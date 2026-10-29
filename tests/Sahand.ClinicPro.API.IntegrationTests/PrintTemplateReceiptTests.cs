@@ -66,4 +66,29 @@ public class PrintTemplateReceiptTests
         (await controller.Preview(html.Id)).Should().BeOfType<BadRequestObjectResult>();
         (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<BadRequestObjectResult>();
     }
+
+    [Fact]
+    public async Task Appointment_template_render_requires_appointment_create_or_settings_permission()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "نوبت", Type = PrintTemplateType.AppointmentTicket,
+            HtmlBody = "<div>{{patient_name}} {{tracking_code}} {{queue_number}}</div>", IsActive = true, IsDefault = true });
+        await db.SaveChangesAsync();
+        var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+        var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var request = new RenderRequest(new Dictionary<string, object?> {
+            ["patient_name"] = "بیمار <script>", ["tracking_code"] = "APT-12", ["queue_number"] = "7" });
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
+        (await controller.Render("AppointmentTicket", request, auth)).Should().BeOfType<ForbidResult>();
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.create") }, "test"));
+        (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
+        var result = (OkObjectResult)await controller.Render("AppointmentTicket", request, auth);
+        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        html.Should().Contain("APT-12").And.Contain("7").And.Contain("&lt;script&gt;").And.NotContain("<script>");
+    }
 }

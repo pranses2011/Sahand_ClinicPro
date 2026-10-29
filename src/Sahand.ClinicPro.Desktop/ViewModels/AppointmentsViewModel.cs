@@ -956,16 +956,11 @@ public partial class AppointmentsViewModel : ViewModelBase
         var ticketDate = SelectedDateShamsi;
         var ticketTime = SelectedSlot?.Time ?? string.Empty;
         var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
-        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket"))
-        {
-            var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
-            var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
-                ? clinic : "درمانگاه سهند";
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                Services.AppointmentTicketPrinter.Print(
-                    ticketPrinter, clinicTitle, code, ticketPatient, ticketDoctor,
-                    ticketDate, ticketTime, $"نوبت {ticketType}"));
-        }
+        var autoPrintTicket = LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket");
+        var ticketData = new AppointmentTicketData(
+            response.Data.PatientName ?? ticketPatient, ticketDoctor,
+            response.Data.DateShamsi ?? ticketDate, response.Data.Time ?? ticketTime,
+            code, response.Data.QueueNumber);
 
         SelectedPatient = null;
         PatientSearchText = string.Empty;
@@ -976,6 +971,28 @@ public partial class AppointmentsViewModel : ViewModelBase
         WizardStep = 0;
         await LoadSlotsAsync();
         await LoadTodayAppointmentsAsync();
+        if (autoPrintTicket)
+        {
+            try
+            {
+                var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
+                var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
+                    ? clinic : "درمانگاه سهند";
+                var (outcome, usedFallback) = await AppointmentTicketTemplatePrint.PrintAsync(ticketData,
+                    vars => TemplatedPrintService.TryPrintAsync(_api, "AppointmentTicket", vars, $"قبض نوبت {code}"),
+                    () => AppointmentTicketPrinter.Print(ticketPrinter, clinicTitle, code,
+                        ticketData.PatientName, ticketData.DoctorName, ticketData.Date, ticketData.Time, $"نوبت {ticketType}"));
+                if (usedFallback) _snackbar.Warning("قالب نوبت دریافت نشد؛ از طرح داخلی استفاده شد.");
+                if (outcome == TemplatePrintOutcome.Printed) _snackbar.Success("قبض نوبت به چاپگر ارسال شد");
+                else if (outcome == TemplatePrintOutcome.NotPrinted) _snackbar.Info("قبض نوبت به چاپگر ارسال نشد");
+                else _snackbar.Info("پنجره چاپ قالب بسته شد؛ نتیجه چاپ مرورگر قابل تأیید نیست");
+            }
+            catch (Exception)
+            {
+                // رزرو قبلاً ثبت شده است؛ اجرای مجدد چاپ می‌تواند قبض تکراری بسازد.
+                _snackbar.Error("نوبت ثبت شد، اما اجرای چاپ قبض ناموفق بود؛ پیش از چاپ مجدد خروجی چاپگر را بررسی کنید.");
+            }
+        }
     }
 
     /// <summary>بارگذاری نوبت‌های امروز — جدول پایین تب رزرو</summary>
@@ -1198,6 +1215,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string? AppointmentCode { get; set; }
+        public string? PatientName { get; set; }
+        public string? DoctorName { get; set; }
+        public string? DateShamsi { get; set; }
+        public string? Time { get; set; }
+        public int? QueueNumber { get; set; }
     }
 
     public sealed class TodayResponse
