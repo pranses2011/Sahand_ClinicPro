@@ -156,7 +156,7 @@ public partial class SettingsViewModel : ViewModelBase
                 Printer = PrintJobSettings.PrinterFor(job.Key) ?? string.Empty,
                 Paper = PrintJobSettings.PaperFor(job.Key),
                 Copies = PrintJobSettings.CopiesFor(job.Key),
-                Preview = PrintJobSettings.PreviewFor(job.Key) ?? true,
+                Preview = PrintJobSettings.PreviewFor(job.Key),
                 AutoPrint = PrintJobSettings.AutoFor(job.Key)
             });
         }
@@ -799,11 +799,14 @@ public partial class SettingsViewModel : ViewModelBase
             // مرکز چاپ — چاپگر/کاغذ/نسخه/پیش‌نمایش/خودکار اختصاصی هر سند
             foreach (var row in PrintJobs)
             {
-                PrintJobSettings.SetPrinter(row.Key, row.Printer);
-                PrintJobSettings.SetPaper(row.Key, row.Paper);
-                PrintJobSettings.SetCopies(row.Key, row.Copies);
-                PrintJobSettings.SetPreview(row.Key, row.Preview);
-                PrintJobSettings.SetAuto(row.Key, row.AutoPrint);
+                if (row.SupportsPrinter) PrintJobSettings.SetPrinter(row.Key, row.Printer);
+                if (row.SupportsReceiptOptions)
+                {
+                    PrintJobSettings.SetCopies(row.Key, row.Copies);
+                    PrintJobSettings.SetPreview(row.Key, row.Preview);
+                }
+                // کاغذ و چاپ خودکار اختصاصی هنوز به همهٔ مسیرها متصل نیستند؛
+                // مقدارهای پیشین حفظ می‌شوند ولی کنترل آنها غیرفعال است.
             }
         }
         catch
@@ -1489,6 +1492,13 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
     /// <summary>کلید پایدار سند</summary>
     public string Key { get; set; } = string.Empty;
 
+    /// <summary>آیا مسیر فعلی چاپگر اختصاصی این سند را می‌خواند؟</summary>
+    public bool SupportsPrinter => Key is "ReceptionReceipt" or "AppointmentTicket" or "Prescription"
+        or "LabResult" or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report";
+
+    /// <summary>تنظیم نسخه و پیش‌نمایش فقط برای موتور داخلی قبض پذیرش متصل است.</summary>
+    public bool SupportsReceiptOptions => Key == "ReceptionReceipt";
+
     /// <summary>عنوان سند</summary>
     public string Title { get; set; } = string.Empty;
 
@@ -1512,7 +1522,7 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
 
     /// <summary>پیش‌نمایش قبل از چاپ این سند</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
-    private bool _preview = true;
+    private bool? _preview;
 
     /// <summary>چاپ خودکار (در نقاطی که سند خودکار چاپ می‌شود)</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]

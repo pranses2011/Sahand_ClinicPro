@@ -467,14 +467,10 @@
                                      خالی هستند و نمی‌شود چاپگر انتخاب کرد» ═══ چاپگرهای نصب‌شدهٔ
                                      ویندوز در ComboBox قابل انتخاب‌اند (ویرایش‌پذیر برای نام‌های
                                      دستی/شبکه)؛ «چاپگر نوبت‌دهی» برای قبض‌های نوبت اضافه شد. -->
-                                <!-- ═══ مرکز چاپ (بازطراحی تأییدشدهٔ مالک) ═══
-                                     هر سند چاپی برنامه با عنوان خودش این‌جا ردیف دارد و
-                                     چاپگر/کاغذ/نسخه/پیش‌نمایش/چاپ خودکار اختصاصی خودش را
-                                     می‌گیرد؛ چاپگر خالی یعنی پیش‌فرض ویندوز. این فهرست از
-                                     PrintJobSettings خوانده می‌شود و همهٔ چاپگرهای برنامه
-                                     (قبض، نوبت، آزمایش، برچسب و…) از همان کاتالوگ می‌خوانند -->
+                                <!-- مرکز چاپ: فقط کنترل‌های متصل فعال‌اند؛ تنظیمات کاغذ و
+                                     چاپ خودکار اختصاصی تا اتصال واقعی غیرفعال می‌مانند. -->
                                 <TextBlock Text="🖨️ مرکز چاپ — چاپگر اختصاصی هر سند" FontSize="12.5" FontWeight="Bold" Margin="2,2,0,4" />
-                                <TextBlock Text="برای هر سند، چاپگر جدا انتخاب کنید؛ خالی = پیش‌فرض ویندوز. دکمهٔ «تست» با همان چاپگر سند چاپ آزمایشی می‌گیرد."
+                                <TextBlock Text="کنترل‌های خاکستری هنوز به چاپ آن سند متصل نیستند. برای قبض اصلی پذیرش، نسخه و پیش‌نمایش اعمال می‌شود؛ قالب HTML از دیالوگ مرورگر استفاده می‌کند. چاپگر خالی ابتدا تنظیمات قدیمی و سپس پیش‌فرض ویندوز را به کار می‌برد."
                                            FontSize="10.5" Opacity="0.65" TextWrapping="Wrap" Margin="2,0,0,8" />
                                 <ItemsControl ItemsSource="{Binding PrintJobs}" Margin="0,0,0,6">
                                     <ItemsControl.ItemTemplate>
@@ -497,12 +493,12 @@
                                                         </TextBlock>
                                                         <TextBlock Text="{Binding Description, Mode=OneWay}" FontSize="9.5" Opacity="0.6" TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
-                                                    <ComboBox Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    <ComboBox Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsPrinter}"
                                                               ItemsSource="{Binding DataContext.PrinterNames, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                               IsEditable="True" StaysOpenOnEdit="True"
                                                               Text="{Binding Printer, UpdateSourceTrigger=PropertyChanged}"
                                                               materialDesign:HintAssist.Hint="چاپگر این سند" FontSize="11" />
-                                                    <ComboBox Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    <ComboBox Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="False" ToolTip="اندازه کاغذ اختصاصی هنوز به این مسیر متصل نشده است"
                                                               SelectedItem="{Binding Paper}" FontSize="11"
                                                               materialDesign:HintAssist.Hint="کاغذ">
                                                         <ComboBox.Items>
@@ -514,14 +510,16 @@
                                                             <ComboBoxItem Content="برچسب ۴۰×۳۰" />
                                                         </ComboBox.Items>
                                                     </ComboBox>
-                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsReceiptOptions}" ToolTip="فقط قبض اصلی پذیرش؛ تعداد نسخه باید توسط درایور چاپگر پشتیبانی شود"
                                                              Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged}"
                                                              materialDesign:HintAssist.Hint="نسخه" FontSize="11" />
-                                                    <CheckBox Grid.Column="4" Content="پیش‌نمایش" IsChecked="{Binding Preview}"
+                                                    <CheckBox Grid.Column="4" Content="پیش‌نمایش" IsChecked="{Binding Preview}" IsThreeState="True"
+                                                              IsEnabled="{Binding SupportsReceiptOptions}" ToolTip="فقط قبض اصلی پذیرش؛ حالت سوم یعنی استفاده از تنظیم عمومی"
                                                               FontSize="10.5" Margin="10,0,0,0" VerticalAlignment="Center" />
-                                                    <CheckBox Grid.Column="5" Content="خودکار" IsChecked="{Binding AutoPrint}"
+                                                    <CheckBox Grid.Column="5" Content="خودکار" IsChecked="{Binding AutoPrint}" IsEnabled="False"
+                                                              ToolTip="این گزینه هنوز به چاپ خودکار اختصاصی سند متصل نیست"
                                                               FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                                    <Button Grid.Column="6" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                    <Button Grid.Column="6" Margin="10,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsPrinter}"
                                                             Command="{Binding DataContext.TestPrintJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -536,7 +534,7 @@
                                     <StackPanel>
                                         <TextBlock Text="⚙️ رفتار عمومی چاپ (همهٔ سندها)" FontSize="12" FontWeight="Bold" Margin="0,0,0,4" />
                                         <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ (پیش‌فرض عمومی)" IsChecked="{Binding ShowPreview}" Margin="2,3" FontSize="11.5" />
-                                        <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" FontSize="11.5" />
+                                        <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور (هنوز متصل نیست)" IsChecked="{Binding AutoPrintInvoice}" IsEnabled="False" Margin="2,3" FontSize="11.5" />
                                         <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" FontSize="11.5" />
                                     </StackPanel>
                                 </Border>

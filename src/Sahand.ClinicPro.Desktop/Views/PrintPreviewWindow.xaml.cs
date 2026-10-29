@@ -18,6 +18,9 @@ public partial class PrintPreviewWindow : Window
     private readonly FlowDocument _document;
     private readonly string _printTitle;
     private readonly string? _printerName;
+    private readonly double? _pageWidth;
+    private readonly double? _pageHeight;
+    private readonly int _copies;
 
     /// <summary>آیا کاربر از این پنجره چاپ کرد؟ (بستن بدون چاپ = false)</summary>
     public bool Printed { get; private set; }
@@ -26,19 +29,24 @@ public partial class PrintPreviewWindow : Window
     /// سازنده — سند باید PageWidth/PageHeight از قبل گرفته باشد (مسیرهای
     /// چاپ برنامه همهً این کار را می‌کنند؛ قبض نوبت عرض ۸۰ میلی، بقیه A4).
     /// </summary>
-    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName, bool allowPrint = true)
+    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName, bool allowPrint = true,
+        double? pageWidth = null, double? pageHeight = null, int copies = 1)
     {
         _document = document;
         _printTitle = printTitle;
         _printerName = printerName;
+        _pageWidth = pageWidth;
+        _pageHeight = pageHeight;
+        _copies = copies;
         InitializeComponent();
 
         PrintButton.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
-        if (!allowPrint)
-            DocViewer.CommandBindings.Add(new System.Windows.Input.CommandBinding(
-                System.Windows.Input.ApplicationCommands.Print,
-                (_, e) => e.Handled = true,
-                (_, e) => { e.CanExecute = false; e.Handled = true; }));
+        // دکمه/میانبر داخلی نمایشگر نباید از تنظیمات چاپگر، اندازه و نسخه
+        // عبور کند؛ در نمونهٔ طراح هم هیچ مسیر چاپی باز نمی‌گذاریم.
+        DocViewer.CommandBindings.Add(new System.Windows.Input.CommandBinding(
+            System.Windows.Input.ApplicationCommands.Print,
+            (_, e) => { if (allowPrint) OnPrintClick(this, new RoutedEventArgs()); e.Handled = true; },
+            (_, e) => { e.CanExecute = allowPrint; e.Handled = true; }));
         HeaderTitle.Text = "پیش‌نمایش چاپ — " + printTitle;
 
         // نمایشگر با همان سند مشترک — صفحه‌بندی FlowDocumentPageViewer
@@ -68,7 +76,7 @@ public partial class PrintPreviewWindow : Window
     /// <summary>چاپ به چاپگر مقصد تنظیمات — بدون دیالوگ ویندوز (تجربهٔ یکدست)</summary>
     private void OnPrintClick(object sender, RoutedEventArgs e)
     {
-        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName))
+        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName, _pageWidth, _pageHeight, _copies))
         {
             Printed = true;
             Close();

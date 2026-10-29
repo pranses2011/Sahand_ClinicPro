@@ -138,7 +138,8 @@ public static class ReceptionReceiptPrinter
             : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;
 
         return PrintFlow.Print(doc, $"قبض پذیرش {receipt.DisplayReceptionNumber}", printerName,
-            ReceiptWidth, height);
+            ReceiptWidth, height, PrintJobSettings.PreviewFor("ReceptionReceipt"),
+            PrintJobSettings.CopiesFor("ReceptionReceipt"));
     }
 
     /// <summary>سند نمونه با همان موتور و ابعاد چاپ واقعی؛ اطلاعات ساختگی است.</summary>
