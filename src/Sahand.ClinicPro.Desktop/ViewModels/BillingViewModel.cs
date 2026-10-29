@@ -307,7 +307,8 @@ public partial class InvoiceFormViewModel : ObservableObject
     private readonly string _invoiceRecoveryServer;
     private long? _pendingInvoiceBranch;
     public string InvoiceRecoveryInfo => _pendingInvoice is null ? string.Empty :
-        $"درخواست بازیابی: {Patient?.FullName} — اقلام: " +
+        $"درخواست بازیابی: {Patient?.FullName}" +
+        (_pendingInvoice.Request.ReceptionId is long receptionId ? $" — پذیرش {receptionId}" : "") + " — اقلام: " +
         string.Join("، ", _pendingInvoice.Request.Items.Select(i => $"{i.Description} × {i.Quantity}")) +
         $"؛ جمع {Money.FormatWithUnit(_pendingInvoice.Quote.SubTotal)}، تخفیف {Money.FormatWithUnit(_pendingInvoice.Quote.DiscountAmount)}، بیمه {Money.FormatWithUnit(_pendingInvoice.Quote.InsuranceShare)}، مالیات {Money.FormatWithUnit(_pendingInvoice.Quote.Tax)}، پرداختی بیمار {Money.FormatWithUnit(_pendingInvoice.Quote.PatientPayable)}. ارسال مجدد ممکن است فاکتور را صادر کند؛ ابتدا سوابق را بررسی کنید.";
     public bool CanRetryInvoice => !IsBusy && _invoiceSubmissionLocked && _pendingInvoiceRequest is not null &&

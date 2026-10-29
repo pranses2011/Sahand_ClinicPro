@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using Sahand.ClinicPro.Application.DTOs.Billing;
+using Sahand.ClinicPro.Domain.Enums;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -696,10 +698,15 @@ public partial class ReceptionsViewModel : ViewModelBase
     private ObservableCollection<ReceptionRow> _receptions = new();
 
     /// <summary>سازنده</summary>
-    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar)
+    private readonly IInvoiceRecoveryStore? _invoiceRecoveryStore;
+    private readonly string _invoiceRecoveryServer;
+
+    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar, IInvoiceRecoveryStore? invoiceRecoveryStore = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _invoiceRecoveryStore = invoiceRecoveryStore ?? (api is ApiClient ? new InvoiceRecoveryStore() : null);
+        _invoiceRecoveryServer = api is ApiClient client ? client.PaymentRecoveryServer : "test-api";
         LoadPanelPrefs();
         _ = InitializeAsync();
     }
@@ -1850,28 +1857,59 @@ public partial class ReceptionsViewModel : ViewModelBase
         //        موفقیت بی‌قید و شرط چاپ می‌شد و کاربر گمان می‌کرد همه‌چیز ثبت
         //        شده؛ اکنون شکست هر حلقه با دیالوگ فارسی خودِ برنامه (قانون ششم
         //        مالک — بدون MessageBox ویندوز) اعلام و کل زنجیره صادقانه گزارش می‌شود.
-        var invoiceFailed = false; // وضعیت صدور فاکتور برای پیام پایانی صادقانه
-        var invoice = await _api.PostAsync<InvoiceCreateResponse>("invoices", new
+        var invoiceFailed = false;
+        var invoiceDto = new CreateInvoiceDto(FoundPatient!.Id, reception.Data, null, InvoiceType.Visit,
+            company?.Id, 0m, BuildInvoiceItems(isServiceMode, consumeResult),
+            isServiceMode ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}" : $"پذیرش {FoundPatient.FullName}");
+        var preview = await _api.PostAsync<InvoicePreviewResponse>("invoices/preview", invoiceDto);
+        if (preview?.Data is null || string.IsNullOrWhiteSpace(preview.Data.QuoteVersion))
         {
-            patientId = FoundPatient.Id,
-            receptionId = reception.Data,
-            visitId = (long?)null,
-            type = 1,
-            insuranceCompanyId = company?.Id,
-            taxPercent = 0m,
-            items = BuildInvoiceItems(isServiceMode, consumeResult),
-            description = isServiceMode
-                ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}"
-                : $"پذیرش {FoundPatient.FullName}"
-        });
-        if (invoice?.Data is null || invoice.Data <= 0)
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ محاسبه فاکتور دریافت نشد و فاکتور ارسال نشد. مصرف و صندوق را بررسی کنید. " + _api.LastError);
+            return;
+        }
+        if (payment is not null && preview.Data.PatientPayable != confirmedPayable)
         {
-            // پذیرش ثبت شده ولی فاکتور نه — از ماژول «صندوق و فاکتور» قابل تکمیل است؛
-            // خطای واقعی سرور (LastError) نمایش داده می‌شود تا ریشه مشخص باشد
-            invoiceFailed = true;
-            IsBusy = false;
-            Views.AppDialog.Error("صدور فاکتور ناموفق",
-                $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما نتیجه صدور فاکتور مشخص نیست:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پیش از صدور دوباره، وجود فاکتور را در «صندوق و فاکتور» بررسی کنید.");
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ مبلغ سرور با مبلغ تأییدشده متفاوت است و فاکتور یا پرداخت ارسال نشد. در صندوق بررسی کنید.");
+            return;
+        }
+        if ((_api as ApiClient)?.BranchId != receptionBranch ||
+            (_api is ApiClient activeClient && activeClient.PaymentRecoveryServer != _invoiceRecoveryServer))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و فاکتور ارسال نشد.");
+            return;
+        }
+        var request = invoiceDto with { ExpectedQuote = preview.Data.QuoteVersion, RequestId = Guid.NewGuid() };
+        var pending = new PendingInvoice(request, preview.Data, _invoiceRecoveryServer, receptionBranch);
+        try { _invoiceRecoveryStore?.Reserve(pending); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ رزرو ایمن فاکتور ناموفق بود و درخواست ارسال نشد. بازیابی و صندوق را بررسی کنید.");
+            return;
+        }
+        if ((_api as ApiClient)?.BranchId != receptionBranch ||
+            (_api is ApiClient currentClient && currentClient.PaymentRecoveryServer != _invoiceRecoveryServer))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ فاکتور ارسال نشد و درخواست برای بررسی در صندوق ذخیره شد.");
+            return;
+        }
+        var invoice = await _api.PostAsync<InvoiceCreateResponse>("invoices/idempotent", request);
+        if (invoice?.Data is null or <= 0)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ نتیجه صدور فاکتور نامعلوم است. پس از بررسی سوابق، بیمار را در فرم فاکتور صندوق برای بازیابی انتخاب کنید. " + _api.LastError);
+            return;
+        }
+        try { _invoiceRecoveryStore?.Clear(pending); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"فاکتور {invoice.Data} صادر شد اما فایل بازیابی پاک نشد؛ پرداخت ارسال نشد. در صندوق بررسی کنید.");
+            return;
         }
 
         // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
@@ -2032,59 +2070,23 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// </summary>
     /// <param name="isServiceMode">حالت پذیرش خدمتی؟</param>
     /// <param name="consumeResult">نتیجهٔ مصرف لوازم — تهی یعنی بدون مصرفی</param>
-    private List<object> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
+    private List<InvoiceItemDto> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
     {
-        var items = new List<object>();
-
-        // پذیرش چندخدمتی: هر خدمت انتخاب‌شده یک قلم فاکتور با تعداد خودش است
-        // تا یک فاکتور واحد برای کل مراجعه صادر شود (نه چند فاکتور جدا)
+        var items = new List<InvoiceItemDto>();
         if (isServiceMode)
         {
             foreach (var line in SelectedServices)
-                items.Add(new
-                {
-                    serviceId = (long?)line.Service.Id,
-                    doctorId = (long?)null,
-                    performedById = SelectedPerformer?.Id,
-                    medicationId = (long?)null,
-                    description = line.Service.Name,
-                    quantity = (decimal)line.Quantity,
-                    unitPrice = line.Service.Price,
-                    discountPercent = 0m
-                });
+                items.Add(new InvoiceItemDto(line.Service.Id, line.Service.Name, line.Quantity, line.Service.Price,
+                    0, null, 0, SelectedPerformer?.Id));
         }
         else
         {
-            items.Add(new
-            {
-                serviceId = (long?)null,
-                doctorId = (long?)SelectedDoctor!.Id,
-                performedById = (long?)null,
-                medicationId = (long?)null,
-                description = $"ویزیت {SelectedDoctor!.Name}",
-                quantity = 1m,
-                unitPrice = VisitFee,
-                discountPercent = 0m
-            });
+            items.Add(new InvoiceItemDto(null, $"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee,
+                0, SelectedDoctor.Id, 0));
         }
-
-        // چرخهٔ ۳۹ — اقلام مصرفی با قیمت واقعی برداشت از بچ‌ها؛ معاف از بیمه
         foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
-        {
-            items.Add(new
-            {
-                serviceId = (long?)null,
-                doctorId = (long?)null,
-                performedById = isServiceMode ? SelectedPerformer?.Id : (long?)null,
-                medicationId = (long?)consumed.MedicationId,
-                description = $"لوازم مصرفی: {consumed.Name}",
-                quantity = consumed.Quantity,
-                unitPrice = consumed.UnitPrice,
-                discountPercent = 0m,
-                isInsuranceExempt = true
-            });
-        }
-
+            items.Add(new InvoiceItemDto(null, $"لوازم مصرفی: {consumed.Name}", consumed.Quantity, consumed.UnitPrice,
+                0, null, 0, isServiceMode ? SelectedPerformer?.Id : null, true, consumed.MedicationId));
         return items;
     }
 
@@ -2209,6 +2211,11 @@ public partial class ReceptionsViewModel : ViewModelBase
         public long? Id { get; set; }
         public long? PatientId { get; set; }
         public decimal? RemainingAmount { get; set; }
+    }
+
+    public sealed class InvoicePreviewResponse
+    {
+        public InvoicePreviewDto? Data { get; set; }
     }
 
     public sealed class InvoiceCreateResponse
