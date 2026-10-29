@@ -122,11 +122,11 @@ public partial class OphthalmologyViewModel : ViewModelBase
     partial void OnOsAddChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
     partial void OnPdChanged(string? value) => OnPropertyChanged(nameof(GlassesPrescriptionText));
 
-    /// <summary>هشدار گلوکوم چشم راست</summary>
-    public string? OdIopWarning => int.TryParse(NormalizeEyeNumber(OdIop), out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
+    /// <summary>یادآوری بررسی فشار چشم راست؛ به‌تنهایی تشخیص نیست.</summary>
+    public string? OdIopWarning => int.TryParse(NormalizeEyeNumber(OdIop), out var v) && v > 21 ? "⚠️ IOP بالای ۲۱ — نیازمند بررسی متخصص؛ به‌تنهایی تشخیص نیست" : null;
 
-    /// <summary>هشدار گلوکوم چشم چپ</summary>
-    public string? OsIopWarning => int.TryParse(NormalizeEyeNumber(OsIop), out var v) && v > 21 ? "⚠️ احتمال گلوکوم — IOP بالای ۲۱" : null;
+    /// <summary>یادآوری بررسی فشار چشم چپ؛ به‌تنهایی تشخیص نیست.</summary>
+    public string? OsIopWarning => int.TryParse(NormalizeEyeNumber(OsIop), out var v) && v > 21 ? "⚠️ IOP بالای ۲۱ — نیازمند بررسی متخصص؛ به‌تنهایی تشخیص نیست" : null;
 
     partial void OnOdIopChanged(string? value) { OnPropertyChanged(nameof(OdIopWarning)); OnPropertyChanged(nameof(OdIopGaugeWidth)); }
     partial void OnOsIopChanged(string? value) { OnPropertyChanged(nameof(OsIopWarning)); OnPropertyChanged(nameof(OsIopGaugeWidth)); }

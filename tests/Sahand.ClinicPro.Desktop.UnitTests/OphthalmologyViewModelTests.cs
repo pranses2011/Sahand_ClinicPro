@@ -39,7 +39,7 @@ public class OphthalmologyViewModelTests
         var api = new FakeApiClient();
         var vm = await Ready(api, 3);
         vm.OdSphere = "−۲٫۵"; vm.OdIop = "۲۳"; vm.Pd = "۶۲";
-        vm.OdIopWarning.Should().NotBeNull();
+        vm.OdIopWarning.Should().Contain("به‌تنهایی تشخیص نیست").And.NotContain("احتمال گلوکوم");
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
         var body = JsonSerializer.SerializeToElement(api.LastBody);
         body.GetProperty("rightSphere").GetDecimal().Should().Be(-2.5m);
