@@ -1870,7 +1870,6 @@ public partial class ReceptionsViewModel : ViewModelBase
         //        موفقیت بی‌قید و شرط چاپ می‌شد و کاربر گمان می‌کرد همه‌چیز ثبت
         //        شده؛ اکنون شکست هر حلقه با دیالوگ فارسی خودِ برنامه (قانون ششم
         //        مالک — بدون MessageBox ویندوز) اعلام و کل زنجیره صادقانه گزارش می‌شود.
-        var invoiceFailed = false;
         var invoiceDto = new CreateInvoiceDto(FoundPatient!.Id, reception.Data, null, InvoiceType.Visit,
             company?.Id, 0m, BuildInvoiceItems(isServiceMode, consumeResult),
             isServiceMode ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}" : $"پذیرش {FoundPatient.FullName}");
@@ -1993,9 +1992,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var queueNo = reception.Data;
         // پیام پایانی صادقانه — وضعیت واقعی هر سه حلقه (پذیرش/فاکتور/پرداخت)
         // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
-        if (invoiceFailed)
-            _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ نتیجه فاکتور را پیش از تکرار در صندوق بررسی کنید");
-        else if (paymentConfirmedButRecoveryRetained)
+        if (paymentConfirmedButRecoveryRetained)
             _snackbar.Info($"پذیرش و پرداخت ثبت شد — شناسه پذیرش {queueNo}؛ فایل بازیابی پرداخت در صندوق بررسی شود");
         else if (paymentFailed)
             _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد، وضعیت پرداخت را در صندوق بررسی کنید");
@@ -2014,7 +2011,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چاپ از دروازهٔ PrintFlow می‌گذرد، پس تنظیم «پیش‌نمایش قبل از چاپ» هم
         // رعایت می‌شود. خطای چاپ نباید زنجیرهٔ ثبت‌شده را زیر سؤال ببرد، لذا در
         // try/catch جدا و با پیام ملایم اعلام می‌شود.
-        if (!invoiceFailed && !paymentFailed && payment is not null && invoice?.Data is > 0)
+        if (!paymentFailed && payment is not null && invoice?.Data is > 0)
         {
             try
             {
