@@ -243,4 +243,17 @@ public class ReceptionsViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
     }
 
+    [Fact]
+    public void Automatic_payment_requires_matching_persisted_invoice_and_confirmed_amount()
+    {
+        var detail = new ReceptionsViewModel.ReceptionInvoiceDetail { Id = 9, PatientId = 7, RemainingAmount = 100m };
+        ReceptionsViewModel.CanAutomaticallyPay(detail, 9, 7, 100m).Should().BeTrue();
+        ReceptionsViewModel.CanAutomaticallyPay(detail, 9, 7, 99m).Should().BeFalse();
+        ReceptionsViewModel.CanAutomaticallyPay(detail, 9, 8, 100m).Should().BeFalse();
+        ReceptionsViewModel.CanAutomaticallyPay(detail, 10, 7, 100m).Should().BeFalse();
+        ReceptionsViewModel.CanAutomaticallyPay(null, 9, 7, 100m).Should().BeFalse();
+        detail.RemainingAmount = null;
+        ReceptionsViewModel.CanAutomaticallyPay(detail, 9, 7, 100m).Should().BeFalse();
+    }
+
 }

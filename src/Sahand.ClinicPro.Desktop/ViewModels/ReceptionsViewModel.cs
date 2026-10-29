@@ -1646,6 +1646,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
         // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
         // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
+        var confirmedPayable = PayableByPatient;
         var payVm = new ReceptionPayViewModel(PayableByPatientDisplay);
         var payWindow = new Views.ReceptionPayWindow(payVm)
         {
@@ -1656,14 +1657,14 @@ public partial class ReceptionsViewModel : ViewModelBase
         // انصراف — هیچ چیزی ثبت نمی‌شود
         if (payVm.Result is null) return;
 
-        await SubmitReceptionAsync(payVm.Result);
+        await SubmitReceptionAsync(payVm.Result, confirmedPayable);
     }
 
     /// <summary>
     /// اجرای زنجیره پذیرش طبق فرم ۱۰ — پذیرش + مصرف لوازم + فاکتور + پرداخت اختیاری
     /// </summary>
     /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
-    private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment)
+    private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment, decimal? confirmedPayable = null)
     {
         if (IsSubmitting || !ValidateReception()) return;
         IsSubmitting = true;
@@ -1783,24 +1784,31 @@ public partial class ReceptionsViewModel : ViewModelBase
         {
             // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
             // (قیمت واقعی بچ‌ها از مصرف؛ اگر مصرف رد شده و کاربر ادامه داد، فقط خدمت)
-            var payable = PatientShare + (consumeResult?.TotalCost ?? 0m);
-            var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments", new
+            var detail = await _api.GetAsync<ReceptionInvoiceEnvelope>($"invoices/{invoice.Data}");
+            var payable = detail?.Data?.RemainingAmount;
+            if (!CanAutomaticallyPay(detail?.Data, invoice.Data.Value, FoundPatient.Id, confirmedPayable))
             {
-                invoiceId = invoice.Data,
-                patientId = FoundPatient.Id,
-                amount = payable,
-                // روش و مرجع از پنجرهٔ پرداخت — ۱ نقدی، ۲ کارتخوان (چرخهٔ ۳۹)
-                method = payment.Method,
-                referenceNumber = payment.ReferenceNumber,
-                cardNumber = payment.CardNumber
-            });
-            if (paymentResult?.Data is null || paymentResult.Data <= 0)
-            {
-                // پرداخت ثبت نشد — کاربر باید بداند؛ فاکتور بدهکار مانده است
                 paymentFailed = true;
-                IsBusy = false;
-                Views.AppDialog.Error("ثبت پرداخت ناموفق",
-                    $"فاکتور صادر شد اما ثبت پرداخت {Money.FormatWithUnit(payable)} شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
+                _snackbar.Warning($"فاکتور صادر شد، اما مبلغ نهایی تأیید نشد یا با مبلغ تأییدشده تفاوت دارد؛ پرداخت ثبت نشد. شناسه فاکتور {invoice.Data} را در صندوق بررسی کنید.");
+            }
+            else
+            {
+                var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments", new
+                {
+                    invoiceId = invoice.Data,
+                    patientId = FoundPatient.Id,
+                    amount = payable.Value,
+                    method = payment.Method,
+                    referenceNumber = payment.ReferenceNumber,
+                    cardNumber = payment.CardNumber
+                });
+                if (paymentResult?.Data is null || paymentResult.Data <= 0)
+                {
+                    paymentFailed = true;
+                    IsBusy = false;
+                    Views.AppDialog.Error("پاسخ پرداخت دریافت نشد",
+                        $"فاکتور صادر شد اما نتیجه پرداخت {Money.FormatWithUnit(payable.Value)} مشخص نیست:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پیش از تکرار پرداخت، وضعیت فاکتور و پرداخت را در صندوق بررسی کنید.");
+                }
             }
         }
 
@@ -1812,7 +1820,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (invoiceFailed)
             _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
         else if (paymentFailed)
-            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
+            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد، وضعیت پرداخت را در صندوق بررسی کنید");
         else if (consumablesSkipped)
             _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
         else if (consumeResult is not null)
@@ -2058,6 +2066,23 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string Message { get; set; } = string.Empty;
         public string? ApprovalCode { get; set; }
         public decimal CoveragePercent { get; set; }
+    }
+
+    /// <summary>پرداخت خودکار تنها با مبلغ و هویت تأییدشدهٔ فاکتور مجاز است.</summary>
+    public static bool CanAutomaticallyPay(ReceptionInvoiceDetail? detail, long invoiceId, long patientId, decimal? confirmedAmount) =>
+        detail is not null && detail.Id == invoiceId && detail.PatientId == patientId &&
+        detail.RemainingAmount is > 0m && detail.RemainingAmount == confirmedAmount;
+
+    public sealed class ReceptionInvoiceEnvelope
+    {
+        public ReceptionInvoiceDetail? Data { get; set; }
+    }
+
+    public sealed class ReceptionInvoiceDetail
+    {
+        public long? Id { get; set; }
+        public long? PatientId { get; set; }
+        public decimal? RemainingAmount { get; set; }
     }
 
     public sealed class InvoiceCreateResponse
