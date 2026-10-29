@@ -26,7 +26,7 @@ public class ParaclinicalConcurrencyTests
         var behavior = new TransactionBehavior<SubmitImagingReportCommand, Result>(transaction.Object,
             NullLogger<TransactionBehavior<SubmitImagingReportCommand, Result>>.Instance);
         var command = new SubmitImagingReportCommand(new ImagingReportDto(1, null, "یافته", null, null));
-        RequestHandlerDelegate<Result> next = () => Task.FromException<Result>(new DbUpdateConcurrencyException());
+        RequestHandlerDelegate<Result> next = _ => Task.FromException<Result>(new DbUpdateConcurrencyException());
         await FluentActions.Invoking(() => behavior.Handle(command, next, default)).Should().ThrowAsync<DbUpdateConcurrencyException>();
         transaction.Verify(x => x.BeginAsync(It.IsAny<CancellationToken>()), Times.Once);
         transaction.Verify(x => x.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
