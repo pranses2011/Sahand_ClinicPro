@@ -103,8 +103,12 @@ public partial class PaymentWindowViewModel : ObservableObject
         ErrorMessage = string.Empty;
         if (Amount <= 0)
         { ErrorMessage = "مبلغ پرداخت باید بزرگ‌تر از صفر باشد"; return; }
-        if (Amount > RemainingAmount || MethodIndex is < 0 or > 4)
-        { ErrorMessage = "مبلغ از مانده بیشتر است یا روش پرداخت معتبر نیست."; return; }
+        if (Amount > RemainingAmount || Amount > 999999999999999999m || decimal.Truncate(Amount) != Amount ||
+            MethodIndex is < 0 or > 4 || ReferenceNumber?.Trim().Length > 50 || CardNumber?.Trim().Length > 20)
+        { ErrorMessage = "مبلغ صحیح ریالی، روش یا اطلاعات پرداخت معتبر نیست."; return; }
+        var branch = CurrentBranch;
+        if (_api is ApiClient serverClient && serverClient.PaymentRecoveryServer != _recoveryServer)
+        { ErrorMessage = "سرور تغییر کرده است؛ پنجره را دوباره باز کنید."; return; }
 
         IsBusy = true;
         var sent = false;
@@ -116,9 +120,11 @@ public partial class PaymentWindowViewModel : ObservableObject
             { ErrorMessage = _api.LastError ?? "دریافت هویت فاکتور ناموفق بود"; return; }
             if (detail.RemainingAmount != RemainingAmount || Amount > detail.RemainingAmount)
             { ErrorMessage = "مانده فاکتور تغییر کرده است؛ پنجره را ببندید و فاکتور را تازه‌سازی کنید."; return; }
+            if (CurrentBranch != branch || (_api is ApiClient activeClient && activeClient.PaymentRecoveryServer != _recoveryServer))
+            { ErrorMessage = "سرور یا شعبه تغییر کرد؛ پرداخت ارسال نشد."; return; }
             var body = new PendingPayment(_invoiceId, detail.PatientId, Amount, MethodIndex + 1,
                 string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
-                string.IsNullOrWhiteSpace(CardNumber) ? null : CardNumber.Trim(), Guid.NewGuid(), _recoveryServer, CurrentBranch);
+                string.IsNullOrWhiteSpace(CardNumber) ? null : CardNumber.Trim(), Guid.NewGuid(), _recoveryServer, branch);
             try { _recoveryStore?.Reserve(body); }
             catch (Exception)
             {
@@ -129,6 +135,12 @@ public partial class PaymentWindowViewModel : ObservableObject
                 return;
             }
             _pendingPayment = body;
+            if (!RecoveryContextMatches)
+            {
+                IsPaymentOutcomeUnknown = true;
+                ErrorMessage = "شعبه یا سرور تغییر کرد؛ درخواست ارسال نشد و بازیابی محلی برای بررسی حفظ شد.";
+                return;
+            }
             sent = true;
             var ok = await _api.PostAsync("payments/idempotent", body);
             if (!ok)
