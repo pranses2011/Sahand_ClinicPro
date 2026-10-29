@@ -6,7 +6,8 @@ using Sahand.ClinicPro.Desktop.Services;
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
 /// <summary>ردیف سابقهٔ معاینهٔ چشم — نمایش خوانا در فهرست</summary>
-public record EyeExamRow(string DateShamsi, string OdSummary, string OsSummary, string? Findings);
+public record EyeExamRow(string DateShamsi, string OdSummary, string OsSummary, string? Findings,
+    string? VisualField = null, string? EyewearPrescription = null, string? AdditionalDetails = null);
 
 /// <summary>
 /// ViewModel صفحهٔ مستقل «چشم‌پزشکی» — چرخهٔ چهل‌وسوم (گزارش مالک)
@@ -22,6 +23,9 @@ public partial class OphthalmologyViewModel : ViewModelBase
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
     private readonly Func<bool> _confirmPatientChange;
+    private readonly Func<bool> _confirmCopyPrescription;
+    private EyeExamDto? _latestExam;
+    public bool HasPreviousRefraction => _latestExam is not null;
     private int _patientRequestVersion;
 
     [ObservableProperty] private bool _isEyeHistoryLoading;
@@ -150,10 +154,18 @@ public partial class OphthalmologyViewModel : ViewModelBase
     {
         // دادهٔ بالینی و پاسخ‌های در حال پرواز هرگز به بیمار بعدی منتقل نشوند.
         _patientRequestVersion++;
+        _latestExam = null;
+        OnPropertyChanged(nameof(HasPreviousRefraction));
         IsEyeHistoryLoading = false;
         IsEyeHistoryReady = false;
         EyeHistory.Clear();
         HistoryTrendText = string.Empty;
+        ResetExamForm();
+        OnPropertyChanged(nameof(IsEyeExamEnabled));
+    }
+
+    private void ResetExamForm()
+    {
         OdSphere = OdCylinder = OdAxis = OdAdd = OdIop = null;
         OsSphere = OsCylinder = OsAxis = OsAdd = OsIop = null;
         Pd = EyeFindings = null;
@@ -161,19 +173,37 @@ public partial class OphthalmologyViewModel : ViewModelBase
         SlitOd = SlitOs = PachymetryOd = PachymetryOs = null;
         VisualFieldText = SpecialTestsText = ImagingNote = DiagnosisText = null;
         CarePlanText = DrugPrescriptionText = FollowUpText = null;
-        OnPropertyChanged(nameof(IsEyeExamEnabled));
+    }
+
+    /// <summary>کپی اختیاری اعداد نسخهٔ قبلی؛ فشار، حدت و یافته‌های معاینهٔ قدیمی منتقل نمی‌شوند.</summary>
+    [RelayCommand]
+    private void CopyPreviousRefraction()
+    {
+        if (!IsEyeExamEnabled || _latestExam is not { } last || !_confirmCopyPrescription()) return;
+        OdSphere = last.Od?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OdCylinder = last.Od?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OdAxis = last.Od?.Axis?.ToString();
+        OsSphere = last.Os?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OsCylinder = last.Os?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OsAxis = last.Os?.Axis?.ToString();
+        Pd = last.Pd?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        OdAdd = ReadSavedAdd(last.EyewearPrescription, "OD");
+        OsAdd = ReadSavedAdd(last.EyewearPrescription, "OS");
     }
 
     /// <summary>سابقهٔ معاینه‌های چشم بیمار منتخب — ۲۰ مورد آخر</summary>
     public ObservableCollection<EyeExamRow> EyeHistory { get; } = new();
 
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public OphthalmologyViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null)
+    public OphthalmologyViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null, Func<bool>? confirmCopyPrescription = null)
     {
         _api = api;
         _snackbar = snackbar;
         _confirmPatientChange = confirmPatientChange ?? (() => Views.AppDialog.Confirm(
             "تغییر بیمار", "اطلاعات فرم بیمار فعلی پاک می‌شود؛ موارد ذخیره‌نشده از دست می‌روند. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
+        _confirmCopyPrescription = confirmCopyPrescription ?? (() => Views.AppDialog.Confirm(
+            "کپی نسخهٔ قبلی", "مقادیر عدسی و فاصله مردمک فرم جایگزین می‌شوند. نسخهٔ قبلی نیازمند بررسی مجدد است؛ فشار و حدت قبلی کپی نمی‌شوند. ادامه می‌دهید؟",
             Views.AppDialogIcon.Warning) == true);
     }
 
@@ -196,7 +226,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     }
 
     /// <summary>بازیابی آخرین معاینهٔ چشم بیمار + سابقه — GET eye/exams</summary>
-    private async Task LoadEyeHistoryAsync(bool populateForm = true)
+    private async Task LoadEyeHistoryAsync()
     {
         if (EyePatient is null) return;
         var patientId = EyePatient.Id;
@@ -228,35 +258,13 @@ public partial class OphthalmologyViewModel : ViewModelBase
         IsEyeHistoryReady = true;
         EyeHistory.Clear();
         HistoryTrendText = string.Empty;
+        _latestExam = null;
+        OnPropertyChanged(nameof(HasPreviousRefraction));
         if (exams.Count == 0) return;
 
-        // هنگام نوسازی پس از ثبت، داده‌های فرم در حال ویرایش دست‌نخورده می‌مانند.
-        if (populateForm)
-        {
-        // آخرین معاینه → پر کردن فرم برای ادامهٔ پرونده
-        var last = exams[0];
-        OdSphere = last.Od?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        OdCylinder = last.Od?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        OdAxis = last.Od?.Axis?.ToString();
-        OsSphere = last.Os?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        OsCylinder = last.Os?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        OsAxis = last.Os?.Axis?.ToString();
-        OdIop = last.Od?.Iop?.ToString();
-        OsIop = last.Os?.Iop?.ToString();
-        Pd = last.Pd?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        // Add به صورت متن نسخه در قرارداد فعلی ذخیره می‌شود؛ فقط قالب دقیق
-        // تولیدشده توسط همین برنامه خوانده می‌شود، نه نسخه‌های آزاد قدیمی.
-        OdAdd = ReadSavedAdd(last.EyewearPrescription, "OD");
-        OsAdd = ReadSavedAdd(last.EyewearPrescription, "OS");
-        EyeFindings = last.Findings;
-        VisualFieldText = last.VisualField;
-        if (last.Od?.Acuity is { } odAcuity && VisionOptions.Contains(odAcuity))
-            OdVisionIndex = Array.IndexOf(VisionOptions, odAcuity);
-        if (last.Os?.Acuity is { } osAcuity && VisionOptions.Contains(osAcuity))
-            OsVisionIndex = Array.IndexOf(VisionOptions, osAcuity);
-        if (last.ColorVision is { } cv && ColorVisionOptions.Contains(cv))
-            ColorVisionIndex = Array.IndexOf(ColorVisionOptions, cv);
-        }
+        // سابقه فقط برای مرور است؛ مقدار معاینه قبلی به شکل خودکار وارد معاینه جدید نمی‌شود.
+        _latestExam = exams[0];
+        OnPropertyChanged(nameof(HasPreviousRefraction));
 
         // روند: مقایسهٔ تازه‌ترین معاینه با قبلی (فشار چشم و نمرهٔ عدسی راست)
         if (exams.Count >= 2)
@@ -271,9 +279,10 @@ public partial class OphthalmologyViewModel : ViewModelBase
         foreach (var e in exams)
             EyeHistory.Add(new EyeExamRow(
                 e.DateShamsi ?? "—",
-                e.Od is null ? "—" : $"S {e.Od.Sphere} / C {e.Od.Cylinder} / IOP {e.Od.Iop?.ToString() ?? "—"}",
-                e.Os is null ? "—" : $"S {e.Os.Sphere} / C {e.Os.Cylinder} / IOP {e.Os.Iop?.ToString() ?? "—"}",
-                e.Findings));
+                e.Od is null ? "—" : $"S {e.Od.Sphere?.ToString() ?? "—"} / C {e.Od.Cylinder?.ToString() ?? "—"} / AX {e.Od.Axis?.ToString() ?? "—"} / VA {e.Od.Acuity ?? "—"} / IOP {e.Od.Iop?.ToString() ?? "—"}",
+                e.Os is null ? "—" : $"S {e.Os.Sphere?.ToString() ?? "—"} / C {e.Os.Cylinder?.ToString() ?? "—"} / AX {e.Os.Axis?.ToString() ?? "—"} / VA {e.Os.Acuity ?? "—"} / IOP {e.Os.Iop?.ToString() ?? "—"}",
+                e.Findings, e.VisualField, e.EyewearPrescription,
+                $"PD: {e.Pd?.ToString() ?? "—"} · دید رنگی: {e.ColorVision ?? "—"}"));
     }
 
     private static string? ReadSavedAdd(string? prescription, string side)
@@ -391,7 +400,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
         _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
         if (EyePatient?.Id == patient.Id)
         {
-            try { await LoadEyeHistoryAsync(populateForm: false); }
+            ResetExamForm();
+            try { await LoadEyeHistoryAsync(); }
             catch { _snackbar.Warning("معاینه ثبت شد، اما نوسازی سابقه ناموفق بود."); }
         }
         }

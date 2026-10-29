@@ -68,13 +68,15 @@ public class OphthalmologyViewModelTests
             os = new { sphere = -1m, cylinder = -0.5m, axis = 80, acuity = "20/20", iop = 18 },
             visualField = "میدان بینایی", eyewearPrescription = "OD: SPH -2 · CYL -1 · AXIS 90 · ADD +1.5\nOS: SPH -1 · CYL -0.5 · AXIS 80 · ADD +2\nPD: 62 mm"
         } } };
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = "1234" };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar(), confirmCopyPrescription: () => true) { EyePatientSearch = "1234" };
         await vm.SearchEyePatientCommand.ExecuteAsync(null);
         vm.EyePatient!.Id.Should().Be(7);
-        vm.VisualFieldText.Should().Be("میدان بینایی");
+        vm.VisualFieldText.Should().BeNull();
+        vm.OdIop.Should().BeNull(); vm.OdVisionIndex.Should().Be(-1);
+        vm.EyeHistory.Should().ContainSingle().Which.VisualField.Should().Be("میدان بینایی");
+        vm.CopyPreviousRefractionCommand.Execute(null);
         vm.OdAdd.Should().Be("+1.5"); vm.OsAdd.Should().Be("+2");
-        vm.OdVisionIndex.Should().Be(Array.IndexOf(vm.VisionOptions, "20/40"));
-        vm.EyeHistory.Should().ContainSingle();
+        vm.OdSphere.Should().Be("-2"); vm.OdIop.Should().BeNull(); vm.OdVisionIndex.Should().Be(-1);
     }
 
 
@@ -87,10 +89,12 @@ public class OphthalmologyViewModelTests
         api.CannedResponses["eye/exams?patientId=7"] = new { data = new[] { new { findings, dateShamsi = "1405/01/01" } } };
         var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = "1234" };
         await vm.SearchEyePatientCommand.ExecuteAsync(null);
-        vm.EyeFindings.Should().Be(findings);
+        vm.EyeFindings.Should().BeNull();
+        vm.EyeHistory.Should().ContainSingle().Which.Findings.Should().Be(findings);
+        vm.EyeFindings = "یافته جدید";
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
-        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("findings").GetString().Should().Be(findings);
-        vm.EyeFindings.Should().Be(findings);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("findings").GetString().Should().Be("یافته جدید");
+        vm.EyeFindings.Should().BeNull();
         vm.EyeHistory.Should().ContainSingle();
         api.Calls.Count(c => c.Method == "GET" && c.Endpoint == "eye/exams?patientId=7").Should().Be(2);
     }
@@ -168,6 +172,26 @@ public class OphthalmologyViewModelTests
         vm.OdAdd = "۱٫۲۳۴";
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
+    }
+
+    [Fact]
+    public async Task Refraction_copy_can_be_cancelled_and_successful_exam_clears_form()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id = 7, firstName = "بیمار", lastName = "تست", nationalCode = "1234", mobile = "" } } };
+        api.CannedResponses["eye/exams?patientId=7"] = new { data = new[] { new { od = new { sphere = -2m, iop = 23 }, findings = "یافته قدیمی" } } };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar(), confirmCopyPrescription: () => false) { EyePatientSearch = "1234" };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.OdSphere = "-1";
+        vm.CopyPreviousRefractionCommand.Execute(null);
+        vm.OdSphere.Should().Be("-1");
+        vm.OdIop = "15";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        vm.OdSphere.Should().BeNull();
+        vm.OdIop.Should().BeNull();
+        vm.EyeHistory.Should().ContainSingle().Which.Findings.Should().Be("یافته قدیمی");
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams").Should().Be(1);
     }
 
 }

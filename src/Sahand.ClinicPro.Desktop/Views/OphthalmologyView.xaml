@@ -83,6 +83,10 @@
                                 <TextBlock Text="در حال دریافت سابقهٔ بیمار…" Foreground="#176AC2" Margin="0,0,0,8"
                                            Visibility="{Binding IsEyeHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
                                 <StackPanel IsEnabled="{Binding IsEyeExamEnabled}">
+                                <TextBlock Text="این فرم برای معاینهٔ جدید است؛ اندازه‌های قبلی خودکار کپی نمی‌شوند. نسخهٔ قبلی را در سابقه بررسی کنید."
+                                           FontSize="10.5" Foreground="#617992" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <Button Command="{Binding CopyPreviousRefractionCommand}" IsEnabled="{Binding HasPreviousRefraction}"
+                                        Content="کپی مقادیر نسخهٔ قبلی پس از بررسی" HorizontalAlignment="Left" Margin="0,0,0,8" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -168,7 +172,7 @@
                                         <TextBlock Text="یافته‌ها و تشخیص" FontSize="10.5" Opacity="0.6" />
                                         <TextBox Text="{Binding EyeFindings, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
                                                  TextWrapping="Wrap" Height="60" />
-                                        <TextBlock Text="جزئیات تخصصی معاینهٔ قبلی به‌صورت متن در یافته‌ها نمایش داده می‌شوند."
+                                        <TextBlock Text="جزئیات معاینهٔ قبلی در بخش سابقه نمایش داده می‌شوند و خودکار وارد فرم جدید نمی‌شوند."
                                                    TextWrapping="Wrap" FontSize="10" Opacity="0.7" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
@@ -232,7 +236,7 @@
 
                                 <!-- ═══ سابقهٔ معاینه‌های چشم بیمار منتخب — چرخهٔ ۲۸ ═══
                                      با انتخاب بیمار، ۲۰ معاینهٔ آخر او از پرونده خوانده می‌شود؛
-                                     آخرین معاینه در فرم می‌نشیند و بقیه برای مرور روند درمان است -->
+                                     همهٔ معاینه‌ها برای مرورند و به‌صورت خودکار وارد فرم جدید نمی‌شوند -->
                                 <Border CornerRadius="12" BorderBrush="#B39DDB" BorderThickness="1" Padding="12" Margin="0,14,0,0"
                                         Background="#F3E5F5"
                                         Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
@@ -264,6 +268,10 @@
                                                                         <Run Text="   OS: " /><Run Text="{Binding OsSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                                     </TextBlock>
                                                                 </Grid>
+                                                                <TextBlock Text="{Binding AdditionalDetails}" FontSize="10.5" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding EyewearPrescription}" FontSize="10.5" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding VisualField, StringFormat='میدان بینایی: {0}'}" FontSize="10.5" TextWrapping="Wrap"
+                                                                           Visibility="{Binding VisualField, Converter={StaticResource StringToVisibility}}" />
                                                                 <TextBlock Text="{Binding Findings, Mode=OneWay, TargetNullValue=''}" FontSize="10.5" Opacity="0.7"
                                                                            TextWrapping="Wrap" Margin="0,3,0,0"
                                                                            Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
