@@ -35,4 +35,17 @@ public class ComplementarySurveyDesignerTests
         vm.OpenSurveyDesignerCommand.Execute(new SurveyRow { Id = 8, Title = "عنوان", QuestionsJson = questions, EditVersion = version });
         vm.IsSurveyDesignerOpen.Should().BeFalse();
     }
+    [Fact]
+    public async Task Failed_legacy_list_refresh_does_not_erase_previously_loaded_surveys()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = new[] { new { id = 8, title = "فهرست قبلی", editVersion = "v" } } };
+        var vm = new ComplementaryViewModel(api, new FakeSnackbar());
+        await vm.LoadSurveysAsync();
+        api.CannedResponses.Remove("surveys");
+        await vm.LoadSurveysAsync();
+        vm.Surveys.Should().ContainSingle().Which.Title.Should().Be("فهرست قبلی");
+        vm.IsBusy.Should().BeFalse();
+    }
+
 }

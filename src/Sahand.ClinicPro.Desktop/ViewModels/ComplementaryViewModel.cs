@@ -891,8 +891,10 @@ public partial class ComplementaryViewModel : ViewModelBase
         try
         {
             var response = await _api.GetAsync<SurveysResponse>("surveys");
+            if (response?.Data is null)
+            { _snackbar.Error(_api.LastError ?? "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."); return; }
             Surveys = new ObservableCollection<SurveyRow>(
-                (response?.Data ?? new List<SurveyDto>()).Select(s => new SurveyRow
+                response.Data.Select(s => new SurveyRow
                 {
                     Id = s.Id,
                     Title = s.Title,
@@ -904,6 +906,8 @@ public partial class ComplementaryViewModel : ViewModelBase
                     EditVersion = s.EditVersion
                 }));
         }
+        catch (Exception)
+        { _snackbar.Error("دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."); }
         finally
         {
             IsBusy = false;
@@ -1008,23 +1012,29 @@ public partial class ComplementaryViewModel : ViewModelBase
         var questionsJson = representation == _initialDesignerRepresentation ? _originalDesignerQuestions : representation;
         if (questionsJson?.Length > 200_000)
         { _snackbar.Error("حجم سؤال‌ها بیش از حد مجاز است."); return; }
+        if (IsBusy) return;
         IsBusy = true;
-        var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
+        try
         {
-            title = DesignerTitle.Trim(),
-            description = DesignerDescription,
-            questions = questionsJson,
-            isActive = (bool?)null,
-            editVersion = _designingSurveyVersion
-        });
-        IsBusy = false;
-        if (ok)
-        {
-            _snackbar.Success("نظرسنجی با سوالات جدید به‌روزرسانی شد");
-            IsSurveyDesignerOpen = false;
-            await LoadSurveysAsync();
+            var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
+            {
+                title = DesignerTitle.Trim(),
+                description = DesignerDescription,
+                questions = questionsJson,
+                isActive = (bool?)null,
+                editVersion = _designingSurveyVersion
+            });
+            if (ok)
+            {
+                _snackbar.Success("نظرسنجی با سوالات جدید به‌روزرسانی شد");
+                IsSurveyDesignerOpen = false;
+                await LoadSurveysAsync();
+            }
+            else _snackbar.Error((_api.LastError ?? "ذخیرهٔ نظرسنجی ناموفق بود") + "؛ پیش از تکرار فهرست را بررسی کنید.");
         }
-        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ نظرسنجی ناموفق بود");
+        catch (Exception)
+        { _snackbar.Error("پاسخ ذخیره دریافت نشد؛ پیش از تلاش مجدد فهرست را بررسی کنید."); }
+        finally { IsBusy = false; }
     }
 
     /// <summary>بستن طراح بدون ذخیره</summary>
