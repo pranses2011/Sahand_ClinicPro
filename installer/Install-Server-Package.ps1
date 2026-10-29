@@ -17,6 +17,12 @@ if (-not (Test-Path (Join-Path $source 'Sahand.ClinicPro.API.exe'))) {
     throw "فایل‌های سرور در پوشه '$source' پیدا نشد. ZIP کامل نسخه را استخراج کنید."
 }
 
+# هر بستهٔ تازه باید manifest خودبسندهٔ همین نسخه را همراه داشته باشد؛
+# در نبود آن قبل از متوقف‌کردن سرویس ادامه ندهید.
+if (-not (Test-Path (Join-Path $source 'Sahand.ClinicPro.API.deps.json'))) {
+    throw 'فهرست وابستگی‌های نسخهٔ جدید در بسته موجود نیست. بسته را دوباره دانلود کنید یا نصب کامل همین نسخه را اجرا کنید.'
+}
+
 Write-Host 'نصب سرور درمانگاه سهند' -ForegroundColor Cyan
 
 # نصب مجدد، تنظیمات و دیتابیس را دست‌نخورده نگه می‌دارد.
@@ -78,11 +84,9 @@ if (-not $UpdateMode -and $installedVersion) {
 }
 if ($effectiveUpdate) {
     # ═══ قانون طلایی به‌روزرسانی کم‌حجم ═══
-    # runtimeconfig.json و deps.json نصب خودبسنده هرگز بازنویسی نمی‌شوند؛
-    # بازنویسی runtimeconfig با نسخهٔ وابسته به فریم‌ورک همان چیزی بود که در
-    # آپدیت ۲.۲۸.۲ سرور را با خطای «No frameworks were found» از کار انداخت.
-    # Runtime موجود (hostfxr/coreclr و همراهانش) میزبان فایل‌های تازه است.
-    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json Sahand.ClinicPro.API.runtimeconfig.json Sahand.ClinicPro.API.deps.json /XD Logs /NFL /NDL /NJH /NJS
+    # runtimeconfig نصب موجود حفظ می‌شود؛ deps خودبسندهٔ نسخهٔ جدید
+    # همراه بسته است و باید جایگزین شود تا وابستگی‌های تازه شناسایی شوند.
+    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json Sahand.ClinicPro.API.runtimeconfig.json /XD Logs /NFL /NDL /NJH /NJS
 
     # ترمیم نصب‌هایی که با آپدیت خراب ۲.۲۸.۲ آسیب دیده‌اند: اگر runtimeconfig
     # فعلی «وابسته به فریم‌ورک» شده باشد، نسخهٔ خودبسندهٔ حداقلی برگردانده

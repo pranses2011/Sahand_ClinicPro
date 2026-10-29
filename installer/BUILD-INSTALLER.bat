@@ -33,6 +33,8 @@ for %%F in (01-login.png 11-attendance-devices.png 14-license.png install-api-co
 echo [1.5/6] انتشار سبک کلاینت (برای حالت «فقط فایل‌های به‌روزشده» در نصب کامل)...
 dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\desktop-update
 if errorlevel 1 goto :fail
+copy /y publish\desktop\Sahand.ClinicPro.Desktop.deps.json publish\desktop-update\ >nul
+if errorlevel 1 goto :fail
 
 echo [2/6] ساخت EXE نصب کلاینت...
 set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
@@ -72,10 +74,11 @@ if errorlevel 1 goto :fail
 if exist dist\SahandClinicPro-ServerUpdate-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%
 mkdir dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server
 robocopy publish\server-update dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server /E >nul
-rem فایل‌های میزبان Runtime نباید روی نصب خودبسنده بازنویسی شوند
-del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.runtimeconfig.json 2>nul
-del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.deps.json 2>nul
 if errorlevel 8 goto :fail
+rem runtimeconfig نصب موجود حفظ، ولی deps خودبسنده نسخه جدید جایگزین می‌شود
+del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.runtimeconfig.json 2>nul
+copy /y publish\server\Sahand.ClinicPro.API.deps.json dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\ >nul
+if errorlevel 1 goto :fail
 copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
 copy /y installer\Enable-RestorePermission.ps1 dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
 copy /y installer\Enable-RestorePermission.bat dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul

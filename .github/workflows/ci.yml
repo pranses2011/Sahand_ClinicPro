@@ -189,6 +189,10 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: آزمون اجرای به‌روزرسانی خودبسنده با وابستگی جدید
+        shell: pwsh
+        run: ./scripts/test-update-host.ps1
+
       - name: بازیابی و ساخت پروژهٔ تست دسکتاپ
         run: dotnet build tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj -c Release
 
