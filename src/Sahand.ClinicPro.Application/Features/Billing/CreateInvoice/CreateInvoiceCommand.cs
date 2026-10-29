@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -119,7 +119,10 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
     }
 
     /// <summary>پیش‌نمایش بدون درج فاکتور، سند یا تغییر پذیرش.</summary>
-    public async Task<Result<InvoicePreviewDto>> Handle(PreviewInvoiceQuery request, CancellationToken cancellationToken)
+    Task<Result<InvoicePreviewDto>> IRequestHandler<PreviewInvoiceQuery, Result<InvoicePreviewDto>>.Handle(PreviewInvoiceQuery request, CancellationToken cancellationToken)
+        => PreviewAsync(request, cancellationToken);
+
+    public async Task<Result<InvoicePreviewDto>> PreviewAsync(PreviewInvoiceQuery request, CancellationToken cancellationToken)
     {
         var calculation = await CalculateAsync(request.Dto, preview: true, cancellationToken);
         if (calculation.IsFailure) return Result<InvoicePreviewDto>.Failure(calculation.Error);

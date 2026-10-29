@@ -26,7 +26,7 @@ public class InvoicePreviewSafetyTests
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var item = new InvoiceItemDto(null, "خدمت", 1, 101, 10, null, 0);
         var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 5, new() { item });
-        var quote = await handler.Handle(new PreviewInvoiceQuery(dto), default);
+        var quote = await handler.PreviewAsync(new PreviewInvoiceQuery(dto), default);
         quote.IsSuccess.Should().BeTrue();
         quote.Value.SubTotal.Should().Be(101);
         quote.Value.DiscountAmount.Should().Be(10);
