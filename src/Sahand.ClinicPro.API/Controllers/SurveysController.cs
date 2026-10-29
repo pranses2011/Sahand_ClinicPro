@@ -153,10 +153,18 @@ public class SurveysController : ApiBaseController
     [HasPermission("surveys.view")] // ممیزی چرخه ۱۲ — ثبت پاسخ توسط پرسنل/کیوسک
 public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitResponseRequest request)
     {
-        var exists = await _unitOfWork.Repository<Survey>().QueryableNoTracking
-            .AnyAsync(s => s.Id == id && s.IsActive);
-        if (!exists)
+        var survey = await _unitOfWork.Repository<Survey>().QueryableNoTracking
+            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive && !s.IsDeleted);
+        if (survey is null)
             return BadRequest(ApiResponse<object>.Failure("نظرسنجی فعال یافت نشد"));
+        string? answerSnapshot = null;
+        if (request.Answers is not null)
+        {
+            if (!string.Equals(survey.Questions, request.QuestionsSnapshot, StringComparison.Ordinal))
+                return Conflict(ApiResponse<object>.Failure("سؤال‌های نظرسنجی تغییر کرده‌اند؛ فهرست را تازه‌سازی و پاسخ را دوباره وارد کنید"));
+            if (!TryBuildAnswerSnapshot(survey.Questions, request.Answers, out answerSnapshot))
+                return BadRequest(ApiResponse<object>.Failure("پاسخ‌ها با سؤال‌های نظرسنجی سازگار نیستند یا کامل وارد نشده‌اند"));
+        }
 
         var response = new SurveyResponse
         {
@@ -166,12 +174,54 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
             DoctorId = request.DoctorId,
             Rating = request.Rating is >= 1 and <= 5 ? request.Rating : null,
             Comments = request.Comments?.Trim(),
+            Answers = answerSnapshot,
             SubmittedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
         await _unitOfWork.Repository<SurveyResponse>().AddAsync(response);
         await _unitOfWork.SaveEntitiesAsync();
         return Ok(ApiResponse<object>.SuccessMessage("پاسخ شما ثبت شد — سپاس از همراهی"));
+    }
+
+    // عکس سؤال و پاسخ همراه هم ذخیره می‌شود؛ ویرایش بعدی فرم معنای
+    // پاسخ تاریخی را عوض نمی‌کند. درخواست‌های قدیمی بدون Answers سازگارند.
+    private static bool TryBuildAnswerSnapshot(string? questions, List<string?> answers, out string? snapshot)
+    {
+        snapshot = null;
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(string.IsNullOrWhiteSpace(questions) ? "[]" : questions);
+            var root = doc.RootElement;
+            if (root.ValueKind != System.Text.Json.JsonValueKind.Array || root.GetArrayLength() != answers.Count || answers.Count > 100) return false;
+            var saved = new List<object>();
+            var index = 0;
+            foreach (var q in root.EnumerateArray())
+            {
+                if (q.ValueKind != System.Text.Json.JsonValueKind.Object) return false;
+                if (!q.TryGetProperty("text", out var text) && !q.TryGetProperty("q", out text)) return false;
+                if (text.ValueKind != System.Text.Json.JsonValueKind.String || string.IsNullOrWhiteSpace(text.GetString())) return false;
+                var type = q.TryGetProperty("type", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String ? t.GetString() : "rating";
+                var answer = answers[index++]?.Trim();
+                if (string.IsNullOrEmpty(answer) || answer.Length > 2000) return false;
+                if (type == "rating" && answer is not ("1" or "2" or "3" or "4" or "5")) return false;
+                if (type == "choice")
+                {
+                    if (!q.TryGetProperty("options", out var options)) return false;
+                    var valid = options.ValueKind switch
+                    {
+                        System.Text.Json.JsonValueKind.Array => options.EnumerateArray().Any(x => x.ValueKind == System.Text.Json.JsonValueKind.String && x.GetString()?.Trim() == answer),
+                        System.Text.Json.JsonValueKind.String => (options.GetString() ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Contains(answer),
+                        _ => false
+                    };
+                    if (!valid) return false;
+                }
+                else if (type is not ("rating" or "text")) return false;
+                saved.Add(new { text = text.GetString(), type, answer });
+            }
+            snapshot = System.Text.Json.JsonSerializer.Serialize(saved);
+            return true;
+        }
+        catch (System.Text.Json.JsonException) { return false; }
     }
 
     /// <summary>
@@ -250,7 +300,10 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
                     : PersianDateHelper.ToShamsi(r.CreatedAt)))
             .ToList();
 
-        var result = new SurveyResultsDto(summary, distribution, perDoctor.ToList(), comments);
+        var recentAnswers = responses.Where(r => !string.IsNullOrWhiteSpace(r.Answers))
+            .OrderByDescending(r => r.SubmittedAt ?? r.CreatedAt).Take(20)
+            .Select(r => new SurveyAnswerDto(r.Id, PersianDateHelper.ToShamsi(r.SubmittedAt ?? r.CreatedAt), r.Answers!)).ToList();
+        var result = new SurveyResultsDto(summary, distribution, perDoctor.ToList(), comments, recentAnswers);
         return Ok(ApiResponse<object>.Success(result));
     }
 
@@ -344,7 +397,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
 
     /// <summary>درخواست ثبت پاسخ</summary>
     public record SubmitResponseRequest(long? PatientId, long? VisitId, long? DoctorId,
-        byte? Rating, string? Comments);
+        byte? Rating, string? Comments, List<string?>? Answers = null, string? QuestionsSnapshot = null);
 
     /// <summary>درخواست ارسال لینک — نشانی پایه اختیاری لینک نظرسنجی (پیش‌فرض دامنه محصول)</summary>
     public record SendLinksRequest(string? BaseUrl);
@@ -362,9 +415,13 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
     public record SurveyCommentDto(long Id, string PatientName, string DoctorName,
         byte? Rating, string Comment, string SubmittedShamsi);
 
+    /// <summary>پاسخ‌های سؤال‌به‌سؤال، همراه عکس متن پرسش در زمان ثبت.</summary>
+    public record SurveyAnswerDto(long Id, string SubmittedShamsi, string Answers);
+
     /// <summary>بسته کامل نتایج</summary>
     public record SurveyResultsDto(SurveyResultsSummaryDto Summary,
         List<StarDistributionDto> StarDistribution,
         List<DoctorRatingDto> DoctorRatings,
-        List<SurveyCommentDto> RecentComments);
+        List<SurveyCommentDto> RecentComments,
+        List<SurveyAnswerDto> RecentAnswers);
 }

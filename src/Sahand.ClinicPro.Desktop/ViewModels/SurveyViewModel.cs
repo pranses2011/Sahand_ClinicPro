@@ -107,6 +107,18 @@ public partial class SurveyQuestionItem : ObservableObject
 
 }
 
+/// <summary>یک پرسش برای ثبت پاسخ داخلی توسط پرسنل.</summary>
+public partial class SurveyAnswerItem : ObservableObject
+{
+    public string Text { get; init; } = string.Empty;
+    public string TypeKey { get; init; } = "rating";
+    public string[] Options { get; init; } = Array.Empty<string>();
+    [ObservableProperty] private string? _answer;
+}
+
+/// <summary>پاسخ تاریخی به همراه متن پرسش هنگام ثبت.</summary>
+public record SurveyAnswerHistoryRow(string SubmittedShamsi, string Details);
+
 /// <summary>ستون توزیع ستاره‌ها — ارتفاع نوار از پیش مقیاس‌شده</summary>
 public record StarBar(int Star, int Count, double BarHeight, string StarText);
 
@@ -178,6 +190,71 @@ public partial class SurveyViewModel : ViewModelBase
     /// <summary>سوالات سازنده پویا</summary>
     public ObservableCollection<SurveyQuestionItem> Questions { get; } = new();
 
+    private SurveyListRow? _respondingSurvey;
+    [ObservableProperty] private bool _isResponseFormOpen;
+    [ObservableProperty] private string _responseSurveyTitle = string.Empty;
+    [ObservableProperty] private string? _responseComment;
+    [ObservableProperty] private int _responseRatingIndex = -1;
+    public string[] ResponseRatingOptions { get; } = { "۱", "۲", "۳", "۴", "۵" };
+    public ObservableCollection<SurveyAnswerItem> ResponseAnswers { get; } = new();
+    public ObservableCollection<SurveyAnswerHistoryRow> AnswerHistory { get; } = new();
+
+    /// <summary>ساخت فرم پاسخ برای نظرسنجی انتخاب‌شده، به صورت ناشناس.</summary>
+    [RelayCommand]
+    private void OpenResponseForm()
+    {
+        var survey = SelectedSurvey;
+        if (survey is null || !survey.IsActive)
+        { _snackbar.Error("یک نظرسنجی فعال انتخاب کنید"); return; }
+        if (!SurveyQuestionItem.TryParseList(survey.QuestionsJson, out var questions))
+        { _snackbar.Error("ساختار سؤال‌های این نظرسنجی قابل پاسخ‌گویی در این فرم نیست"); return; }
+        _respondingSurvey = survey;
+        ResponseSurveyTitle = survey.Title;
+        ResponseComment = null; ResponseRatingIndex = -1;
+        ResponseAnswers.Clear();
+        foreach (var q in questions)
+            ResponseAnswers.Add(new SurveyAnswerItem { Text = q.Text, TypeKey = q.TypeKey,
+                Options = q.TypeKey switch
+                {
+                    "rating" => new[] { "1", "2", "3", "4", "5" },
+                    "choice" => q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                    _ => Array.Empty<string>()
+                } });
+        IsResponseFormOpen = true;
+    }
+
+    [RelayCommand]
+    private void CancelResponseForm() { IsResponseFormOpen = false; _respondingSurvey = null; }
+
+    /// <summary>ثبت پاسخ‌های یک فرم به همراه امتیاز کلی و نظر اختیاری.</summary>
+    [RelayCommand]
+    private async Task SubmitSurveyResponseAsync()
+    {
+        var survey = _respondingSurvey;
+        if (survey is null) return;
+        if (ResponseAnswers.Any(a => string.IsNullOrWhiteSpace(a.Answer) || a.Answer.Trim().Length > 2000 ||
+            (a.TypeKey != "text" && !a.Options.Contains(a.Answer.Trim()))))
+        { _snackbar.Error("پاسخ همهٔ سؤال‌ها را به‌درستی وارد کنید (حداکثر ۲۰۰۰ نویسه)"); return; }
+        if (ResponseAnswers.Count == 0 && ResponseRatingIndex < 0 && string.IsNullOrWhiteSpace(ResponseComment))
+        { _snackbar.Error("حداقل یک امتیاز یا نظر وارد کنید"); return; }
+        IsBusy = true;
+        try
+        {
+            var ok = await _api.PostAsync($"surveys/{survey.Id}/responses", new
+            {
+                patientId = (long?)null, visitId = (long?)null, doctorId = (long?)null,
+                rating = ResponseRatingIndex is >= 0 and < 5 ? (byte?)(ResponseRatingIndex + 1) : null,
+                comments = ResponseComment, questionsSnapshot = survey.QuestionsJson,
+                answers = ResponseAnswers.Select(a => a.Answer?.Trim()).ToArray()
+            });
+            if (!ok) { _snackbar.Error(_api.LastError ?? "ثبت پاسخ ناموفق بود"); return; }
+            _snackbar.Success($"پاسخ ناشناس نظرسنجی «{survey.Title}» ثبت شد");
+            if (ReferenceEquals(_respondingSurvey, survey)) CancelResponseForm();
+            await LoadSurveysAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
     /* ─── تب ۲: نتایج و آمار ─── */
 
     /// <summary>نظرسنجی انتخاب‌شده برای مشاهده نتایج</summary>
@@ -231,7 +308,7 @@ public partial class SurveyViewModel : ViewModelBase
     private void ResetResults()
     {
         TotalResponsesText = AverageText = Last30Text = "—";
-        Stars.Clear(); DoctorRatings.Clear(); Comments.Clear();
+        Stars.Clear(); DoctorRatings.Clear(); Comments.Clear(); AnswerHistory.Clear();
     }
 
     /* ─── تب ۱: فرمان‌ها ─── */
@@ -502,6 +579,26 @@ public partial class SurveyViewModel : ViewModelBase
                 DoctorRatings.Add(new DoctorRatingRow(d.DoctorId, d.DoctorName,
                     d.ResponseCount, d.Average.ToString("0.##"), 100.0 * d.Average / maxDoctor));
 
+            AnswerHistory.Clear();
+            foreach (var item in data.RecentAnswers ?? new())
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(item.Answers);
+                    if (doc.RootElement.ValueKind != JsonValueKind.Array) continue;
+                    var lines = new List<string>();
+                    foreach (var answer in doc.RootElement.EnumerateArray())
+                    {
+                        if (answer.ValueKind != JsonValueKind.Object ||
+                            !answer.TryGetProperty("text", out var text) || text.ValueKind != JsonValueKind.String ||
+                            !answer.TryGetProperty("answer", out var value) || value.ValueKind != JsonValueKind.String) continue;
+                        lines.Add($"{text.GetString()}: {value.GetString()}");
+                    }
+                    if (lines.Count > 0) AnswerHistory.Add(new SurveyAnswerHistoryRow(item.SubmittedShamsi, string.Join(Environment.NewLine, lines)));
+                }
+                catch (JsonException) { /* پاسخ قدیمی یا ناسازگار نمایش داده نمی‌شود */ }
+            }
+
             // نظرات آزاد
             Comments.Clear();
             foreach (var c in data.RecentComments)
@@ -589,6 +686,7 @@ public partial class SurveyViewModel : ViewModelBase
         public List<StarDto> StarDistribution { get; set; } = new();
         public List<DoctorRatingDto> DoctorRatings { get; set; } = new();
         public List<CommentDto> RecentComments { get; set; } = new();
+        public List<AnswerHistoryDto>? RecentAnswers { get; set; } = new();
     }
 
     private sealed class ResultsSummary
@@ -610,6 +708,12 @@ public partial class SurveyViewModel : ViewModelBase
         public string DoctorName { get; set; } = string.Empty;
         public int ResponseCount { get; set; }
         public double Average { get; set; }
+    }
+
+    private sealed class AnswerHistoryDto
+    {
+        public string SubmittedShamsi { get; set; } = string.Empty;
+        public string Answers { get; set; } = string.Empty;
     }
 
     private sealed class CommentDto

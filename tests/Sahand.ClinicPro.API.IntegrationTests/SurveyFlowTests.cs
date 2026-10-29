@@ -243,6 +243,39 @@ public class SurveyFlowTests
         }
     }
 
+    [Fact]
+    public async Task Structured_answers_are_validated_and_keep_original_question_text()
+    {
+        var client = await LoginAsync();
+        const string questions = "[{\"text\":\"کیفیت؟\",\"type\":\"rating\"},{\"text\":\"انتخاب؟\",\"type\":\"choice\",\"options\":[\"الف\",\"ب\"]},{\"text\":\"توضیح؟\",\"type\":\"text\"}]";
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "پاسخ پویا", questions, surveyType = 1 });
+        var created = await ReadAsync<JsonElementPacket>(create);
+        var surveyId = created.Data.GetProperty("surveyId").GetInt64();
+
+        var invalid = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "6", "الف", "متن" } });
+        invalid.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var ok = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "5", "ب", "پاسخ آزاد" }, rating = 4 });
+        ok.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        const string changed = "[{\"text\":\"پرسش تغییر یافته\",\"type\":\"text\"}]";
+        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{surveyId}", new { title = "پاسخ پویا", questions = changed, surveyType = 1 });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+        var stale = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "5", "ب", "متن" } });
+        stale.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var results = await client.GetAsync($"/api/v1/surveys/{surveyId}/results");
+        var payload = await ReadAsync<JsonElementPacket>(results);
+        var recent = payload.Data.GetProperty("recentAnswers");
+        recent.GetArrayLength().Should().Be(1);
+        using var snapshot = JsonDocument.Parse(recent[0].GetProperty("answers").GetString()!);
+        snapshot.RootElement[0].GetProperty("text").GetString().Should().Be("کیفیت؟");
+        snapshot.RootElement[1].GetProperty("answer").GetString().Should().Be("ب");
+        snapshot.RootElement[2].GetProperty("answer").GetString().Should().Be("پاسخ آزاد");
+    }
+
     /* ─── کمکی‌ها ─── */
 
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>

@@ -53,4 +53,34 @@ public class SurveyViewModelTests
         vm.AverageText.Should().Be("—");
         vm.ResultsMessage.Should().Contain("هنوز دریافت نشده");
     }
+    [Fact]
+    public async Task Internal_response_submits_snapshot_and_answers_anonymously()
+    {
+        const string questions = "[{\"text\":\"امتیاز؟\",\"type\":\"rating\"},{\"text\":\"شرح؟\",\"type\":\"text\"}]";
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var vm = new SurveyViewModel(api, new FakeSnackbar()) { SelectedSurvey = Row(9, active: true, questions: questions) };
+        vm.OpenResponseFormCommand.Execute(null);
+        vm.IsResponseFormOpen.Should().BeTrue();
+        vm.ResponseAnswers[0].Answer = "5";
+        vm.ResponseAnswers[1].Answer = "خوب";
+        await vm.SubmitSurveyResponseCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("patientId").ValueKind.Should().Be(JsonValueKind.Null);
+        body.GetProperty("questionsSnapshot").GetString().Should().Be(questions);
+        body.GetProperty("answers")[1].GetString().Should().Be("خوب");
+        vm.IsResponseFormOpen.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Internal_response_rejects_missing_answer()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var vm = new SurveyViewModel(api, new FakeSnackbar()) { SelectedSurvey = Row(9, active: true, questions: "[{\"text\":\"امتیاز؟\",\"type\":\"rating\"}]") };
+        vm.OpenResponseFormCommand.Execute(null);
+        await vm.SubmitSurveyResponseCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "surveys/9/responses");
+    }
+
 }
