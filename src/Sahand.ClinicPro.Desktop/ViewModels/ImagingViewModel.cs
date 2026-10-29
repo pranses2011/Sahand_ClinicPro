@@ -168,6 +168,7 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>آیا درخواستی انتخاب شده</summary>
     public bool HasSelectedImagingOrder => SelectedImagingOrder is not null;
 
+    [ObservableProperty] private bool _hasUnsupportedReportDetails;
     [ObservableProperty] private bool _isSavingImagingReport;
     /// <summary>زمان ثبت گزارش، ویرایش و انتخاب از صف قفل می‌شود.</summary>
     public bool CanEditImagingReport => !IsSavingImagingReport;
@@ -724,9 +725,13 @@ public partial class ImagingViewModel : ViewModelBase
         DoseCtdi = null; DoseDlp = null; CriticalFinding = false;
         CriticalNotifiedTo = null; ReportComparison = ComparisonOptions[0];
         ReportStatus = "نهایی و امضاشده"; Measurements.Clear();
+        HasUnsupportedReportDetails = !SupportedReportDetails(value.ReportDetails);
+        ReportMessage = HasUnsupportedReportDetails
+            ? "جزئیات گزارش با این نسخه سازگار نیست؛ برای جلوگیری از حذف اطلاعات، ذخیره غیرفعال است."
+            : value.Status is 4 or 5 ? "گزارش نهایی یا لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود." : string.Empty;
         // هر مطالعه چک‌لیست مستقل دارد؛ علامت‌های بیمار قبلی نباید منتقل شود.
         BuildSafety();
-        if (!string.IsNullOrWhiteSpace(value.ReportDetails))
+        if (!HasUnsupportedReportDetails && !string.IsNullOrWhiteSpace(value.ReportDetails))
         {
             try
             {
@@ -755,6 +760,52 @@ public partial class ImagingViewModel : ViewModelBase
         OnPropertyChanged(nameof(DoseHigh));
         ViewerMessage = $"{value.ModalityFa} {value.BodyPart} — {value.PatientName}";
         _ = LoadImagingFilesAsync();
+    }
+
+    // از بازنویسی دادهٔ نسخه‌های دیگر که این ویرایشگر قادر به نگهداری آن
+    // نیست جلوگیری می‌کند؛ گزارش اصلی و چک‌لیست همچنان قابل مشاهده‌اند.
+    private bool SupportedReportDetails(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return true;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object) return false;
+            var properties = doc.RootElement.EnumerateObject().ToList();
+            if (properties.Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != properties.Count) return false;
+            foreach (var p in properties)
+            {
+                var v = p.Value;
+                switch (p.Name)
+                {
+                    case "ctdi": case "dlp":
+                        if (v.ValueKind is not (JsonValueKind.Number or JsonValueKind.Null)) return false;
+                        break;
+                    case "comparison":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String || !ComparisonOptions.Contains(v.GetString()))) return false;
+                        break;
+                    case "status":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String ||
+                            (v.GetString() != "نهایی" && !ReportStatusOptions.Contains(v.GetString())))) return false;
+                        break;
+                    case "criticalTo":
+                        if (v.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return false;
+                        break;
+                    case "criticalMethod":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String || !CriticalMethodOptions.Contains(v.GetString()))) return false;
+                        break;
+                    case "critical":
+                        if (v.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return false;
+                        break;
+                    case "measurements": case "safety":
+                        if (v.ValueKind != JsonValueKind.Array || v.EnumerateArray().Any(x => x.ValueKind != JsonValueKind.String)) return false;
+                        break;
+                    default: return false;
+                }
+            }
+            return true;
+        }
+        catch (JsonException) { return false; }
     }
 
     /// <summary>بارگذاری فایل‌های درخواست انتخاب‌شده</summary>
@@ -825,6 +876,7 @@ public partial class ImagingViewModel : ViewModelBase
         if (!CanEditImagingReport) return;
         var order = SelectedImagingOrder;
         if (order is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
+        if (HasUnsupportedReportDetails) { _snackbar.Error("ساختار جزئیات گزارش پشتیبانی نمی‌شود؛ ذخیره برای حفاظت از داده متوقف شد."); return; }
         if (order.Status is 4 or 5) { _snackbar.Error("گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود."); return; }
         if (isFinal && string.IsNullOrWhiteSpace(ReportFindings) && string.IsNullOrWhiteSpace(ReportImpression))
         { _snackbar.Error("برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"); return; }

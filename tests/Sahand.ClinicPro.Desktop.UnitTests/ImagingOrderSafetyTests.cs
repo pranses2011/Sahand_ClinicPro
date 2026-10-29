@@ -168,4 +168,22 @@ public class ImagingOrderSafetyTests
         api.Calls.Should().NotContain(c => c.Method == "PUT-bool" && c.Endpoint == "imaging/reports");
     }
 
+    [Theory]
+    [InlineData("{invalid")]
+    [InlineData("{\"futureField\":\"data\"}")]
+    [InlineData("{\"safety\":[123]}")]
+    public async Task Unsupported_report_details_cannot_be_overwritten(string details)
+    {
+        var api = new FakeApiClient();
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        var order = Order(1, "MRI");
+        order.ReportDetails = details;
+        vm.SelectedImagingOrder = order;
+        vm.HasUnsupportedReportDetails.Should().BeTrue();
+        vm.ReportFindings = "یافته";
+        await vm.SaveReportCommand.ExecuteAsync(true);
+        api.Calls.Should().NotContain(c => c.Method == "PUT-bool" && c.Endpoint == "imaging/reports");
+        order.ReportDetails.Should().Be(details);
+    }
+
 }
