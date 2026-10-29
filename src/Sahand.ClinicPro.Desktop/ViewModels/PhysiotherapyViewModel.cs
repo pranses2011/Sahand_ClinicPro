@@ -131,7 +131,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private int _totalSessions;
     partial void OnTotalSessionsChanged(int value) => OnPropertyChanged(nameof(CourseProgress));
     /// <summary>شمارهٔ این جلسه</summary>
-    public int SessionNumber => History.Count == 0 ? 1 : History.Max(s => s.SessionNumber) + 1;
+    public int SessionNumber => History.Count == 0 ? 1 :
+        History.Max(s => s.SessionNumber) == int.MaxValue ? int.MaxValue : History.Max(s => s.SessionNumber) + 1;
     /// <summary>درصد پیشرفت دوره</summary>
     public double CourseProgress => TotalSessions <= 0 ? 0 : Math.Min(100, (double)(SessionNumber - 1) / TotalSessions * 100);
     /// <summary>پروتکل فعال</summary>

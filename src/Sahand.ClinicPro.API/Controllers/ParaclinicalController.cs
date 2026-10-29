@@ -323,7 +323,9 @@ public class ParaclinicalController : ApiBaseController
         var sessions = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
             .QueryableNoTracking
             .Where(e => e.PatientId == patientId && !e.IsDeleted)
-            .OrderByDescending(e => e.Id)
+            // آخرین شماره‌ها، نه صرفاً آخرین شناسه‌ها؛ سابقهٔ قدیمیِ
+            // نامرتب نباید سبب پیشنهاد شمارهٔ تکراری شود.
+            .OrderByDescending(e => e.SessionNumber).ThenByDescending(e => e.Id)
             .Take(20)
             .Select(e => new
             {
