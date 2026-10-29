@@ -17,8 +17,8 @@ public static class VisitEditVersion
             v.PrimaryDiagnosisId, v.TreatmentPlan, v.FollowUpDate, v.FamilyHistory, v.SocialHistory,
             v.ReviewOfSystems, v.SecondaryDiagnoses, v.FollowUpInstructions, v.RowVersion,
             vital = vital is null ? null : new { vital.Id, vital.PatientId, vital.MeasuredAt, vital.BloodPressureSystolic,
-                vital.BloodPressureDiastolic, vital.HeartRate, vital.Temperature, vital.OxygenSaturation,
-                vital.Weight, vital.Height, vital.BloodSugar, vital.Bmi, vital.RowVersion }
+                vital.BloodPressureDiastolic, vital.HeartRate, vital.RespiratoryRate, vital.Temperature, vital.OxygenSaturation,
+                vital.Weight, vital.Height, vital.BloodSugar, vital.Bmi, vital.HeadCircumference, vital.MeasuredBy, vital.RowVersion }
         });
         return Convert.ToHexString(SHA256.HashData(bytes));
     }
