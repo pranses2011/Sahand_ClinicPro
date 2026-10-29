@@ -1612,6 +1612,10 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
         if (Inquiry is { IsDone: true, IsEligible: false })
         { _snackbar.Error("استعلام بیمه تأیید نشده است؛ پیش از ثبت مجدداً استعلام کنید یا بیمهٔ آزاد را انتخاب کنید."); return false; }
+        if (ReceptionModeIndex == 0 && ApplyInsuranceToDoctorVisits && Inquiry is { IsDone: true, IsEligible: true } &&
+            InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count &&
+            InsuranceCompanies[InsuranceIndex] is { Id: > 0, IsContracted: true } company && CoveragePercent != company.CoveragePercent)
+        { _snackbar.Error("درصد استعلام با درصد قابل محاسبه در فاکتور یکسان نیست؛ پیش از ثبت با مسئول بیمه یا صندوق بررسی کنید."); return false; }
         if (ReceptionModeIndex == 1)
         {
             if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }

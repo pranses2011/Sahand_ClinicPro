@@ -274,4 +274,19 @@ public class ReceptionsViewModelTests
         vm.IsSearchingPatient.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Doctor_inquiry_percent_that_billing_cannot_reproduce_blocks_reception()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] { new { id = 5, name = "بیمه", isContracted = true, coveragePercent = 60m } } };
+        api.CannedResponses["insurance/inquiries"] = new { data = new { isEligible = true, coveragePercent = 90m } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", "بیمه", null, null, 5);
+        vm.SelectedDoctor = vm.Doctors.First();
+        await vm.VerifyInsuranceCommand.ExecuteAsync(null);
+        vm.CoveragePercent.Should().Be(90m);
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+    }
+
 }
