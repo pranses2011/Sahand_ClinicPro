@@ -34,6 +34,9 @@ public class ApiClient : IApiClient
     /// <summary>شناسه شعبه جاری — با هر درخواست در هدر X-Branch-Id ارسال می‌شود (گام U17)</summary>
     public long? BranchId { get; set; }
 
+    /// <summary>نشانی دقیق سرور برای جداسازی بازیابی‌های محلی.</summary>
+    public string PaymentRecoveryServer => _http.BaseAddress?.AbsoluteUri ?? throw new InvalidOperationException("نشانی سرور پرداخت مشخص نیست.");
+
     /// <summary>رویداد انقضای نشست</summary>
     public event EventHandler? SessionExpired;
 

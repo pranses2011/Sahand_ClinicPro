@@ -28,6 +28,7 @@
     <PackageVersion Include="Riok.Mapperly" Version="3.6.0" />
     <!-- چرخهٔ ۶۹ (فاز ۳ / F-01): تولید QR برای چاپ نسخه و برچسب نمونه -->
     <PackageVersion Include="QRCoder" Version="1.4.3" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <!-- انتزاع‌های DI برای کلاس‌های کتابخانه‌ای -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />

@@ -40,6 +40,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <!-- چرخهٔ ۶۹ (فاز ۳ / F-01/F-02): تولید QR چاپی — نسخه (راستی‌آزمایی) و برچسب نمونه -->
     <PackageReference Include="QRCoder" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
   </ItemGroup>
 
   <ItemGroup>
