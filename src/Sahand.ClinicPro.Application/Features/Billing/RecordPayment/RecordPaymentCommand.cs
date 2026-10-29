@@ -61,11 +61,11 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         var dto = request.Dto;
 
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
-        if (patient is null)
+        if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
         var invoice = await _unitOfWork.Repository<Invoice>().GetByIdAsync(dto.InvoiceId!.Value, cancellationToken);
-        if (invoice is null)
+        if (invoice is null || invoice.IsDeleted)
             return Result<long>.Failure(Error.NotFound("فاکتور", dto.InvoiceId.Value));
 
         if (invoice.PatientId != dto.PatientId)

@@ -78,7 +78,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         var dto = request.Dto;
 
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
-        if (patient is null)
+        if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
         if (dto.ReceptionId is long receptionId)

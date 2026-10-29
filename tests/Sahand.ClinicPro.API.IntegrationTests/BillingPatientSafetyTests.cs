@@ -41,6 +41,9 @@ public class BillingPatientSafetyTests
         (await handler.Handle(new(badMethod), default)).IsSuccess.Should().BeFalse();
         invoice.Status = InvoiceStatus.Cancelled;
         (await handler.Handle(new(new RecordPaymentDto(invoice.Id, owner.Id, 100, PaymentMethod.Cash)), default)).IsSuccess.Should().BeFalse();
+        invoice.Status = InvoiceStatus.Issued;
+        invoice.IsDeleted = true;
+        (await handler.Handle(new(new RecordPaymentDto(invoice.Id, owner.Id, 100, PaymentMethod.Cash)), default)).IsSuccess.Should().BeFalse();
         db.Set<Payment>().Should().BeEmpty();
         invoice.PaidAmount.Should().Be(0);
         invoice.RemainingAmount.Should().Be(100);
