@@ -1752,6 +1752,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         if (IsSubmitting || !ValidateReception()) return;
         IsSubmitting = true;
+        var receptionBranch = (_api as ApiClient)?.BranchId;
         try
         {
 
@@ -1866,6 +1867,11 @@ public partial class ReceptionsViewModel : ViewModelBase
             {
                 paymentFailed = true;
                 _snackbar.Warning($"فاکتور صادر شد، اما مبلغ نهایی تأیید نشد یا با مبلغ تأییدشده تفاوت دارد؛ پرداخت ثبت نشد. شناسه فاکتور {invoice.Data} را در صندوق بررسی کنید.");
+            }
+            else if ((_api as ApiClient)?.BranchId != receptionBranch)
+            {
+                paymentFailed = true;
+                _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
             }
             else
             {

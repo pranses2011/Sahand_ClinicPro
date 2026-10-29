@@ -626,6 +626,7 @@ public partial class InvoiceFormViewModel : ObservableObject
         var received = ReceivedAmount;
         var method = PaymentMethodIndex switch { 0 => 1, 1 => 2, 2 => 5, 3 => 4, _ => 0 };
         var request = dto with { ExpectedQuote = _quote.QuoteVersion };
+        var invoiceBranch = (_api as ApiClient)?.BranchId;
         IsBusy = true;
         var sentInvoice = false;
         long? invoiceId = null;
@@ -643,6 +644,8 @@ public partial class InvoiceFormViewModel : ObservableObject
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
             if (received == 0)
             { _snackbar.Success($"فاکتور #{invoiceId} صادر شد؛ پرداختی ثبت نشد."); CloseRequested?.Invoke(this, EventArgs.Empty); return; }
+            if ((_api as ApiClient)?.BranchId != invoiceBranch)
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
             PaymentAttempt attempt;
             try
             {
