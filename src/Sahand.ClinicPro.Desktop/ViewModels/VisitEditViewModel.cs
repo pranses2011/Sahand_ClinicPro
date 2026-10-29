@@ -746,18 +746,18 @@ public partial class VisitEditViewModel : ObservableObject
     private async Task SendToPhysioAsync()
     {
         if (IsBusy) return;
-        if (_pendingPhysioReferral is null)
-        {
-            var note = PhysioReferralNote?.Trim();
-            if (string.IsNullOrWhiteSpace(note) || note.Length > 2000)
-            { _snackbar.Error("شرح ارجاع را با حداکثر ۲۰۰۰ نویسه وارد کنید."); return; }
-            if (!await SaveCoreAsync(silent: false) || _visitId is null) return;
-            _pendingPhysioReferral = new(Guid.NewGuid(), _visitId.Value, _patientId, _doctorId, note);
-            OnPropertyChanged(nameof(CanEditPhysioReferral));
-        }
         IsBusy = true;
         try
         {
+            if (_pendingPhysioReferral is null)
+            {
+                var note = PhysioReferralNote?.Trim();
+                if (string.IsNullOrWhiteSpace(note) || note.Length > 2000)
+                { _snackbar.Error("شرح ارجاع را با حداکثر ۲۰۰۰ نویسه وارد کنید."); return; }
+                if (!await SaveCoreAsync(silent: false) || _visitId is null) return;
+                _pendingPhysioReferral = new(Guid.NewGuid(), _visitId.Value, _patientId, _doctorId, note);
+                OnPropertyChanged(nameof(CanEditPhysioReferral));
+            }
             var response = await _api.PostAsync<PhysioReferralSaveResponse>("physiotherapy/referrals", _pendingPhysioReferral);
             if (response?.Data is not > 0)
             {
