@@ -315,6 +315,10 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
         if (request.VisitId.HasValue && !await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
                 .AnyAsync(v => v.Id == request.VisitId.Value && v.PatientId == request.PatientId && !v.IsDeleted, cancellationToken))
             return Result<long>.Failure(new Error("VISIT_PATIENT_MISMATCH", "ویزیت معتبر و متعلق به این بیمار یافت نشد"));
+        if (!EyeExamValueSafety.IsValid(request.RightSphere, request.RightCylinder, request.RightAxis,
+                request.LeftSphere, request.LeftCylinder, request.LeftAxis, request.RightIop, request.LeftIop, request.PupilDistance) ||
+            request.RightVisualAcuity?.Length > 10 || request.LeftVisualAcuity?.Length > 10 || request.ColorVision?.Length > 100)
+            return Result<long>.Failure(new Error("INVALID_EYE_EXAM", "مقادیر معاینه یا دقت آن‌ها با محدوده ذخیره‌سازی سازگار نیست"));
         var exam = new EyeExamRecord
         {
             PatientId = request.PatientId,

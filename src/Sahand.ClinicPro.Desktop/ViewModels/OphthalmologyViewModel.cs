@@ -339,6 +339,10 @@ public partial class OphthalmologyViewModel : ViewModelBase
             !DecimalValue(OdAdd, out _) || !DecimalValue(OsAdd, out _))
         { _snackbar.Error("مقدار عددی واردشده در اندازه‌های چشم معتبر نیست"); return; }
 
+        if (!Sahand.ClinicPro.Application.Features.Paraclinical.EyeExamValueSafety.IsValid(
+                rightSphere, rightCylinder, rightAxis, leftSphere, leftCylinder, leftAxis, rightIop, leftIop, pd))
+        { _snackbar.Error("محور باید بین صفر و ۱۸۰، فشار غیرمنفی و فاصله مردمک مثبت باشد؛ دقت عدسی حداکثر دو و فاصله مردمک یک رقم اعشار است."); return; }
+
         if (rightSphere is null && rightCylinder is null && rightAxis is null && leftSphere is null &&
             leftCylinder is null && leftAxis is null && rightIop is null && leftIop is null && pd is null &&
             OdVisionIndex < 0 && OsVisionIndex < 0 && ColorVisionIndex < 0 &&

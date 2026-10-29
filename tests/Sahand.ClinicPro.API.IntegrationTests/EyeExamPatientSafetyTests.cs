@@ -34,4 +34,25 @@ public class EyeExamPatientSafetyTests
         (await handler.Handle(Command(second.Id, visit.Id), default)).IsSuccess.Should().BeTrue();
         db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.EyeExamRecord>().Should().ContainSingle();
     }
+    [Fact]
+    public async Task Exam_rejects_invalid_axes_pressure_and_values_the_database_would_round()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "EYE-NUM", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new SaveEyeExamCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var exam = Command(patient.Id, null);
+        (await handler.Handle(exam with { RightAxis = 181 }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { LeftIop = -1 }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { RightSphere = 1.234m }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { RightCylinder = 100m }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { PupilDistance = 62.55m }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { PupilDistance = 0 }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam with { RightSphere = -2.50m, RightAxis = 180, RightIop = 0, PupilDistance = 62.5m }, default)).IsSuccess.Should().BeTrue();
+        db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.EyeExamRecord>().Should().ContainSingle();
+    }
+
 }

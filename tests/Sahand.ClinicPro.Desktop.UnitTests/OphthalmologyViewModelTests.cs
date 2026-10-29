@@ -151,4 +151,20 @@ public class OphthalmologyViewModelTests
         api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
     }
 
+    [Fact]
+    public async Task Out_of_range_or_silently_rounded_measurements_are_not_sent()
+    {
+        var api = new FakeApiClient();
+        var vm = await Ready(api, 3);
+        vm.OdAxis = "۱۸۱";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        vm.OdAxis = "۹۰";
+        vm.OdSphere = "۱٫۲۳۴";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        vm.OdSphere = "۱٫۲۵";
+        vm.Pd = "۶۲٫۵۵";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
+    }
+
 }
