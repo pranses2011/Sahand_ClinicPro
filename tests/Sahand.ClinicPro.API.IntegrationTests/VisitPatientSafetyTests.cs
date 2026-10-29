@@ -36,9 +36,9 @@ public class VisitPatientSafetyTests
             VitalSigns: new VitalSignsInputDto(HeartRate: 75))), default);
         saved.IsSuccess.Should().BeTrue();
         var vital = await db.Set<VitalSign>().SingleAsync();
-        vital.VisitId.Should().Be(saved.Value);
+        vital.VisitId.Should().Be(saved.Value.Id);
         vital.PatientId.Should().Be(owner.Id);
-        (await handler.Handle(new(new SaveVisitDto(saved.Value, other.Id, doctor.Id, null,
+        (await handler.Handle(new(new SaveVisitDto(saved.Value.Id, other.Id, doctor.Id, null,
             ChiefComplaint: "داده نامرتبط")), default)).IsSuccess.Should().BeFalse();
         (await db.Set<Visit>().SingleAsync()).ChiefComplaint.Should().BeNull();
     }
@@ -69,6 +69,30 @@ public class VisitPatientSafetyTests
     {
         Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit.VisitVitalsSafety
             .IsValid(new VitalSignsInputDto(OxygenSaturation: value)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Stale_or_missing_visit_version_cannot_overwrite_clinical_data()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "VISIT-VERSION", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000004" };
+        var doctor = new Doctor();
+        db.AddRange(patient, doctor);
+        await db.SaveChangesAsync();
+        var handler = new SaveVisitCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<SaveVisitCommandHandler>.Instance);
+        var first = await handler.Handle(new(new SaveVisitDto(null, patient.Id, doctor.Id, null, ChiefComplaint: "اول")), default);
+        first.IsSuccess.Should().BeTrue();
+        var missing = await handler.Handle(new(new SaveVisitDto(first.Value.Id, patient.Id, doctor.Id, null, ChiefComplaint: "گمشده")), default);
+        missing.IsSuccess.Should().BeFalse();
+        var second = await handler.Handle(new(new SaveVisitDto(first.Value.Id, patient.Id, doctor.Id, null,
+            ChiefComplaint: "دوم", EditVersion: first.Value.EditVersion)), default);
+        second.IsSuccess.Should().BeTrue();
+        var stale = await handler.Handle(new(new SaveVisitDto(first.Value.Id, patient.Id, doctor.Id, null,
+            ChiefComplaint: "قدیمی", EditVersion: first.Value.EditVersion)), default);
+        stale.IsSuccess.Should().BeFalse();
+        (await db.Set<Visit>().SingleAsync()).ChiefComplaint.Should().Be("دوم");
     }
 
 }

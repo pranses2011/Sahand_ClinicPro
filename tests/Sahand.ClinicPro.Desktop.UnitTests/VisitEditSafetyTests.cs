@@ -11,7 +11,7 @@ public class VisitEditSafetyTests
     public async Task Saving_new_visit_twice_reuses_created_id()
     {
         var api = new FakeApiClient();
-        api.CannedResponses["visits"] = new { data = 42L };
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
         var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
         await vm.SaveDraftCommand.ExecuteAsync(null);
         JsonSerializer.SerializeToElement(api.LastBody).GetProperty("id").ValueKind.Should().Be(JsonValueKind.Null);
@@ -30,7 +30,7 @@ public class VisitEditSafetyTests
         await vm.NextPatientCommand.ExecuteAsync(null);
         closed.Should().BeFalse();
         await vm.SaveDraftCommand.ExecuteAsync(null);
-        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits").Should().Be(1);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned").Should().Be(1);
         vm.StopTimers();
     }
     [Fact]
@@ -38,9 +38,9 @@ public class VisitEditSafetyTests
     {
         var api = new FakeApiClient();
         api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, receptionId = 9L,
-            status = 4, physicalExamination = "یافته اصلی", soapSubjective = "شرح مستقل", soapObjective = "معاینه مستقل",
+            status = 4, editVersion = "version-42", physicalExamination = "یافته اصلی", soapSubjective = "شرح مستقل", soapObjective = "معاینه مستقل",
             soapAssessment = "ارزیابی مستقل", soapPlan = "برنامه مستقل", secondaryDiagnoses = "قالب قدیمی" } };
-        api.CannedResponses["visits"] = new { data = 42L };
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
         var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
         vm.PhysicalExamText.Should().Be("یافته اصلی");
         vm.HeadNeckNormal.Should().BeFalse();
@@ -62,7 +62,7 @@ public class VisitEditSafetyTests
         api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, status = 3 } };
         var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
         await vm.SaveDraftCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "visits");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned");
         vm.StopTimers();
     }
 
@@ -70,7 +70,7 @@ public class VisitEditSafetyTests
     public async Task Vital_numbers_are_validated_and_persian_digits_are_preserved()
     {
         var api = new FakeApiClient();
-        api.CannedResponses["visits"] = new { data = 42L };
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
         var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
         vm.BpText = "۱۲۰/۸۰";
         vm.HrText = "۷۲";
@@ -85,7 +85,7 @@ public class VisitEditSafetyTests
         body.GetProperty("height").GetDecimal().Should().Be(170m);
         vm.Spo2Text = "۱۰۱";
         await vm.SaveDraftCommand.ExecuteAsync(null);
-        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits").Should().Be(1);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned").Should().Be(1);
         vm.StopTimers();
     }
 

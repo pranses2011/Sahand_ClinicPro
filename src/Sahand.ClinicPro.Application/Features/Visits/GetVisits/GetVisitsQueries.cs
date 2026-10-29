@@ -1,3 +1,4 @@
+using Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit;
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -76,14 +77,12 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
         if (v is null)
             return Result<VisitDetailDto>.Failure(Error.NotFound("ویزیت", request.Id));
 
-        var vitals = await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>()
-            .QueryableNoTracking
-            .Where(vs => vs.VisitId == v.Id)
-            .OrderByDescending(vs => vs.Id)
-            .Select(vs => new VitalSignsViewDto(
-                vs.BloodPressureSystolic, vs.BloodPressureDiastolic, vs.HeartRate,
-                vs.Temperature, vs.OxygenSaturation, vs.Weight, vs.Height, vs.Bmi, vs.BloodSugar))
+        var vital = await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>()
+            .QueryableNoTracking.Where(vs => vs.VisitId == v.Id).OrderByDescending(vs => vs.Id)
             .FirstOrDefaultAsync(cancellationToken);
+        var vitals = vital is null ? null : new VitalSignsViewDto(
+            vital.BloodPressureSystolic, vital.BloodPressureDiastolic, vital.HeartRate,
+            vital.Temperature, vital.OxygenSaturation, vital.Weight, vital.Height, vital.Bmi, vital.BloodSugar);
 
         var dto = new VisitDetailDto(
             v.Id, v.VisitCode, v.PatientId, v.DoctorId,
@@ -118,7 +117,8 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
             v.PrimaryDiagnosis is null
                 ? null
                 : v.PrimaryDiagnosis.DescriptionFa ?? v.PrimaryDiagnosis.Description,
-            v.ReceptionId);
+            v.ReceptionId,
+            VisitEditVersion.Create(v, vital));
 
         return Result<VisitDetailDto>.Success(dto);
     }

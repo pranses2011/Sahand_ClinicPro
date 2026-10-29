@@ -29,6 +29,7 @@ public partial class VisitEditViewModel : ObservableObject
     private readonly ISnackbarService _snackbar;
     private long? _visitId;
     private bool _creationResultUnknown;
+    private string? _editVersion;
     private readonly bool _openedExisting;
     private bool _existingVisitLoaded;
     private bool _visitEditable = true;
@@ -231,7 +232,8 @@ public partial class VisitEditViewModel : ObservableObject
         _patientId = v.PatientId;
         _doctorId = v.DoctorId;
         _receptionId = v.ReceptionId;
-        _visitEditable = v.Status is 1 or 2 or 4;
+        _editVersion = v.EditVersion;
+        _visitEditable = v.Status is 1 or 2 or 4 && !string.IsNullOrWhiteSpace(v.EditVersion);
         _soapSubjective = v.SoapSubjective;
         _soapObjective = v.SoapObjective;
         _soapAssessment = v.SoapAssessment;
@@ -809,6 +811,7 @@ public partial class VisitEditViewModel : ObservableObject
             var body = new
             {
                 id = _visitId,
+                editVersion = _editVersion,
                 patientId = _patientId,
                 doctorId = _doctorId,
                 receptionId = _receptionId,
@@ -833,8 +836,8 @@ public partial class VisitEditViewModel : ObservableObject
                 vitalSigns = vitals
             };
 
-            var response = await _api.PostAsync<SaveVisitResponse>("visits", body);
-            if (response?.Data is null or 0)
+            var response = await _api.PostAsync<SaveVisitResponse>("visits/save-versioned", body);
+            if (response?.Data is null || response.Data.Id <= 0 || string.IsNullOrWhiteSpace(response.Data.EditVersion))
             {
                 if (_visitId is null) _creationResultUnknown = true;
                 ErrorMessage = (_api.LastError ?? "پاسخ ذخیره ویزیت دریافت نشد") +
@@ -844,7 +847,8 @@ public partial class VisitEditViewModel : ObservableObject
                 return false;
             }
 
-            _visitId = response.Data.Value;
+            _visitId = response.Data.Id;
+            _editVersion = response.Data.EditVersion;
             if (vitals is not null) _hasExistingVitals = true;
             SaveStateText = complete
                 ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}"
@@ -935,6 +939,7 @@ public partial class VisitEditViewModel : ObservableObject
         public long DoctorId { get; set; }
         public long? ReceptionId { get; set; }
         public int Status { get; set; }
+        public string? EditVersion { get; set; }
         public string? PhysicalExamination { get; set; }
         public string? SoapSubjective { get; set; }
         public string? SoapObjective { get; set; }
@@ -1017,7 +1022,12 @@ public partial class VisitEditViewModel : ObservableObject
     public sealed class SaveVisitResponse
     {
         public bool IsSuccess { get; set; }
-        public long? Data { get; set; }
+        public SavedVisit? Data { get; set; }
+    }
+    public sealed class SavedVisit
+    {
+        public long Id { get; set; }
+        public string? EditVersion { get; set; }
     }
 }
 
