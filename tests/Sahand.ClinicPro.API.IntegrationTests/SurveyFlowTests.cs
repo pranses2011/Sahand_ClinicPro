@@ -123,9 +123,7 @@ public class SurveyFlowTests
         await SubmitAsync(client, surveyId, patientId, doctorA, rating: 5, comment: "برخورد عالی بود");
         await SubmitAsync(client, surveyId, patientId, doctorB, rating: 1, comment: "انتظار بیش از این را داشتم");
 
-        var doctorA2 = await SeedSecondPatientAndGetSecondDoctorAsync(client);
-        _ = doctorA2; // بیمار دوم روی همان پزشک الف در SubmitAsync جداگانه زیر می‌آید
-        await SubmitAsync(client, surveyId, patientId + 1000, doctorA, rating: 4, comment: null as string);
+        await SubmitAsync(client, surveyId, patientId, doctorA, rating: 4, comment: null as string);
 
         // ── نتایج: کل ۳ پاسخ، میانگین (5+4+1)/3 ≈ 3.33 ──
         var results = await client.GetAsync($"/api/v1/surveys/{surveyId}/results");
@@ -354,6 +352,33 @@ public class SurveyFlowTests
         saved.IsActive.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Response_rejects_invalid_or_mismatched_patient_doctor_and_visit()
+    {
+        var (client, doctorA, doctorB, patientId) = await SeedDoctorsAndPatientAsync();
+        long visitId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var visit = new Visit { PatientId = patientId, DoctorId = doctorA, VisitDate = DateTime.UtcNow };
+            db.Visits.Add(visit);
+            await db.SaveChangesAsync();
+            visitId = visit.Id;
+        }
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "ارتباط پاسخ با ویزیت" });
+        var surveyId = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        var url = $"/api/v1/surveys/{surveyId}/responses";
+        (await client.PostAsJsonAsync(url, new { patientId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { doctorId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { visitId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { patientId, doctorId = doctorB, visitId, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { patientId, doctorId = doctorA, visitId, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync(url, new { rating = 5 })).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var verify = _factory.Services.CreateScope();
+        var dbVerify = verify.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        (await dbVerify.SurveyResponses.CountAsync(r => r.SurveyId == surveyId)).Should().Be(2);
+    }
+
     /* ─── کمکی‌ها ─── */
 
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>
@@ -412,16 +437,6 @@ public class SurveyFlowTests
         await context.SaveChangesAsync();
 
         return (client, ids[0], ids[1], patient.Id);
-    }
-
-    /// <summary>بذر بیمار دوم — برای پاسخ سوم روی پزشک الف</summary>
-    private async Task<long> SeedSecondPatientAndGetSecondDoctorAsync(HttpClient client)
-    {
-        _ = client;
-        using var scope = _factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        var doctorId = await context.Doctors.OrderBy(d => d.Id).Select(d => d.Id).FirstAsync();
-        return doctorId;
     }
 
     /// <summary>ثبت یک پاسخ</summary>

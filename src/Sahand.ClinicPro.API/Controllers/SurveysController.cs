@@ -172,6 +172,24 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
             .FirstOrDefaultAsync(s => s.Id == id && s.IsActive && !s.IsDeleted);
         if (survey is null)
             return BadRequest(ApiResponse<object>.Failure("نظرسنجی فعال یافت نشد"));
+        // اطلاعات اختیاری‌اند، اما در صورت ارسال باید معتبر و در کنار هم
+        // سازگار باشند؛ وگرنه آمار پزشک یا هویت پاسخ به اشتباه نسبت داده می‌شود.
+        if (request.PatientId.HasValue && !await _unitOfWork.Repository<Patient>().QueryableNoTracking
+                .AnyAsync(p => p.Id == request.PatientId.Value && !p.IsDeleted))
+            return BadRequest(ApiResponse<object>.Failure("بیمار انتخاب‌شده یافت نشد"));
+        if (request.DoctorId.HasValue && !await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .AnyAsync(d => d.Id == request.DoctorId.Value && !d.IsDeleted))
+            return BadRequest(ApiResponse<object>.Failure("پزشک انتخاب‌شده یافت نشد"));
+        if (request.VisitId.HasValue)
+        {
+            var visit = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
+                .Where(v => v.Id == request.VisitId.Value && !v.IsDeleted)
+                .Select(v => new { v.PatientId, v.DoctorId }).FirstOrDefaultAsync();
+            if (visit is null || (request.PatientId.HasValue && visit.PatientId != request.PatientId.Value) ||
+                (request.DoctorId.HasValue && visit.DoctorId != request.DoctorId.Value))
+                return BadRequest(ApiResponse<object>.Failure("ویزیت یافت نشد یا با بیمار و پزشک انتخاب‌شده مطابقت ندارد"));
+        }
+
         string? answerSnapshot = null;
         if (request.Answers is not null)
         {
