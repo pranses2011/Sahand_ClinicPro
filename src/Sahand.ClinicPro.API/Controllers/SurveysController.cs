@@ -65,6 +65,8 @@ public class SurveysController : ApiBaseController
 
         if (!ValidQuestions(request.Questions))
             return BadRequest(ApiResponse<object>.Failure("سؤال‌های نظرسنجی نامعتبرند؛ نوع، متن و گزینه‌ها را بررسی کنید (حداکثر ۱۰۰ سؤال)"));
+        if (!ValidSurveyType(request.SurveyType))
+            return BadRequest(ApiResponse<object>.Failure("نوع نظرسنجی پشتیبانی نمی‌شود"));
 
         var survey = new Survey
         {
@@ -94,6 +96,9 @@ public class SurveysController : ApiBaseController
         if (string.IsNullOrWhiteSpace(title) || title.Length > 150)
             return BadRequest(ApiResponse<object>.Failure("عنوان نظرسنجی الزامی است و حداکثر ۱۵۰ نویسه"));
 
+        if (!ValidSurveyType(request.SurveyType))
+            return BadRequest(ApiResponse<object>.Failure("نوع نظرسنجی پشتیبانی نمی‌شود"));
+
         // دادهٔ قدیمی ناسازگار را می‌توان بدون تغییر نگه داشت؛ ساخت یا تغییر
         // سؤال ناسازگار مجاز نیست تا فرم غیرقابل پاسخ ساخته نشود.
         if (!string.Equals(survey.Questions, request.Questions, StringComparison.Ordinal) && !ValidQuestions(request.Questions))
@@ -108,7 +113,7 @@ public class SurveysController : ApiBaseController
         survey.Title = title;
         survey.Description = request.Description?.Trim();
         survey.Questions = request.Questions;
-        survey.SurveyType = NormalizeSurveyType(request.SurveyType);
+        if (request.SurveyType.HasValue) survey.SurveyType = request.SurveyType.Value;
         if (request.IsActive.HasValue)
             survey.IsActive = request.IsActive.Value;
         survey.UpdatedAt = DateTime.UtcNow;
@@ -482,6 +487,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
     /* ─── مدل‌ها ─── */
 
     /// <summary>نرمال‌سازی نوع نظرسنجی — مقدار نامعتبر به «رضایت» برمی‌گردد</summary>
+    private static bool ValidSurveyType(SurveyType? value) => value is null or SurveyType.Satisfaction or SurveyType.Service or SurveyType.Doctor;
     private static SurveyType NormalizeSurveyType(SurveyType? value) =>
         value is SurveyType.Satisfaction or SurveyType.Service or SurveyType.Doctor
             ? value.Value

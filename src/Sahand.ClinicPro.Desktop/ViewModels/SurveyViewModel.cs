@@ -16,7 +16,7 @@ internal static class SurveyNumberFormatting
 /// <summary>ردیف نظرسنجی — تب ۱ فرم ۳۴</summary>
 public record SurveyListRow(long Id, string Title, string? Description, string TypeText,
     bool IsActive, string ActiveText, int ResponseCount, string AverageText,
-    string? QuestionsJson, string? EditVersion = null)
+    string? QuestionsJson, string? EditVersion = null, bool IsTypeSupported = true)
 {
     public string QuestionCountText => SurveyQuestionItem.TryParseList(QuestionsJson, out var questions)
         ? SurveyNumberFormatting.Count(questions.Count) : "—";
@@ -447,6 +447,11 @@ public partial class SurveyViewModel : ViewModelBase
             return;
         }
 
+        if (!SelectedSurvey.IsTypeSupported)
+        {
+            _snackbar.Error("نوع این نظرسنجی در این نسخه پشتیبانی نمی‌شود؛ برای حفاظت اطلاعات ویرایش باز نشد.");
+            return;
+        }
         if (string.IsNullOrWhiteSpace(SelectedSurvey.EditVersion))
         {
             _snackbar.Error("نسخهٔ ویرایش در فهرست موجود نیست؛ سرور و برنامه را همزمان به‌روز و فهرست را تازه‌سازی کنید.");
@@ -744,13 +749,14 @@ public partial class SurveyViewModel : ViewModelBase
         {
             "Service" => "کیفیت خدمات",
             "Doctor" => "ارزیابی پزشک",
-            _ => "رضایت بیماران"
+            "Satisfaction" => "رضایت بیماران",
+            _ => $"نوع ناشناخته ({s.Type})"
         };
         return new SurveyListRow(s.Id, s.Title, s.Description, typeText,
             s.IsActive, s.IsActive ? "🟢 فعال" : "🔴 غیرفعال",
             s.ResponseCount,
             s.AverageRating > 0 ? s.AverageRating.ToString("0.##") + " از ۵" : "—",
-            s.Questions, s.EditVersion);
+            s.Questions, s.EditVersion, s.Type is "Satisfaction" or "Service" or "Doctor");
     }
 
     /* ─── پاسخ‌های API ─── */

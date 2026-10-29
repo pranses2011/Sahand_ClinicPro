@@ -515,6 +515,25 @@ public class SurveyFlowTests
         rows.Data.Single(s => s.Id == id).Title.Should().Be("تغییر اول");
     }
 
+
+    [Fact]
+    public async Task Unsupported_type_is_rejected_and_omitted_type_does_not_change_existing_type()
+    {
+        var client = await LoginAsync();
+        (await client.PostAsJsonAsync("/api/v1/surveys", new { title = "نوع نامعتبر", surveyType = 99 }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "خدمات", surveyType = 2 });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        (await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر", surveyType = 99, editVersion = version }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر", editVersion = version }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var survey = await scope.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(x => x.Id == id);
+        survey.SurveyType.Should().Be(Sahand.ClinicPro.Domain.Enums.SurveyType.Service);
+    }
+
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);
 
     private sealed record LoginPacket(bool IsSuccess, LoginData Data);

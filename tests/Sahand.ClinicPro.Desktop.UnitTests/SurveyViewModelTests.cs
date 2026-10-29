@@ -203,4 +203,16 @@ public class SurveyViewModelTests
         vm.Surveys.Should().ContainSingle();
     }
 
+    [Fact]
+    public void Unknown_survey_type_is_displayed_but_not_rewritten()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = new[] { new { id = 9, title = "قدیمی", type = "99", editVersion = "v" } } };
+        var vm = new SurveyViewModel(api, new FakeSnackbar());
+        vm.SelectedSurvey = vm.Surveys.Single();
+        vm.SelectedSurvey.TypeText.Should().Contain("99");
+        vm.OpenEditFormCommand.Execute(null);
+        vm.IsFormOpen.Should().BeFalse();
+    }
+
 }
