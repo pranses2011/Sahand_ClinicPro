@@ -86,4 +86,20 @@ public class DentistryViewModelTests
         vm.IsDentalChartEnabled.Should().BeTrue();
         vm.ClinicalNote.Should().Be("یادداشت");
     }
+    [Fact]
+    public async Task Cancelling_patient_change_preserves_dental_form()
+    {
+        var api = new FakeApiClient();
+        var vm = new DentistryViewModel(api, new FakeSnackbar(), () => false)
+        {
+            DentalPatient = new QuickPatient(1, "بیمار", "", "", null, null, null, null, 0),
+            ClinicalNote = "یادداشت ذخیره‌نشده", DentalPatientSearch = "1234"
+        };
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        vm.ClearDentalPatientCommand.Execute(null);
+        vm.DentalPatient!.Id.Should().Be(1);
+        vm.ClinicalNote.Should().Be("یادداشت ذخیره‌نشده");
+        api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
+    }
+
 }

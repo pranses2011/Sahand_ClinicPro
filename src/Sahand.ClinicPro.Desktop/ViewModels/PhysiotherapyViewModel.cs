@@ -94,6 +94,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmPatientChange;
     private int _patientVersion;
     private readonly Dictionary<string, int> _defaultTechniqueMinutes = new();
     [ObservableProperty] private bool _isHistoryLoading;
@@ -366,10 +367,13 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private string? _trendSummary;
 
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public PhysiotherapyViewModel(IApiClient api, ISnackbarService snackbar)
+    public PhysiotherapyViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmPatientChange = confirmPatientChange ?? (() => Views.AppDialog.Confirm(
+            "تغییر بیمار", "اطلاعات فرم بیمار فعلی پاک می‌شود؛ موارد ذخیره‌نشده از دست می‌روند. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
         foreach (var row in Assessments)
             row.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(TotalImprovement)); OnPropertyChanged(nameof(TotalImprovementText)); RefreshRomBars(); };
         RefreshRomBars();
@@ -410,6 +414,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     private async Task SearchPhysioPatientAsync()
     {
         if (IsPhysioSaving) return;
+        if (PhysioPatient is not null && !_confirmPatientChange()) return;
         PhysioPatient = null;
         var version = ++_patientVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, PhysioPatientSearch);

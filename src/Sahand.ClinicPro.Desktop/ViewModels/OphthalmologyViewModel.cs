@@ -21,6 +21,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmPatientChange;
     private int _patientRequestVersion;
 
     [ObservableProperty] private bool _isEyeHistoryLoading;
@@ -167,10 +168,13 @@ public partial class OphthalmologyViewModel : ViewModelBase
     public ObservableCollection<EyeExamRow> EyeHistory { get; } = new();
 
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public OphthalmologyViewModel(IApiClient api, ISnackbarService snackbar)
+    public OphthalmologyViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmPatientChange = confirmPatientChange ?? (() => Views.AppDialog.Confirm(
+            "تغییر بیمار", "اطلاعات فرم بیمار فعلی پاک می‌شود؛ موارد ذخیره‌نشده از دست می‌روند. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
     }
 
     /// <summary>
@@ -181,6 +185,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     private async Task SearchEyePatientAsync()
     {
         if (IsEyeSaving) return;
+        if (EyePatient is not null && !_confirmPatientChange()) return;
         // هنگام جستجوی بیمار دیگر، فرم و ثبت بیمار قبلی فوراً غیرفعال شود.
         EyePatient = null;
         var searchVersion = ++_patientRequestVersion;
@@ -290,6 +295,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     private void ClearEyePatient()
     {
         if (IsEyeSaving) return;
+        if (EyePatient is not null && !_confirmPatientChange()) return;
         // حتی در نبود بیمار منتخب، جستجوی در حال اجرا باید بی‌اثر شود.
         _patientRequestVersion++;
         EyePatient = null;

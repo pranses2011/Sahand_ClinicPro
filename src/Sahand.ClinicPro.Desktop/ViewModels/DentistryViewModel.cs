@@ -100,6 +100,7 @@ public partial class DentistryViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmPatientChange;
     private int _patientVersion;
     private readonly Dictionary<string, int> _toothState = new();
     [ObservableProperty] private bool _isChartLoading;
@@ -228,10 +229,13 @@ public partial class DentistryViewModel : ViewModelBase
     private string _dentalChartInfo = "بیمار را جستجو کنید تا چارت ذخیره‌شدهٔ او بارگذاری شود";
 
     /// <summary>سازنده — چارت FDI: فک بالا ۱۱-۱۸ و ۲۱-۲۸ / فک پایین ۳۱-۳۸ و ۴۱-۴۸</summary>
-    public DentistryViewModel(IApiClient api, ISnackbarService snackbar)
+    public DentistryViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmPatientChange = confirmPatientChange ?? (() => Views.AppDialog.Confirm(
+            "تغییر بیمار", "اطلاعات فرم بیمار فعلی پاک می‌شود؛ موارد ذخیره‌نشده از دست می‌روند. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
         foreach (var n in new[] { 18, 17, 16, 15, 14, 13, 12, 11 })
             UpperTeeth.Add(new ToothVM { Number = n });
         foreach (var n in new[] { 21, 22, 23, 24, 25, 26, 27, 28 })
@@ -333,6 +337,7 @@ public partial class DentistryViewModel : ViewModelBase
     private async Task SearchDentalPatientAsync()
     {
         if (IsDentalSaving) return;
+        if (DentalPatient is not null && !_confirmPatientChange()) return;
         DentalPatient = null;
         var version = ++_patientVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, DentalPatientSearch);
@@ -462,6 +467,7 @@ public partial class DentistryViewModel : ViewModelBase
     private void ClearDentalPatient()
     {
         if (IsDentalSaving) return;
+        if (DentalPatient is not null && !_confirmPatientChange()) return;
         _patientVersion++;
         DentalPatient = null;
         DentalPatientSearch = string.Empty;

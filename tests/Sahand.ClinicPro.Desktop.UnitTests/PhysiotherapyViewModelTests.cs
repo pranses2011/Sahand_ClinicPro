@@ -115,4 +115,19 @@ public class PhysiotherapyViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "physiotherapy/sessions");
     }
 
+    [Fact]
+    public async Task Cancelling_patient_change_preserves_physiotherapy_form()
+    {
+        var api = new FakeApiClient();
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar(), () => false)
+        {
+            PhysioPatient = new QuickPatient(1, "بیمار", "", "", null, null, null, null, 0),
+            PhysioNotes = "یادداشت ذخیره‌نشده", PhysioPatientSearch = "1234"
+        };
+        await vm.SearchPhysioPatientCommand.ExecuteAsync(null);
+        vm.PhysioPatient!.Id.Should().Be(1);
+        vm.PhysioNotes.Should().Be("یادداشت ذخیره‌نشده");
+        api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
+    }
+
 }

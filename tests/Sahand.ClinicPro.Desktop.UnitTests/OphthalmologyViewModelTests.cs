@@ -129,7 +129,7 @@ public class OphthalmologyViewModelTests
     {
         var api = new FakeApiClient();
         api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id = 7, firstName = "علی", lastName = "رضایی", nationalCode = "1234", mobile = "" } } };
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = "1234" };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar(), () => true) { EyePatientSearch = "1234" };
         await vm.SearchEyePatientCommand.ExecuteAsync(null);
         vm.IsEyeExamEnabled.Should().BeFalse();
         vm.EyeFindings = "یافته";
@@ -139,4 +139,16 @@ public class OphthalmologyViewModelTests
         await vm.SearchEyePatientCommand.ExecuteAsync(null);
         vm.IsEyeExamEnabled.Should().BeTrue();
     }
+    [Fact]
+    public async Task Cancelling_patient_change_preserves_eye_form()
+    {
+        var api = new FakeApiClient();
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar(), () => false) { EyePatient = Patient(1), EyeFindings = "یادداشت ذخیره‌نشده", EyePatientSearch = "1234" };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.ClearEyePatientCommand.Execute(null);
+        vm.EyePatient!.Id.Should().Be(1);
+        vm.EyeFindings.Should().Be("یادداشت ذخیره‌نشده");
+        api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
+    }
+
 }
