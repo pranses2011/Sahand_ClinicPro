@@ -150,7 +150,9 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         if (!InvoiceAmountSafety.Valid(dto))
             return Result<InvoiceCalculation>.Failure(new Error("BILLING.AMOUNTS_INVALID", "تعداد، مبلغ، درصد یا شناسه اقلام فاکتور نامعتبر یا خارج از دقت مجاز است."));
 
-        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
+        // بیمار از فیلتر شعبه و حذف نرم عبور می‌کند، حتی اگر قبلاً ردیابی شده باشد.
+        var patient = await _unitOfWork.Repository<Patient>().QueryableNoTracking
+            .FirstOrDefaultAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken);
         if (patient is null || patient.IsDeleted)
             return Result<InvoiceCalculation>.Failure(Error.NotFound("بیمار", dto.PatientId));
 

@@ -206,4 +206,20 @@ public class BillingPatientSafetyTests
         var persianResult = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
         persianResult.Value.Data.Should().Contain(x => x.Id == invoice.Id);
     }
+    [Fact]
+    public async Task Invoice_preview_and_creation_reject_tracked_patient_from_another_branch()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "BRANCH-INVOICE", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000003", BranchId = 2 };
+        db.Add(patient); await db.SaveChangesAsync();
+        db.CurrentBranchId = 1;
+        var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
+            new() { new InvoiceItemDto(null, "خدمت", 1, 100, 0, null, 0) });
+        (await handler.PreviewAsync(new PreviewInvoiceQuery(dto), default)).IsFailure.Should().BeTrue();
+        (await handler.Handle(new CreateInvoiceCommand(dto), default)).IsFailure.Should().BeTrue();
+        db.Set<Invoice>().Should().BeEmpty();
+    }
 }
