@@ -1596,6 +1596,13 @@ public partial class ReceptionsViewModel : ViewModelBase
         return true;
     }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isSubmitting;
+
+    /// <summary>فرم در طول زنجیرهٔ ثبت و چاپ قابل تغییر نیست.</summary>
+    public bool CanEditReception => !IsSubmitting;
+
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
     private async Task ReceptionAndInvoiceAsync() => await SubmitReceptionAsync(null);
@@ -1612,7 +1619,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task ReceptionAndPayAsync()
     {
-        if (!ValidateReception()) return;
+        if (IsSubmitting || !ValidateReception()) return;
 
         // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
         // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
@@ -1635,7 +1642,10 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
     private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment)
     {
-        if (!ValidateReception()) return;
+        if (IsSubmitting || !ValidateReception()) return;
+        IsSubmitting = true;
+        try
+        {
 
         // ═══ چرخهٔ بیست‌وششم — رفع آف‌بای‌وان بیمه (همان ریشهٔ بالا) ═══
         // نمایهٔ صفر = آزاد (شناسهٔ ۰) → تهی ارسال می‌شود؛ نمایه‌های بعدی
@@ -1670,7 +1680,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (reception?.Data is null)
         {
             IsBusy = false;
-            _snackbar.Error(_api.LastError ?? "ثبت پذیرش ناموفق بود");
+            _snackbar.Error((_api.LastError ?? "پاسخ ثبت پذیرش دریافت نشد") + "؛ پیش از تکرار، صف پذیرش را بررسی کنید.");
             return;
         }
 
@@ -1850,6 +1860,12 @@ public partial class ReceptionsViewModel : ViewModelBase
         WizardStep = 0;
 
         await LoadAsync();
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
+        }
+        finally { IsBusy = false; IsSubmitting = false; }
     }
 
     /// <summary>

@@ -50,7 +50,7 @@
             </DockPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" IsEnabled="{Binding CanEditReception}">
             <StackPanel>
                 <!-- ═══ کارت‌های آماری — چرخهٔ ۴۶: هم‌الگو با زبان طراحی مشترک برنامه
                      (App.StatCard)؛ ایموجی‌های برچسب حذف شدند — رندر ناهماهنگ در ویندوز ═══ -->

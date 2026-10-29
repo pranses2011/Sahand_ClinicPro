@@ -188,4 +188,23 @@ public class ReceptionsViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
     }
 
+    [Fact]
+    public async Task Reception_form_is_locked_until_pending_submission_completes()
+    {
+        var api = MakeApi();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingPostResult = pending.Task;
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.SelectedDoctor = vm.Doctors.First();
+        var submission = vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        vm.IsSubmitting.Should().BeTrue();
+        vm.CanEditReception.Should().BeFalse();
+        pending.SetResult(null);
+        await submission;
+        vm.IsSubmitting.Should().BeFalse();
+        vm.CanEditReception.Should().BeTrue();
+        vm.IsBusy.Should().BeFalse();
+    }
+
 }
