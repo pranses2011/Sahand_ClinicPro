@@ -122,6 +122,8 @@ public partial class SurveyRow : ObservableObject
 
     /// <summary>متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)</summary>
     public string? QuestionsJson { get; init; }
+    /// <summary>نسخه فرم برای جلوگیری از بازنویسی همزمان.</summary>
+    public string? EditVersion { get; init; }
 }
 
 /// <summary>
@@ -291,6 +293,11 @@ public partial class ComplementaryViewModel : ViewModelBase
 
     /// <summary>شناسهٔ نظرسنجی در حال ویرایش در طراح</summary>
     private long _designingSurveyId;
+    private string? _designingSurveyVersion;
+    private string? _originalDesignerQuestions;
+    private string? _initialDesignerRepresentation;
+    private string? DesignerRepresentation() => DesignerQuestions.Count == 0 ? null :
+        "[" + string.Join(",", DesignerQuestions.Select(q => q.ToJson())) + "]";
 
     /// <summary>عنوان در طراح سوالات</summary>
     [ObservableProperty]
@@ -893,7 +900,8 @@ public partial class ComplementaryViewModel : ViewModelBase
                     IsActive = s.IsActive,
                     ResponseCount = s.ResponseCount,
                     AverageRating = s.AverageRating,
-                    QuestionsJson = s.Questions
+                    QuestionsJson = s.Questions,
+                    EditVersion = s.EditVersion
                 }));
         }
         finally
@@ -956,16 +964,18 @@ public partial class ComplementaryViewModel : ViewModelBase
         row ??= SelectedSurvey;
         if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
 
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی در فهرست موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
+        if (!SurveyQuestionItem.TryParseList(row.QuestionsJson, out var existing))
+        { _snackbar.Error("ساختار سؤال‌ها پشتیبانی نمی‌شود؛ ویرایش برای حفاظت داده باز نشد."); return; }
         _designingSurveyId = row.Id;
+        _designingSurveyVersion = row.EditVersion;
+        _originalDesignerQuestions = row.QuestionsJson;
         DesignerTitle = row.Title;
         DesignerDescription = row.Description;
         DesignerQuestions.Clear();
-        var existing = SurveyQuestionItem.ParseList(row.QuestionsJson);
-        if (existing.Count > 0)
-            foreach (var q in existing)
-                DesignerQuestions.Add(q);
-        else
-            DesignerQuestions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
+        foreach (var q in existing) DesignerQuestions.Add(q);
+        _initialDesignerRepresentation = DesignerRepresentation();
         IsSurveyDesignerOpen = true;
     }
 
@@ -983,17 +993,23 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(DesignerTitle) || DesignerTitle.Trim().Length < 3)
         { _snackbar.Error("عنوان نظرسنجی حداقل ۳ کاراکتر است"); return; }
-        if (DesignerQuestions.Count == 0)
-        { _snackbar.Error("حداقل یک سوال اضافه کنید"); return; }
-
-        var questionsJson = "[" + string.Join(",", DesignerQuestions.Select(q => q.ToJson())) + "]";
+        if (DesignerQuestions.Count > 100 || DesignerQuestions.Any(q => string.IsNullOrWhiteSpace(q.Text) || q.Text.Length > 2000))
+        { _snackbar.Error("متن سؤال‌ها را وارد کنید؛ حداکثر ۱۰۰ سؤال و ۲۰۰۰ نویسه برای هر سؤال مجاز است."); return; }
+        if (DesignerQuestions.Any(q => q.TypeKey == "choice" && q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is var choices &&
+            (choices.Length < 2 || choices.Length > 100 || choices.Any(c => c.Length > 2000))))
+        { _snackbar.Error("برای سؤال چندگزینه‌ای بین ۲ تا ۱۰۰ گزینه معتبر وارد کنید."); return; }
+        var representation = DesignerRepresentation();
+        var questionsJson = representation == _initialDesignerRepresentation ? _originalDesignerQuestions : representation;
+        if (questionsJson?.Length > 200_000)
+        { _snackbar.Error("حجم سؤال‌ها بیش از حد مجاز است."); return; }
         IsBusy = true;
         var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
         {
             title = DesignerTitle.Trim(),
             description = DesignerDescription,
             questions = questionsJson,
-            isActive = (bool?)null
+            isActive = (bool?)null,
+            editVersion = _designingSurveyVersion
         });
         IsBusy = false;
         if (ok)
@@ -1195,6 +1211,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         public double AverageRating { get; set; }
         /// <summary>سوالات JSON — چرخهٔ ۲۸: از GET / فهرست برای طراح</summary>
         public string? Questions { get; set; }
+        public string? EditVersion { get; set; }
     }
 
     /// <summary>پاسخ خلاصهٔ نتایج نظرسنجی — چرخهٔ ۲۸ (دیالوگ نتایج)</summary>
