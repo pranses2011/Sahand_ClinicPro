@@ -1519,7 +1519,8 @@ public partial class ReceptionsViewModel : ViewModelBase
             if (proceed)
             {
                 InsuranceIndex = 0;
-                Inquiry = new InquiryState(true, false, "استعلام ناموفق — پذیرش آزاد", null, 0);
+                Inquiry = null; // انتخاب صریح آزاد؛ استعلام شکست‌خورده مانع پذیرش آزاد نیست
+                _snackbar.Info("پذیرش آزاد انتخاب شد؛ تعرفهٔ آزاد را بررسی کنید.");
             }
         }
         finally
