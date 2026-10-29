@@ -879,6 +879,7 @@ public partial class ImagingViewModel : ViewModelBase
         if (order is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
         if (HasUnsupportedReportDetails) { _snackbar.Error("ساختار جزئیات گزارش پشتیبانی نمی‌شود؛ ذخیره برای حفاظت از داده متوقف شد."); return; }
         if (order.Status is 4 or 5) { _snackbar.Error("گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود."); return; }
+        if (isFinal && order.Status != 3) { _snackbar.Error("پیش از نهایی‌کردن گزارش، انجام مطالعه را در صف ثبت کنید"); return; }
         if (isFinal && string.IsNullOrWhiteSpace(ReportFindings) && string.IsNullOrWhiteSpace(ReportImpression))
         { _snackbar.Error("برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"); return; }
         if (isFinal && CriticalFinding && string.IsNullOrWhiteSpace(CriticalNotifiedTo))
@@ -927,7 +928,6 @@ public partial class ImagingViewModel : ViewModelBase
             order.Recommendation = request.recommendation;
             order.ReportDetails = request.reportDetails;
             if (isFinal) { order.Status = 4; order.ReportedAt = DateTime.UtcNow; }
-            else if (order.Status is 1 or 2) order.Status = 3;
             if (SelectedImagingOrder?.Id == order.Id)
             {
                 DraftStamp = isFinal ? "گزارش نهایی ذخیره شد" : "پیش‌نویس ذخیره شد";

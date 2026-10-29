@@ -97,6 +97,8 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         // بازنویسی شوند. مسیر الحاقیهٔ واقعی هنوز پیاده‌سازی نشده است.
         if (order.Status is ImagingOrderStatus.Reported or ImagingOrderStatus.Cancelled)
             return Result.Failure(new Error("IMAGING_REPORT_LOCKED", "گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست"));
+        if (request.Dto.IsFinal && order.Status != ImagingOrderStatus.Performed)
+            return Result.Failure(new Error("IMAGING_NOT_PERFORMED", "پیش از نهایی‌کردن گزارش، انجام مطالعه را ثبت کنید"));
         if (request.Dto.IsFinal && string.IsNullOrWhiteSpace(request.Dto.Findings) && string.IsNullOrWhiteSpace(request.Dto.Impression))
             return Result.Failure(new Error("IMAGING_REPORT_EMPTY", "برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"));
 
@@ -109,16 +111,13 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         {
             order.Status = ImagingOrderStatus.Reported;
             order.ReportedAt = DateTime.UtcNow;
-            order.PerformedAt ??= DateTime.UtcNow;
-        }
-        else if (order.Status is ImagingOrderStatus.Ordered or ImagingOrderStatus.Scheduled)
-        {
-            // پیش‌نویس/گزارش اولیه: مطالعه انجام‌شده محسوب می‌شود ولی هنوز نهایی نیست
-            order.Status = ImagingOrderStatus.Performed;
-            order.PerformedAt ??= DateTime.UtcNow;
         }
 
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        try { await _unitOfWork.SaveEntitiesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(new Error("IMAGING_CONFLICT", "درخواست همزمان تغییر کرده است؛ صف و گزارش را تازه‌سازی کنید"));
+        }
         return Result.Success();
     }
 }
@@ -161,7 +160,11 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
         if (request.Status == ImagingOrderStatus.Scheduled)
             order.ScheduledAt ??= DateTime.UtcNow;
 
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        try { await _unitOfWork.SaveEntitiesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure(new Error("IMAGING_CONFLICT", "درخواست همزمان تغییر کرده است؛ صف را تازه‌سازی کنید"));
+        }
         return Result.Success();
     }
 }

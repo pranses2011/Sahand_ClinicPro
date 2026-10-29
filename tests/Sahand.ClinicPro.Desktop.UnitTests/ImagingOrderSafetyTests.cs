@@ -136,6 +136,7 @@ public class ImagingOrderSafetyTests
         var api = new FakeApiClient { PendingPutResult = pending.Task };
         var vm = new ImagingViewModel(api, new FakeSnackbar());
         var first = Order(1, "MRI");
+        first.Status = 3;
         var second = Order(2, "CT");
         vm.SelectedImagingOrder = first;
         vm.ReportFindings = "یافته بیمار اول";
