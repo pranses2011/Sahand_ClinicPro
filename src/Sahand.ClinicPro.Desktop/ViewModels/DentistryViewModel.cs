@@ -103,6 +103,7 @@ public partial class DentistryViewModel : ViewModelBase
     private readonly Func<bool> _confirmPatientChange;
     private int _patientVersion;
     private readonly Dictionary<string, int> _toothState = new();
+    [ObservableProperty] private string? _unsupportedDentalDetails;
     [ObservableProperty] private bool _isChartLoading;
     [ObservableProperty] private bool _isChartReady;
     [ObservableProperty] private bool _isDentalSaving;
@@ -320,7 +321,7 @@ public partial class DentistryViewModel : ViewModelBase
     partial void OnDentalPatientChanged(QuickPatient? value)
     {
         _patientVersion++;
-        IsChartReady = false; IsChartLoading = false;
+        IsChartReady = false; IsChartLoading = false; UnsupportedDentalDetails = null;
         DentalPlan.Clear(); _toothState.Clear();
         PerioSummary = MedicalSummary = PrescriptionText = RadioNote = ClinicalNote = string.Empty;
         ConsentSigned = false; PlanScheduleText = string.Empty; SelectedCatalogItem = null;
@@ -366,6 +367,12 @@ public partial class DentistryViewModel : ViewModelBase
         if (chart is null)
         {
             DentalChartInfo = "بازیابی چارت ناموفق بود — برای تلاش دوباره بیمار را جستجو کنید";
+            return;
+        }
+        if (chart.PlanId is not null && chart.CanEdit != true)
+        {
+            UnsupportedDentalDetails = chart.Note;
+            DentalChartInfo = "طرح قبلی با این ویرایشگر سازگار نیست؛ برای حفاظت داده، ثبت غیرفعال است. نسخه اصلی زیر نمایش داده می‌شود؛ در صورت نبود متن، سرور و برنامه را هم‌زمان به‌روز کنید.";
             return;
         }
         var child = chart.Extras?.IsChildChart ?? (chart.Teeth is { Count: > 0 } && chart.Teeth.Keys.All(k => int.TryParse(k, out var n) && n / 10 >= 5));
@@ -484,6 +491,7 @@ public partial class DentistryViewModel : ViewModelBase
     private sealed class DentalChartData
     {
         public long? PlanId { get; set; }
+        public bool? CanEdit { get; set; }
         public string? CreatedDateShamsi { get; set; }
         /// <summary>نقشهٔ شمارهٔ دندان → وضعیت (۰ سالم تا ۶ ایمپلنت)</summary>
         public Dictionary<string, int>? Teeth { get; set; }

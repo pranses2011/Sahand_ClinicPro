@@ -102,4 +102,19 @@ public class DentistryViewModelTests
         api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(null)]
+    public async Task Unsupported_or_old_server_chart_cannot_be_silently_replaced(bool? canEdit)
+    {
+        var api = ApiWithPatient();
+        api.CannedResponses["dental/chart?patientId=1"] = new { data = new { planId = 8, canEdit, note = "طرح قدیمی", teeth = new Dictionary<string, int>(), rows = Array.Empty<object>() } };
+        var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        vm.IsDentalChartEnabled.Should().BeFalse();
+        vm.UnsupportedDentalDetails.Should().Be("طرح قدیمی");
+        await vm.SaveDentalChartCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "dental/plans");
+    }
+
 }

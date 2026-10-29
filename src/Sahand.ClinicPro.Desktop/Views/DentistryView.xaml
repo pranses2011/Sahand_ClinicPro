@@ -95,8 +95,12 @@
                                 </Button>
                             </Grid>
                             <!-- راهنمای وضعیت ذخیره/بازیابی چارت — پاسخ «از کجا بازیابی می‌شود؟» -->
-                            <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding DentalChartInfo, Mode=OneWay}"
-                                       FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" />
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3">
+                                <TextBlock Text="{Binding DentalChartInfo, Mode=OneWay}" FontSize="11" TextWrapping="Wrap" />
+                                <TextBox Text="{Binding UnsupportedDentalDetails, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True"
+                                         TextWrapping="Wrap" MaxHeight="120" VerticalScrollBarVisibility="Auto"
+                                         Visibility="{Binding UnsupportedDentalDetails, Converter={StaticResource StringToVisibility}}" />
+                            </StackPanel>
 
                             <!-- چارت FDI -->
                             <Border Grid.Row="2" Grid.Column="0" CornerRadius="10" Padding="12" IsEnabled="{Binding IsDentalChartEnabled}"

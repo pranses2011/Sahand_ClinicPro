@@ -148,6 +148,16 @@ public class ParaclinicalController : ApiBaseController
                 note = "چارتی برای این بیمار ثبت نشده است"
             }));
 
+        if (!DentalChartCompatibility.CanEdit(plan.PlanDetails))
+            return Ok(ApiResponse<object>.Success(new
+            {
+                planId = (long?)plan.Id,
+                canEdit = false,
+                note = plan.PlanDetails,
+                teeth = new Dictionary<string, int>(),
+                rows = Array.Empty<object>()
+            }));
+
         // تجزیهٔ JSON ذخیره‌شده در PlanDetails — ساختار:
         // { "teeth": {"11": 2, ...}, "rows": [{"tooth":11,"procedure":"ترمیم","price":1500000,"status":"پیشنهاد"}] }
         var teeth = new Dictionary<string, int>();
@@ -203,6 +213,7 @@ public class ParaclinicalController : ApiBaseController
             teeth,
             rows,
             extras,
+            canEdit = true,
             note = (string?)null
         }));
     }
