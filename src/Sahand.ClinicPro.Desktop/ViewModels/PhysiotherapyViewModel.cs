@@ -380,6 +380,54 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             "درصدها محاسبهٔ نسبی‌اند و این گزارش نیازمند بررسی و تأیید درمانگر است.";
     }
 
+    /// <summary>آخرین ارجاع‌های پزشکان؛ این فهرست وضعیت نوبت یا درمان نیست.</summary>
+    public ObservableCollection<PhysioReferralRow> Referrals { get; } = new();
+    [ObservableProperty] private bool _isLoadingReferrals;
+    [ObservableProperty] private string _referralListCaption = "برای دریافت ارجاع‌ها تازه‌سازی را بزنید.";
+    private int _referralListVersion;
+
+    [RelayCommand]
+    private Task LoadRecentReferralsAsync() => LoadReferralsAsync(null);
+
+    [RelayCommand]
+    private Task LoadPatientReferralsAsync()
+    {
+        if (PhysioPatient is null) { _snackbar.Error("ابتدا بیمار را انتخاب کنید."); return Task.CompletedTask; }
+        return LoadReferralsAsync(PhysioPatient.Id);
+    }
+
+    private async Task LoadReferralsAsync(long? patientId)
+    {
+        var version = ++_referralListVersion;
+        IsLoadingReferrals = true;
+        try
+        {
+            var path = patientId.HasValue ? $"physiotherapy/referrals?patientId={patientId.Value}" : "physiotherapy/referrals";
+            var response = await _api.GetAsync<PhysioReferralsResponse>(path);
+            if (version != _referralListVersion) return;
+            if (response?.Data is null)
+            { ReferralListCaption = "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."; _snackbar.Error(_api.LastError ?? "دریافت ارجاع‌ها ناموفق بود."); return; }
+            Referrals.Clear();
+            foreach (var row in response.Data) Referrals.Add(row);
+            ReferralListCaption = patientId.HasValue ? "آخرین ۱۰۰ ارجاع بیمار انتخاب‌شده" : "آخرین ۱۰۰ ارجاع همه بیماران";
+        }
+        catch (Exception)
+        {
+            if (version == _referralListVersion) { ReferralListCaption = "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."; _snackbar.Error("دریافت ارجاع‌ها ناموفق بود."); }
+        }
+        finally { if (version == _referralListVersion) IsLoadingReferrals = false; }
+    }
+
+    [RelayCommand]
+    private void SelectReferralPatient(PhysioReferralRow? referral)
+    {
+        if (referral is null || IsPhysioSaving || referral.PatientId <= 0) return;
+        if (PhysioPatient?.Id == referral.PatientId) return;
+        if (PhysioPatient is not null && !_confirmPatientChange()) return;
+        PhysioPatient = new QuickPatient(referral.PatientId, referral.PatientName ?? "", referral.NationalCode ?? "",
+            referral.Mobile ?? "", null, null, null, null, referral.Gender);
+    }
+
     // ─────────────── سابقه و نمودار روند ───────────────
     /// <summary>سابقهٔ جلسات بیمار</summary>
     public ObservableCollection<PhysioSessionDto> History { get; } = new();
@@ -413,6 +461,10 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     partial void OnPhysioPatientChanged(QuickPatient? value)
     {
         _patientVersion++;
+        _referralListVersion++;
+        IsLoadingReferrals = false;
+        Referrals.Clear();
+        ReferralListCaption = "برای دریافت ارجاع‌ها تازه‌سازی را بزنید.";
         _nextSessionNumber = null;
         IsHistoryReady = false;
         IsHistoryLoading = false;
@@ -645,3 +697,20 @@ public sealed class PhysioSessionDto
     /// <summary>یادداشت ساخت‌یافته (JSON)</summary>
     public string? ProgressNote { get; set; }
 }
+
+/// <summary>ارجاع مستقل پزشک به فیزیوتراپی.</summary>
+public sealed class PhysioReferralRow
+{
+    public long Id { get; set; }
+    public long VisitId { get; set; }
+    public long PatientId { get; set; }
+    public string? PatientName { get; set; }
+    public string? NationalCode { get; set; }
+    public string? Mobile { get; set; }
+    public int Gender { get; set; }
+    public long DoctorId { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string DateShamsi => Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(CreatedAt);
+}
+public sealed class PhysioReferralsResponse { public List<PhysioReferralRow>? Data { get; set; } }

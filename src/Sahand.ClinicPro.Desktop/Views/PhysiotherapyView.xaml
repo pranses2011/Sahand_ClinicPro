@@ -97,6 +97,35 @@
                     </StackPanel>
                 </Border>
 
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="ارجاع‌های پزشکان به فیزیوتراپی" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="ارجاع جلسه یا نوبت درمان نیست. نتیجه ۱۰۰ مورد آخر را نشان می‌دهد." Foreground="#617992" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                            <Button Content="تازه‌سازی آخرین ارجاع‌ها" Command="{Binding LoadRecentReferralsCommand}" Margin="0,0,8,0" />
+                            <Button Content="ارجاع‌های بیمار انتخاب‌شده" Command="{Binding LoadPatientReferralsCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding ReferralListCaption}" Foreground="#617992" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding Referrals}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F2F7FC" CornerRadius="6" Padding="8" Margin="0,0,0,6">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Left" Content="انتخاب بیمار" IsEnabled="{Binding DataContext.CanSelectPhysioPatient, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Command="{Binding DataContext.SelectReferralPatientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                            <StackPanel>
+                                                <TextBlock FontWeight="Bold"><Run Text="{Binding PatientName}" /><Run Text=" — ویزیت " /><Run Text="{Binding VisitId}" /><Run Text=" — " /><Run Text="{Binding DateShamsi}" /></TextBlock>
+                                                <TextBlock Text="{Binding Note}" TextWrapping="Wrap" />
+                                                <TextBlock Foreground="#617992"><Run Text="شناسه پزشک: " /><Run Text="{Binding DoctorId}" /><Run Text=" — کد ملی: " /><Run Text="{Binding NationalCode}" /></TextBlock>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <TextBlock Text="در حال دریافت سابقهٔ جلسات…" Foreground="#176AC2" Margin="0,0,0,8"
                            Visibility="{Binding IsHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
                 <TextBlock Text="عدد واردشده معتبر نیست؛ پیش از ثبت مقدار را اصلاح کنید." Foreground="#B00020" TextWrapping="Wrap" Margin="0,4"
