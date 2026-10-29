@@ -35,6 +35,8 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
             query = query.Where(i => i.PatientId == request.PatientId.Value);
         if (request.Status.HasValue)
             query = query.Where(i => i.PaymentStatus == request.Status.Value);
+        var searchedId = 0L;
+        var isId = false;
         if (!string.IsNullOrWhiteSpace(page.Search))
         {
             var term = page.Search.Trim();
@@ -44,8 +46,8 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
                 >= '٠' and <= '٩' => (char)('0' + c - '٠'),
                 _ => c
             }).ToArray());
-            var isId = long.TryParse(normalizedNumber, System.Globalization.NumberStyles.None,
-                System.Globalization.CultureInfo.InvariantCulture, out var searchedId) && searchedId > 0;
+            isId = long.TryParse(normalizedNumber, System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out searchedId) && searchedId > 0;
             query = query.Where(i =>
                 (isId && i.Id == searchedId) ||
                 (i.InvoiceNumber != null && i.InvoiceNumber.Contains(normalizedNumber)) ||
@@ -54,7 +56,9 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query
-            .OrderByDescending(i => i.InvoiceDate)
+            .OrderByDescending(i => isId && i.Id == searchedId)
+            .ThenByDescending(i => i.InvoiceDate)
+            .ThenByDescending(i => i.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
             .Select(i => new InvoiceListDto(
