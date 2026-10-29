@@ -556,7 +556,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
                 await LoadHistoryAsync();
             }
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت جلسه ناموفق بود");
+        else _snackbar.Error((_api.LastError ?? "ثبت جلسه ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد سابقه را بررسی کنید.");
         }
         finally { IsPhysioSaving = false; }
     }

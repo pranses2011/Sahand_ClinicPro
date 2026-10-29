@@ -9,6 +9,16 @@ public class OphthalmologyViewModelTests
 {
     private static QuickPatient Patient(long id) => new(id, $"بیمار {id}", "", "", null, null, null, null, 0);
 
+    private static async Task<OphthalmologyViewModel> Ready(FakeApiClient api, long id)
+    {
+        var term = id.ToString("D4");
+        api.CannedResponses[$"patients/search?term={term}"] = new { data = new[] { new { id, firstName = "بیمار", lastName = "آزمایشی", nationalCode = term, mobile = "" } } };
+        api.CannedResponses[$"eye/exams?patientId={id}"] = new { data = Array.Empty<object>() };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = term };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        return vm;
+    }
+
     [Fact]
     public void Switching_patients_clears_all_previous_clinical_values_and_defaults()
     {
@@ -27,7 +37,8 @@ public class OphthalmologyViewModelTests
     public async Task Persian_numeric_input_is_sent_as_numbers_and_unselected_vision_is_not_assumed_normal()
     {
         var api = new FakeApiClient();
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(3), OdSphere = "−۲٫۵", OdIop = "۲۳", Pd = "۶۲" };
+        var vm = await Ready(api, 3);
+        vm.OdSphere = "−۲٫۵"; vm.OdIop = "۲۳"; vm.Pd = "۶۲";
         vm.OdIopWarning.Should().NotBeNull();
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
         var body = JsonSerializer.SerializeToElement(api.LastBody);
@@ -42,7 +53,8 @@ public class OphthalmologyViewModelTests
     public async Task Invalid_numeric_input_does_not_create_exam()
     {
         var api = new FakeApiClient();
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(3), OdIop = "نامعتبر" };
+        var vm = await Ready(api, 3);
+        vm.OdIop = "نامعتبر";
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(c => c.Endpoint == "eye/exams" && c.Method == "POST-bool");
     }
@@ -90,7 +102,8 @@ public class OphthalmologyViewModelTests
         var api = new FakeApiClient { PendingPostResult = null };
         // این مسیر POST بولی است، پاسخ معوق جداگانه دارد.
         api.PendingBoolPostResult = completion.Task;
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(7), EyeFindings = "یافته" };
+        var vm = await Ready(api, 7);
+        vm.EyeFindings = "یافته";
         var save = vm.SaveEyeExamCommand.ExecuteAsync(null);
         vm.IsEyeExamEnabled.Should().BeFalse();
         vm.CanSelectEyePatient.Should().BeFalse();
@@ -106,8 +119,24 @@ public class OphthalmologyViewModelTests
     public async Task Empty_exam_is_not_saved()
     {
         var api = new FakeApiClient();
-        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(7) };
+        var vm = await Ready(api, 7);
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
+    }
+
+    [Fact]
+    public async Task Failed_history_blocks_exam_until_reloaded()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id = 7, firstName = "علی", lastName = "رضایی", nationalCode = "1234", mobile = "" } } };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = "1234" };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.IsEyeExamEnabled.Should().BeFalse();
+        vm.EyeFindings = "یافته";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
+        api.CannedResponses["eye/exams?patientId=7"] = new { data = Array.Empty<object>() };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.IsEyeExamEnabled.Should().BeTrue();
     }
 }

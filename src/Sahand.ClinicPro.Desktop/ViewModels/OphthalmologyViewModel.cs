@@ -26,9 +26,11 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [ObservableProperty] private bool _isEyeHistoryLoading;
     /// <summary>تا پایان بارگذاری سابقه، ویرایش یا ثبت معاینه مجاز نیست.</summary>
     [ObservableProperty] private bool _isEyeSaving;
+    [ObservableProperty] private bool _isEyeHistoryReady;
     public bool CanSelectEyePatient => !IsEyeSaving;
-    public bool IsEyeExamEnabled => EyePatient is not null && !IsEyeHistoryLoading && !IsEyeSaving;
+    public bool IsEyeExamEnabled => EyePatient is not null && IsEyeHistoryReady && !IsEyeHistoryLoading && !IsEyeSaving;
     partial void OnIsEyeHistoryLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEyeExamEnabled));
+    partial void OnIsEyeHistoryReadyChanged(bool value) => OnPropertyChanged(nameof(IsEyeExamEnabled));
     partial void OnIsEyeSavingChanged(bool value)
     {
         OnPropertyChanged(nameof(IsEyeExamEnabled));
@@ -148,6 +150,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
         // دادهٔ بالینی و پاسخ‌های در حال پرواز هرگز به بیمار بعدی منتقل نشوند.
         _patientRequestVersion++;
         IsEyeHistoryLoading = false;
+        IsEyeHistoryReady = false;
         EyeHistory.Clear();
         HistoryTrendText = string.Empty;
         OdSphere = OdCylinder = OdAxis = OdAdd = OdIop = null;
@@ -193,11 +196,18 @@ public partial class OphthalmologyViewModel : ViewModelBase
         if (EyePatient is null) return;
         var patientId = EyePatient.Id;
         var requestVersion = _patientRequestVersion;
+        IsEyeHistoryReady = false;
         IsEyeHistoryLoading = true;
         EyeExamsResponse? response;
         try
         {
             response = await _api.GetAsync<EyeExamsResponse>($"eye/exams?patientId={patientId}");
+        }
+        catch
+        {
+            if (requestVersion == _patientRequestVersion)
+                _snackbar.Error("دریافت سابقه ناموفق بود؛ برای ثبت معاینه دوباره بیمار را جستجو کنید.");
+            return;
         }
         finally
         {
@@ -207,9 +217,10 @@ public partial class OphthalmologyViewModel : ViewModelBase
         var exams = response?.Data;
         if (exams is null)
         {
-            _snackbar.Error(_api.LastError ?? "دریافت سابقهٔ معاینه ناموفق بود");
+            _snackbar.Error(_api.LastError ?? "دریافت سابقه ناموفق بود؛ برای ثبت معاینه دوباره بیمار را جستجو کنید.");
             return;
         }
+        IsEyeHistoryReady = true;
         EyeHistory.Clear();
         HistoryTrendText = string.Empty;
         if (exams.Count == 0) return;
@@ -295,8 +306,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
     {
         if (EyePatient is null)
         { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        if (IsEyeHistoryLoading || IsEyeSaving)
-        { _snackbar.Error("تا پایان عملیات معاینه صبر کنید"); return; }
+        if (!IsEyeExamEnabled)
+        { _snackbar.Error("ابتدا سابقهٔ بیمار را دریافت و تا پایان عملیات معاینه صبر کنید"); return; }
 
         // تبدیل ارقام فارسی/عربی و جلوگیری از ذخیرهٔ بی‌صدای مقدار نامعتبر به صورت null.
         static bool IntValue(string? text, out int? value)
@@ -364,7 +375,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
             _snackbar.Error("پاسخ ثبت معاینه دریافت نشد؛ پیش از تلاش مجدد سابقهٔ بیمار را بررسی کنید.");
             return;
         }
-        if (!ok) { _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود"); return; }
+        if (!ok) { _snackbar.Error((_api.LastError ?? "ثبت معاینه ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد سابقه را بررسی کنید."); return; }
         _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
         if (EyePatient?.Id == patient.Id)
         {
