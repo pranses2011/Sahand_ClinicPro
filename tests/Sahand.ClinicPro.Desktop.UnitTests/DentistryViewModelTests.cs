@@ -141,4 +141,19 @@ public class DentistryViewModelTests
         vm.PlanTotalText.Should().Be(Sahand.ClinicPro.Desktop.Helpers.Money.Format(22340m));
     }
 
+    [Fact]
+    public async Task Invalid_catalog_price_is_not_added_to_treatment_plan()
+    {
+        var api = ApiWithPatient();
+        var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        vm.SelectedTooth = vm.UpperTeeth.First();
+        vm.SelectedCatalogItem = new DentalCatalogItem("خدمت", "آزاد", 0, 0.5m);
+        vm.AddDentalPlanCommand.Execute(null);
+        vm.DentalPlan.Should().BeEmpty();
+        vm.SelectedCatalogItem = new DentalCatalogItem("خدمت", "آزاد", 0, 1_000_000_000_000_000_000m);
+        vm.AddDentalPlanCommand.Execute(null);
+        vm.DentalPlan.Should().BeEmpty();
+    }
+
 }

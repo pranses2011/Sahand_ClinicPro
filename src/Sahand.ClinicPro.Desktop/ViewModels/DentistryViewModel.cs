@@ -305,6 +305,8 @@ public partial class DentistryViewModel : ViewModelBase
         if (!IsDentalChartEnabled) { _snackbar.Error("ابتدا پروندهٔ بیمار را بارگذاری کنید"); return; }
         if (SelectedTooth is null) { _snackbar.Error("ابتدا دندان را از چارت انتخاب کنید"); return; }
         if (SelectedCatalogItem is not { } item) { _snackbar.Error("ابتدا خدمت واقعی را انتخاب کنید"); return; }
+        if (item.Price < 0 || item.Price != decimal.Truncate(item.Price) || item.Price > Helpers.Money.MaxRial || PlanTotal > Helpers.Money.MaxRial - item.Price)
+        { _snackbar.Error("تعرفه یا جمع طرح از ظرفیت مبلغ ریالی مجاز خارج است"); return; }
         var procedure = item.Name;
         var surface = (SelectedSurface ?? "—").Split(' ')[0];
         var schedule = string.IsNullOrWhiteSpace(PlanScheduleText) ? "بدون نوبت" : PlanScheduleText.Trim();
