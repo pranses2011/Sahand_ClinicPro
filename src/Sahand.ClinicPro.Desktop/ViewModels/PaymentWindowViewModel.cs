@@ -45,6 +45,10 @@ public partial class PaymentWindowViewModel : ObservableObject
     /// <summary>در حال ذخیره</summary>
     [ObservableProperty]
     private bool _isBusy;
+    [ObservableProperty] private bool _isPaymentOutcomeUnknown;
+    public bool CanEditPayment => !IsBusy && !IsPaymentOutcomeUnknown;
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditPayment));
+    partial void OnIsPaymentOutcomeUnknownChanged(bool value) => OnPropertyChanged(nameof(CanEditPayment));
 
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
@@ -65,55 +69,55 @@ public partial class PaymentWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
+        if (IsBusy || IsPaymentOutcomeUnknown) return;
         ErrorMessage = string.Empty;
-
         if (Amount <= 0)
-        {
-            ErrorMessage = "مبلغ پرداخت باید بزرگ‌تر از صفر باشد";
-            return;
-        }
+        { ErrorMessage = "مبلغ پرداخت باید بزرگ‌تر از صفر باشد"; return; }
+        if (Amount > RemainingAmount || MethodIndex is < 0 or > 4)
+        { ErrorMessage = "مبلغ از مانده بیشتر است یا روش پرداخت معتبر نیست."; return; }
 
         IsBusy = true;
-
-        // ابتدا شناسهٔ بیمار فاکتور گرفته می‌شود
-        // ═══ چرخهٔ ۴۸ — پاکت استاندارد ApiResponse باز شود ═══
-        // پاسخ سرور در پاکت {isSuccess, data} است؛ نگاشت مستقیمِ پیشین یعنی
-        // PatientId/RemainingAmount همیشه پیش‌فرض (۰) — پرداخت با patientId=0
-        // ثبت می‌شد و به هیچ بیماری وصل نمی‌ماند.
-        var envelope = await _api.GetAsync<InvoiceDetailEnvelope>($"invoices/{_invoiceId}");
-        var detail = envelope?.Data;
-        if (detail is null)
+        var sent = false;
+        try
         {
-            ErrorMessage = _api.LastError ?? "دریافت فاکتور ناموفق بود";
-            IsBusy = false;
-            return;
-        }
-
-        var body = new
-        {
-            invoiceId = _invoiceId,
-            patientId = detail.PatientId,
-            amount = Amount,
-            method = MethodIndex + 1,
-            referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
-            cardNumber = string.IsNullOrWhiteSpace(CardNumber) ? null : CardNumber.Trim()
-        };
-
-        var ok = await _api.PostAsync("payments", body);
-        IsBusy = false;
-
-        if (ok)
-        {
-            // چرخهٔ ۷۰ — ذخیرهٔ روشِ ثبت‌شده به‌عنوان آخرین روش استفاده‌شده
+            var envelope = await _api.GetAsync<InvoiceDetailEnvelope>($"invoices/{_invoiceId}");
+            var detail = envelope?.Data;
+            if (detail is null || detail.Id != _invoiceId || detail.PatientId <= 0)
+            { ErrorMessage = _api.LastError ?? "دریافت هویت فاکتور ناموفق بود"; return; }
+            if (detail.RemainingAmount != RemainingAmount || Amount > detail.RemainingAmount)
+            { ErrorMessage = "مانده فاکتور تغییر کرده است؛ پنجره را ببندید و فاکتور را تازه‌سازی کنید."; return; }
+            var body = new
+            {
+                invoiceId = _invoiceId, patientId = detail.PatientId, amount = Amount, method = MethodIndex + 1,
+                referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
+                cardNumber = string.IsNullOrWhiteSpace(CardNumber) ? null : CardNumber.Trim()
+            };
+            sent = true;
+            var ok = await _api.PostAsync("payments", body);
+            if (!ok)
+            {
+                IsPaymentOutcomeUnknown = true;
+                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ پیش از تلاش مجدد، فاکتور و سوابق پرداخت را بررسی کنید. " + _api.LastError;
+                return;
+            }
             Services.LocalSettingsStore.Set("ui.payment.lastMethod", MethodIndex.ToString());
             SaveSucceeded?.Invoke(this, EventArgs.Empty);
         }
-        else ErrorMessage = _api.LastError ?? "ثبت پرداخت ناموفق بود";
+        catch (Exception)
+        {
+            if (sent)
+            {
+                IsPaymentOutcomeUnknown = true;
+                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ پیش از تلاش مجدد، فاکتور و سوابق پرداخت را بررسی کنید.";
+            }
+            else ErrorMessage = "دریافت فاکتور ناموفق بود؛ پرداخت ارسال نشد.";
+        }
+        finally { IsBusy = false; }
     }
 
     /// <summary>انصراف</summary>
     [RelayCommand]
-    private void Cancel() => CloseRequested?.Invoke(this, EventArgs.Empty);
+    private void Cancel() { if (!IsBusy) CloseRequested?.Invoke(this, EventArgs.Empty); }
 
     /// <summary>
     /// پاکت استاندارد پاسخ فاکتور — چرخهٔ ۴۸ (قانون هم‌کلاسی‌ها با باگ پاکت

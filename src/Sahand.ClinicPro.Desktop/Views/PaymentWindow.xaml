@@ -28,6 +28,7 @@
             <Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
         </TextBlock>
 
+        <StackPanel IsEnabled="{Binding CanEditPayment}">
         <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی — چرخهٔ بیست‌وهفتم: واحد پول پویا (پیشوند + بدون هاردکد) -->
         <TextBox behaviors:MoneyInput.IsEnabled="True"
                  behaviors:MoneyInput.NumericValue="{Binding Amount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
@@ -57,12 +58,14 @@
                  MaxLength="4"
                  Margin="0,0,0,16" />
 
+        </StackPanel>
+
         <TextBlock Text="{Binding ErrorMessage}"
                    Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                    FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <UniformGrid Columns="2">
-            <Button Command="{Binding SaveCommand}"
+            <Button Command="{Binding SaveCommand}" IsEnabled="{Binding CanEditPayment}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Content="ثبت پرداخت" Height="42" Margin="4" />
             <Button Command="{Binding CancelCommand}"
