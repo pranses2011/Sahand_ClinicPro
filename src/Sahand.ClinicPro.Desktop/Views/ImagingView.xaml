@@ -521,6 +521,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
+                            <TextBlock Text="ویرایش همزمان یک گزارش از چند رایانه ایمن نیست: در هر زمان فقط یک کاربر آن را ویرایش کند و پیش از شروع، صف را تازه‌سازی کند." Foreground="#9E1F17" Background="#FFF4E0" FontWeight="Bold" Padding="8" Margin="0,0,0,8" TextWrapping="Wrap" />
                             <Border Background="#FFECEA" BorderBrush="#F0B8B2" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,12"
                                     Visibility="{Binding CriticalFinding, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="🚨 یافتهٔ بحرانی فعال است: اطلاع‌رسانی را جداگانه انجام دهید؛ این فرم فقط اطلاعات واردشده را ثبت می‌کند و پیامک یا تماس خودکار ارسال نمی‌کند." Foreground="#9E1F17" FontWeight="SemiBold" TextWrapping="Wrap" />
