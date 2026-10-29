@@ -84,4 +84,30 @@ public class InvoiceRecoveryStoreTests
         }
         finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }
     }
+    [Fact]
+    public async Task Simultaneous_reservations_for_same_patient_do_not_overwrite_each_other()
+    {
+        var folder = Folder();
+        try
+        {
+            var store = new InvoiceRecoveryStore(folder);
+            var first = Sample();
+            var second = first with { Request = first.Request with { RequestId = Guid.NewGuid() } };
+            using var gate = new ManualResetEventSlim(false);
+            async Task<bool> Attempt(PendingInvoice pending) => await Task.Run(() =>
+            {
+                gate.Wait();
+                try { store.Reserve(pending); return true; }
+                catch (IOException) { return false; }
+            });
+            var a = Attempt(first);
+            var b = Attempt(second);
+            gate.Set();
+            var results = await Task.WhenAll(a, b);
+            results.Count(x => x).Should().Be(1);
+            var key = store.Load("test-api", 7)!.Request.RequestId;
+            (key == first.Request.RequestId || key == second.Request.RequestId).Should().BeTrue();
+        }
+        finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }
+    }
 }
