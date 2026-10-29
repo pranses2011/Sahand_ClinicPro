@@ -1855,6 +1855,7 @@ public partial class ReceptionsViewModel : ViewModelBase
 
         // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
         var paymentFailed = false;
+        var paymentConfirmedButRecoveryRetained = false;
         if (payment is not null && invoice?.Data is not null && invoice.Data > 0)
         {
             // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
@@ -1868,22 +1869,44 @@ public partial class ReceptionsViewModel : ViewModelBase
             }
             else
             {
-                var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", new
+                var sentPayment = false;
+                try
                 {
-                    requestId = Guid.NewGuid(),
-                    invoiceId = invoice.Data,
-                    patientId = FoundPatient.Id,
-                    amount = payable.Value,
-                    method = payment.Method,
-                    referenceNumber = payment.ReferenceNumber,
-                    cardNumber = payment.CardNumber
-                });
-                if (paymentResult?.Data is null || paymentResult.Data <= 0)
+                    var attempt = PaymentAttempt.Reserve(_api, invoice.Data.Value, FoundPatient.Id, payable!.Value,
+                        payment.Method, payment.ReferenceNumber, payment.CardNumber);
+                    if (!attempt.ContextMatches)
+                    {
+                        paymentFailed = true;
+                        _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید.");
+                    }
+                    else
+                    {
+                        sentPayment = true;
+                        var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", attempt.Request);
+                        if (paymentResult?.Data is null || paymentResult.Data <= 0)
+                        {
+                            paymentFailed = true;
+                            Views.AppDialog.Error("پاسخ پرداخت دریافت نشد",
+                                $"فاکتور {invoice.Data} صادر شد ولی نتیجه پرداخت مشخص نیست. پس از بررسی دریافت وجه و سوابق، همان فاکتور را در صندوق باز کنید.{Environment.NewLine}{_api.LastError}");
+                        }
+                        else
+                        {
+                            try { attempt.Clear(); }
+                            catch (Exception)
+                            {
+                                paymentFailed = true;
+                                paymentConfirmedButRecoveryRetained = true;
+                                _snackbar.Warning($"پرداخت فاکتور {invoice.Data} ثبت شد ولی فایل بازیابی پاک نشد؛ در صندوق بررسی کنید.");
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
                 {
                     paymentFailed = true;
-                    IsBusy = false;
-                    Views.AppDialog.Error("پاسخ پرداخت دریافت نشد",
-                        $"فاکتور صادر شد اما نتیجه پرداخت {Money.FormatWithUnit(payable.Value)} مشخص نیست:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پیش از تکرار پرداخت، وضعیت فاکتور و پرداخت را در صندوق بررسی کنید.");
+                    _snackbar.Warning(sentPayment
+                        ? $"فاکتور {invoice.Data} صادر شد؛ نتیجه پرداخت نامعلوم است و باید در صندوق بررسی شود."
+                        : $"فاکتور {invoice.Data} صادر شد؛ رزرو ایمن پرداخت ناموفق بود و پرداخت ارسال نشد.");
                 }
             }
         }
@@ -1895,6 +1918,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
         if (invoiceFailed)
             _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ نتیجه فاکتور را پیش از تکرار در صندوق بررسی کنید");
+        else if (paymentConfirmedButRecoveryRetained)
+            _snackbar.Info($"پذیرش و پرداخت ثبت شد — شناسه پذیرش {queueNo}؛ فایل بازیابی پرداخت در صندوق بررسی شود");
         else if (paymentFailed)
             _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد، وضعیت پرداخت را در صندوق بررسی کنید");
         else if (consumeResult is not null)
