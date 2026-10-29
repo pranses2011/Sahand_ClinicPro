@@ -1,4 +1,3 @@
-using System.Globalization;
 using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.Services;
@@ -9,12 +8,9 @@ public static class LabNumericResult
     /// <summary>پارس اعشار با ارقام فارسی، عربی یا لاتین؛ جداکنندهٔ هزارگان پذیرفته نمی‌شود.</summary>
     public static bool TryParse(string text, out decimal value)
     {
-        var normalized = Money.PersianDigitsToLatin(text.Trim())
-            .Replace('٫', '.').Replace('/', '.').Replace('−', '-');
-        return decimal.TryParse(normalized, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
-            CultureInfo.InvariantCulture, out value);
+        return PlainNumber.TryParse(text, out value);
     }
 
     /// <summary>نمایش مقدار بدون گردکردن یا تبدیل واحد پول.</summary>
-    public static string Format(decimal value) => Money.ToPersianDigits(value.ToString(CultureInfo.InvariantCulture));
+    public static string Format(decimal value) => PlainNumber.Format(value);
 }

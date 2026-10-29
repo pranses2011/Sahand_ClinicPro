@@ -182,15 +182,15 @@ public partial class StocktakingViewModel : ViewModelBase
             SessionStatusColor = d.StatusColor;
             IsInProgress = d.Status == "در حال شمارش";
             IsAwaitingApproval = d.Status == "تکمیل شده (در انتظار تأیید)";
-            SummaryText = $"شمارش‌شده: {d.CountedItems}/{d.TotalItems}  •  مغایرت: {d.DifferenceItems} قلم  •  کسری: {d.TotalShortage:N0}  •  زیادندی: {d.TotalSurplus:N0}";
+            SummaryText = $"شمارش‌شده: {d.CountedItems}/{d.TotalItems}  •  مغایرت: {d.DifferenceItems} قلم  •  کسری: {PlainNumber.Format(d.TotalShortage)}  •  زیادی: {PlainNumber.Format(d.TotalSurplus)}";
 
             Items.Clear();
             foreach (var i in d.Items ?? new())
                 Items.Add(new StockItemRow(
                     i.ItemId, i.MedicationName, i.BatchNumber,
-                    Money.Format(i.SystemQuantity), Money.Format(i.CountedQuantity),
+                    PlainNumber.Format(i.SystemQuantity), i.IsCounted ? PlainNumber.Format(i.CountedQuantity) : "—",
                     i.Difference, i.IsCounted,
-                    !i.IsCounted ? "شمارش نشده" : (i.Difference == 0 ? "برابر" : (i.Difference > 0 ? "+" : "") + Money.Format(i.Difference)),
+                    !i.IsCounted ? "شمارش نشده" : (i.Difference == 0 ? "برابر" : (i.Difference > 0 ? "+" : "") + PlainNumber.Format(i.Difference)),
                     !i.IsCounted ? "#9E9E9E" : (i.Difference == 0 ? "#43A047" : (i.Difference > 0 ? "#1E88E5" : "#E53935")),
                     i.Notes));
             ApplyFilter();
@@ -240,7 +240,7 @@ public partial class StocktakingViewModel : ViewModelBase
     {
         if (SelectedSession is null) { _snackbar.Error("ابتدا یک جلسه انتخاب کنید"); return; }
         if (SelectedItem is null) { _snackbar.Error("ابتدا یک قلم از جدول انتخاب کنید"); return; }
-        if (!decimal.TryParse(CountInput?.Trim(), out var qty) || qty < 0)
+        if (!PlainNumber.TryParse(CountInput ?? string.Empty, out var qty) || qty < 0)
         { _snackbar.Error("مقدار شمارش باید عددی نامنفی باشد"); return; }
 
         IsBusy = true;
@@ -294,7 +294,7 @@ public partial class StocktakingViewModel : ViewModelBase
             var response = await _api.PostAsync<ApproveResponse>($"stocktakings/{SelectedSession.Id}/approve", new { });
             if (response?.IsSuccess == true && response.Data is not null)
             {
-                _snackbar.Success($"مغایرت {response.Data.AdjustedItems} قلم به موجودی اعمال شد — کسری {response.Data.TotalShortage:N0}، زیادندی {response.Data.TotalSurplus:N0}");
+                _snackbar.Success($"مغایرت {response.Data.AdjustedItems} قلم به موجودی اعمال شد — کسری {PlainNumber.Format(response.Data.TotalShortage)}، زیادی {PlainNumber.Format(response.Data.TotalSurplus)}");
                 await LoadSessionsAsync();
                 var row = Sessions.FirstOrDefault(s => s.Id == SelectedSession.Id);
                 if (row is not null) SelectedSession = row;
