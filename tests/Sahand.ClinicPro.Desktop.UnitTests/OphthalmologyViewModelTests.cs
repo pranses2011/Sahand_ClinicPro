@@ -164,6 +164,9 @@ public class OphthalmologyViewModelTests
         vm.OdSphere = "۱٫۲۵";
         vm.Pd = "۶۲٫۵۵";
         await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        vm.Pd = "۶۲";
+        vm.OdAdd = "۱٫۲۳۴";
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
     }
 
