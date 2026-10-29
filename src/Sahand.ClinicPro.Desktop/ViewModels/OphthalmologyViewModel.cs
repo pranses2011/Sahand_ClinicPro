@@ -25,7 +25,10 @@ public partial class OphthalmologyViewModel : ViewModelBase
     private readonly Func<bool> _confirmPatientChange;
     private readonly Func<bool> _confirmCopyPrescription;
     private EyeExamDto? _latestExam;
-    public bool HasPreviousRefraction => _latestExam is not null;
+    public bool HasPreviousRefraction => _latestExam is { } exam &&
+        (exam.Od?.Sphere is not null || exam.Od?.Cylinder is not null || exam.Od?.Axis is not null ||
+         exam.Os?.Sphere is not null || exam.Os?.Cylinder is not null || exam.Os?.Axis is not null || exam.Pd is not null ||
+         ReadSavedAdd(exam.EyewearPrescription, "OD") is not null || ReadSavedAdd(exam.EyewearPrescription, "OS") is not null);
     private int _patientRequestVersion;
 
     [ObservableProperty] private bool _isEyeHistoryLoading;
@@ -181,7 +184,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [RelayCommand]
     private void CopyPreviousRefraction()
     {
-        if (!IsEyeExamEnabled || _latestExam is not { } last || !_confirmCopyPrescription()) return;
+        if (!IsEyeExamEnabled || !HasPreviousRefraction || _latestExam is not { } last || !_confirmCopyPrescription()) return;
         OdSphere = last.Od?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
         OdCylinder = last.Od?.Cylinder?.ToString(System.Globalization.CultureInfo.InvariantCulture);
         OdAxis = last.Od?.Axis?.ToString();

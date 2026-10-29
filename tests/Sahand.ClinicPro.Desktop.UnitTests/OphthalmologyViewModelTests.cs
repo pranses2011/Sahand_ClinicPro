@@ -208,4 +208,18 @@ public class OphthalmologyViewModelTests
         vm.OdCorrectedVisionIndex.Should().Be(-1);
     }
 
+    [Fact]
+    public async Task Exam_without_refraction_does_not_offer_copying_an_empty_prescription()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id = 7, firstName = "بیمار", lastName = "تست", nationalCode = "1234", mobile = "" } } };
+        api.CannedResponses["eye/exams?patientId=7"] = new { data = new[] { new { od = new { iop = 23 }, findings = "یافته" } } };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar(), confirmCopyPrescription: () => true) { EyePatientSearch = "1234" };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.HasPreviousRefraction.Should().BeFalse();
+        vm.OdSphere = "-1";
+        vm.CopyPreviousRefractionCommand.Execute(null);
+        vm.OdSphere.Should().Be("-1");
+    }
+
 }
