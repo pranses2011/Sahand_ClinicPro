@@ -60,4 +60,15 @@ public class InvoiceFormSafetyTests
         api.Calls.Count(x => x.Endpoint == "invoices").Should().Be(1);
         vm.ErrorMessage.Should().Contain("نامعلوم");
     }
+    [Fact]
+    public async Task Invalid_number_binding_blocks_invoice_creation()
+    {
+        var api = new FakeApiClient();
+        var vm = Create(api);
+        vm.HasInvalidInvoiceInput = true;
+        await vm.SaveAndPrintCommand.ExecuteAsync(null);
+        vm.ErrorMessage.Should().Contain("نامعتبر");
+        api.Calls.Should().NotContain(x => x.Endpoint == "invoices");
+    }
+
 }
