@@ -315,9 +315,10 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         // شمارهٔ واقعی از دیتابیس برگردد (EF مقدار پیش‌فرض تولیدی را پس از
         // INSERT روی خود موجودیت برمی‌خواند)، سپس سند با همان شماره ساخته و
         // در همان تراکنشِ فرمان (TransactionBehavior) ذخیره می‌شود — اتمیک.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        // شناسهٔ تولیدشدهٔ SQL باید پیش از ساخت رویداد دریافت شود.
         invoice.AddDomainEvent(new InvoiceCreatedEvent(
             invoice.Id, dto.PatientId, invoice.TotalAmount));
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         // ── سند حسابداری خودکار — قانون طلایی دوبل (اکنون با شمارهٔ واقعی) ──
         await GenerateJournalEntryAsync(invoice, patient, cancellationToken);

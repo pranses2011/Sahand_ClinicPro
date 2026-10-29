@@ -105,9 +105,11 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         if (invoice.PaymentStatus == PaymentStatus.Paid)
             invoice.AddDomainEvent(new InvoicePaidEvent(invoice.Id, dto.PatientId, invoice.PaidAmount));
 
+        // پرداخت و فاکتور در تراکنش فرمان ذخیره می‌شوند تا شناسهٔ واقعی پرداخت
+        // پیش از ایجاد سند حسابداری در دسترس باشد.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         // ── سند حسابداری دریافتی — بدهکار صندوق، بستانکار مطالبات بیمار ──
         await GenerateReceiptJournalAsync(payment, invoice, cancellationToken);
-
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         _logger.LogInformation("پرداخت {Amount} ریال برای فاکتور {Number} ثبت شد",

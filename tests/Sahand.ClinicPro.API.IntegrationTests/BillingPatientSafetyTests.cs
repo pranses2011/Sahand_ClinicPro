@@ -10,6 +10,7 @@ using Sahand.ClinicPro.Domain.Entities.Clinical;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Entities.Billing;
+using Sahand.ClinicPro.Domain.Entities.Accounting;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -70,6 +71,29 @@ public class BillingPatientSafetyTests
         (await handler.Handle(new(Make(null, visit.Id)), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(Make(999999, null)), default)).IsSuccess.Should().BeFalse();
         db.Set<Invoice>().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Payment_journal_references_the_saved_payment()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "PAY-JOURNAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000004" };
+        db.Add(patient);
+        db.AddRange(new AccountingAccount { AccountCode = "1101", AccountName = "صندوق" },
+            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات" });
+        await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
+        db.Add(invoice);
+        await db.SaveChangesAsync();
+        var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<ICurrentUserService>(), NullLogger<RecordPaymentCommandHandler>.Instance);
+        var result = await handler.Handle(new(new RecordPaymentDto(invoice.Id, patient.Id, 100, PaymentMethod.Cash)), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeGreaterThan(0);
+        var journal = await db.Set<JournalEntry>().SingleAsync(e => e.ReferenceType == JournalReferenceType.Payment);
+        journal.ReferenceId.Should().Be(result.Value);
     }
 
 }
