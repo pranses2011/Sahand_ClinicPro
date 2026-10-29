@@ -19,6 +19,11 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>پاسخ‌های آماده — کلید: endpoint، مقدار: شیء سریال‌شونده</summary>
     public Dictionary<string, object> CannedResponses { get; } = new();
 
+    /// <summary>پاسخ GET معوق برای آزمون ترتیب درخواست‌ها.</summary>
+    public Dictionary<string, Task<object?>> PendingGetResponses { get; } = new();
+    /// <summary>پاسخ دانلود معوق برای آزمون تعویض فایل.</summary>
+    public Dictionary<string, Task<byte[]?>> PendingDownloads { get; } = new();
+
     /// <summary>پاسخ بولی آماده برای فراخوانی‌های بدون داده خروجی</summary>
     public bool NextBoolResult { get; set; } = true;
 
@@ -72,10 +77,12 @@ public sealed class FakeApiClient : IApiClient
     }
 
     /// <summary>GET عمومی</summary>
-    public Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default)
+    public async Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default)
     {
         Calls.Add(("GET", endpoint));
-        return Task.FromResult(Resolve<T>(endpoint));
+        if (!PendingGetResponses.TryGetValue(endpoint, out var pending)) return Resolve<T>(endpoint);
+        var response = await pending;
+        return response is null ? default : JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response, JsonOptions), JsonOptions);
     }
 
     /// <summary>POST عمومی</summary>
@@ -157,7 +164,8 @@ public sealed class FakeApiClient : IApiClient
 
     /// <summary>دانلود فایل — در تست استفاده نمی‌شود</summary>
     public Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default)
-        => throw new NotSupportedException("دانلود در تست ViewModel پشتیبانی نمی‌شود");
+        => PendingDownloads.TryGetValue(endpoint, out var pending)
+            ? pending : throw new NotSupportedException("دانلود در تست ViewModel پشتیبانی نمی‌شود");
 
     /// <summary>دانلود POST — خروجی PDF گزارش‌ها (چرخه ۱۳، D6) — در تست استفاده نمی‌شود</summary>
     public Task<byte[]?> PostDownloadAsync(string endpoint, object? body, CancellationToken ct = default)

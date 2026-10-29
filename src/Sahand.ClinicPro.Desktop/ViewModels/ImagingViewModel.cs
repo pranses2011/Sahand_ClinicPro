@@ -91,6 +91,8 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>درخواست‌های پس از فیلتر/جست‌وجو — صف نمایشی</summary>
     public ObservableCollection<ImagingOrderRow> FilteredOrders { get; } = new();
     private int _queueRequestVersion;
+    private int _fileRequestVersion;
+    private int _imageRequestVersion;
     private bool _queueLoaded;
     [ObservableProperty] private string _queueStatus = "صف هنوز دریافت نشده است.";
     partial void OnQueueStatusChanged(string value) => OnPropertyChanged(nameof(QueueEmptyMessage));
@@ -688,7 +690,14 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بازخورد انتخاب درخواست — پرکردن گزارش، ایمنی و فایل‌ها</summary>
     partial void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
     {
-        if (value is null) return;
+        _fileRequestVersion++;
+        _imageRequestVersion++;
+        ImagingFiles = new ObservableCollection<ImagingFileRow>();
+        SelectedImagingFile = null;
+        CurrentImageBytes = null;
+        CurrentImageName = null;
+        ImageSourceChanged?.Invoke();
+        if (value is null) { ViewerMessage = "مطالعه‌ای انتخاب نشده است."; return; }
         try
         {
             OnSelectedImagingOrderChangedCore(value);
@@ -710,6 +719,8 @@ public partial class ImagingViewModel : ViewModelBase
         DoseCtdi = null; DoseDlp = null; CriticalFinding = false;
         CriticalNotifiedTo = null; ReportComparison = ComparisonOptions[0];
         ReportStatus = "نهایی و امضاشده"; Measurements.Clear();
+        // هر مطالعه چک‌لیست مستقل دارد؛ علامت‌های بیمار قبلی نباید منتقل شود.
+        BuildSafety();
         if (!string.IsNullOrWhiteSpace(value.ReportDetails))
         {
             try
@@ -730,13 +741,11 @@ public partial class ImagingViewModel : ViewModelBase
                 {
                     // چک‌لیست پس از ساخته‌شدن بر اساس مدالیته علامت می‌خورد
                     var done = saf.EnumerateArray().Select(e => e.GetString()).ToHashSet();
-                    BuildSafety();
                     foreach (var item in SafetyItems) item.IsChecked = done.Contains(item.Text);
                 }
             }
             catch (JsonException) { /* گزارش‌های قدیمی بدون جزئیات ساخت‌یافته */ }
         }
-        if (SafetyItems.Count == 0) BuildSafety();
         OnPropertyChanged(nameof(CurrentDrl));
         OnPropertyChanged(nameof(DoseHigh));
         ViewerMessage = $"{value.ModalityFa} {value.BodyPart} — {value.PatientName}";
@@ -747,9 +756,19 @@ public partial class ImagingViewModel : ViewModelBase
     private async Task LoadImagingFilesAsync()
     {
         if (SelectedImagingOrder is null) return;
-        var response = await _api.GetAsync<ImagingFilesResponse>(
-            $"imaging/files?orderId={SelectedImagingOrder.Id}");
-        ImagingFiles = new ObservableCollection<ImagingFileRow>((response?.Data ?? new List<ImagingFileDto>())
+        var orderId = SelectedImagingOrder.Id;
+        var version = ++_fileRequestVersion;
+        ImagingFilesResponse? response;
+        try { response = await _api.GetAsync<ImagingFilesResponse>($"imaging/files?orderId={orderId}"); }
+        catch
+        {
+            if (version == _fileRequestVersion && SelectedImagingOrder?.Id == orderId)
+                ViewerMessage = "دریافت فایل‌های مطالعه ناموفق بود.";
+            return;
+        }
+        if (version != _fileRequestVersion || SelectedImagingOrder?.Id != orderId) return;
+        if (response?.Data is null) { ViewerMessage = _api.LastError ?? "دریافت فایل‌های مطالعه ناموفق بود."; return; }
+        ImagingFiles = new ObservableCollection<ImagingFileRow>(response.Data
             .Select(f => new ImagingFileRow(f.Id, f.FileName, f.IsDicom, f.FileSize, f.UploadedAt)));
         SelectedImagingFile = ImagingFiles.FirstOrDefault();
         if (ImagingFiles.Count == 0)
@@ -759,24 +778,31 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بازخورد انتخاب فایل — بارگذاری تصویر در نمایشگر</summary>
     partial void OnSelectedImagingFileChanged(ImagingFileRow? value)
     {
-        if (value is null) return;
-        _ = LoadCurrentImageAsync(value);
+        var version = ++_imageRequestVersion;
+        CurrentImageBytes = null;
+        CurrentImageName = value?.FileName;
+        ImageSourceChanged?.Invoke();
+        if (value is not null) _ = LoadCurrentImageAsync(value, version);
     }
 
-    private async Task LoadCurrentImageAsync(ImagingFileRow file)
+    private async Task LoadCurrentImageAsync(ImagingFileRow file, int version)
     {
-        CurrentImageName = file.FileName;
         if (file.IsDicom)
         {
-            CurrentImageBytes = null;
             ViewerMessage = "فایل DICOM است — برای مشاهده با پنجره/سطح واقعی، دکمهٔ «نمایش DICOM» را بزنید.";
-            ImageSourceChanged?.Invoke();
             return;
         }
-        var bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content");
+        byte[]? bytes;
+        try { bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content"); }
+        catch
+        {
+            if (version == _imageRequestVersion && SelectedImagingFile?.Id == file.Id)
+                ViewerMessage = "دریافت تصویر ناموفق بود.";
+            return;
+        }
+        if (version != _imageRequestVersion || SelectedImagingFile?.Id != file.Id) return;
         if (bytes is null || bytes.Length == 0)
         {
-            CurrentImageBytes = null;
             ViewerMessage = _api.LastError ?? "دریافت فایل ناموفق بود";
         }
         else
@@ -854,6 +880,7 @@ public partial class ImagingViewModel : ViewModelBase
             return;
         }
 
+        var orderId = SelectedImagingOrder.Id;
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "انتخاب فایل تصویر یا DICOM",
@@ -864,12 +891,12 @@ public partial class ImagingViewModel : ViewModelBase
         var bytes = await System.IO.File.ReadAllBytesAsync(dialog.FileName);
         var uploadResponse = await _api.PostFileAsync<UploadAck>("imaging/files",
             System.IO.Path.GetFileName(dialog.FileName), bytes,
-            new Dictionary<string, string> { ["orderId"] = SelectedImagingOrder.Id.ToString() });
+            new Dictionary<string, string> { ["orderId"] = orderId.ToString() });
 
         if (uploadResponse?.IsSuccess == true)
         {
             _snackbar.Success(uploadResponse.Message ?? "فایل بارگذاری شد");
-            await LoadImagingFilesAsync();
+            if (SelectedImagingOrder?.Id == orderId) await LoadImagingFilesAsync();
         }
         else
         {
@@ -887,7 +914,11 @@ public partial class ImagingViewModel : ViewModelBase
             return;
         }
 
-        var bytes = await _api.DownloadFileAsync($"imaging/files/{SelectedImagingFile.Id}/content");
+        var file = SelectedImagingFile;
+        var orderId = SelectedImagingOrder?.Id;
+        var version = _imageRequestVersion;
+        var bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content");
+        if (version != _imageRequestVersion || SelectedImagingFile?.Id != file.Id || SelectedImagingOrder?.Id != orderId) return;
         if (bytes is null || bytes.Length == 0)
         {
             _snackbar.Error(_api.LastError ?? "دریافت فایل ناموفق بود");
@@ -895,7 +926,7 @@ public partial class ImagingViewModel : ViewModelBase
         }
 
         var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
-            $"sahand-dicom-{SelectedImagingFile.Id}.dcm");
+            $"sahand-dicom-{file.Id}.dcm");
         await System.IO.File.WriteAllBytesAsync(tempPath, bytes);
 
         var viewer = new Views.DicomViewerWindow(tempPath)

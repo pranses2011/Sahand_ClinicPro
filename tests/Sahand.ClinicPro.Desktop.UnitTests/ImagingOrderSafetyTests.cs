@@ -82,4 +82,51 @@ public class ImagingOrderSafetyTests
         vm.QueueEmptyMessage.Should().Contain("ناموفق");
     }
 
+    private static ImagingViewModel.ImagingOrderRow Order(long id, string modality) =>
+        new(id, id, $"بیمار {id}", modality, "زانو", 1, 3, null, null, null, null, null, null,
+            DateTime.UtcNow, null, null, null, null);
+
+    [Fact]
+    public async Task Changing_study_clears_old_safety_and_ignores_delayed_file_list()
+    {
+        var old = new TaskCompletionSource<object?>();
+        var api = new FakeApiClient();
+        api.PendingGetResponses["imaging/files?orderId=1"] = old.Task;
+        api.CannedResponses["imaging/files?orderId=2"] = new { data = new[] {
+            new { id = 22, fileName = "دوم.dcm", isDicom = true }
+        } };
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        vm.SelectedImagingOrder = Order(1, "MRI");
+        vm.SafetyItems[0].IsChecked = true;
+        vm.SelectedImagingOrder = Order(2, "CT");
+        vm.SafetyItems.Should().OnlyContain(x => !x.IsChecked);
+        vm.ImagingFiles.Should().ContainSingle(x => x.Id == 22);
+        old.SetResult(new { data = new[] { new { id = 11, fileName = "اول.dcm", isDicom = true } } });
+        await old.Task;
+        await Task.Yield();
+        vm.ImagingFiles.Should().ContainSingle(x => x.Id == 22);
+        vm.SelectedImagingFile!.Id.Should().Be(22);
+    }
+
+    [Fact]
+    public async Task Delayed_image_from_previous_selection_cannot_replace_current_image()
+    {
+        var old = new TaskCompletionSource<byte[]?>();
+        var next = new TaskCompletionSource<byte[]?>();
+        var api = new FakeApiClient();
+        api.PendingDownloads["imaging/files/11/content"] = old.Task;
+        api.PendingDownloads["imaging/files/22/content"] = next.Task;
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        vm.SelectedImagingFile = new ImagingViewModel.ImagingFileRow(11, "اول.png", false, 1, null);
+        vm.SelectedImagingFile = new ImagingViewModel.ImagingFileRow(22, "دوم.png", false, 1, null);
+        next.SetResult(new byte[] { 2 });
+        await next.Task;
+        await Task.Yield();
+        old.SetResult(new byte[] { 1 });
+        await old.Task;
+        await Task.Yield();
+        vm.CurrentImageName.Should().Be("دوم.png");
+        vm.CurrentImageBytes.Should().Equal(2);
+    }
+
 }
