@@ -85,7 +85,8 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
         (await client.PostAsJsonAsync("/s/read", new { token = "wrong" })).StatusCode.Should().Be(HttpStatusCode.Gone);
         var read = await client.PostAsJsonAsync("/s/read", new { token });
         read.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await read.Content.ReadAsStringAsync()).Should().Contain("کیفیت");
+        using (var readDoc = JsonDocument.Parse(await read.Content.ReadAsStringAsync()))
+            readDoc.RootElement.GetProperty("questions").GetString().Should().Contain("کیفیت");
         var bad = await client.PostAsJsonAsync("/s/submit", new { token, questionsSnapshot = questions, answers = new[] { "9" } });
         bad.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var stale = await client.PostAsJsonAsync("/s/submit", new { token, questionsSnapshot = "[]", answers = new[] { "5" } });
