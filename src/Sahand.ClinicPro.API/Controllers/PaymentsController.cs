@@ -25,6 +25,16 @@ public class PaymentsController : ApiBaseController
     /// <summary>سازنده با تزریق میانجی</summary>
     public PaymentsController(IMediator mediator) => _mediator = mediator;
 
+    /// <summary>ثبت یا بازخوانی ایمن همان درخواست؛ این مسیر شناسه پایدار را الزامی می‌کند.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("payments.create")]
+    public async Task<IActionResult> RecordIdempotent([FromBody] RecordPaymentDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه پایدار درخواست پرداخت الزامی است.", 400));
+        return await Record(dto);
+    }
+
     /// <summary>ثبت پرداخت — نقدی یا کارتی یا آنلاین</summary>
     [HttpPost]
     [HasPermission("payments.create")]
