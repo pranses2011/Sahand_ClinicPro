@@ -96,4 +96,26 @@ public class BillingPatientSafetyTests
         journal.ReferenceId.Should().Be(result.Value);
     }
 
+    [Fact]
+    public async Task Consumables_cannot_be_invoiced_again_when_any_prior_invoice_is_ambiguous()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "INV-AMBIG", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var reception = new Reception { PatientId = patient.Id };
+        db.Add(reception);
+        await db.SaveChangesAsync();
+        db.Add(new Invoice { PatientId = patient.Id, ReceptionId = reception.Id, Status = InvoiceStatus.Cancelled, IsDeleted = true });
+        await db.SaveChangesAsync();
+        var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var items = new List<InvoiceItemDto> { new(null, "مصرفی", 1, 100, 0, null, 0, MedicationId: 123) };
+        var result = await handler.Handle(new(new CreateInvoiceDto(patient.Id, reception.Id, null, (InvoiceType)1, null, 0, items)), default);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("BILLING.CONSUMABLE_PREVIOUS_INVOICE");
+        (await db.Set<Invoice>().IgnoreQueryFilters().CountAsync()).Should().Be(1);
+    }
+
 }

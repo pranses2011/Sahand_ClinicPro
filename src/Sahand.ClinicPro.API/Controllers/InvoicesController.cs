@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
@@ -51,9 +52,16 @@ public class InvoicesController : ApiBaseController
     [HasPermission("invoices.create")]
     public async Task<IActionResult> Create([FromBody] CreateInvoiceDto dto)
     {
-        var result = await _mediator.Send(new CreateInvoiceCommand(dto));
-        if (result.IsSuccess)
-            return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new CreateInvoiceCommand(dto));
+            if (result.IsSuccess)
+                return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");
+            return ToResponse(result);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پذیرش همزمان تغییر کرد؛ پیش از تلاش مجدد فاکتورهای آن را بررسی کنید.", 409));
+        }
     }
 }

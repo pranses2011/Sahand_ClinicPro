@@ -83,11 +83,23 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 
         if (dto.ReceptionId is long receptionId)
         {
-            var reception = await _unitOfWork.Repository<Reception>().QueryableNoTracking
-                .FirstOrDefaultAsync(r => r.Id == receptionId && !r.IsDeleted, cancellationToken);
-            if (reception is null) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
+            var receptionRepo = _unitOfWork.Repository<Reception>();
+            var reception = await receptionRepo.GetByIdAsync(receptionId, cancellationToken);
+            if (reception is null || reception.IsDeleted) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
             if (reception.PatientId != dto.PatientId)
                 return Result<long>.Failure(new Error("BILLING.RECEPTION_PATIENT", "بیمار فاکتور با بیمار پذیرش مطابقت ندارد."));
+            // اقلام قدیمی فاکتور شناسه دارو ندارند؛ وجود هر فاکتور قبلی، حتی
+            // ابطال‌شده یا حذف نرم‌شده، مانع تشخیص ایمن مبلغ مصرفی قبلی است.
+            // فاکتورهای بدون مصرفی همچنان می‌توانند جداگانه صادر شوند.
+            if (dto.Items.Any(i => i.MedicationId.HasValue) &&
+                await _unitOfWork.Repository<Invoice>().QueryableNoTracking.IgnoreQueryFilters()
+                    .AnyAsync(i => i.ReceptionId == receptionId, cancellationToken))
+                return Result<long>.Failure(new Error("BILLING.CONSUMABLE_PREVIOUS_INVOICE",
+                    "برای این پذیرش فاکتور قبلی وجود دارد؛ اقلام مصرفی را پیش از صدور مجدد به‌صورت دستی بررسی کنید."));
+            // همه صادرکنندگان وابسته به پذیرش در یک rowversion رقابت می‌کنند؛
+            // اگر هر دو پیش از بررسی فاکتور قبلی شروع شوند، تنها یکی ثبت می‌شود.
+            reception.UpdatedAt = DateTime.UtcNow;
+            receptionRepo.MarkPropertyModified(reception, r => r.UpdatedAt);
         }
         if (dto.VisitId is long visitId)
         {
