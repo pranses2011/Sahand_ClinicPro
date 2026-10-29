@@ -109,6 +109,14 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
             await repo.AddAsync(visit, cancellationToken);
         }
 
+        // حتی اگر فقط علائم حیاتی تغییر کند، ردیف والد باید در SQL Server با
+        // rowversion به‌روزرسانی شود تا دو درج همزمان علائم، هردو پذیرفته نشوند.
+        if (dto.Id.HasValue)
+        {
+            visit.UpdatedAt = DateTime.UtcNow;
+            repo.MarkPropertyModified(visit, x => x.UpdatedAt);
+        }
+
         // اعمال فیلدهای بالینی
         visit.ChiefComplaint = dto.ChiefComplaint;
         visit.HistoryOfPresentIllness = dto.HistoryOfPresentIllness;
