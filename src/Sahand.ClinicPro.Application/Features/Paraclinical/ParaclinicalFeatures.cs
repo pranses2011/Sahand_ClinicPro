@@ -184,7 +184,7 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
 /// <summary>فرمان ثبت طرح درمان دندانپزشکی</summary>
 public record CreateDentalPlanCommand(
     long PatientId, long? DentistId, decimal TotalCost,
-    int EstimatedSessions, string? PlanDetails) : IRequest<Result<long>>;
+    int EstimatedSessions, string? PlanDetails, long? ExpectedPlanId = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت طرح درمان دندانپزشکی</summary>
 public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCommand, Result<long>>
@@ -197,8 +197,11 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
     /// <summary>اجرای ثبت طرح درمان</summary>
     public async Task<Result<long>> Handle(CreateDentalPlanCommand request, CancellationToken cancellationToken)
     {
-        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
-                .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken))
+        // همهٔ ثبت‌های چارت یک بیمار روی rowversion بیمار رقابت می‌کنند تا
+        // بررسی آخرین طرح و درج طرح جدید در تراکنش واحد اتمیک بماند.
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
         if (request.TotalCost < 0 || request.EstimatedSessions < 0)
             return Result<long>.Failure(new Error("INVALID_DENTAL_PLAN", "مبلغ و تعداد جلسات نمی‌توانند منفی باشند"));
@@ -209,6 +212,11 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
             .OrderByDescending(p => p.Id).FirstOrDefaultAsync(cancellationToken);
         if (previous is not null && !DentalChartCompatibility.CanEdit(previous.PlanDetails))
             return Result<long>.Failure(new Error("DENTAL_PLAN_LEGACY", "طرح قبلی ناسازگار است؛ برای جلوگیری از پنهان شدن آن ثبت متوقف شد"));
+        if (previous?.Id != request.ExpectedPlanId)
+            return Result<long>.Failure(new Error("DENTAL_PLAN_STALE", "چارت پس از بازشدن فرم تغییر کرده است؛ ابتدا پرونده را دوباره بارگذاری و بررسی کنید"));
+        // تغییر فیلد حسابرسی موجب اعمال شرط rowversion هنگام ذخیره می‌شود؛
+        // تعارض باید تا بیرون pipeline انتشار یابد تا کل تراکنش rollback شود.
+        patient.UpdatedAt = DateTime.UtcNow;
         var plan = new DentalTreatmentPlan
         {
             PatientId = request.PatientId,

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Features.Paraclinical;
 using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Domain.Common;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -105,7 +106,12 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("dental.create")]
     public async Task<IActionResult> CreateDentalPlan([FromBody] CreateDentalPlanCommand command)
     {
-        var result = await _mediator.Send(command);
+        Result<long> result;
+        try { result = await _mediator.Send(command); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پرونده همزمان تغییر کرده است؛ چارت را دوباره بارگذاری و بررسی کنید", 409));
+        }
         if (result.IsSuccess)
             // چرخهٔ سی‌امین — نام اکشن هدف با nameof وصل شد؛ رشتهٔ «GetOrders»
             // وجود نداشت و پس از ثبت موفقِ طرح، اجرای نتیجه با

@@ -102,6 +102,7 @@ public partial class DentistryViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private readonly Func<bool> _confirmPatientChange;
     private int _patientVersion;
+    private long? _loadedPlanId;
     private readonly Dictionary<string, int> _toothState = new();
     [ObservableProperty] private string? _unsupportedDentalDetails;
     [ObservableProperty] private bool _isChartLoading;
@@ -321,7 +322,7 @@ public partial class DentistryViewModel : ViewModelBase
     partial void OnDentalPatientChanged(QuickPatient? value)
     {
         _patientVersion++;
-        IsChartReady = false; IsChartLoading = false; UnsupportedDentalDetails = null;
+        IsChartReady = false; IsChartLoading = false; UnsupportedDentalDetails = null; _loadedPlanId = null;
         DentalPlan.Clear(); _toothState.Clear();
         PerioSummary = MedicalSummary = PrescriptionText = RadioNote = ClinicalNote = string.Empty;
         ConsentSigned = false; PlanScheduleText = string.Empty; SelectedCatalogItem = null;
@@ -404,6 +405,7 @@ public partial class DentistryViewModel : ViewModelBase
             ClinicalNote = chart.Extras.Clinical ?? string.Empty;
         }
 
+        _loadedPlanId = chart.PlanId;
         IsChartReady = true;
         DentalChartInfo = string.IsNullOrWhiteSpace(chart.CreatedDateShamsi)
             ? "چارتی برای این بیمار ثبت نشده — نخستین ثبت"
@@ -445,24 +447,29 @@ public partial class DentistryViewModel : ViewModelBase
         IsDentalSaving = true;
         try
         {
-        bool ok;
-        try { ok = await _api.PostAsync("dental/plans", new
+        DentalPlanSaveResponse? response;
+        try { response = await _api.PostAsync<DentalPlanSaveResponse>("dental/plans", new
         {
             patientId = patient.Id,
             dentistId = (long?)null,
             totalCost = DentalPlan.Sum(r => r.Price),
             estimatedSessions = DentalPlan.Count,
-            planDetails
+            planDetails,
+            expectedPlanId = _loadedPlanId
         }); }
         catch
         {
             _snackbar.Error("پاسخ ذخیرهٔ چارت دریافت نشد؛ پیش از تلاش مجدد پرونده را بررسی کنید.");
             return;
         }
-        if (ok)
+        if (response is { IsSuccess: true, Data: > 0 })
         {
             _snackbar.Success($"چارت و طرح درمان برای «{patient.FullName}» ذخیره شد");
-            if (version == _patientVersion && DentalPatient?.Id == patient.Id) DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)}";
+            if (version == _patientVersion && DentalPatient?.Id == patient.Id)
+            {
+                _loadedPlanId = response.Data;
+                DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)}";
+            }
         }
         else _snackbar.Error((_api.LastError ?? "ذخیرهٔ چارت ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد پرونده را بررسی کنید.");
         }
@@ -483,6 +490,12 @@ public partial class DentistryViewModel : ViewModelBase
     // ── مدل‌های پاسخ چارت دندان — چرخهٔ ۲۸ ──
 
     /// <summary>پاسخ GET dental/chart — وضعیت دندان‌ها + ردیف‌های طرح</summary>
+    private sealed class DentalPlanSaveResponse
+    {
+        public bool IsSuccess { get; set; }
+        public long Data { get; set; }
+    }
+
     private sealed class DentalChartResponse
     {
         public DentalChartData? Data { get; set; }

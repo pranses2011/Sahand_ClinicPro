@@ -99,4 +99,24 @@ public class DentalPatientSafetyTests
         db.Set<DentalTreatmentPlan>().Should().ContainSingle().Which.PlanDetails.Should().Be("جزئیات قدیمی");
     }
 
+    [Fact]
+    public async Task Stale_or_missing_chart_version_cannot_hide_newer_plan()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-VERSION", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        const string json = "{\"teeth\":{},\"rows\":[]}";
+        var first = await handler.Handle(new(patient.Id, null, 0, 0, json), default);
+        first.IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 0, 0, json), default)).IsSuccess.Should().BeFalse();
+        var second = await handler.Handle(new(patient.Id, null, 0, 0, json, first.Value), default);
+        second.IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 0, 0, json, first.Value), default)).IsSuccess.Should().BeFalse();
+        db.Set<DentalTreatmentPlan>().Should().HaveCount(2);
+    }
+
 }

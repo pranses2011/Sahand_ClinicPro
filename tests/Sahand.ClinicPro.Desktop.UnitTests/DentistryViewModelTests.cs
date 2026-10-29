@@ -11,6 +11,7 @@ public class DentistryViewModelTests
     {
         var api = new FakeApiClient();
         api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id, firstName = "علی", lastName = "رضایی", nationalCode = "1234", mobile = "" } } };
+        api.CannedResponses["dental/plans"] = new { isSuccess = true, data = 42L };
         api.CannedResponses[$"dental/chart?patientId={id}"] = new { data = new { teeth = new Dictionary<string, int>(), rows = Array.Empty<object>() } };
         api.CannedResponses["lookups/services?search=&insuranceCompanyId="] = new { data = new[] { new { serviceName = "خدمت واقعی", price = 456m } } };
         return api;
@@ -60,7 +61,7 @@ public class DentistryViewModelTests
         await vm.SearchDentalPatientCommand.ExecuteAsync(null);
         vm.IsDentalChartEnabled.Should().BeFalse();
         await vm.SaveDentalChartCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "dental/plans");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "dental/plans");
         vm.ClinicalNote = "اطلاعات قبلی";
         vm.ClearDentalPatientCommand.Execute(null);
         vm.ClinicalNote.Should().BeEmpty();
@@ -70,9 +71,9 @@ public class DentistryViewModelTests
     [Fact]
     public async Task Pending_save_locks_chart_and_patient_selection()
     {
-        var completion = new TaskCompletionSource<bool>();
+        var completion = new TaskCompletionSource<object?>();
         var api = ApiWithPatient();
-        api.PendingBoolPostResult = completion.Task;
+        api.PendingPostResult = completion.Task;
         var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
         await vm.SearchDentalPatientCommand.ExecuteAsync(null);
         vm.ClinicalNote = "یادداشت";
@@ -81,7 +82,7 @@ public class DentistryViewModelTests
         vm.CanSelectDentalPatient.Should().BeFalse();
         vm.ClearDentalPatientCommand.Execute(null);
         vm.DentalPatient!.Id.Should().Be(1);
-        completion.SetResult(false);
+        completion.SetResult(null);
         await save;
         vm.IsDentalChartEnabled.Should().BeTrue();
         vm.ClinicalNote.Should().Be("یادداشت");
@@ -114,7 +115,20 @@ public class DentistryViewModelTests
         vm.IsDentalChartEnabled.Should().BeFalse();
         vm.UnsupportedDentalDetails.Should().Be("طرح قدیمی");
         await vm.SaveDentalChartCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "dental/plans");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "dental/plans");
+    }
+
+    [Fact]
+    public async Task Chart_save_uses_loaded_plan_id_and_updates_it_after_success()
+    {
+        var api = ApiWithPatient();
+        api.CannedResponses["dental/chart?patientId=1"] = new { data = new { planId = 10L, canEdit = true, teeth = new Dictionary<string, int>(), rows = Array.Empty<object>() } };
+        var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        await vm.SaveDentalChartCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("expectedPlanId").GetInt64().Should().Be(10);
+        await vm.SaveDentalChartCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("expectedPlanId").GetInt64().Should().Be(42);
     }
 
 }
