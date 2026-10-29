@@ -135,4 +135,22 @@ public class BillingPatientSafetyTests
         db.Set<Payment>().Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Payment_rejects_a_tracked_invoice_from_another_branch()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "BRANCH-PAY", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000003" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, BranchId = 2, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
+        db.Add(invoice); await db.SaveChangesAsync();
+        db.CurrentBranchId = 1;
+        var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<ICurrentUserService>(), NullLogger<RecordPaymentCommandHandler>.Instance);
+        var result = await handler.Handle(new RecordPaymentCommand(new RecordPaymentDto(invoice.Id, patient.Id, 100, PaymentMethod.Cash)), default);
+        result.IsFailure.Should().BeTrue();
+        invoice.PaidAmount.Should().Be(0);
+        db.Set<Payment>().Should().BeEmpty();
+    }
 }

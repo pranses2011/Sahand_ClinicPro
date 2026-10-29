@@ -63,6 +63,15 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
             decimal.Truncate(dto.Amount) != dto.Amount || dto.ReferenceNumber?.Length > 50 || dto.CardNumber?.Length > 20)
             return Result<long>.Failure(new Error("PAYMENT.INVALID", "شناسه فاکتور، مبلغ صحیح ریالی یا اطلاعات پرداخت نامعتبر است."));
 
+        // FindAsync ممکن است رکورد ردیابی‌شده را بدون اعمال فیلتر شعبه برگرداند.
+        // پیش از دسترسی به موجودیت‌های قابل ویرایش، دیده‌شدن هر دو را کنترل کن.
+        if (!await _unitOfWork.Repository<Patient>().QueryableNoTracking
+                .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        if (!await _unitOfWork.Repository<Invoice>().QueryableNoTracking
+                .AnyAsync(i => i.Id == dto.InvoiceId.Value && !i.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("فاکتور", dto.InvoiceId.Value));
+
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
         if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
