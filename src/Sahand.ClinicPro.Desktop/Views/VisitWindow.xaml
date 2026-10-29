@@ -973,14 +973,14 @@
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Run" Width="16" Height="16" Foreground="#5E35B1" VerticalAlignment="Center" />
-                                        <TextBlock Text="ارجاع بیمار همین ویزیت به بخش فیزیوتراپی" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
+                                        <TextBlock Text="ارجاع مستقل هنوز پشتیبانی نمی‌شود؛ از بخش فیزیوتراپی استفاده کنید" Style="{StaticResource CardTitle}" Margin="8,0,0,0" />
                                     </StackPanel>
                                     <TextBlock Text="شرح ارجاع — شکایت، تشخیص یا هدف درمان (اختیاری)" Style="{StaticResource FieldLabel}" Margin="2,12,0,5" />
                                     <TextBox Text="{Binding PhysioReferralNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
                                              TextWrapping="Wrap" Height="86" VerticalScrollBarVisibility="Auto" />
                                     <Button Command="{Binding SendToPhysioCommand}" Margin="2,16,0,0" HorizontalAlignment="Left"
                                             Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="230" Background="#5E35B1" BorderBrush="#5E35B1"
-                                            ToolTip="ارجاع در فهرست جلسات بخش فیزیوتراپی می‌نشیند و درمانگر ادامه می‌دهد">
+                                            ToolTip="ارجاع مستقل هنوز پشتیبانی نمی‌شود؛ هیچ جلسه ساختگی ثبت نخواهد شد">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
                                             <TextBlock Text="ارسال به فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />

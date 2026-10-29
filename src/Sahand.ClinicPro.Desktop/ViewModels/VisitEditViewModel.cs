@@ -720,43 +720,10 @@ public partial class VisitEditViewModel : ObservableObject
     [ObservableProperty]
     private string? _physioReferralNote;
 
-    /// <summary>
-    /// ارسال به فیزیوتراپی — چرخهٔ ۴۸: قرارداد فعلی سرور جلسه‌محور است
-    /// (RecordPhysioSessionCommand)؛ ارجاع به‌صورت نخستین جلسهٔ «ارجاعی» با
-    /// درمانگر تهی و برچسب واضح ثبت می‌شود تا در فهرست جلساتِ بخش فیزیوتراپی
-    /// دیده شود و درمانگر جلسات بعدی را با شمارهٔ ۲ به بعد ادامه دهد.
-    /// </summary>
+    /// <summary>ارجاع مستقل هنوز در سرور پشتیبانی نمی‌شود؛ جلسه ساختگی ثبت نمی‌کنیم.</summary>
     [RelayCommand]
-    private async Task SendToPhysioAsync()
-    {
-        if (_patientId <= 0)
-        {
-            _snackbar.Error("بیمار ویزیت مشخص نیست — ابتدا ویزیت را ذخیره کنید");
-            return;
-        }
-
-        IsBusy = true;
-        var ok = await _api.PostAsync("physiotherapy/sessions", new
-        {
-            patientId = _patientId,
-            therapistId = (long?)null, // درمانگر هنوز مشخص نیست — ارجاع است نه جلسهٔ درمان
-            sessionNumber = 1,
-            treatments = string.IsNullOrWhiteSpace(PhysioReferralNote)
-                ? "ارجاع به فیزیوتراپی از ویزیت پزشک"
-                : $"ارجاع به فیزیوتراپی از ویزیت پزشک — {PhysioReferralNote.Trim()}",
-            duration = (int?)null,
-            painScore = (byte?)null
-        });
-        IsBusy = false;
-
-        if (ok)
-        {
-            _snackbar.Success("ارجاع به فیزیوتراپی ثبت شد — در فهرست جلسات بخش فیزیوتراپی دیده می‌شود");
-            PhysioReferralNote = null;
-        }
-        else
-            _snackbar.Error(_api.LastError ?? "ارسال به فیزیوتراپی ناموفق بود");
-    }
+    private void SendToPhysio() => _snackbar.Error(
+        "ثبت ارجاع مستقل فیزیوتراپی هنوز پشتیبانی نمی‌شود؛ از بخش فیزیوتراپی برای ثبت جلسه واقعی استفاده کنید.");
 
     /* ─── تب ۵: گشودن نسخه‌نویسی با زمینهٔ ویزیت ─── */
 
