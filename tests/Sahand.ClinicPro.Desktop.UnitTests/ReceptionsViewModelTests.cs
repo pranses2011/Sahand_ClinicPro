@@ -141,4 +141,51 @@ public class ReceptionsViewModelTests
         vm.Receptions.Should().BeEmpty();
         vm.IsBusy.Should().BeFalse(because: "چرخهٔ بارگذاری حتی در خطا پایین می‌آید");
     }
+    [Fact]
+    public async Task Older_insurance_tariffs_cannot_replace_newer_ones_and_submission_waits()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] {
+            new { id = 5, name = "بیمه یک", isContracted = true },
+            new { id = 6, name = "بیمه دو", isContracted = true } } };
+        api.CannedResponses["lookups/services?search=&insuranceCompanyId="] =
+            new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 100m } } };
+        var first = new TaskCompletionSource<object?>();
+        var second = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["lookups/services?search=&insuranceCompanyId=5"] = first.Task;
+        api.PendingGetResponses["lookups/services?search=&insuranceCompanyId=6"] = second.Task;
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.ReceptionModeIndex = 1;
+        vm.AddServiceCommand.Execute(vm.Services.Single());
+        vm.InsuranceIndex = 1;
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        vm.InsuranceIndex = 2;
+        var refresh = vm.RefreshServiceTariffsCommand.ExecuteAsync(null);
+        second.SetResult(new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 300m } } });
+        await refresh;
+        first.SetResult(new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 200m } } });
+        await Task.Delay(100);
+        vm.Services.Single().Price.Should().Be(300m);
+        vm.SelectedServices.Single().Service.Price.Should().Be(300m);
+    }
+
+    [Fact]
+    public async Task Failed_tariff_refresh_keeps_selected_service_but_blocks_submission()
+    {
+        var api = MakeApi();
+        const string path = "lookups/services?search=&insuranceCompanyId=";
+        api.CannedResponses[path] = new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 100m } } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.ReceptionModeIndex = 1;
+        vm.AddServiceCommand.Execute(vm.Services.Single());
+        api.CannedResponses.Remove(path);
+        await vm.RefreshServiceTariffsCommand.ExecuteAsync(null);
+        vm.SelectedServices.Should().ContainSingle();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+    }
+
 }

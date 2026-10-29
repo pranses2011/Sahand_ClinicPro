@@ -602,6 +602,8 @@
                                 <!-- حالت خدمت درمانی: خدمت از تعرفه‌ها + انجام‌دهندهٔ اختیاری + اتاق -->
                                 <StackPanel Visibility="{Binding ReceptionModeIndex, Converter={StaticResource SectionToVisibility}, ConverterParameter=1}">
                                     <TextBlock Text="خدمات درمانی این مراجعه — از کاتالوگ جست‌وجو و اضافه کنید (یک پذیرش، یک فاکتور، یک قبض)" Style="{StaticResource FieldCaption}" TextWrapping="Wrap" />
+                                    <Button Content="تازه‌سازی تعرفهٔ خدمات" Command="{Binding RefreshServiceTariffsCommand}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" />
                                     <TextBox Text="{Binding ServiceSearchText, UpdateSourceTrigger=PropertyChanged}"
                                              materialDesign:HintAssist.Hint="🔎 جستجوی خدمت… مثلاً تزریق یا سرم" />
                                     <Border BorderBrush="#DCE8E3" BorderThickness="1" CornerRadius="10" Margin="0,6,0,0" MaxHeight="118">

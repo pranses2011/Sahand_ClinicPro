@@ -382,6 +382,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     private void AddService(ServiceOption? service)
     {
         if (service is null) return;
+        if (!_serviceTariffsLoaded || !Services.Contains(service))
+        { _snackbar.Error("تعرفه‌های بیمهٔ انتخابی هنوز آماده نیستند؛ فهرست تعرفه را تازه‌سازی کنید."); return; }
         var line = SelectedServices.FirstOrDefault(l => l.Service.Id == service.Id);
         if (line is not null) line.Quantity++;
         else
@@ -1133,18 +1135,47 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? Value { get; set; }
     }
 
+    private int _serviceLoadVersion;
+    private bool _serviceTariffsLoaded;
+
+    /// <summary>تلاش مجدد برای دریافت تعرفهٔ بیمهٔ فعلی.</summary>
+    [RelayCommand]
+    private async Task RefreshServiceTariffsAsync() =>
+        await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
+
     /// <summary>بارگذاری خدمات، تعرفهٔ مؤثر و پرسنل پذیرش خدمت درمانی.</summary>
     /// <param name="insuranceCompanyId">شناسهٔ شرکت طرف‌قرارداد؛ تهی یعنی تعرفهٔ آزاد.</param>
     private async Task LoadServicesAndPerformersAsync(long? insuranceCompanyId = null)
     {
         // خدمات فعال با تعرفهٔ هدفِ منتخب — سهم‌های بیمه/بیمار همراه قیمت می‌آید
+        var version = ++_serviceLoadVersion;
+        _serviceTariffsLoaded = false;
         var url = $"lookups/services?search=&insuranceCompanyId={insuranceCompanyId?.ToString() ?? ""}";
-        var services = await _api.GetAsync<ServicesLookupResponse>(url);
+        ServicesLookupResponse? services;
+        try { services = await _api.GetAsync<ServicesLookupResponse>(url); }
+        catch (Exception)
+        {
+            if (version == _serviceLoadVersion) _snackbar.Error("دریافت تعرفه‌ها ناموفق بود؛ دوباره تلاش کنید.");
+            return;
+        }
+        if (version != _serviceLoadVersion) return;
+        if (services?.Data is null)
+        { _snackbar.Error("دریافت تعرفه‌ها ناموفق بود؛ دوباره تلاش کنید. ثبت خدمت تا دریافت تعرفه معتبر ممکن نیست."); return; }
         Services.Clear();
-        foreach (var s2 in services?.Data ?? new List<ServiceLookupDto>())
+        foreach (var s2 in services.Data)
             Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price,
                 s2.InsuranceShare, s2.PatientShare));
         RefreshFilteredServices();
+        foreach (var line in SelectedServices)
+        {
+            var same = Services.FirstOrDefault(s => s.Id == line.Service.Id);
+            if (same is not null) line.Service = same;
+        }
+        SyncPrimaryService();
+        RecalculateCost();
+        _serviceTariffsLoaded = true;
+        if (SelectedServices.Any(line => !Services.Any(s => s.Id == line.Service.Id)))
+            _snackbar.Warning("برخی خدمات انتخابی در تعرفهٔ جدید نیستند؛ آن‌ها را حذف یا اصلاح کنید.");
 
         // پرسنل فعال برای انتخاب انجام‌دهنده — فقط یک بار لازم است
         if (Performers.Count == 0)
@@ -1403,28 +1434,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         CoveragePercent = selectedCompany?.CoveragePercent ?? 0m;
         RecalculateCost();
 
-        // ═══ چرخهٔ بیست‌وششم ═══ تعرفه‌ها بیمه‌محورند — با تغییر بیمه، فهرست
-        // خدمات با تعرفهٔ همان بیمه بازخوانی می‌شود و خدمتِ قبلی هم اگر هنوز
-        // موجود باشد دوباره انتخاب می‌شود تا قیمت‌ها بی‌درنگ درست بمانند.
-        // (نمایهٔ صفر = آزاد → بیمهٔ تهی به سرور می‌رود)
-        var companyId = GetEffectiveServiceInsuranceCompanyId(value);
-        var previousLines = SelectedServices.Select(l => (l.Service.Id, l.Quantity)).ToList();
-        _ = LoadServicesAndPerformersAsync(companyId).ContinueWith(_ =>
-        {
-            if (previousLines.Count == 0) return;
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-            {
-                foreach (var line in SelectedServices.ToList())
-                {
-                    var same = Services.FirstOrDefault(s => s.Id == line.Service.Id)
-                               ?? Services.FirstOrDefault(s => s.Name == line.Service.Name);
-                    if (same is not null) line.Service = same;
-                    else { line.Changed -= OnSelectedServiceLineChanged; SelectedServices.Remove(line); }
-                }
-                SyncPrimaryService();
-                RecalculateCost();
-            });
-        });
+        // پاسخ‌های دیررس نباید تعرفهٔ بیمهٔ فعلی را بازنویسی کنند.
+        _ = LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(value));
     }
 
     /// <summary>استعلام بیمه — با Timeout ۳۰ ثانیه و پیام مناسب</summary>
@@ -1575,6 +1586,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (ReceptionModeIndex == 1)
         {
             if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }
+            if (!_serviceTariffsLoaded || SelectedServices.Any(line => !Services.Any(s => s.Id == line.Service.Id)))
+            { _snackbar.Error("تعرفهٔ معتبر بیمهٔ فعلی آماده نیست یا خدمتی در فهرست جدید وجود ندارد؛ تعرفه را تازه‌سازی و خدمات را بررسی کنید."); return false; }
         }
         else
         {
