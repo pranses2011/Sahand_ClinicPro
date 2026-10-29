@@ -130,4 +130,15 @@ public class PhysiotherapyViewModelTests
         api.Calls.Should().NotContain(c => c.Endpoint.StartsWith("patients/search"));
     }
 
+    [Fact]
+    public async Task Next_session_uses_server_max_not_only_recent_rows()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { nextSessionNumber = 101, data = new[] { new { sessionNumber = 25 } } };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.SessionNumber.Should().Be(101);
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("sessionNumber").GetInt32().Should().Be(101);
+    }
+
 }

@@ -340,7 +340,7 @@ public class ParaclinicalController : ApiBaseController
         var maxSession = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
             .QueryableNoTracking.Where(e => e.PatientId == patientId && !e.IsDeleted)
             .Select(e => (int?)e.SessionNumber).MaxAsync();
-        var nextSessionNumber = maxSession is null ? 1 : maxSession == int.MaxValue ? int.MaxValue : maxSession.Value + 1;
+        var nextSessionNumber = maxSession is null or < 1 ? 1 : maxSession == int.MaxValue ? int.MaxValue : maxSession.Value + 1;
         return Ok(new { isSuccess = true, statusCode = 200, message = "عملیات با موفقیت انجام شد", data = sessions, nextSessionNumber });
     }
 
