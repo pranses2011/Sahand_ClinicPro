@@ -386,13 +386,14 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                     : item.MedicationId.HasValue &&
                       consumableCostByMedication.TryGetValue(item.MedicationId.Value, out var consumedCost) &&
                       consumedCost.Quantity > 0m
-                        ? RoundRial(consumedCost.TotalCost / consumedCost.Quantity)
+                        ? consumedCost.TotalCost / consumedCost.Quantity
                         : 0m
             });
         }
 
         var tax = RoundRial((subTotal - totalDiscount) * dto.TaxPercent / 100m);
-        if (subTotal - totalDiscount - totalInsuranceShare + tax > InvoiceAmountSafety.MaxRial)
+        if (subTotal > InvoiceAmountSafety.MaxRial || tax > InvoiceAmountSafety.MaxRial ||
+            subTotal - totalDiscount - totalInsuranceShare + tax > InvoiceAmountSafety.MaxRial)
             return Result<InvoiceCalculation>.Failure(new Error("BILLING.AMOUNT_OVERFLOW", "مبلغ فاکتور از سقف قابل ذخیره بیشتر است."));
         invoice.SubTotal = subTotal;
         invoice.DiscountAmount = totalDiscount;

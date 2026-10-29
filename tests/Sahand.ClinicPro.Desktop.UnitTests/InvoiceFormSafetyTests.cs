@@ -77,4 +77,27 @@ public class InvoiceFormSafetyTests
         api.Calls.Should().NotContain(x => x.Endpoint == "invoices");
     }
 
+    [Fact]
+    public async Task Editing_an_item_after_quote_blocks_issuance_even_for_programmatic_change()
+    {
+        var api = new FakeApiClient();
+        var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
+        vm.Items[0].Quantity = 2;
+        await vm.SaveAndPrintCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(x => x.Endpoint == "invoices");
+        vm.ErrorMessage.Should().Contain("محاسبه");
+    }
+
+    [Fact]
+    public async Task Invoice_request_includes_the_reviewed_quote_version()
+    {
+        var api = new FakeApiClient();
+        var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
+        await vm.SaveAndPrintCommand.ExecuteAsync(null);
+        var body = System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("ExpectedQuote").GetString().Should().Be("TEST-QUOTE");
+    }
+
 }
