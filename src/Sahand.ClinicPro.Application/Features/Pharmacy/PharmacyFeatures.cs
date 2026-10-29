@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Enums;
@@ -77,6 +78,7 @@ public class DispensePrescriptionCommandHandler : IRequestHandler<DispensePrescr
             return Result.Failure(new Error("ALREADY_DELIVERED", "این نسخه قبلاً تحویل شده است"));
 
         var now = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
 
         foreach (var item in prescription.Items.Where(i => !i.IsDelivered))
         {
@@ -84,9 +86,9 @@ public class DispensePrescriptionCommandHandler : IRequestHandler<DispensePrescr
             var batches = await _unitOfWork.Repository<PharmacyInventory>()
                 .QueryableTracking
                 .Where(inv => inv.MedicationId == item.MedicationId
-                           && inv.Quantity > 0
-                           && (inv.ExpiryDate == null || inv.ExpiryDate >= DateOnly.FromDateTime(now)))
-                .OrderBy(inv => inv.ExpiryDate)
+                           && inv.Quantity > 0 && inv.IsActive && !inv.IsDeleted
+                           && (inv.ExpiryDate == null || inv.ExpiryDate >= today))
+                .OrderBy(inv => inv.ExpiryDate == null).ThenBy(inv => inv.ExpiryDate).ThenBy(inv => inv.Id)
                 .ToListAsync(cancellationToken);
 
             var remaining = item.Quantity;
@@ -94,6 +96,7 @@ public class DispensePrescriptionCommandHandler : IRequestHandler<DispensePrescr
             foreach (var batch in batches)
             {
                 if (remaining <= 0) break;
+                if (batch.Quantity <= 0) continue;
 
                 var take = Math.Min(batch.Quantity, remaining);
                 batch.Quantity -= take;

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
@@ -50,7 +51,7 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
     public async Task<Result<List<ConsumableOptionDto>>> Handle(GetConsumablesQuery request,
         CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
         var search = request.Search?.Trim();
 
         // فقط بچ‌های دارای موجودی و سالم (تهی یا آیندهٔ انقضا)؛ بچ منقضی هرگز
@@ -59,7 +60,7 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
             .QueryableNoTracking
             .Include(i => i.Medication)
             .Where(i => i.Quantity > 0
-                && !i.IsDeleted
+                && !i.IsDeleted && i.IsActive
                 && (i.ExpiryDate == null || i.ExpiryDate >= today)
                 && i.Medication != null
                 && i.Medication.ItemKind == MedicationItemKind.Consumable
@@ -71,9 +72,12 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
                 (i.Medication!.GenericNameFa != null && i.Medication.GenericNameFa.Contains(search)) ||
                 i.Medication!.GenericName.Contains(search));
 
-        var rows = await query
+        // سقف بر تعداد قلم است، نه تعداد بچ؛ همهٔ بچ‌های هر قلم منتخب باید جمع شوند.
+        var selectedIds = await query.Select(i => new { i.MedicationId, Name = i.Medication!.GenericNameFa ?? i.Medication.GenericName })
+            .Distinct().OrderBy(x => x.Name).ThenBy(x => x.MedicationId).Take(200)
+            .Select(x => x.MedicationId).ToListAsync(cancellationToken);
+        var rows = await query.Where(i => selectedIds.Contains(i.MedicationId))
             .OrderBy(i => i.Medication!.GenericNameFa ?? i.Medication.GenericName)
-            .Take(200)
             .Select(i => new
             {
                 i.MedicationId,
@@ -170,6 +174,9 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.QTY",
                 "تعداد هر قلم مصرفی باید بیشتر از صفر باشد"));
 
+        if (request.Items.GroupBy(i => i.MedicationId).Any(g => g.Count() > 1))
+            return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.DUPLICATE", "هر قلم مصرفی فقط یک بار در درخواست مجاز است."));
+
         // پذیرش باید واقعی باشد — منشأ تراکنش‌ها به آن گره می‌خورد
         var reception = await _unitOfWork.Repository<Reception>()
             .QueryableNoTracking
@@ -177,7 +184,10 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
         if (reception is null)
             return Result<ConsumeStockResultDto>.Failure(Error.NotFound("پذیرش", request.ReceptionId));
 
+        if (reception.Status == ReceptionStatus.Cancelled)
+            return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.CANCELLED", "مصرف برای پذیرش لغوشده مجاز نیست."));
         var now = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
         var resultItems = new List<ConsumeResultItemDto>();
         // ═══ چرخهٔ ۶۷ — جمع بهای تمام‌شدهٔ اقلام مصرفی (قیمت خرید × تعداد) ═══
         // مبنای سند حسابداری هزینه؛ قیمت فروش (taken) فقط برای نمایش خروجی است.
@@ -198,9 +208,9 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 .QueryableTracking
                 .Where(inv => inv.MedicationId == item.MedicationId
                            && inv.Quantity > 0
-                           && !inv.IsDeleted
-                           && (inv.ExpiryDate == null || inv.ExpiryDate >= DateOnly.FromDateTime(now)))
-                .OrderBy(inv => inv.ExpiryDate)
+                           && !inv.IsDeleted && inv.IsActive
+                           && (inv.ExpiryDate == null || inv.ExpiryDate >= today))
+                .OrderBy(inv => inv.ExpiryDate == null).ThenBy(inv => inv.ExpiryDate).ThenBy(inv => inv.Id)
                 .ToListAsync(cancellationToken);
 
             var remaining = item.Quantity;
@@ -209,6 +219,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
             foreach (var batch in batches)
             {
                 if (remaining <= 0) break;
+                if (batch.Quantity <= 0) continue;
 
                 var take = Math.Min(batch.Quantity, remaining);
                 batch.Quantity -= take;

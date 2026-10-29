@@ -153,4 +153,48 @@ public class Cycle46ConsumablesFlowTests
         options.Value!.Single(o => o.MedicationId == createdIds[0]).TotalQuantity
             .Should().Be(20m, "کمبوی پذیرش باید موجودی پس از مصرف را نشان دهد (۲۰)");
     }
+    [Fact]
+    public async Task Consumables_use_expiring_active_batches_first_and_count_all_batches()
+    {
+        var (uow, context) = CreateUnitOfWork();
+        var medication = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+        { GenericName = "FEFO", GenericNameFa = "قلم تست", ItemKind = MedicationItemKind.Consumable, IsActive = true };
+        var reception = new Reception { PatientId = 1, ReceptionNumber = "FEFO", Status = ReceptionStatus.Admitted };
+        context.AddRange(medication, reception);
+        await context.SaveChangesAsync();
+        var future = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1));
+        var undated = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = medication.Id, Quantity = 1, SellPrice = 10 };
+        var dated = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = medication.Id, Quantity = 1, SellPrice = 20, ExpiryDate = future };
+        var inactive = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = medication.Id, Quantity = 100, SellPrice = 50, IsActive = false };
+        context.AddRange(undated, dated, inactive);
+        context.AddRange(Enumerable.Range(0, 201).Select(_ => new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory
+            { MedicationId = medication.Id, Quantity = 1, SellPrice = 10 }));
+        await context.SaveChangesAsync();
+        var listing = await new Sahand.ClinicPro.Application.Features.Pharmacy.GetConsumablesQueryHandler(uow)
+            .Handle(new(null), default);
+        listing.Value.Single().TotalQuantity.Should().Be(203);
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler>.Instance);
+        var result = await handler.Handle(new(reception.Id, new() { new(medication.Id, 1) }, null), default);
+        result.IsSuccess.Should().BeTrue();
+        dated.Quantity.Should().Be(0);
+        undated.Quantity.Should().Be(1);
+        inactive.Quantity.Should().Be(100);
+        result.Value.TotalCost.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task Consumables_reject_duplicate_items_and_cancelled_reception()
+    {
+        var (uow, context) = CreateUnitOfWork();
+        var reception = new Reception { PatientId = 1, ReceptionNumber = "CANCEL", Status = ReceptionStatus.Cancelled };
+        context.Add(reception);
+        await context.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler>.Instance);
+        (await handler.Handle(new(reception.Id, new() { new(1, 1), new(1, 2) }, null), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(reception.Id, new() { new(1, 1) }, null), default)).IsSuccess.Should().BeFalse();
+        context.PharmacyTransactions.Should().BeEmpty();
+    }
+
 }
