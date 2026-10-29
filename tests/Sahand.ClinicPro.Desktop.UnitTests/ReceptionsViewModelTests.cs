@@ -48,6 +48,7 @@ public class ReceptionsViewModelTests
                 },
             },
         };
+        api.CannedResponses["settings/insurance-policy"] = new { data = Array.Empty<object>() };
         api.CannedResponses["lookups/insurance-companies"] = new
         {
             isSuccess = true,
@@ -326,6 +327,18 @@ public class ReceptionsViewModelTests
         System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody).GetProperty("appointmentId").GetInt64().Should().Be(77);
         pending.SetResult(null);
         await submission;
+    }
+
+    [Fact]
+    public async Task Missing_insurance_policy_blocks_reception_until_it_can_be_loaded()
+    {
+        var api = MakeApi();
+        api.CannedResponses.Remove("settings/insurance-policy");
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.SelectedDoctor = vm.Doctors.First();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
     }
 
 }

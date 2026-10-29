@@ -620,6 +620,9 @@ public partial class ReceptionsViewModel : ViewModelBase
     private int _insuranceIndex;
 
     /// <summary>تنظیم مستقل اعمال بیمه برای ویزیت</summary>
+    private bool _insurancePolicyLoaded;
+    private bool _insuranceListLoaded;
+    private bool _isInitializing = true;
     private bool ApplyInsuranceToDoctorVisits { get; set; } = true;
 
     /// <summary>تنظیم مستقل اعمال بیمه برای خدمات درمانی</summary>
@@ -704,6 +707,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>بارگذاری اولیه</summary>
     private async Task InitializeAsync()
     {
+        try
+        {
         await LoadInsuranceBillingPolicyAsync();
         var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (doctors?.Data is not null)
@@ -711,6 +716,8 @@ public partial class ReceptionsViewModel : ViewModelBase
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+        _insuranceListLoaded = companies?.Data is not null;
+        if (!_insuranceListLoaded) _snackbar.Error("دریافت فهرست بیمه ناموفق بود؛ پیش از ثبت آن را تازه‌سازی کنید.");
         // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «نوع بیمه گزینهٔ آزاد وجود ندارد و
         // هنوز بیمهٔ آسیا به‌عنوان آزاد ثبت می‌شود» — ریشهٔ باگ: کد، نمایهٔ صفرِ
         // کشو را «آزاد/بدون بیمه» تفسیر می‌کرد (InsuranceIndex <= 0) ولی کشو هیچ
@@ -731,6 +738,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
 
         await LoadAsync();
+        }
+        catch (Exception) { _snackbar.Error("بارگذاری اولیه پذیرش ناموفق بود؛ اطلاعات بیمه را تازه‌سازی کنید."); }
+        finally { _isInitializing = false; }
     }
 
     /// <summary>بارگذاری آمار و صف امروز</summary>
@@ -1144,13 +1154,52 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     private async Task LoadInsuranceBillingPolicyAsync()
     {
+        _insurancePolicyLoaded = false;
         var response = await _api.GetAsync<InsurancePolicySettingsResponse>("settings/insurance-policy");
-        var settings = response?.Data ?? new List<InsurancePolicySetting>();
+        if (response?.Data is null)
+        { _snackbar.Error("دریافت تنظیمات بیمه ناموفق بود؛ پیش از ثبت آن را تازه‌سازی کنید."); return; }
+        _insurancePolicyLoaded = true;
+        var settings = response.Data;
         var visits = settings.FirstOrDefault(x => x.Key == "ApplyToDoctorVisits")?.Value;
         var services = settings.FirstOrDefault(x => x.Key == "ApplyToMedicalServices")?.Value;
         if (bool.TryParse(visits, out var applyVisits)) ApplyInsuranceToDoctorVisits = applyVisits;
         if (bool.TryParse(services, out var applyServices)) ApplyInsuranceToMedicalServices = applyServices;
         RecalculateCost();
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isRefreshingInsurance;
+
+    /// <summary>دریافت دوبارهٔ تنظیمات و شرکت‌های بیمه پس از خطا.</summary>
+    [RelayCommand]
+    private async Task RefreshInsuranceAsync()
+    {
+        if (IsSubmitting || IsCreatingUnidentifiedPatient || IsRefreshingInsurance) return;
+        if (_isInitializing) { _snackbar.Info("بارگذاری اولیه هنوز تمام نشده است."); return; }
+        IsRefreshingInsurance = true;
+        var selectedId = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count ? InsuranceCompanies[InsuranceIndex].Id : 0;
+        try
+        {
+            await LoadInsuranceBillingPolicyAsync();
+            _insuranceListLoaded = false;
+            var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+            if (companies?.Data is null)
+            { _snackbar.Error("دریافت فهرست بیمه ناموفق بود؛ دوباره تلاش کنید."); return; }
+            InsuranceCompanies.Clear();
+            InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)", false));
+            foreach (var c in companies.Data)
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
+            _insuranceListLoaded = true;
+            var index = InsuranceCompanies.ToList().FindIndex(c => c.Id == selectedId);
+            if (index < 0)
+            { InsuranceIndex = -1; _snackbar.Warning("شرکت بیمه قبلی در فهرست جدید نیست؛ بیمه را دوباره انتخاب کنید."); }
+            else { InsuranceIndex = index; InvalidateInquiry(); }
+            await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
+            RecalculateCost();
+        }
+        catch (Exception) { _snackbar.Error("دریافت اطلاعات بیمه ناموفق بود؛ دوباره تلاش کنید."); }
+        finally { IsRefreshingInsurance = false; }
     }
 
     private sealed class InsurancePolicySettingsResponse
@@ -1628,6 +1677,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     private bool ValidateReception()
     {
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
+        if (_isInitializing || !_insuranceListLoaded || !_insurancePolicyLoaded || IsRefreshingInsurance || InsuranceIndex < 0 || InsuranceIndex >= InsuranceCompanies.Count)
+        { _snackbar.Error("اطلاعات بیمه آماده نیست؛ تنظیمات و فهرست بیمه را تازه‌سازی و انتخاب کنید."); return false; }
         if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
         if (_selectedAppointmentId is not null && (ReceptionModeIndex != 0 || FoundPatient.Id != _selectedAppointmentPatientId || SelectedDoctor?.Id != _selectedAppointmentDoctorId))
         { _snackbar.Error("بیمار یا پزشک پذیرش با نوبت انتخاب‌شده مطابقت ندارد؛ نوبت را بررسی یا جستجو را پاک کنید."); return false; }
@@ -1655,7 +1706,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     private bool _isSubmitting;
 
     /// <summary>فرم در طول زنجیرهٔ ثبت و چاپ قابل تغییر نیست.</summary>
-    public bool CanEditReception => !IsSubmitting && !IsCreatingUnidentifiedPatient;
+    public bool CanEditReception => !IsSubmitting && !IsCreatingUnidentifiedPatient && !IsRefreshingInsurance;
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]

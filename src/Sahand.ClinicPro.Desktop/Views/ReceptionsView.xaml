@@ -813,6 +813,8 @@
                                 <ComboBox ItemsSource="{Binding InsuranceCompanies}"
                                           SelectedIndex="{Binding InsuranceIndex}"
                                           DisplayMemberPath="DisplayName" />
+                                <Button Content="تازه‌سازی اطلاعات بیمه" Command="{Binding RefreshInsuranceCommand}"
+                                        Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" />
                                 <TextBlock Text="شماره بیمه" Style="{StaticResource FieldCaption}" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
