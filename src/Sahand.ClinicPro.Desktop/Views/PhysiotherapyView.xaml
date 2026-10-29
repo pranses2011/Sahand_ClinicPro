@@ -22,9 +22,9 @@
         </Style>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#DCE8E3" />
+            <Setter Property="BorderBrush" Value="#D3E2F0" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="14" />
             <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
@@ -36,12 +36,21 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="DirectionsRun" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="فیزیوتراپی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="— ماژول حرفه‌ای دورهٔ درمان" FontSize="12" Opacity="0.65" Margin="8,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Left" Command="{Binding SavePhysioSessionCommand}" IsEnabled="{Binding IsPhysioSessionEnabled}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره جلسه" />
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="#E8F2FD" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="DirectionsRun" Width="23" Height="23" Foreground="#176AC2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="دوره درمان فیزیوتراپی" Foreground="#173657" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="نقشه بدن، جلسه درمان و روند پرونده بیمار" Foreground="#617992" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="2">
             <StackPanel>
@@ -69,7 +78,7 @@
                                 <TextBlock FontWeight="SemiBold">
                                     <Run Text="بیمار: " /><Run Text="{Binding PhysioPatient.FullName, Mode=OneWay}" />
                                     <Run Text=" — جلسهٔ " /><Run Text="{Binding SessionNumber, Mode=OneWay}" />
-                                    <Run Text=" از " /><Run Text="{Binding TotalSessions, Mode=OneWay}" />
+                                    <Run Text=" (شماره بعدی در سابقه)" />
                                 </TextBlock>
                             </Border>
                         </Grid>
@@ -88,6 +97,9 @@
                     </StackPanel>
                 </Border>
 
+                <TextBlock Text="در حال دریافت سابقهٔ جلسات…" Foreground="#176AC2" Margin="0,0,0,8"
+                           Visibility="{Binding IsHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel IsEnabled="{Binding IsPhysioSessionEnabled}">
                 <!-- ───── نقشهٔ بدن ───── -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
@@ -104,7 +116,7 @@
                             </Button>
                             <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#00695C">
                                 <Run Text="ناحیهٔ انتخابی: " /><Run Text="{Binding SelectedZone, Mode=OneWay}" />
-                                <Run Text=" — درد: " /><Run Text="{Binding SelectedZonePain, Mode=OneWay}" /><Run Text=" از ۱۰" />
+                                <Run Text=" — درد: " /><Run Text="{Binding SelectedZonePainText, Mode=OneWay}" /><Run Text=" از ۱۰" />
                             </TextBlock>
                         </StackPanel>
                         <Viewbox MaxHeight="430" HorizontalAlignment="Center">
@@ -184,9 +196,11 @@
                             <TextBlock Text="{Binding TotalDuration, Mode=OneWay}" FontWeight="Bold" Foreground="#00695C" />
                             <TextBlock Text=" دقیقه" />
                             <TextBlock Text="   |   نمرهٔ درد کلی: " FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding PainScore, Mode=OneWay}" FontWeight="Bold" Foreground="{Binding PainColor, Mode=OneWay}" />
+                            <TextBlock Text="{Binding PainScoreDisplay, Mode=OneWay}" FontWeight="Bold" Foreground="{Binding PainColor, Mode=OneWay}" />
                         </StackPanel>
-                        <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,4,0,0" />
+                        <CheckBox Content="درد کلی این جلسه اندازه‌گیری شده است" IsChecked="{Binding RecordPainScore}" Margin="2,4,0,0" />
+                        <Slider Minimum="0" Maximum="10" Value="{Binding PainScore}" IsEnabled="{Binding RecordPainScore}"
+                                TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,4,0,0" />
                         <TextBlock Text="یادداشت پیشرفت جلسه" FontSize="10.5" Opacity="0.6" Margin="2,8,2,2" />
                         <TextBox Text="{Binding PhysioNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="60" />
                     </StackPanel>
@@ -213,7 +227,7 @@
                 <!-- ───── ارزیابی ساخت‌یافته ───── -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Text="📐 ارزیابی ساخت‌یافتهٔ دوره — شروع در برابر امروز (درصد بهبود خودکار)" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="📐 ارزیابی ساخت‌یافته — نخستین مقدار در ۲۰ جلسهٔ اخیر در برابر امروز" Style="{StaticResource SectionTitle}" />
                         <Grid Margin="2,0,2,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2.2*" /><ColumnDefinition Width="*" />
@@ -289,7 +303,7 @@
                                         <Line X1="40" Y1="20" X2="40" Y2="200" Stroke="#E3EEEA" />
                                         <Line X1="40" Y1="200" X2="580" Y2="200" Stroke="#E3EEEA" />
                                         <Line X1="40" Y1="164" X2="580" Y2="164" Stroke="#2E7D32" StrokeDashArray="6,4" />
-                                        <TextBlock Canvas.Left="500" Canvas.Top="146" Text="هدف: درد ≤ ۲" FontSize="10" Foreground="#2E7D32" />
+                                        <TextBlock Canvas.Left="500" Canvas.Top="146" Text="خط مرجع: درد ۲" FontSize="10" Foreground="#2E7D32" />
                                         <Polyline Points="{Binding PainTrendPoints}" Stroke="#C62828" StrokeThickness="3" />
                                     </Canvas>
                                 </Border>
@@ -301,7 +315,7 @@
                                         <Line X1="40" Y1="20" X2="40" Y2="200" Stroke="#E3EEEA" />
                                         <Line X1="40" Y1="200" X2="580" Y2="200" Stroke="#E3EEEA" />
                                         <Line X1="40" Y1="40" X2="580" Y2="40" Stroke="#2E7D32" StrokeDashArray="6,4" />
-                                        <TextBlock Canvas.Left="486" Canvas.Top="22" Text="هدف پایان دوره: ۸۰°" FontSize="10" Foreground="#2E7D32" />
+                                        <TextBlock Canvas.Left="486" Canvas.Top="22" Text="خط مرجع: ۸۰°" FontSize="10" Foreground="#2E7D32" />
                                         <Polyline Points="{Binding RomTrendPoints}" Stroke="#00897B" StrokeThickness="3" />
                                     </Canvas>
                                 </Border>
@@ -370,6 +384,7 @@
                         <TextBlock Text="💾 ذخیرهٔ جلسه با نقشهٔ بدن و ارزیابی" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </Grid>

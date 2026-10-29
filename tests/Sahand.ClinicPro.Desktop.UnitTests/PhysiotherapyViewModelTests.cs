@@ -1,0 +1,60 @@
+using System.Text.Json;
+using FluentAssertions;
+using Sahand.ClinicPro.Desktop.ViewModels;
+using Xunit;
+
+namespace Sahand.ClinicPro.Desktop.UnitTests;
+
+public class PhysiotherapyViewModelTests
+{
+    private static QuickPatient Patient(long id) => new(id, $"بیمار {id}", "", "", null, null, null);
+
+    [Fact]
+    public void Patient_change_clears_prior_clinical_information_and_example_defaults()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        api.CannedResponses["physiotherapy/sessions?patientId=2"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.Assessments.Should().OnlyContain(x => x.BaseValue == null && x.NowValue == null);
+        vm.SetZonePainCommand.Execute(7);
+        vm.PhysioNotes = "یادداشت"; vm.HomeProgram = "برنامه"; vm.RedFlags[0].IsChecked = true;
+        vm.TechniqueItems[0].Minutes = 33; vm.TechniqueItems[0].IsSelected = true;
+        vm.Assessments[0].BaseValue = 8; vm.Assessments[0].NowValue = 4;
+        vm.PhysioPatient = Patient(2);
+        vm.ZonePain.Should().BeEmpty(); vm.RecordPainScore.Should().BeFalse();
+        vm.PhysioNotes.Should().BeNull(); vm.HomeProgram.Should().BeNull(); vm.HasRedFlag.Should().BeFalse();
+        vm.TechniqueItems[0].IsSelected.Should().BeFalse(); vm.TechniqueItems[0].Minutes.Should().Be(15);
+        vm.Assessments.Should().OnlyContain(x => x.BaseValue == null && x.NowValue == null);
+        vm.TotalImprovementText.Should().Be("—");
+    }
+
+    [Fact]
+    public async Task Missing_pain_and_assessments_are_saved_as_null_not_zero()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("painScore").ValueKind.Should().Be(JsonValueKind.Null);
+        using var note = JsonDocument.Parse(body.GetProperty("progressNote").GetString()!);
+        note.RootElement.GetProperty("flexion").ValueKind.Should().Be(JsonValueKind.Null);
+        note.RootElement.GetProperty("assessments")[0].GetProperty("base").ValueKind.Should().Be(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Failed_history_blocks_saving_and_recent_history_uses_maximum_session_number()
+    {
+        var api = new FakeApiClient();
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.IsPhysioSessionEnabled.Should().BeFalse();
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "physiotherapy/sessions");
+        api.CannedResponses["physiotherapy/sessions?patientId=2"] = new { data = new[] { new { sessionNumber = 23, painScore = (byte?)null }, new { sessionNumber = 25, painScore = (byte?)null } } };
+        vm.PhysioPatient = Patient(2);
+        vm.SessionNumber.Should().Be(26);
+        vm.PainTrendPoints.Should().BeEmpty();
+        vm.IsPhysioSessionEnabled.Should().BeTrue();
+    }
+}
