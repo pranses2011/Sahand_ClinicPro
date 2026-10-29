@@ -239,14 +239,28 @@ public partial class LabResultViewModel : ObservableObject
     /// (پیش‌نمایش اختیاری طبق تنظیمات چاپ) به چاپگر می‌رود.
     /// </summary>
     [RelayCommand]
-    private void PrintSheet()
+    private async Task PrintSheetAsync()
     {
-        if (_lastDetail is null)
+        var detail = _lastDetail;
+        if (detail is null)
         {
             ErrorMessage = "جزئیات درخواست هنوز بارگذاری نشده است";
             return;
         }
-        Services.LabResultPrinter.Print(_lastDetail, _orderId);
+        try
+        {
+            var (outcome, fallback) = await LabResultTemplatePrint.PrintAsync(detail, _orderId,
+                vars => TemplatedPrintService.TryPrintAsync(_api, "LabResult", vars, "برگهٔ نتیجه آزمایش"),
+                () => LabResultPrinter.Print(detail, _orderId));
+            if (fallback) _snackbar?.Warning("قالب نتیجه دریافت نشد؛ از طرح داخلی استفاده شد.");
+            StatusMessage = outcome switch
+            {
+                TemplatePrintOutcome.Printed => "برگهٔ نتیجه به چاپگر ارسال شد",
+                TemplatePrintOutcome.NotPrinted => "برگهٔ نتیجه به چاپگر ارسال نشد",
+                _ => "پنجرهٔ چاپ قالب بسته شد؛ نتیجهٔ چاپ مرورگر قابل تأیید نیست"
+            };
+        }
+        catch { ErrorMessage = "اجرای چاپ ناموفق بود؛ پیش از تلاش مجدد خروجی چاپگر را بررسی کنید."; }
     }
 
     /// <summary>

@@ -58,7 +58,7 @@
                  چاپ برگهٔ نتیجهٔ همین درخواست — سند فارسی از LabResultPrinter
                  ساخته می‌شود و از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری).
                  فقط وقتی نمایان است که دست‌کم یک قلم نتیجه داشته باشد. -->
-            <Button Command="{Binding PrintSheetCommand}"
+            <Button Command="{Binding PrintSheetCommand}" ToolTip="فقط نتیجه‌های ذخیره‌شده در سرور چاپ می‌شوند؛ تغییرات ثبت‌نشده را ابتدا ذخیره کنید."
                     Visibility="{Binding HasAnyResult, Converter={StaticResource BoolToVis}}"
                     Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,12,0">
                 <StackPanel Orientation="Horizontal">

@@ -125,7 +125,9 @@ public class PrintTemplatesController : ApiBaseController
             (await authorization.AuthorizeAsync(User, "PERMISSION:receptions.print")).Succeeded;
         var canPrintAppointment = tType == PrintTemplateType.AppointmentTicket &&
             (await authorization.AuthorizeAsync(User, "PERMISSION:appointments.create")).Succeeded;
-        if (!canViewSettings && !canPrintReceipt && !canPrintAppointment) return Forbid();
+        var canPrintLabResult = tType == PrintTemplateType.LabResult &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:lab.view")).Succeeded;
+        if (!canViewSettings && !canPrintReceipt && !canPrintAppointment && !canPrintLabResult) return Forbid();
 
         var template = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
             .Where(t => !t.IsDeleted && t.IsActive && t.Type == tType)

@@ -91,4 +91,29 @@ public class PrintTemplateReceiptTests
         var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
         html.Should().Contain("APT-12").And.Contain("7").And.Contain("&lt;script&gt;").And.NotContain("<script>");
     }
+
+    [Fact]
+    public async Task Lab_view_permission_can_render_only_lab_result_template()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "جواب", Type = PrintTemplateType.LabResult,
+            HtmlBody = "<div>{{patient_name}}</div>{{results_html}}", IsActive = true, IsDefault = true });
+        await db.SaveChangesAsync();
+        var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+        var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var request = new RenderRequest(new Dictionary<string, object?> {
+            ["patient_name"] = "بیمار <script>", ["results_html"] = "<table><tr><td>12.55</td></tr></table><img src=x onerror=alert(1)>" });
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "lab.view") }, "test"));
+        (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
+        var result = (OkObjectResult)await controller.Render("LabResult", request, auth);
+        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        html.Should().Contain("12.55").And.Contain("&lt;script&gt;").And.NotContain("<img").And.NotContain("<script>");
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
+        (await controller.Render("LabResult", request, auth)).Should().BeOfType<ForbidResult>();
+    }
 }
