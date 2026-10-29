@@ -323,9 +323,7 @@ public class ParaclinicalController : ApiBaseController
         var sessions = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
             .QueryableNoTracking
             .Where(e => e.PatientId == patientId && !e.IsDeleted)
-            // آخرین شماره‌ها، نه صرفاً آخرین شناسه‌ها؛ سابقهٔ قدیمیِ
-            // نامرتب نباید سبب پیشنهاد شمارهٔ تکراری شود.
-            .OrderByDescending(e => e.SessionNumber).ThenByDescending(e => e.Id)
+            .OrderByDescending(e => e.Id)
             .Take(20)
             .Select(e => new
             {
@@ -339,7 +337,11 @@ public class ParaclinicalController : ApiBaseController
             })
             .ToListAsync();
         sessions.Reverse();
-        return Ok(ApiResponse<object>.Success(sessions));
+        var maxSession = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
+            .QueryableNoTracking.Where(e => e.PatientId == patientId && !e.IsDeleted)
+            .Select(e => (int?)e.SessionNumber).MaxAsync();
+        var nextSessionNumber = maxSession is null ? 1 : maxSession == int.MaxValue ? int.MaxValue : maxSession.Value + 1;
+        return Ok(new { isSuccess = true, statusCode = 200, message = "عملیات با موفقیت انجام شد", data = sessions, nextSessionNumber });
     }
 
     // ═══════════════ فایل‌های تصویربرداری — گام R4 ═══════════════

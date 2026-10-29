@@ -96,6 +96,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private readonly Func<bool> _confirmPatientChange;
     private int _patientVersion;
+    private int? _nextSessionNumber;
     private readonly Dictionary<string, int> _defaultTechniqueMinutes = new();
     [ObservableProperty] private bool _isHistoryLoading;
     [ObservableProperty] private bool _isHistoryReady;
@@ -131,8 +132,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private int _totalSessions;
     partial void OnTotalSessionsChanged(int value) => OnPropertyChanged(nameof(CourseProgress));
     /// <summary>شمارهٔ این جلسه</summary>
-    public int SessionNumber => History.Count == 0 ? 1 :
-        History.Max(s => s.SessionNumber) == int.MaxValue ? int.MaxValue : History.Max(s => s.SessionNumber) + 1;
+    public int SessionNumber => _nextSessionNumber ?? (History.Count == 0 ? 1 :
+        History.Max(s => s.SessionNumber) == int.MaxValue ? int.MaxValue : History.Max(s => s.SessionNumber) + 1);
     /// <summary>درصد پیشرفت دوره</summary>
     public double CourseProgress => TotalSessions <= 0 ? 0 : Math.Min(100, (double)(SessionNumber - 1) / TotalSessions * 100);
     /// <summary>پروتکل فعال</summary>
@@ -390,6 +391,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     partial void OnPhysioPatientChanged(QuickPatient? value)
     {
         _patientVersion++;
+        _nextSessionNumber = null;
         IsHistoryReady = false;
         IsHistoryLoading = false;
         History.Clear(); PainTrendPoints = new(); RomTrendPoints = new(); TrendSummary = null;
@@ -447,6 +449,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         }
         History.Clear(); PainTrendPoints = new(); RomTrendPoints = new(); TrendSummary = null;
         foreach (var session in sessions) History.Add(session);
+        _nextSessionNumber = response?.NextSessionNumber;
         IsHistoryReady = true;
         OnPropertyChanged(nameof(SessionNumber)); OnPropertyChanged(nameof(CourseProgress));
         if (sessions.Count == 0) return;
@@ -587,6 +590,8 @@ public sealed class PhysioSessionsResponse
 {
     /// <summary>موفقیت پاسخ</summary>
     public bool IsSuccess { get; set; }
+    /// <summary>شماره بعدی از کل جلسات، مستقل از بیست ردیف نمایش‌داده‌شده.</summary>
+    public int? NextSessionNumber { get; set; }
     /// <summary>فهرست جلسات</summary>
     public List<PhysioSessionDto>? Data { get; set; }
 }

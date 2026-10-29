@@ -38,7 +38,7 @@ public class PhysioPatientSafetyTests
         db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession>().Should().ContainSingle();
     }
     [Fact]
-    public async Task History_contains_highest_session_number_even_if_created_long_ago()
+    public async Task History_stays_chronological_and_next_number_includes_older_sessions()
     {
         using var factory = new InMemoryApiFactory();
         using var scope = factory.Services.CreateScope();
@@ -54,7 +54,8 @@ public class PhysioPatientSafetyTests
         var json = JsonSerializer.SerializeToElement(response.Value, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         var sessions = json.GetProperty("data").EnumerateArray().ToArray();
         sessions.Should().HaveCount(20);
-        sessions[^1].GetProperty("sessionNumber").GetInt32().Should().Be(100);
+        sessions[^1].GetProperty("sessionNumber").GetInt32().Should().Be(25);
+        json.GetProperty("nextSessionNumber").GetInt32().Should().Be(101);
     }
 
 }
