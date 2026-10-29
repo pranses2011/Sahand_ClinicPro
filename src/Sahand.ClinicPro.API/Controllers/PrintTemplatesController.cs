@@ -89,6 +89,9 @@ public class PrintTemplatesController : ApiBaseController
         if (t is null)
             return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
 
+        if (t.Type == PrintTemplateType.ReceptionReceipt && t.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker)
+            return Ok(ApiResponse<object>.Success(new { html = "", useOriginalReceptionReceipt = true }));
+
         var clinic = await ClinicInfoAsync();
         var sample = PrintTemplateRenderer.SampleData(t.Type.ToString());
         var body = PrintTemplateRenderer.Render(t.HtmlBody, sample)
@@ -104,12 +107,18 @@ public class PrintTemplatesController : ApiBaseController
     /// <summary>رندر با متغیرهای واقعی — برای استفاده ماژول‌های چاپ (فاکتور/نسخه/…)</summary>
     /// <param name="type">نوع سند — قالب پیش‌فرض همان نوع استفاده می‌شود</param>
     /// <param name="request">متغیرهای سند</param>
+    /// <param name="authorization">بررسی دسترسی متناسب با نوع سند</param>
     [HttpPost("render/{type}")]
-    [HasPermission("settings.view")]
-    public async Task<IActionResult> Render(string type, [FromBody] RenderRequest request)
+    public async Task<IActionResult> Render(string type, [FromBody] RenderRequest request,
+        [FromServices] IAuthorizationService authorization)
     {
-        if (!Enum.TryParse<PrintTemplateType>(type, true, out var tType))
+        if (!Enum.TryParse<PrintTemplateType>(type, true, out var tType) || !Enum.IsDefined(tType))
             return BadRequest(ApiResponse<object>.Failure("نوع سند نامعتبر است"));
+
+        var canViewSettings = (await authorization.AuthorizeAsync(User, "PERMISSION:settings.view")).Succeeded;
+        var canPrintReceipt = tType == PrintTemplateType.ReceptionReceipt &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:receptions.print")).Succeeded;
+        if (!canViewSettings && !canPrintReceipt) return Forbid();
 
         var template = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
             .Where(t => !t.IsDeleted && t.IsActive && t.Type == tType)
@@ -330,6 +339,8 @@ public class PrintTemplatesController : ApiBaseController
     /// <summary>اعتبارسنجی مشترک</summary>
     private static string? Validate(SavePrintTemplateDto dto)
     {
+        if (dto.IsDefault && !dto.IsActive)
+            return "قالب پیش‌فرض باید فعال باشد";
         if (string.IsNullOrWhiteSpace(dto.TemplateName) || dto.TemplateName.Trim().Length < 3)
             return "نام قالب حداقل ۳ نویسه باشد";
         if (string.IsNullOrWhiteSpace(dto.HtmlBody) || dto.HtmlBody.Trim().Length < 10)

@@ -109,12 +109,8 @@ public static class ReceptionReceiptPrinter
     /// <returns>true اگر چاپ (یا پیش‌نمایشِ منتهی به چاپ) انجام شد</returns>
     public static bool Print(ReceptionReceipt receipt)
     {
-        var doc = BuildReceipt(receipt);
-
-        // ارتفاع بر اساس محتوا — هر قلم ≈ ۱۸px؛ کف و سقف امن برای درایورها
-        var height = Math.Clamp(ReceiptBaseHeight + receipt.Items.Count * 18d, 620d, 1400d);
-        doc.PageWidth = ReceiptWidth;
-        doc.PageHeight = height;
+        var doc = CreateDocument(receipt);
+        var height = doc.PageHeight;
 
         // چاپگر مقصد — اختصاصی رسید، وگرنه چاپگر قبض نوبت، وگرنه پیش‌فرض ویندوز
         // (Get هرگز null نمی‌دهد؛ رشتهٔ خالی یعنی تنظیم‌نشده)
@@ -126,6 +122,20 @@ public static class ReceptionReceiptPrinter
 
         return PrintFlow.Print(doc, $"قبض پذیرش {receipt.QueueNumber}", printerName,
             ReceiptWidth, height);
+    }
+
+    /// <summary>سند نمونه با همان موتور و ابعاد چاپ واقعی؛ اطلاعات ساختگی است.</summary>
+    public static FlowDocument CreateSamplePreviewDocument() => CreateDocument(new ReceptionReceipt(
+        0, 0, "نمونه — فاقد اعتبار", null, null, "پزشک نمونه", "خدمت نمونه", null,
+        "آزاد", "۱۴۰۵/۰۱/۰۱", "۱۰:۰۰", new[] { new ReceptionReceiptItem("خدمت نمونه", 1, 100000) },
+        100000, 0, 100000, 100000, 100000, 1, null, null, "پیش‌نمایش نمونه — فاقد اعتبار"));
+
+    private static FlowDocument CreateDocument(ReceptionReceipt receipt)
+    {
+        var doc = BuildReceipt(receipt);
+        doc.PageWidth = ReceiptWidth;
+        doc.PageHeight = Math.Clamp(ReceiptBaseHeight + receipt.Items.Count * 18d, 620d, 1400d);
+        return doc;
     }
 
     /// <summary>ساخت سند قبض — راست‌چین، ارقام فارسی، فونت چاپ جاسازی‌شده</summary>

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Sahand.ClinicPro.Desktop.ViewModels;
+using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.Views;
 
@@ -26,9 +27,24 @@ public partial class ComplementaryView : UserControl
     private void OnDataContextChangedAsync(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is ComplementaryViewModel old)
+        {
             old.PropertyChanged -= OnViewModelPropertyChanged;
+            old.OriginalReceiptPreviewRequested -= OnOriginalReceiptPreviewRequested;
+        }
         if (e.NewValue is ComplementaryViewModel vm)
+        {
             vm.PropertyChanged += OnViewModelPropertyChanged;
+            vm.OriginalReceiptPreviewRequested += OnOriginalReceiptPreviewRequested;
+        }
+    }
+
+    private void OnOriginalReceiptPreviewRequested()
+    {
+        var preview = new PrintPreviewWindow(ReceptionReceiptPrinter.CreateSamplePreviewDocument(),
+            "قبض اصلی — داده نمونه، فاقد اعتبار", null, allowPrint: false);
+        var owner = Window.GetWindow(this);
+        if (owner is not null) preview.Owner = owner;
+        preview.ShowDialog();
     }
 
     /// <summary>نمایش HTML جدید در مرورگر</summary>
@@ -41,9 +57,11 @@ public partial class ComplementaryView : UserControl
         {
             if (string.IsNullOrEmpty(vm.PreviewHtml))
             {
+                PreviewPlaceholder.Visibility = Visibility.Visible;
                 PreviewBrowser.Visibility = Visibility.Collapsed;
                 return;
             }
+            PreviewPlaceholder.Visibility = Visibility.Collapsed;
             PreviewBrowser.Visibility = Visibility.Visible;
             PreviewBrowser.NavigateToString(vm.PreviewHtml);
         });

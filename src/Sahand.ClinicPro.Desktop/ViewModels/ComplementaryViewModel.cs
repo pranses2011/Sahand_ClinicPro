@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Domain.Entities.Reporting;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -10,6 +11,9 @@ public partial class PrintTemplateRow : ObservableObject
 {
     /// <summary>شناسه — صفر یعنی قالب جدید</summary>
     public long Id { get; set; }
+
+    /// <summary>جزئیات قالب از سرور دریافت شده‌اند.</summary>
+    public bool IsLoaded { get; set; }
 
     /// <summary>کلید نوع — Invoice و…</summary>
     public string Key { get; set; } = "Invoice";
@@ -31,6 +35,16 @@ public partial class PrintTemplateRow : ObservableObject
     /// <summary>بدنه HTML قالب</summary>
     [ObservableProperty]
     private string _body = string.Empty;
+
+    /// <summary>قبض اصلی یک سند داخلی است و بدنه HTML قابل ویرایش ندارد.</summary>
+    public bool IsOriginalReceipt => Key == "ReceptionReceipt" && Body == BuiltInPrintTemplates.ReceptionReceiptMarker;
+    /// <summary>آیا ویرایشگر HTML و تنظیمات ظاهری قابل استفاده است؟</summary>
+    public bool IsHtmlTemplate => !IsOriginalReceipt;
+    partial void OnBodyChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsOriginalReceipt));
+        OnPropertyChanged(nameof(IsHtmlTemplate));
+    }
 
     /// <summary>اندازه کاغذ A4/A5/A6</summary>
     [ObservableProperty]
@@ -192,8 +206,9 @@ public partial class ComplementaryViewModel : ViewModelBase
         new[] { new TemplateTypeOption("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
 
     /// <summary>بازسازی فهرست پالایه‌شده — پس از بارگذاری یا تغییر پالایه</summary>
-    private void ApplyTemplateFilter()
+    private void ApplyTemplateFilter(PrintTemplateRow? preferred = null)
     {
+        var previous = preferred ?? SelectedTemplate;
         // اندیسِ امن — اگر پالایه بیرون از بازه شد (مثلاً پس از حذف نوعی) به «همه» برمی‌گردد
         var idx = TemplateFilterIndex;
         if (idx < 0 || idx >= TemplateFilterOptions.Length) idx = 0;
@@ -207,9 +222,10 @@ public partial class ComplementaryViewModel : ViewModelBase
                 VisibleTemplates.Add(t);
         }
 
-        // اگر قالب انتخابی فعلی در فهرست پالایه‌شده نیست، اولین قالب فهرست انتخاب می‌شود
-        if (SelectedTemplate is null || (key.Length > 0 && SelectedTemplate.Key != key))
-            SelectedTemplate = VisibleTemplates.Count > 0 ? VisibleTemplates[0] : null;
+        // پاک شدن مجموعه در ListBox ممکن است انتخاب را موقتاً null کند؛ پس از
+        // پر کردن مجموعه، انتخاب پیشین را فقط اگر واقعاً در فهرست است بازگردان.
+        SelectedTemplate = previous is not null && VisibleTemplates.Contains(previous)
+            ? previous : VisibleTemplates.FirstOrDefault();
     }
 
     /// <summary>پالایه عوض شد — فهرست دوباره پالایه می‌شود (بدون رفت‌وبرگشت به سرور)</summary>
@@ -218,6 +234,17 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// <summary>قالب انتخابی</summary>
     [ObservableProperty]
     private PrintTemplateRow? _selectedTemplate;
+
+    /// <summary>درخواست نمایش سند داخلی توسط نما.</summary>
+    public event Action? OriginalReceiptPreviewRequested;
+
+    /// <summary>بارگذاری جزئیات قالب انتخابی هنوز کامل نشده است.</summary>
+    [ObservableProperty]
+    private bool _isTemplateLoading;
+
+    /// <summary>آماده بودن ویرایشگر برای جلوگیری از تغییر هنگام دریافت جزئیات.</summary>
+    public bool IsTemplateReady => !IsTemplateLoading;
+    partial void OnIsTemplateLoadingChanged(bool value) => OnPropertyChanged(nameof(IsTemplateReady));
 
     /// <summary>پیش‌نمایش HTML رندرشده</summary>
     [ObservableProperty]
@@ -343,11 +370,13 @@ public partial class ComplementaryViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadTemplatesAsync()
     {
+        var selectedId = SelectedTemplate?.Id;
         IsBusy = true;
         var response = await _api.GetAsync<TemplatesEnvelope>("print-templates");
         IsBusy = false;
+        if (response?.Data is null) { _snackbar.Error(_api.LastError ?? "بارگذاری قالب‌ها ناموفق بود"); return; }
         PrintTemplates.Clear();
-        foreach (var t in response?.Data ?? new List<TemplateApi>())
+        foreach (var t in response.Data)
         {
             var row = new PrintTemplateRow
             {
@@ -362,21 +391,26 @@ public partial class ComplementaryViewModel : ViewModelBase
             };
             row.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+                if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
             };
             PrintTemplates.Add(row);
         }
         // چرخهٔ سی‌وپنجم: پس از بارگذاری کامل، پالایهٔ موجودیت دوباره اعمال می‌شود
         // تا فهرست طراح همیشه فقط قالب‌های موجودیتِ منتخب را نشان دهد
-        ApplyTemplateFilter();
-        if (SelectedTemplate is null && PrintTemplates.Count > 0)
-            SelectedTemplate = PrintTemplates[0];
+        ApplyTemplateFilter(PrintTemplates.FirstOrDefault(t => t.Id == selectedId));
     }
 
     /// <summary>بارگذاری کامل بدنه و تنظیمات قالب انتخابی</summary>
     partial void OnSelectedTemplateChanged(PrintTemplateRow? value)
     {
-        if (value is null) return;
+        PreviewHtml = null;
+        IsTemplateLoading = value is { Id: > 0, IsLoaded: false };
+        if (value is null) { ActiveVariables.Clear(); return; }
+        if (value.IsLoaded) { RefreshPalette(value.Key); return; }
         _ = LoadTemplateBodyAsync(value);
     }
 
@@ -385,8 +419,11 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         if (template.Id == 0) { RefreshPalette(template.Key); return; }
         var response = await _api.GetAsync<TemplateDetailEnvelope>($"print-templates/{template.Id}");
+        if (!ReferenceEquals(SelectedTemplate, template)) return;
+        IsTemplateLoading = false;
         var d = response?.Data;
-        if (d is null) return;
+        if (d is null) { _snackbar.Error(_api.LastError ?? "بارگذاری جزئیات قالب ناموفق بود"); IsTemplateLoading = true; return; }
+        if (template.IsDirty) { _snackbar.Error("قالب هنگام بارگذاری تغییر کرد؛ دوباره انتخاب کنید"); IsTemplateLoading = true; return; }
         template.Title = d.TemplateName;
         template.Description = d.Description;
         template.Body = d.HtmlBody;
@@ -397,6 +434,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         template.IsActive = d.IsActive;
         template.IsDefault = d.IsDefault;
         template.IsDirty = false;
+        template.IsLoaded = true;
         RefreshPalette(template.Key);
     }
 
@@ -586,10 +624,16 @@ public partial class ComplementaryViewModel : ViewModelBase
         };
         row.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
         };
         PrintTemplates.Add(row);
-        SelectedTemplate = row;
+        var filterIdx = Array.FindIndex(TemplateFilterOptions, o => o.Key == row.Key);
+        if (filterIdx >= 0 && TemplateFilterIndex != filterIdx) TemplateFilterIndex = filterIdx;
+        ApplyTemplateFilter(row);
         _snackbar.Info($"قالب آمادهٔ «{preset.Title}» ساخته شد — نام بدهید و ذخیره کنید");
     }
 
@@ -613,7 +657,11 @@ public partial class ComplementaryViewModel : ViewModelBase
         };
         row.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
         };
         PrintTemplates.Add(row);
         // چرخهٔ سی‌وپنجم: اگر فیلتر فعلی با نوع قالب تازه یکی نیست، فیلتر به همان
@@ -634,34 +682,41 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task SaveTemplateAsync()
     {
         if (SelectedTemplate is null) { _snackbar.Info("ابتدا یک قالب انتخاب کنید"); return; }
+        if (IsTemplateLoading) { _snackbar.Error("ابتدا منتظر بارگذاری جزئیات قالب بمانید"); return; }
         if (SelectedTemplate.Title.Trim().Length < 3) { _snackbar.Error("نام قالب حداقل ۳ نویسه باشد"); return; }
         if (SelectedTemplate.Body.Trim().Length < 10) { _snackbar.Error("بدنه قالب خالی است"); return; }
 
+        var template = SelectedTemplate;
         IsBusy = true;
         var payload = new
         {
-            templateName = SelectedTemplate.Title,
-            type = SelectedTemplate.Key,
-            description = SelectedTemplate.Description,
-            htmlBody = SelectedTemplate.Body,
-            paperSize = SelectedTemplate.PaperSize,
+            templateName = template.Title,
+            type = template.Key,
+            description = template.Description,
+            htmlBody = template.Body,
+            paperSize = template.PaperSize,
             orientation = "Portrait",
-            fontSize = SelectedTemplate.FontSize,
+            fontSize = template.FontSize,
             fontFamily = (string?)null,
-            showClinicLogo = SelectedTemplate.ShowLogo,
-            accentColor = SelectedTemplate.AccentColor,
-            isActive = SelectedTemplate.IsActive,
-            isDefault = SelectedTemplate.IsDefault
+            showClinicLogo = template.ShowLogo,
+            accentColor = template.AccentColor,
+            isActive = template.IsActive,
+            isDefault = template.IsDefault
         };
-        var ok = SelectedTemplate.Id == 0
-            ? await _api.PostAsync("print-templates", payload)
-            : await _api.PutAsync($"print-templates/{SelectedTemplate.Id}", payload);
+        bool ok;
+        if (template.Id == 0)
+        {
+            var created = await _api.PostAsync<TemplateDetailEnvelope>("print-templates", payload);
+            ok = created?.IsSuccess == true && created.Data is { Id: > 0 };
+            if (ok) template.Id = created!.Data!.Id;
+        }
+        else ok = await _api.PutAsync($"print-templates/{template.Id}", payload);
         IsBusy = false;
 
         if (ok)
         {
-            _snackbar.Success($"قالب «{SelectedTemplate.Title}» ذخیره شد");
-            SelectedTemplate.IsDirty = false;
+            _snackbar.Success($"قالب «{template.Title}» ذخیره شد");
+            template.IsDirty = false;
             await LoadTemplatesAsync();
         }
         else _snackbar.Error(_api.LastError ?? "ذخیره قالب ناموفق بود");
@@ -710,14 +765,23 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task PreviewTemplateAsync()
     {
         if (SelectedTemplate is null) { _snackbar.Info("ابتدا یک قالب انتخاب کنید"); return; }
-        // برای قالب ذخیره‌نشده ابتدا ذخیره می‌کنیم تا پیش‌نمایش سروری دقیق باشد
-        if (SelectedTemplate.IsDirty || SelectedTemplate.Id == 0)
-            await SaveTemplateAsync();
-        if (SelectedTemplate.Id == 0) return;
-
+        if (IsTemplateLoading) { _snackbar.Error("ابتدا منتظر بارگذاری جزئیات قالب بمانید"); return; }
+        var template = SelectedTemplate;
+        PreviewHtml = null;
+        if (template.IsDirty || template.Id == 0)
+        {
+            _snackbar.Info("برای پیش‌نمایش ابتدا تغییرات قالب را ذخیره کنید");
+            return;
+        }
+        if (template.IsOriginalReceipt)
+        {
+            OriginalReceiptPreviewRequested?.Invoke();
+            return;
+        }
         IsBusy = true;
-        var response = await _api.GetAsync<PreviewEnvelope>($"print-templates/{SelectedTemplate.Id}/preview");
+        var response = await _api.GetAsync<PreviewEnvelope>($"print-templates/{template.Id}/preview");
         IsBusy = false;
+        if (!ReferenceEquals(SelectedTemplate, template) || template.IsDirty) return;
         if (response?.Data?.Html is { Length: > 0 } html)
         {
             PreviewHtml = html;
@@ -730,7 +794,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     [RelayCommand]
     private void InsertVariable(TemplateVariable? variable)
     {
-        if (SelectedTemplate is null || variable is null) return;
+        if (SelectedTemplate is null || variable is null || SelectedTemplate.IsOriginalReceipt || IsTemplateLoading) return;
         SelectedTemplate.Body += $"{{{{{variable.Key}}}}}";
         SelectedTemplate.IsDirty = true;
     }

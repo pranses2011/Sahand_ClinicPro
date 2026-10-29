@@ -166,7 +166,7 @@
                     </Grid>
 
                     <!-- ستون ۲: ویرایشگر قالب -->
-                    <Grid Grid.Column="1" Margin="0,0,10,0">
+                    <Grid Grid.Column="1" Margin="0,0,10,0" IsEnabled="{Binding IsTemplateReady}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -186,6 +186,7 @@
                                  اندازه‌ها + حالت سفارشی (قابل تایپ مثل Custom:100x180
                                  میلی‌متر عرض×ارتفاع)؛ ویرایش‌پذیر است. -->
                             <ComboBox IsEditable="True" StaysOpenOnEdit="True"
+                                      IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                       SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       Text="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       FontSize="11.5" Width="112" Margin="0,0,7,5"
@@ -202,23 +203,23 @@
                                 <ComboBoxItem Tag="Custom:100x180" Content="سفارشی ۱۰۰×۱۸۰ میلی‌متر" />
                                 <ComboBoxItem Tag="Custom:210x100" Content="سفارشی ۲۱۰×۱۰۰ میلی‌متر" />
                             </ComboBox>
-                            <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                      materialDesign:HintAssist.Hint="رنگ (#16355E)"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="110" FontSize="11" FontFamily="{DynamicResource App.CodeFont}" Margin="0,0,7,5" />
-                            <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                      materialDesign:HintAssist.Hint="فونت"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="62" FontSize="11" Margin="0,0,7,5" />
-                            <CheckBox Content="لوگو" IsChecked="{Binding SelectedTemplate.ShowLogo}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
+                            <CheckBox Content="لوگو" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" IsChecked="{Binding SelectedTemplate.ShowLogo}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
                             <CheckBox Content="فعال" IsChecked="{Binding SelectedTemplate.IsActive}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
                             <CheckBox Content="پیش‌فرض" IsChecked="{Binding SelectedTemplate.IsDefault}" FontSize="11" Margin="0,0,0,4" VerticalAlignment="Center" />
                         </WrapPanel>
 
                         <!-- عنوان ویرایشگر -->
                         <TextBlock Grid.Row="1" FontSize="12" FontWeight="Bold" Opacity="0.7" Margin="2,0,0,5"
-                                   Text="بدنه HTML قالب — متغیرها با {{دو آکولاد}}" />
+                                   Text="بدنه HTML؛ قبض اصلی داخلی و غیرقابل ویرایش است و تنظیمات ظاهری آن از موتور چاپ استفاده می‌کند" />
 
                         <!-- بدنه -->
-                        <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
+                        <TextBox Grid.Row="2" IsReadOnly="{Binding SelectedTemplate.IsOriginalReceipt}" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
                                  VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
@@ -226,7 +227,7 @@
                         <!-- پالت متغیرها -->
                         <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"
                                    FontSize="10.5" Opacity="0.6" Margin="2,7,0,3" />
-                        <ItemsControl Grid.Row="4" ItemsSource="{Binding ActiveVariables}">
+                        <ItemsControl Grid.Row="4" ItemsSource="{Binding ActiveVariables}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel />
@@ -269,7 +270,7 @@
                         <Border Grid.Row="1" CornerRadius="10" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Background="{DynamicResource MaterialDesign.Brush.Background}" ClipToBounds="True">
                             <WebBrowser x:Name="PreviewBrowser" Visibility="Collapsed" />
                         </Border>
-                        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel x:Name="PreviewPlaceholder" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                             <materialDesign:PackIcon Kind="FileFindOutline" Width="44" Height="44" HorizontalAlignment="Center"
                                                      Foreground="#B0BEC5" />
                             <TextBlock Text="پیش‌نمایش اینجا نمایش داده می‌شود" FontSize="11.5" Foreground="#90A4AE"

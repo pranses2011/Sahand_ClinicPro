@@ -26,13 +26,19 @@ public partial class PrintPreviewWindow : Window
     /// سازنده — سند باید PageWidth/PageHeight از قبل گرفته باشد (مسیرهای
     /// چاپ برنامه همهً این کار را می‌کنند؛ قبض نوبت عرض ۸۰ میلی، بقیه A4).
     /// </summary>
-    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName)
+    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName, bool allowPrint = true)
     {
         _document = document;
         _printTitle = printTitle;
         _printerName = printerName;
         InitializeComponent();
 
+        PrintButton.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
+        if (!allowPrint)
+            DocViewer.CommandBindings.Add(new System.Windows.Input.CommandBinding(
+                System.Windows.Input.ApplicationCommands.Print,
+                (_, e) => e.Handled = true,
+                (_, e) => { e.CanExecute = false; e.Handled = true; }));
         HeaderTitle.Text = "پیش‌نمایش چاپ — " + printTitle;
 
         // نمایشگر با همان سند مشترک — صفحه‌بندی FlowDocumentPageViewer
