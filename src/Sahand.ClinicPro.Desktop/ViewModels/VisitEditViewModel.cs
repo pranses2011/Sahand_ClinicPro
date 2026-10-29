@@ -29,6 +29,8 @@ public partial class VisitEditViewModel : ObservableObject
     private readonly ISnackbarService _snackbar;
     private long? _visitId;
     private bool _creationResultUnknown;
+    private bool _labResultUnknown;
+    private bool _imagingResultUnknown;
     private string? _editVersion;
     private readonly bool _openedExisting;
     private bool _existingVisitLoaded;
@@ -633,8 +635,12 @@ public partial class VisitEditViewModel : ObservableObject
             return;
         }
 
+        if (IsBusy || _labResultUnknown)
+        { _snackbar.Error("نتیجه درخواست قبلی نامعلوم است یا عملیاتی در جریان است؛ پیش از ارسال مجدد فهرست آزمایشگاه را بررسی کنید."); return; }
+        if (!await SaveCoreAsync(silent: false)) return;
         IsBusy = true;
-        var ok = await _api.PostAsync("lab/orders", new
+        bool ok;
+        try { ok = await _api.PostAsync("lab/orders", new
         {
             patientId = _patientId,
             doctorId = _doctorId > 0 ? _doctorId : (long?)null,
@@ -642,8 +648,10 @@ public partial class VisitEditViewModel : ObservableObject
             testIds = selected,
             priority = LabPriorityIndex + 1, // هم‌ترتیب با enum سرور: ۱ اورژانس، ۲ بالا، ۳ عادی
             clinicalInfo = string.IsNullOrWhiteSpace(LabClinicalInfo) ? null : LabClinicalInfo.Trim()
-        });
-        IsBusy = false;
+        }); }
+        catch (Exception) { ok = false; }
+        finally { IsBusy = false; }
+        if (!ok) _labResultUnknown = true;
 
         if (ok)
         {
@@ -653,7 +661,7 @@ public partial class VisitEditViewModel : ObservableObject
             LabClinicalInfo = null;
         }
         else
-            _snackbar.Error(_api.LastError ?? "ارسال درخواست آزمایش ناموفق بود");
+            _snackbar.Error("نتیجه درخواست آزمایش نامعلوم است؛ پیش از تلاش مجدد فهرست آزمایشگاه را بررسی کنید. " + _api.LastError);
     }
 
     /* ─── تب ۶: ارسال به تصویربرداری ─── */
@@ -664,7 +672,7 @@ public partial class VisitEditViewModel : ObservableObject
 
     /// <summary>نمایهٔ مودالیتهٔ منتخب</summary>
     [ObservableProperty]
-    private int _imagingModalityIndex;
+    private int _imagingModalityIndex = -1;
 
     /// <summary>نواحی بدن — همان گزینه‌های پیشنهادی صفحهٔ تصویربرداری</summary>
     public string[] ImagingBodyParts { get; } =
@@ -672,7 +680,7 @@ public partial class VisitEditViewModel : ObservableObject
 
     /// <summary>نمایهٔ ناحیهٔ بدن</summary>
     [ObservableProperty]
-    private int _imagingBodyPartIndex;
+    private int _imagingBodyPartIndex = -1;
 
     /// <summary>درخواست فوری است؟ — اولویت اورژانس به سرور می‌رود</summary>
     [ObservableProperty]
@@ -692,8 +700,15 @@ public partial class VisitEditViewModel : ObservableObject
             return;
         }
 
+        if (IsBusy || _imagingResultUnknown)
+        { _snackbar.Error("نتیجه درخواست قبلی نامعلوم است یا عملیاتی در جریان است؛ پیش از ارسال مجدد فهرست تصویربرداری را بررسی کنید."); return; }
+        if (ImagingModalityIndex < 0 || ImagingModalityIndex >= ImagingModalities.Length ||
+            ImagingBodyPartIndex < 0 || ImagingBodyPartIndex >= ImagingBodyParts.Length)
+        { _snackbar.Error("نوع تصویربرداری و ناحیه بدن را صریحاً انتخاب کنید."); return; }
+        if (!await SaveCoreAsync(silent: false)) return;
         IsBusy = true;
-        var ok = await _api.PostAsync("imaging/orders", new
+        bool ok;
+        try { ok = await _api.PostAsync("imaging/orders", new
         {
             patientId = _patientId,
             referringDoctorId = _doctorId > 0 ? _doctorId : (long?)null,
@@ -701,8 +716,10 @@ public partial class VisitEditViewModel : ObservableObject
             bodyPart = ImagingBodyParts[ImagingBodyPartIndex],
             priority = ImagingUrgent ? 1 : 3, // ۱ اورژانس، ۳ عادی
             clinicalInfo = string.IsNullOrWhiteSpace(ImagingClinicalInfo) ? null : ImagingClinicalInfo.Trim()
-        });
-        IsBusy = false;
+        }); }
+        catch (Exception) { ok = false; }
+        finally { IsBusy = false; }
+        if (!ok) _imagingResultUnknown = true;
 
         if (ok)
         {
@@ -711,7 +728,7 @@ public partial class VisitEditViewModel : ObservableObject
             ImagingUrgent = false;
         }
         else
-            _snackbar.Error(_api.LastError ?? "ارسال درخواست تصویربرداری ناموفق بود");
+            _snackbar.Error("نتیجه درخواست تصویربرداری نامعلوم است؛ پیش از تلاش مجدد فهرست تصویربرداری را بررسی کنید. " + _api.LastError);
     }
 
     /* ─── تب فیزیوتراپی: ارسال به فیزیوتراپی ─── */
