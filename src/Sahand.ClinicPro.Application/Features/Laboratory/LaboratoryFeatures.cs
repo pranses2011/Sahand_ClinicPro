@@ -57,14 +57,27 @@ public class CreateLabOrderCommandHandler : IRequestHandler<CreateLabOrderComman
     public async Task<Result<long>> Handle(CreateLabOrderCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
+        var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId, cancellationToken);
+        if (patient is null || patient.IsDeleted) return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        if (doctor is null || doctor.IsDeleted) return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId));
+        if (!Enum.IsDefined(dto.Priority) || dto.TestIds is null || dto.TestIds.Count == 0 ||
+            dto.TestIds.Any(id => id <= 0) || dto.TestIds.Distinct().Count() != dto.TestIds.Count)
+            return Result<long>.Failure(new Error("LAB.ORDER_INVALID", "آزمایش‌ها یا اولویت نامعتبر یا تکراری‌اند."));
+        if (dto.VisitId is long visitId)
+        {
+            var visit = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().GetByIdAsync(visitId, cancellationToken);
+            if (visit is null || visit.IsDeleted || visit.PatientId != dto.PatientId || visit.DoctorId != dto.DoctorId)
+                return Result<long>.Failure(new Error("LAB.VISIT_MISMATCH", "ویزیت با بیمار و پزشک درخواست مطابقت ندارد."));
+        }
 
         var tests = await _unitOfWork.Repository<LabTest>()
             .QueryableNoTracking
             .Where(t => dto.TestIds.Contains(t.Id) && t.IsActive)
             .ToListAsync(cancellationToken);
 
-        if (tests.Count == 0)
-            return Result<long>.Failure(new Error("NO_TESTS", "آزمایش انتخابی معتبر نیست"));
+        if (tests.Count != dto.TestIds.Count)
+            return Result<long>.Failure(new Error("NO_TESTS", "یک یا چند آزمایش انتخابی نامعتبر یا غیرفعال است؛ فهرست را تازه‌سازی کنید."));
 
         var order = new LabOrder
         {
