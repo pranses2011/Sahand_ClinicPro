@@ -129,11 +129,11 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                     <TextBlock Text="🔍 جستجوی خدمت" Style="{StaticResource FieldCaption}" />
+                                    <TextBox Text="{Binding ServiceSearch, UpdateSourceTrigger=PropertyChanged}" ToolTip="عبارت جستجوی خدمت" />
                                     <ComboBox ItemsSource="{Binding Services}"
                                               SelectedItem="{Binding SelectedService}"
                                               DisplayMemberPath="ServiceName"
-                                              IsEditable="True"
-                                              Text="{Binding ServiceSearch, UpdateSourceTrigger=PropertyChanged}" />
+                                              ToolTip="خدمت را از نتایج جاری انتخاب کنید" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="0,0,8,0">
                                     <TextBlock Text="تعداد" Style="{StaticResource FieldCaption}" />
