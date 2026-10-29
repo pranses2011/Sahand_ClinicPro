@@ -173,7 +173,12 @@ public class AuditLogMiddleware
                 var entityId = ExtractId(context.Request.Path)
                                ?? TryExtractIdFromResponse(responseBuffer);
 
-                dbContext.AuditLogs.Add(new AuditLog
+                // ردیاب تغییرات درخواست ممکن است پس از خطای همزمانی/rollback
+                // هنوز موجودیت‌های ثبت‌نشده داشته باشد. ذخیرهٔ لاگ با همان
+                // کانتکست می‌تواند آن تغییرات شکست‌خورده را ناخواسته دوباره ثبت کند.
+                await using var auditScope = context.RequestServices.CreateAsyncScope();
+                var auditContext = auditScope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+                auditContext.AuditLogs.Add(new AuditLog
                 {
                     UserId = userId,
                     Username = displayUserName,
@@ -190,7 +195,7 @@ public class AuditLogMiddleware
                     Severity = AuditSeverity.Info
                 });
 
-                await dbContext.SaveChangesAsync();
+                await auditContext.SaveChangesAsync();
             }
             catch
             {
