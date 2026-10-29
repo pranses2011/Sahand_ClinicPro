@@ -291,6 +291,41 @@ public class ParaclinicalController : ApiBaseController
         return Ok(ApiResponse<object>.Success(exams));
     }
 
+    /// <summary>ثبت ارجاع مستقل؛ شناسه درخواست از تکرار ناخواسته جلوگیری می‌کند.</summary>
+    [HttpPost("~/api/v1/physiotherapy/referrals")]
+    [HasPermission("visits.create")]
+    public async Task<IActionResult> CreatePhysiotherapyReferral([FromBody] CreatePhysiotherapyReferralCommand command)
+    {
+        try
+        {
+            var result = await _mediator.Send(command);
+            if (result.IsFailure && result.Error.Code == "PHYSIO.REFERRAL_KEY_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            return ToResponse(result, "ارجاع فیزیوتراپی ثبت شد");
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(ApiResponse<object>.Failure("نتیجه ثبت ارجاع نامعلوم است؛ با همان شناسه درخواست دوباره تلاش کنید.", 409));
+        }
+    }
+
+    /// <summary>آخرین ارجاع‌ها؛ این فهرست نشان‌دهنده وضعیت درمان یا نوبت نیست.</summary>
+    [HttpGet("~/api/v1/physiotherapy/referrals")]
+    [HasPermission("physiotherapy.create")]
+    public async Task<IActionResult> GetPhysiotherapyReferrals([FromQuery] long? patientId = null)
+    {
+        if (patientId is <= 0) return BadRequest(ApiResponse<object>.Failure("شناسه بیمار نامعتبر است"));
+        var query = _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapyReferral>().QueryableNoTracking;
+        if (patientId.HasValue) query = query.Where(r => r.PatientId == patientId.Value);
+        var rows = await query.Where(r => r.Patient != null && !r.Patient.IsDeleted)
+            .OrderByDescending(r => r.Id).Take(100)
+            .Select(r => new { r.Id, r.VisitId, r.PatientId, PatientName = r.Patient!.FirstName + " " + r.Patient.LastName,
+                r.Patient.NationalCode, r.Patient.Mobile, Gender = (int)r.Patient.Gender,
+                r.DoctorId, r.Note, r.CreatedAt })
+            .ToListAsync();
+        return Ok(ApiResponse<object>.Success(rows));
+    }
+
     /// <summary>ثبت جلسه فیزیوتراپی</summary>
     [HttpPost("~/api/v1/physiotherapy/sessions")]
     [HasPermission("physiotherapy.create")]

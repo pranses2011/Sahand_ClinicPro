@@ -6074,6 +6074,24 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapyReferral", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<long>("DoctorId").HasColumnType("bigint");
+                    b.Property<string>("Note").IsRequired().HasMaxLength(2000).HasColumnType("nvarchar(2000)");
+                    b.Property<long>("PatientId").HasColumnType("bigint");
+                    b.Property<Guid>("RequestId").HasColumnType("uniqueidentifier");
+                    b.Property<long>("VisitId").HasColumnType("bigint");
+                    b.HasKey("Id");
+                    b.HasIndex("DoctorId");
+                    b.HasIndex("PatientId", "Id");
+                    b.HasIndex("RequestId").IsUnique();
+                    b.HasIndex("VisitId");
+                    b.ToTable("PhysiotherapyReferrals");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession", b =>
                 {
                     b.Property<long>("Id")
@@ -11093,6 +11111,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("LabOrder");
 
                     b.Navigation("Test");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapyReferral", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Doctor", "Doctor").WithMany().HasForeignKey("DoctorId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient").WithMany().HasForeignKey("PatientId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Clinical.Visit", "Visit").WithMany().HasForeignKey("VisitId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.Navigation("Doctor");
+                    b.Navigation("Patient");
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession", b =>
