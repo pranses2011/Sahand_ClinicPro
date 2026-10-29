@@ -101,14 +101,19 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private bool _isPhysioSaving;
     public bool CanSelectPhysioPatient => !IsPhysioSaving;
     /// <summary>ثبت جلسه تنها پس از دریافت موفق سابقهٔ بیمار مجاز است.</summary>
-    public bool IsPhysioSessionEnabled => PhysioPatient is not null && IsHistoryReady && !IsHistoryLoading && !IsPhysioSaving;
+    public bool CanEditPhysioSession => PhysioPatient is not null && IsHistoryReady && !IsHistoryLoading && !IsPhysioSaving;
+    /// <summary>خطای تبدیل عدد در نمای WPF باید پیش از ثبت رفع شود.</summary>
+    [ObservableProperty] private bool _hasInvalidPhysioInput;
+    public bool IsPhysioSessionEnabled => CanEditPhysioSession && !HasInvalidPhysioInput;
+    partial void OnHasInvalidPhysioInputChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
     partial void OnIsPhysioSavingChanged(bool value)
     {
         OnPropertyChanged(nameof(CanSelectPhysioPatient));
+        OnPropertyChanged(nameof(CanEditPhysioSession));
         OnPropertyChanged(nameof(IsPhysioSessionEnabled));
     }
-    partial void OnIsHistoryLoadingChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
-    partial void OnIsHistoryReadyChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+    partial void OnIsHistoryLoadingChanged(bool value) { OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled)); }
+    partial void OnIsHistoryReadyChanged(bool value) { OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled)); }
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "فیزیوتراپی";
@@ -170,6 +175,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [RelayCommand]
     private void SetZonePain(int value)
     {
+        if (value is < 0 or > 10) return;
         ZonePain[SelectedZone] = value;
         PainScore = value;
         RecordPainScore = true;
@@ -218,7 +224,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     public string PainColor => PainScore <= 3 ? "#43A047" : PainScore <= 6 ? "#F9A825" : "#E53935";
     partial void OnPainScoreChanged(int value) { OnPropertyChanged(nameof(PainColor)); OnPropertyChanged(nameof(PainScoreDisplay)); }
     /// <summary>مدت کل جلسه (مجموع مدت تکنیک‌های منتخب)</summary>
-    public int TotalDuration => TechniqueItems.Where(t => t.IsSelected).Sum(t => t.Minutes);
+    public long TotalDuration => TechniqueItems.Where(t => t.IsSelected).Sum(t => (long)t.Minutes);
 
     /// <summary>پرچم‌های قرمز غربالگری</summary>
     public ObservableCollection<PhysioCheckItem> RedFlags { get; } = new()
@@ -394,7 +400,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         foreach (var row in Assessments) { row.BaseValue = null; row.NowValue = null; }
         IsFemale = value?.Gender == 2;
         OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText)); OnPropertyChanged(nameof(SessionNumber));
-        OnPropertyChanged(nameof(CourseProgress)); OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+        OnPropertyChanged(nameof(CourseProgress)); OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled));
         BodyMapChanged?.Invoke();
         if (value is not null) _ = LoadHistoryAsync();
     }
@@ -498,11 +504,19 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         catch (JsonException) { /* سازگاری با سابقهٔ قدیمی */ }
     }
 
+    private static bool ValidAssessment(double? value) => value is null || (double.IsFinite(value.Value) && value.Value >= 0);
+
     /// <summary>ذخیرهٔ جلسهٔ فیزیوتراپی با همهٔ داده‌های ساخت‌یافته</summary>
     [RelayCommand]
     private async Task SavePhysioSessionAsync()
     {
         if (!IsPhysioSessionEnabled || PhysioPatient is null) { _snackbar.Error("ابتدا بیمار و سابقهٔ او را بارگذاری کنید"); return; }
+        if (TechniqueItems.Any(t => t.IsSelected && (t.Minutes is < 1 or > 1440)) || TotalDuration > 1440)
+        { _snackbar.Error("مدت تکنیک‌های انتخاب‌شده باید مثبت و مجموع آن‌ها حداکثر ۱۴۴۰ دقیقه باشد"); return; }
+        if (Assessments.Any(a => !ValidAssessment(a.BaseValue) || !ValidAssessment(a.NowValue)))
+        { _snackbar.Error("مقادیر ارزیابی باید عدد متناهی و غیرمنفی باشند"); return; }
+        if (RecordPainScore && (PainScore is < 0 or > 10))
+        { _snackbar.Error("شدت درد باید بین صفر و ده باشد"); return; }
         var patient = PhysioPatient;
         var version = _patientVersion;
         if (HasRedFlag)
@@ -538,7 +552,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             therapistId = (long?)null,
             sessionNumber = SessionNumber,
             treatments,
-            duration = TotalDuration > 0 ? TotalDuration : (int?)null,
+            duration = TotalDuration > 0 ? (int)TotalDuration : (int?)null,
             painScore = RecordPainScore ? (byte?)Math.Clamp(PainScore, 0, 10) : null,
             progressNote
         }); }

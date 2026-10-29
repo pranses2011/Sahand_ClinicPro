@@ -20,6 +20,7 @@ namespace Sahand.ClinicPro.Desktop.Views;
 public partial class PhysiotherapyView : UserControl
 {
     private readonly Dictionary<string, Rectangle> _zoneRects = new();
+    private readonly HashSet<ValidationError> _numericErrors = new();
     private PhysiotherapyViewModel? _vm;
     private bool _builtFemale;
 
@@ -27,6 +28,7 @@ public partial class PhysiotherapyView : UserControl
     public PhysiotherapyView()
     {
         InitializeComponent();
+        Validation.AddErrorHandler(this, OnNumericValidationError);
         DataContextChanged += OnDataContextChanged;
         Loaded += (_, _) => BuildBodyMap();
     }
@@ -34,10 +36,17 @@ public partial class PhysiotherapyView : UserControl
     /// <summary>با تغییر ویومدل، اشتراک رویداد رنگ‌آمیزی نقشه تازه می‌شود</summary>
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (_vm is not null) _vm.BodyMapChanged -= RepaintBodyMap;
+        if (_vm is not null) { _vm.BodyMapChanged -= RepaintBodyMap; _vm.HasInvalidPhysioInput = false; }
         _vm = e.NewValue as PhysiotherapyViewModel;
-        if (_vm is not null) _vm.BodyMapChanged += RepaintBodyMap;
+        if (_vm is not null) { _vm.BodyMapChanged += RepaintBodyMap; _vm.HasInvalidPhysioInput = _numericErrors.Count != 0; }
         BuildBodyMap();
+    }
+
+    private void OnNumericValidationError(object sender, ValidationErrorEventArgs e)
+    {
+        if (e.Action == ValidationErrorEventAction.Added) _numericErrors.Add(e.Error);
+        else _numericErrors.Remove(e.Error);
+        if (_vm is not null) _vm.HasInvalidPhysioInput = _numericErrors.Count != 0;
     }
 
     /// <summary>

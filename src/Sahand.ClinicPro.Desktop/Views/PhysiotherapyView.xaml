@@ -99,7 +99,9 @@
 
                 <TextBlock Text="در حال دریافت سابقهٔ جلسات…" Foreground="#176AC2" Margin="0,0,0,8"
                            Visibility="{Binding IsHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
-                <StackPanel IsEnabled="{Binding IsPhysioSessionEnabled}">
+                <TextBlock Text="عدد واردشده معتبر نیست؛ پیش از ثبت مقدار را اصلاح کنید." Foreground="#B00020" TextWrapping="Wrap" Margin="0,4"
+                           Visibility="{Binding HasInvalidPhysioInput, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel IsEnabled="{Binding CanEditPhysioSession}">
                 <!-- ───── نقشهٔ بدن ───── -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
@@ -183,7 +185,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="2,3">
                                         <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" Width="270" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBox Text="{Binding Minutes, UpdateSourceTrigger=PropertyChanged}" Width="52" HorizontalContentAlignment="Center"
+                                        <TextBox Text="{Binding Minutes, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" Width="52" HorizontalContentAlignment="Center"
                                                  materialDesign:HintAssist.Hint="دقیقه" />
                                     </StackPanel>
                                 </DataTemplate>
@@ -248,8 +250,8 @@
                                             <ColumnDefinition Width="*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="70" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBox Grid.Column="1" Text="{Binding BaseValue, UpdateSourceTrigger=PropertyChanged}" Margin="4,0" HorizontalContentAlignment="Center" />
-                                        <TextBox Grid.Column="2" Text="{Binding NowValue, UpdateSourceTrigger=PropertyChanged}" Margin="4,0" HorizontalContentAlignment="Center" />
+                                        <TextBox Grid.Column="1" Text="{Binding BaseValue, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" Margin="4,0" HorizontalContentAlignment="Center" />
+                                        <TextBox Grid.Column="2" Text="{Binding NowValue, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" Margin="4,0" HorizontalContentAlignment="Center" />
                                         <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="4,0">
                                             <Border Background="#EEF4F2" Height="7" CornerRadius="4">
                                                 <Border HorizontalAlignment="Left" Background="#B0BEC5" CornerRadius="4" Width="{Binding BaseBar}" />

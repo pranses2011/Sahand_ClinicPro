@@ -91,4 +91,28 @@ public class PhysiotherapyViewModelTests
         note.RootElement.GetProperty("bodyMap").TryGetProperty("زانو چپ", out _).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Invalid_numeric_fields_and_implausible_durations_cannot_be_saved()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.HasInvalidPhysioInput = true;
+        vm.CanEditPhysioSession.Should().BeTrue("کاربر باید بتواند مقدار اشتباه را اصلاح کند");
+        vm.IsPhysioSessionEnabled.Should().BeFalse();
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        vm.HasInvalidPhysioInput = false;
+        vm.TechniqueItems[0].IsSelected = true;
+        vm.TechniqueItems[0].Minutes = int.MaxValue;
+        vm.TechniqueItems[1].IsSelected = true;
+        vm.TechniqueItems[1].Minutes = int.MaxValue;
+        vm.TotalDuration.Should().Be(2L * int.MaxValue);
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        vm.TechniqueItems[0].Minutes = 10;
+        vm.TechniqueItems[1].Minutes = 10;
+        vm.Assessments[0].NowValue = -1;
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "physiotherapy/sessions");
+    }
+
 }
