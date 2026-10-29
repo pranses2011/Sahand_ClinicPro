@@ -983,7 +983,7 @@
                                             ToolTip="ارجاع مستقل هنوز پشتیبانی نمی‌شود؛ هیچ جلسه ساختگی ثبت نخواهد شد">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
-                                            <TextBlock Text="ارسال به فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="وضعیت پشتیبانی ارجاع" Margin="8,0,0,0" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
