@@ -579,6 +579,9 @@
                         <StackPanel>
                             <TextBlock Text="هر ناحیه را یا «نرمال» علامت بزنید یا یافتهٔ غیرنرمال را بنویسید — با علامت‌زدن نرمال، جعبهٔ یافته قفل می‌شود"
                                        FontSize="11" Opacity="0.6" Margin="4,4,0,10" />
+                            <TextBlock Text="متن ثبت‌شدهٔ معاینه (یافته‌های جدید ناحیه‌ای به آن افزوده می‌شوند)" FontSize="11" Margin="4,0,0,4" />
+                            <TextBox Text="{Binding PhysicalExamText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                                     MinHeight="76" TextWrapping="Wrap" VerticalContentAlignment="Top" Margin="0,0,0,10" />
                             <!-- چرخهٔ ۷۹: جعبه‌های یافته از Height=46 ثابت به MinHeight=76 کشسان
                                  تغییر کردند — گزارش مالک: «فیلدها ارتفاع مناسب ندارن و متن
                                  داخلشون خونده نمیشه»؛ اکنون متن با چند سطر خوانا و رشد‌پذیر است -->
@@ -593,7 +596,7 @@
                                         <CheckBox Content="نرمال" IsChecked="{Binding HeadNeckNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
                                         <TextBox Text="{Binding HeadNeckFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
-                                                 IsEnabled="{Binding HeadNeckNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 IsEnabled="{Binding HeadNeckNormal, Converter={StaticResource InvertBool}}"
                                                  Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
                                                  VerticalContentAlignment="Top" />
                                     </StackPanel>
@@ -608,7 +611,7 @@
                                         <CheckBox Content="نرمال" IsChecked="{Binding ChestNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
                                         <TextBox Text="{Binding ChestFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="مثلاً رال پایهٔ ریه چپ"
-                                                 IsEnabled="{Binding ChestNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 IsEnabled="{Binding ChestNormal, Converter={StaticResource InvertBool}}"
                                                  Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
                                                  VerticalContentAlignment="Top" />
                                     </StackPanel>
@@ -623,7 +626,7 @@
                                         <CheckBox Content="نرمال" IsChecked="{Binding AbdomenNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
                                         <TextBox Text="{Binding AbdomenFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
-                                                 IsEnabled="{Binding AbdomenNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 IsEnabled="{Binding AbdomenNormal, Converter={StaticResource InvertBool}}"
                                                  Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
                                                  VerticalContentAlignment="Top" />
                                     </StackPanel>
@@ -638,7 +641,7 @@
                                         <CheckBox Content="نرمال" IsChecked="{Binding LimbsNormal}" FontWeight="SemiBold" Margin="2,8,0,0" />
                                         <TextBox Text="{Binding LimbsFindings, UpdateSourceTrigger=PropertyChanged}"
                                                  materialDesign:HintAssist.Hint="یافتهٔ غیرنرمال…"
-                                                 IsEnabled="{Binding LimbsNormal, Converter={StaticResource BoolToVisibility}, ConverterParameter=Inverse}"
+                                                 IsEnabled="{Binding LimbsNormal, Converter={StaticResource InvertBool}}"
                                                  Margin="0,6,0,0" MinHeight="76" AcceptsReturn="True" TextWrapping="Wrap"
                                                  VerticalContentAlignment="Top" />
                                     </StackPanel>

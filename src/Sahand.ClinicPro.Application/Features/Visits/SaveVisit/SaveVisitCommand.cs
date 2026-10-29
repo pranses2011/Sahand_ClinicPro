@@ -163,9 +163,8 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
             }
         }
 
-        if (dto.FollowUpDateShamsi is not null
-            && PersianDateHelper.ToGregorian(dto.FollowUpDateShamsi) is { } followUp)
-            visit.FollowUpDate = DateOnly.FromDateTime(followUp);
+        visit.FollowUpDate = PersianDateHelper.ToGregorian(dto.FollowUpDateShamsi) is { } followUp
+            ? DateOnly.FromDateTime(followUp) : null;
 
         if (dto.Complete)
         {

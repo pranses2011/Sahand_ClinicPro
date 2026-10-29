@@ -29,6 +29,11 @@ public partial class VisitEditViewModel : ObservableObject
     private readonly ISnackbarService _snackbar;
     private long? _visitId;
     private bool _creationResultUnknown;
+    private readonly bool _openedExisting;
+    private bool _existingVisitLoaded;
+    private bool _visitEditable = true;
+    private string? _soapSubjective, _soapObjective, _soapAssessment, _soapPlan;
+    private string? _originalSecondaryDiagnoses, _initialSecondaryRepresentation;
     private System.Windows.Threading.DispatcherTimer? _clock;
     private long _patientId;
     private long _doctorId;
@@ -134,13 +139,14 @@ public partial class VisitEditViewModel : ObservableObject
     public ObservableCollection<string> VitalWarnings { get; } = new();
 
     /* ═══════════ تب ۳: معاینه فیزیکی ═══════════ */
-    [ObservableProperty] private bool _headNeckNormal = true;
+    [ObservableProperty] private string? _physicalExamText;
+    [ObservableProperty] private bool _headNeckNormal;
     [ObservableProperty] private string? _headNeckFindings;
-    [ObservableProperty] private bool _chestNormal = true;
+    [ObservableProperty] private bool _chestNormal;
     [ObservableProperty] private string? _chestFindings;
-    [ObservableProperty] private bool _abdomenNormal = true;
+    [ObservableProperty] private bool _abdomenNormal;
     [ObservableProperty] private string? _abdomenFindings;
-    [ObservableProperty] private bool _limbsNormal = true;
+    [ObservableProperty] private bool _limbsNormal;
     [ObservableProperty] private string? _limbsFindings;
 
     /* ═══════════ تب ۴: تشخیص ═══════════ */
@@ -189,6 +195,7 @@ public partial class VisitEditViewModel : ObservableObject
         _api = api;
         _snackbar = snackbar;
         _visitId = visitId;
+        _openedExisting = true;
         FormTitle = "ادامه ویزیت";
         _ = LoadAsync();
         // چرخهٔ ۴۸ — فهرست آزمایش‌های مرجع برای تب ارسال به آزمایشگاه
@@ -223,6 +230,13 @@ public partial class VisitEditViewModel : ObservableObject
         _patientId = v.PatientId;
         _doctorId = v.DoctorId;
         _receptionId = v.ReceptionId;
+        _visitEditable = v.Status is 1 or 2 or 4;
+        _soapSubjective = v.SoapSubjective;
+        _soapObjective = v.SoapObjective;
+        _soapAssessment = v.SoapAssessment;
+        _soapPlan = v.SoapPlan;
+        PhysicalExamText = v.PhysicalExamination;
+        _originalSecondaryDiagnoses = v.SecondaryDiagnoses;
 
         // فیلدهای SOAP
         ChiefComplaint = v.ChiefComplaint;
@@ -234,15 +248,16 @@ public partial class VisitEditViewModel : ObservableObject
         TreatmentPlan = v.TreatmentPlan;
         FollowUpInstructions = v.FollowUpInstructions;
         FillTags(SecondaryDiagnoses, v.SecondaryDiagnoses);
+        _initialSecondaryRepresentation = JsonSerializer.Serialize(SecondaryDiagnoses.ToList());
         if (v.FollowUpDateShamsi is not null) FollowUpDateShamsi = v.FollowUpDateShamsi;
         // ═══ چرخهٔ ۷۸ — ریشهٔ «پایان ویزیت همیشه خطا می‌دهد» ═══
         // پیش‌تر فقط Code خوانده می‌شد و جای‌نگهدارِ «Id=0» ساخته می‌شد؛ در ذخیره،
         // Id=0 به تهی ترجمه می‌شد و اعتبارسنجِ سرورِ «تشخیص اصلی الزامی است»
         // هر بار پایانِ ویزیتِ ویرایش‌شده را رد می‌کرد — هرچند تشخیص روی صفحه بود!
         // اکنون «شناسهٔ واقعی» از DTO خوانده می‌شود و عنوان کامل هم نمایش داده می‌شود.
-        if (v.PrimaryDiagnosisCode is not null && v.PrimaryDiagnosisId is { } diagId)
-            PrimaryDiagnosis = new DiagnosisOption(diagId, v.PrimaryDiagnosisCode,
-                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode);
+        if (v.PrimaryDiagnosisId is { } diagId)
+            PrimaryDiagnosis = new DiagnosisOption(diagId, v.PrimaryDiagnosisCode ?? "",
+                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode ?? "تشخیص ثبت‌شده");
         if (v.VitalSigns is { } vit)
         {
             BpText = vit.BloodPressureSystolic.HasValue ? $"{vit.BloodPressureSystolic}/{vit.BloodPressureDiastolic}" : null;
@@ -255,8 +270,9 @@ public partial class VisitEditViewModel : ObservableObject
         }
         RebuildVitalCards();
 
+        _existingVisitLoaded = true;
         await LoadPatientContextAsync();
-        FormTitle = $"🩺 ویزیت بیمار: {v.Patient?.FullName ?? ""} [🔴 در حال ضبط]";
+        FormTitle = _visitEditable ? $"🩺 ویزیت بیمار: {v.Patient?.FullName ?? ""} [🔴 در حال ضبط]" : "ویزیت تکمیل‌شده — فقط خواندنی";
         PatientName = v.Patient?.FullName ?? PatientName;
         IsBusy = false;
         StartTimers();
@@ -372,7 +388,7 @@ public partial class VisitEditViewModel : ObservableObject
     /// <summary>راه‌اندازی AutoSave و Stopwatch</summary>
     private void StartTimers()
     {
-        if (_autoSave is not null) return;
+        if (_autoSave is not null || !_visitEditable) return;
         _stopwatch.Start();
 
         // نمایش مدت — هر ثانیه
@@ -831,6 +847,8 @@ public partial class VisitEditViewModel : ObservableObject
         { if (!silent) _snackbar.Info("ذخیره قبلی هنوز در حال انجام است؛ پس از پایان دوباره تلاش کنید."); return false; }
         if (_creationResultUnknown)
         { if (!silent) _snackbar.Error("نتیجه ساخت ویزیت نامعلوم است؛ پیش از تکرار پرونده بیمار را بررسی کنید."); return false; }
+        if (!_visitEditable || (_openedExisting && !_existingVisitLoaded))
+        { if (!silent) _snackbar.Error("ویزیت کامل بارگذاری نشده یا تکمیل‌شده و فقط خواندنی است."); return false; }
         if (_patientId <= 0 || _doctorId <= 0)
         { if (!silent) _snackbar.Error("اطلاعات بیمار یا پزشک ویزیت آماده نیست؛ ذخیره انجام نشد."); return false; }
         _suppressAutoSave = true;
@@ -846,10 +864,10 @@ public partial class VisitEditViewModel : ObservableObject
                 historyOfPresentIllness = Hpi,
                 pastMedicalHistory = Pmh,
                 physicalExamination = BuildExamText(),
-                soapSubjective = ChiefComplaint,
-                soapObjective = BuildExamText(),
-                soapAssessment = PrimaryDiagnosis?.Title,
-                soapPlan = TreatmentPlan,
+                soapSubjective = _existingVisitLoaded ? _soapSubjective : ChiefComplaint,
+                soapObjective = _existingVisitLoaded ? _soapObjective : BuildExamText(),
+                soapAssessment = _existingVisitLoaded ? _soapAssessment : PrimaryDiagnosis?.Title,
+                soapPlan = _existingVisitLoaded ? _soapPlan : TreatmentPlan,
                 primaryDiagnosisId = PrimaryDiagnosis?.Id == 0 ? null : PrimaryDiagnosis?.Id,
                 treatmentPlan = TreatmentPlan,
                 followUpDateShamsi = string.IsNullOrWhiteSpace(FollowUpDateShamsi) ? null : FollowUpDateShamsi.Trim(),
@@ -857,7 +875,8 @@ public partial class VisitEditViewModel : ObservableObject
                 familyHistory = FamilyHistory,
                 socialHistory = SocialHistory,
                 reviewOfSystems = ReviewOfSystems,
-                secondaryDiagnoses = JsonSerializer.Serialize(SecondaryDiagnoses.ToList()),
+                secondaryDiagnoses = _existingVisitLoaded && JsonSerializer.Serialize(SecondaryDiagnoses.ToList()) == _initialSecondaryRepresentation
+                    ? _originalSecondaryDiagnoses : JsonSerializer.Serialize(SecondaryDiagnoses.ToList()),
                 followUpInstructions = FollowUpInstructions,
                 vitalSigns = BuildVitals()
             };
@@ -899,6 +918,7 @@ public partial class VisitEditViewModel : ObservableObject
     private string? BuildExamText()
     {
         var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(PhysicalExamText)) parts.Add(PhysicalExamText);
         if (!HeadNeckNormal && !string.IsNullOrWhiteSpace(HeadNeckFindings)) parts.Add($"سر و گردن: {HeadNeckFindings}");
         else if (HeadNeckNormal) parts.Add("سر و گردن: نرمال");
         if (!ChestNormal && !string.IsNullOrWhiteSpace(ChestFindings)) parts.Add($"قفسه سینه: {ChestFindings}");
@@ -915,7 +935,7 @@ public partial class VisitEditViewModel : ObservableObject
     {
         var hasAny = !string.IsNullOrWhiteSpace(BpText) || !string.IsNullOrWhiteSpace(HrText) ||
                      !string.IsNullOrWhiteSpace(TempText) || !string.IsNullOrWhiteSpace(Spo2Text) ||
-                     !string.IsNullOrWhiteSpace(WeightText) || !string.IsNullOrWhiteSpace(BsText);
+                     !string.IsNullOrWhiteSpace(WeightText) || !string.IsNullOrWhiteSpace(HeightText) || !string.IsNullOrWhiteSpace(BsText);
         if (!hasAny) return null;
 
         int? sys = null, dia = null;
@@ -982,6 +1002,12 @@ public partial class VisitEditViewModel : ObservableObject
         public long PatientId { get; set; }
         public long DoctorId { get; set; }
         public long? ReceptionId { get; set; }
+        public int Status { get; set; }
+        public string? PhysicalExamination { get; set; }
+        public string? SoapSubjective { get; set; }
+        public string? SoapObjective { get; set; }
+        public string? SoapAssessment { get; set; }
+        public string? SoapPlan { get; set; }
         public string? ChiefComplaint { get; set; }
         public string? HistoryOfPresentIllness { get; set; }
         public string? PastMedicalHistory { get; set; }

@@ -33,4 +33,37 @@ public class VisitEditSafetyTests
         api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits").Should().Be(1);
         vm.StopTimers();
     }
+    [Fact]
+    public async Task Existing_visit_preserves_physical_exam_soap_and_legacy_secondary_diagnoses()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, receptionId = 9L,
+            status = 4, physicalExamination = "یافته اصلی", soapSubjective = "شرح مستقل", soapObjective = "معاینه مستقل",
+            soapAssessment = "ارزیابی مستقل", soapPlan = "برنامه مستقل", secondaryDiagnoses = "قالب قدیمی" } };
+        api.CannedResponses["visits"] = new { data = 42L };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
+        vm.PhysicalExamText.Should().Be("یافته اصلی");
+        vm.HeadNeckNormal.Should().BeFalse();
+        vm.ChiefComplaint = "شرح جدید";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("receptionId").GetInt64().Should().Be(9);
+        body.GetProperty("physicalExamination").GetString().Should().Be("یافته اصلی");
+        body.GetProperty("soapSubjective").GetString().Should().Be("شرح مستقل");
+        body.GetProperty("soapObjective").GetString().Should().Be("معاینه مستقل");
+        body.GetProperty("secondaryDiagnoses").GetString().Should().Be("قالب قدیمی");
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Completed_visit_is_not_saved_or_reopened()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, status = 3 } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "visits");
+        vm.StopTimers();
+    }
+
 }
