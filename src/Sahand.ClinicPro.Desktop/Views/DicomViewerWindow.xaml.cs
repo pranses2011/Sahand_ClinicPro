@@ -51,6 +51,12 @@ public partial class DicomViewerWindow : Window
 
     private void LoadImage(Func<DicomImage> readImage, string displayName)
     {
+        // در صورت خطای فایل جدید، تصویر و مشخصات بیمار قبلی باقی نماند.
+        _image = null;
+        ImageHost.Source = null;
+        FileTitle.Text = displayName;
+        DimensionsText.Text = DepthText.Text = KindText.Text = "—";
+        MetadataPanel.Children.Clear();
         try
         {
             _image = readImage();

@@ -601,7 +601,7 @@
                                             <TextBox Text="{Binding CriticalNotifiedTo, UpdateSourceTrigger=PropertyChanged}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="روش اطلاع" Style="{StaticResource FieldLabel}" />
+                                            <TextBlock Text="روش اطلاع (ثبت دستی؛ بدون ارسال خودکار)" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" />
                                             <ComboBox ItemsSource="{Binding CriticalMethodOptions}" SelectedItem="{Binding CriticalMethod}" />
                                         </StackPanel>
                                     </Grid>

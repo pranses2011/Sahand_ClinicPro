@@ -11,6 +11,7 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -35,8 +36,9 @@
             </Button>
         </Grid>
 
+        <TextBlock Grid.Row="1" Text="این نمایشگر برای تصمیم یا تشخیص بالینی تأیید نشده است؛ از نمایشگر معتبر مرکز استفاده کنید." Background="#FFF4E0" Foreground="#9E1F17" FontWeight="Bold" Padding="8" TextWrapping="Wrap" Margin="0,0,0,8" />
         <!-- محور اصلی: تصویر + پنل متادیتا -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="13" />
@@ -125,7 +127,7 @@
         </Grid>
 
         <!-- نوار وضعیت -->
-        <Border Grid.Row="2" Margin="0,8,0,0" Padding="10,6" CornerRadius="6"
+        <Border Grid.Row="3" Margin="0,8,0,0" Padding="10,6" CornerRadius="6"
                 Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
                 BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1">
             <TextBlock x:Name="StatusText" Text="فایلی بارگذاری نشده — از «گشودن فایل» استفاده کنید یا فایل DICOM را از پاراکلینیک انتخاب کنید"
