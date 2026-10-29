@@ -322,6 +322,14 @@ public partial class OphthalmologyViewModel : ViewModelBase
             !DecimalValue(OdAdd, out _) || !DecimalValue(OsAdd, out _))
         { _snackbar.Error("مقدار عددی واردشده در اندازه‌های چشم معتبر نیست"); return; }
 
+        if (rightSphere is null && rightCylinder is null && rightAxis is null && leftSphere is null &&
+            leftCylinder is null && leftAxis is null && rightIop is null && leftIop is null && pd is null &&
+            OdVisionIndex < 0 && OsVisionIndex < 0 && ColorVisionIndex < 0 &&
+            new[] { OdAdd, OsAdd, EyeFindings, SlitOd, SlitOs, PachymetryOd, PachymetryOs,
+                VisualFieldText, SpecialTestsText, ImagingNote, DiagnosisText, CarePlanText,
+                DrugPrescriptionText, FollowUpText }.All(string.IsNullOrWhiteSpace))
+        { _snackbar.Error("حداقل یک اندازه یا یافتهٔ معاینه را وارد کنید"); return; }
+
         // ═══ چرخهٔ ۴۸ — سازگاری کامل با قرارداد سرور SaveEyeExamCommand ═══
         // نام‌های قبلی odSphere/osCylinder/… با هیچ ویژگی‌ای از DTO سرور
         // (rightSphere/leftCylinder/…) بایند نمی‌شدند ⇒ عدسی/استوانه/محور هر دو

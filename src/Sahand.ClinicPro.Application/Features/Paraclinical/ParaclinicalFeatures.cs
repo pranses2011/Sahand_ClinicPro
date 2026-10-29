@@ -236,6 +236,13 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
     /// <summary>اجرای ثبت معاینه چشم — همهٔ اندازه‌ها در رکورد بیمار می‌نشیند</summary>
     public async Task<Result<long>> Handle(SaveEyeExamCommand request, CancellationToken cancellationToken)
     {
+        var patientExists = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken);
+        if (!patientExists)
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.VisitId.HasValue && !await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
+                .AnyAsync(v => v.Id == request.VisitId.Value && v.PatientId == request.PatientId && !v.IsDeleted, cancellationToken))
+            return Result<long>.Failure(new Error("VISIT_PATIENT_MISMATCH", "ویزیت معتبر و متعلق به این بیمار یافت نشد"));
         var exam = new EyeExamRecord
         {
             PatientId = request.PatientId,

@@ -101,4 +101,13 @@ public class OphthalmologyViewModelTests
         vm.IsEyeExamEnabled.Should().BeTrue();
         vm.EyeFindings.Should().Be("یافته");
     }
+
+    [Fact]
+    public async Task Empty_exam_is_not_saved()
+    {
+        var api = new FakeApiClient();
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(7) };
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams");
+    }
 }
