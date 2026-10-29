@@ -302,9 +302,17 @@ public partial class InvoiceFormViewModel : ObservableObject
     private int _patientSearchVersion;
     private bool _invoiceSubmissionLocked;
     private CreateInvoiceDto? _pendingInvoiceRequest;
+    private PendingInvoice? _pendingInvoice;
+    private readonly IInvoiceRecoveryStore? _invoiceRecoveryStore;
+    private readonly string _invoiceRecoveryServer;
     private long? _pendingInvoiceBranch;
+    public string InvoiceRecoveryInfo => _pendingInvoice is null ? string.Empty :
+        $"درخواست بازیابی: {Patient?.FullName} — اقلام: " +
+        string.Join("، ", _pendingInvoice.Request.Items.Select(i => $"{i.Description} × {i.Quantity}")) +
+        $"؛ جمع {Money.Format(_pendingInvoice.Quote.SubTotal)}، تخفیف {Money.Format(_pendingInvoice.Quote.DiscountAmount)}، بیمه {Money.Format(_pendingInvoice.Quote.InsuranceShare)}، مالیات {Money.Format(_pendingInvoice.Quote.Tax)}، پرداختی بیمار {Money.Format(_pendingInvoice.Quote.PatientPayable)}. ارسال مجدد ممکن است فاکتور را صادر کند؛ ابتدا سوابق را بررسی کنید.";
     public bool CanRetryInvoice => !IsBusy && _invoiceSubmissionLocked && _pendingInvoiceRequest is not null &&
-        ((_api as ApiClient)?.BranchId == _pendingInvoiceBranch);
+        ((_api as ApiClient)?.BranchId == _pendingInvoiceBranch) &&
+        (_api is not ApiClient activeClient || activeClient.PaymentRecoveryServer == _invoiceRecoveryServer);
     private InvoicePreviewDto? _quote;
     private string? _quoteInputs;
     public string QuoteStatus => _quote is null ? "برای محاسبه قطعی، «محاسبه فاکتور» را بزنید." :
@@ -323,7 +331,52 @@ public partial class InvoiceFormViewModel : ObservableObject
         OnPropertyChanged(nameof(PayableText)); OnPropertyChanged(nameof(RemainingText));
         OnPropertyChanged(nameof(Payable)); OnPropertyChanged(nameof(Remaining));
     }
-    partial void OnPatientChanged(QuickPatient? value) => InvalidateQuote();
+    partial void OnPatientChanged(QuickPatient? value)
+    {
+        InvalidateQuote();
+        if (_invoiceSubmissionLocked || value is null || _invoiceRecoveryStore is null) return;
+        try
+        {
+            var pending = _invoiceRecoveryStore.Load(_invoiceRecoveryServer, value.Id);
+            if (pending is not null) RestorePendingInvoice(pending);
+        }
+        catch (Exception)
+        {
+            _invoiceSubmissionLocked = true;
+            ErrorMessage = "بازیابی محلی فاکتور خوانده نشد؛ صدور جدید مسدود است. سوابق را بررسی و با پشتیبانی تماس بگیرید.";
+            OnPropertyChanged(nameof(CanEditInvoice));
+        }
+    }
+    private void RestorePendingInvoice(PendingInvoice pending)
+    {
+        _pendingInvoice = pending;
+        _pendingInvoiceRequest = pending.Request;
+        _pendingInvoiceBranch = pending.BranchId;
+        _invoiceSubmissionLocked = true;
+        ErrorMessage = CanRetryInvoice
+            ? "درخواست فاکتور حل‌نشده بازیابی شد؛ جزئیات زیر و سوابق را بررسی کنید."
+            : "درخواست فاکتور مربوط به شعبه دیگری است؛ در شعبه اصلی بررسی کنید.";
+        OnPropertyChanged(nameof(InvoiceRecoveryInfo));
+        OnPropertyChanged(nameof(CanEditInvoice));
+        OnPropertyChanged(nameof(CanRetryInvoice));
+    }
+    private bool ClearPendingInvoice()
+    {
+        try
+        {
+            if (_pendingInvoice is not null) _invoiceRecoveryStore?.Clear(_pendingInvoice);
+            _pendingInvoice = null;
+            _pendingInvoiceRequest = null;
+            OnPropertyChanged(nameof(InvoiceRecoveryInfo));
+            OnPropertyChanged(nameof(CanRetryInvoice));
+            return true;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "فاکتور تأیید شد اما بازیابی محلی پاک نشد؛ پرداخت خودکار متوقف است. همان درخواست را بررسی کنید.";
+            return false;
+        }
+    }
     partial void OnDoctorIndexChanged(int value) => InvalidateQuote();
     [ObservableProperty] private bool _hasInvalidInvoiceInput;
     public bool CanEditInvoice => !IsBusy && !_invoiceSubmissionLocked;
@@ -452,10 +505,12 @@ public partial class InvoiceFormViewModel : ObservableObject
     public event EventHandler? CloseRequested;
 
     /// <summary>سازنده</summary>
-    public InvoiceFormViewModel(IApiClient api, ISnackbarService snackbar)
+    public InvoiceFormViewModel(IApiClient api, ISnackbarService snackbar, IInvoiceRecoveryStore? recoveryStore = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _invoiceRecoveryStore = recoveryStore ?? (api is ApiClient ? new InvoiceRecoveryStore() : null);
+        _invoiceRecoveryServer = api is ApiClient client ? client.PaymentRecoveryServer : "test-api";
         Items.CollectionChanged += (_, _) => RaiseTotals();
         _ = InitializeAsync();
     }
@@ -675,17 +730,44 @@ public partial class InvoiceFormViewModel : ObservableObject
         long? invoiceId = null;
         try
         {
+            var pending = new PendingInvoice(request, _quote!, _invoiceRecoveryServer, invoiceBranch);
+            try { _invoiceRecoveryStore?.Reserve(pending); }
+            catch (Exception)
+            {
+                _invoiceSubmissionLocked = true;
+                try
+                {
+                    var existing = _invoiceRecoveryStore?.Load(_invoiceRecoveryServer, patient.Id);
+                    if (existing is not null) RestorePendingInvoice(existing);
+                }
+                catch (Exception) { }
+                OnPropertyChanged(nameof(CanEditInvoice));
+                ErrorMessage = "رزرو ایمن فاکتور ناموفق بود و درخواست جدید ارسال نشد؛ بازیابی محلی و سوابق را بررسی کنید.";
+                return;
+            }
+            _pendingInvoice = pending;
             _pendingInvoiceRequest = request;
             _pendingInvoiceBranch = invoiceBranch;
+            if ((_api as ApiClient)?.BranchId != invoiceBranch ||
+                (_api is ApiClient activeClient && activeClient.PaymentRecoveryServer != _invoiceRecoveryServer))
+            {
+                _invoiceSubmissionLocked = true;
+                ErrorMessage = "شعبه یا سرور تغییر کرد؛ درخواست فاکتور ارسال نشد و بازیابی برای بررسی حفظ شد.";
+                OnPropertyChanged(nameof(CanEditInvoice));
+                return;
+            }
             sentInvoice = true;
             var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices/idempotent", request);
             _invoiceSubmissionLocked = true;
             OnPropertyChanged(nameof(CanEditInvoice));
             if (invoice?.Data is null or <= 0)
-            { ErrorMessage = "نتیجه صدور فاکتور نامعلوم است؛ پیش از تکرار، فهرست فاکتورها را بررسی کنید. " + _api.LastError; return; }
+            {
+                OnPropertyChanged(nameof(InvoiceRecoveryInfo));
+                ErrorMessage = "نتیجه صدور فاکتور نامعلوم است؛ ابتدا سوابق را بررسی کنید. همان درخواست قابل بازیابی است. " + _api.LastError;
+                return;
+            }
             invoiceId = invoice.Data;
-            _pendingInvoiceRequest = null;
-            OnPropertyChanged(nameof(CanRetryInvoice));
+            if (!ClearPendingInvoice()) return;
             var detail = await _api.GetAsync<PaymentWindowViewModel.InvoiceDetailEnvelope>($"invoices/{invoiceId}");
             if (detail?.Data is null || detail.Data.Id != invoiceId || detail.Data.PatientId != patient.Id || detail.Data.RemainingAmount != expectedAmount)
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
@@ -736,8 +818,7 @@ public partial class InvoiceFormViewModel : ObservableObject
             var result = await _api.PostAsync<InvoiceCreateResult>("invoices/idempotent", request);
             if (result?.Data is null or <= 0)
             { ErrorMessage = "نتیجه فاکتور همچنان نامعلوم است؛ همان درخواست را بررسی کنید و فاکتور جدید نسازید. " + _api.LastError; return; }
-            _pendingInvoiceRequest = null;
-            OnPropertyChanged(nameof(CanRetryInvoice));
+            if (!ClearPendingInvoice()) return;
             ErrorMessage = $"فاکتور #{result.Data} تأیید شد؛ پرداخت خودکار انجام نشد. هویت، مبلغ و پرداخت را در صندوق بررسی کنید.";
         }
         catch (Exception) { ErrorMessage = "نتیجه فاکتور همچنان نامعلوم است؛ پیش از صدور تازه سوابق را بررسی کنید."; }

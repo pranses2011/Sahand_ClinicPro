@@ -243,8 +243,12 @@
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
             <Button DockPanel.Dock="Left" Command="{Binding RetryInvoiceCommand}" IsEnabled="{Binding CanRetryInvoice}"
                     Content="ارسال دوباره همان فاکتور" Margin="0,0,10,0" />
-            <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" VerticalAlignment="Center"
-                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+            <StackPanel>
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" TextWrapping="Wrap"
+                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+                <TextBlock Text="{Binding InvoiceRecoveryInfo}" Foreground="#874C00" FontSize="11" TextWrapping="Wrap"
+                           Visibility="{Binding InvoiceRecoveryInfo, Converter={StaticResource StringToVisibility}}" />
+            </StackPanel>
         </DockPanel>
     </Grid>
 </Window>
