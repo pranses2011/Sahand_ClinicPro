@@ -143,6 +143,8 @@
                                                        FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap" Foreground="#173657" />
                                             <TextBlock Text="خلاصه از ورودی‌های همین فرم ساخته می‌شود؛ برای ثبت در پرونده، معاینه را ذخیره کنید."
                                                        TextWrapping="Wrap" FontSize="10.5" Margin="0,14,0,0" Foreground="#617992" />
+                                            <Button Content="🖨 چاپ پیش‌نویس نسخه" Click="PrintGlassesPrescription_Click"
+                                                    IsEnabled="{Binding IsEyeExamEnabled}" Margin="0,10,0,0" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
