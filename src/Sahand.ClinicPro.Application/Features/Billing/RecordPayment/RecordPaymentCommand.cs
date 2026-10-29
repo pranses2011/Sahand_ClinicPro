@@ -60,7 +60,8 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
     {
         var dto = request.Dto;
         if (dto.InvoiceId is not > 0 || dto.Amount <= 0 || dto.Amount > 999999999999999999m ||
-            decimal.Truncate(dto.Amount) != dto.Amount || dto.ReferenceNumber?.Length > 50 || dto.CardNumber?.Length > 20)
+            decimal.Truncate(dto.Amount) != dto.Amount || dto.ReferenceNumber?.Length > 50 || dto.CardNumber?.Length > 20 ||
+            dto.RequestId == Guid.Empty)
             return Result<long>.Failure(new Error("PAYMENT.INVALID", "شناسه فاکتور، مبلغ صحیح ریالی یا اطلاعات پرداخت نامعتبر است."));
 
         // FindAsync ممکن است رکورد ردیابی‌شده را بدون اعمال فیلتر شعبه برگرداند.
@@ -82,6 +83,16 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
 
         if (invoice.PatientId != dto.PatientId)
             return Result<long>.Failure(new Error("PAYMENT.PATIENT_MISMATCH", "بیمار پرداخت با بیمار فاکتور مطابقت ندارد."));
+        if (dto.RequestId.HasValue)
+        {
+            var prior = await _unitOfWork.Repository<Payment>().QueryableNoTracking
+                .FirstOrDefaultAsync(p => p.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.InvoiceId == dto.InvoiceId && prior.PatientId == dto.PatientId && prior.Amount == dto.Amount &&
+                       prior.Method == dto.Method && prior.ReferenceNumber == dto.ReferenceNumber && prior.CardNumber == dto.CardNumber
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("PAYMENT.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای پرداخت دیگری استفاده شده است."));
+        }
         if (invoice.Status is InvoiceStatus.Cancelled or InvoiceStatus.Refunded or InvoiceStatus.Draft)
             return Result<long>.Failure(new Error("PAYMENT.INVOICE_STATUS", "ثبت پرداخت برای فاکتور پیش‌نویس، ابطال‌شده یا برگشت‌خورده مجاز نیست."));
         if (!Enum.IsDefined(dto.Method))
@@ -99,6 +110,7 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         var payment = new Payment
         {
             PatientId = dto.PatientId,
+            RequestId = dto.RequestId,
             InvoiceId = invoice.Id,
             Amount = dto.Amount,
             Method = dto.Method,

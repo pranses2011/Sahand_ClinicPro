@@ -153,4 +153,28 @@ public class BillingPatientSafetyTests
         invoice.PaidAmount.Should().Be(0);
         db.Set<Payment>().Should().BeEmpty();
     }
+    [Fact]
+    public async Task Payment_request_id_replays_same_payment_and_rejects_different_payload()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "PAY-IDEMPOTENT", FirstName = "اول", LastName = "بیمار", Mobile = "09120000001" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
+        db.Add(invoice); await db.SaveChangesAsync();
+        var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<ICurrentUserService>(), NullLogger<RecordPaymentCommandHandler>.Instance);
+        var dto = new RecordPaymentDto(invoice.Id, patient.Id, 100, PaymentMethod.Cash, RequestId: Guid.NewGuid());
+        var first = await handler.Handle(new RecordPaymentCommand(dto), default);
+        first.IsSuccess.Should().BeTrue();
+        var replay = await handler.Handle(new RecordPaymentCommand(dto), default);
+        replay.IsSuccess.Should().BeTrue(); replay.Value.Should().Be(first.Value);
+        var conflict = await handler.Handle(new RecordPaymentCommand(dto with { Amount = 50 }), default);
+        conflict.Error.Code.Should().Be("PAYMENT.REQUEST_CONFLICT");
+        (await db.Set<Payment>().CountAsync()).Should().Be(1);
+        invoice.PaidAmount.Should().Be(100); invoice.RemainingAmount.Should().Be(0);
+        var empty = await handler.Handle(new RecordPaymentCommand(dto with { RequestId = Guid.Empty }), default);
+        empty.IsFailure.Should().BeTrue();
+    }
 }

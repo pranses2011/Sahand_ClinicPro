@@ -33,6 +33,8 @@ public class PaymentsController : ApiBaseController
         try
         {
             var result = await _mediator.Send(new RecordPaymentCommand(dto));
+            if (result.IsFailure && result.Error.Code == "PAYMENT.REQUEST_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
             if (result.IsSuccess)
                 return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
             return ToResponse(result);

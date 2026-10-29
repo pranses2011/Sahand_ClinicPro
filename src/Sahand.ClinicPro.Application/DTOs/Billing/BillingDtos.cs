@@ -79,7 +79,8 @@ public record RecordPaymentDto(
     decimal Amount,
     PaymentMethod Method,
     string? ReferenceNumber = null,
-    string? CardNumber = null);
+    string? CardNumber = null,
+    Guid? RequestId = null);
 
 /// <summary>ردیف فهرست پرداخت‌ها</summary>
 public record PaymentListDto(

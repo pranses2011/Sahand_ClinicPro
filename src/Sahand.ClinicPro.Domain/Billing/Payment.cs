@@ -7,6 +7,9 @@ namespace Sahand.ClinicPro.Domain.Entities.Billing;
 /// </summary>
 public class Payment : AuditableEntity, ISoftDeletable
 {
+    /// <summary>شناسه پایدار درخواست برای جلوگیری از ثبت دوباره همان پرداخت.</summary>
+    public Guid? RequestId { get; set; }
+
     /// <summary>شماره سند پرداخت - یکتا</summary>
     public string? PaymentNumber { get; set; }
 

@@ -1526,6 +1526,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasComment("شماره ارجاع تراکنش");
 
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1559,6 +1562,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_Payment_InvoiceId");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payment_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("PaymentNumber")
                         .IsUnique()
