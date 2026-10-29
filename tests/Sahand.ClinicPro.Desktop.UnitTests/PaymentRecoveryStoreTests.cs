@@ -21,6 +21,10 @@ public class PaymentRecoveryStoreTests
             var store = new PaymentRecoveryStore(directory);
             var payment = new PendingPayment(7, 9, 500, 2, "SECRET-TRACE-1381", "1234", Guid.NewGuid(), "https://clinic.example/api/v1/", 2);
             store.Reserve(payment);
+            var wire = JsonSerializer.SerializeToElement(payment.ToRequest());
+            wire.TryGetProperty("Server", out _).Should().BeFalse();
+            wire.TryGetProperty("BranchId", out _).Should().BeFalse();
+            wire.GetProperty("RequestId").GetGuid().Should().Be(payment.RequestId);
             var contents = Encoding.UTF8.GetString(File.ReadAllBytes(Directory.GetFiles(directory).Single()));
             contents.Should().NotContain("SECRET-TRACE-1381");
             store.Load(payment.Server, 7).Should().Be(payment);
