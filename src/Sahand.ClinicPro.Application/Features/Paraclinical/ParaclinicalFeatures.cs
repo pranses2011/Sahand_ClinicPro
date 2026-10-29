@@ -16,7 +16,12 @@ public record CreateImagingOrderDto(
 /// <summary>گزارش تصویربرداری — ماژول حرفه‌ای (نسخهٔ ۲ تأییدشده): جزئیات ساخت‌یافته (JSON: دوز/مقایسه/قالب/اندازه‌گیری/ایمنی/اطلاع بحرانی) و پرچم نهایی‌بودن</summary>
 public record ImagingReportDto(
     long OrderId, string? Technique, string? Findings, string? Impression,
-    string? Recommendation, string? ReportDetails = null, bool IsFinal = true);
+    string? Recommendation, string? ReportDetails = null, bool IsFinal = true,
+    ImagingReportExpectedState? ExpectedState = null);
+
+/// <summary>تصویر نسخهٔ گزارش هنگام بازشدن فرم، برای جلوگیری از بازنویسی دادهٔ قدیمی.</summary>
+public record ImagingReportExpectedState(ImagingOrderStatus Status, string? Technique, string? Findings,
+    string? Impression, string? Recommendation, string? ReportDetails);
 
 /// <summary>فرمان ثبت درخواست تصویربرداری</summary>
 public record CreateImagingOrderCommand(CreateImagingOrderDto Dto) : IRequest<Result<long>>;
@@ -92,6 +97,13 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
 
         if (order is null)
             return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.Dto.OrderId));
+
+        var expected = request.Dto.ExpectedState;
+        if (expected is null)
+            return Result.Failure(new Error("IMAGING_REPORT_VERSION_REQUIRED", "نسخهٔ گزارش مشخص نیست؛ برنامه را به‌روز و صف را تازه‌سازی کنید"));
+        if (expected.Status != order.Status || expected.Technique != order.Technique || expected.Findings != order.Findings ||
+            expected.Impression != order.Impression || expected.Recommendation != order.Recommendation || expected.ReportDetails != order.ReportDetails)
+            return Result.Failure(new Error("IMAGING_REPORT_STALE", "گزارش پس از بازشدن فرم تغییر کرده است؛ پیش از ثبت، آن را تازه‌سازی و بررسی کنید"));
 
         // گزارش نهایی و لغوشده نباید با پیش‌نویس یا الحاقیهٔ فاقد تاریخچه
         // بازنویسی شوند. مسیر الحاقیهٔ واقعی هنوز پیاده‌سازی نشده است.

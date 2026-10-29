@@ -72,21 +72,27 @@ public class ImagingOrderPatientSafetyTests
         db.Add(order);
         await db.SaveChangesAsync();
         var handler = new SubmitImagingReportCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        ImagingReportExpectedState Expected() => new(order.Status, order.Technique, order.Findings, order.Impression, order.Recommendation, order.ReportDetails);
         order.Status = ImagingOrderStatus.Ordered;
-        (await handler.Handle(new(new(order.Id, null, "پیش‌نویس", null, null, IsFinal: false)), default)).IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(new(order.Id, null, "پیش‌نویس", null, null, IsFinal: false, ExpectedState: Expected())), default)).IsSuccess.Should().BeTrue();
         order.Status.Should().Be(ImagingOrderStatus.Ordered);
         order.PerformedAt.Should().BeNull();
-        (await handler.Handle(new(new(order.Id, null, "یافته", null, null)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new(order.Id, null, "یافته", null, null, ExpectedState: Expected())), default)).IsSuccess.Should().BeFalse();
+        var stale = Expected();
+        order.Findings = "تغییر کاربر دیگر";
+        (await handler.Handle(new(new(order.Id, null, "بازنویسی قدیمی", null, null, IsFinal: false, ExpectedState: stale)), default)).IsSuccess.Should().BeFalse();
+        order.Findings.Should().Be("تغییر کاربر دیگر");
+        (await handler.Handle(new(new(order.Id, null, "بدون نسخه", null, null, IsFinal: false)), default)).IsSuccess.Should().BeFalse();
         order.Status = ImagingOrderStatus.Performed;
-        (await handler.Handle(new(new(order.Id, null, null, null, null)), default)).IsSuccess.Should().BeFalse();
-        (await handler.Handle(new(new(order.Id, null, "یافته اصلی", null, null)), default)).IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(new(order.Id, null, null, null, null, ExpectedState: Expected())), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new(order.Id, null, "یافته اصلی", null, null, ExpectedState: Expected())), default)).IsSuccess.Should().BeTrue();
         order.Status.Should().Be(ImagingOrderStatus.Reported);
         order.PerformedAt.Should().BeNull(); // گزارش تاریخ انجام گمشده را جعل نمی‌کند.
-        (await handler.Handle(new(new(order.Id, null, "بازنویسی", null, null, IsFinal: false)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new(order.Id, null, "بازنویسی", null, null, IsFinal: false, ExpectedState: Expected())), default)).IsSuccess.Should().BeFalse();
         order.Findings.Should().Be("یافته اصلی");
         order.Status = ImagingOrderStatus.Cancelled;
         await db.SaveChangesAsync();
-        (await handler.Handle(new(new(order.Id, null, "گزارش", null, null)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new(order.Id, null, "گزارش", null, null, ExpectedState: Expected())), default)).IsSuccess.Should().BeFalse();
     }
 
 }

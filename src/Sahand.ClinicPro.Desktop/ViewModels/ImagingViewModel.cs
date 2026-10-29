@@ -943,7 +943,9 @@ public partial class ImagingViewModel : ViewModelBase
         {
             orderId = order.Id, technique = ReportTechnique, findings = ReportFindings,
             impression = ReportImpression, recommendation = ReportRecommendation,
-            reportDetails = JsonSerializer.Serialize(details), isFinal
+            reportDetails = JsonSerializer.Serialize(details), isFinal,
+            expectedState = new { status = order.Status, technique = order.Technique, findings = order.Findings,
+                impression = order.Impression, recommendation = order.Recommendation, reportDetails = order.ReportDetails }
         };
         var savedSnapshot = ReportSnapshot();
         IsSavingImagingReport = true;
