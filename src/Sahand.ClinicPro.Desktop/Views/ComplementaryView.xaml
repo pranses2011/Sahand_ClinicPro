@@ -68,6 +68,7 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <!-- ═══ چرخهٔ سی‌وپنجم (گزارش مالک) — فیلتر موجودیت ═══
                              «باید فقط طرح‌های مربوط به موجودیتی که از لیست انتخاب
@@ -120,8 +121,9 @@
                             </Button>
                         </WrapPanel>
                         <!-- طرح‌های آمادهٔ همین سند — چند طرح برای انتخاب (بازطراحی تأییدشده) -->
-                        <StackPanel Grid.Row="3" Margin="0,6,0,0">
+                        <StackPanel Grid.Row="4" Margin="0,6,0,0">
                             <TextBlock Text="🎨 طرح‌های آمادهٔ این سند — با کلیک ساخته می‌شود:" FontSize="10.5" FontWeight="SemiBold" Opacity="0.75" Margin="2,0,0,4" />
+                            <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding VisiblePresets}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -138,9 +140,10 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            </ScrollViewer>
                         </StackPanel>
-                        <!-- ردیف ۴: عملیات روی قالب انتخابی -->
-                        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4,0,0">
+                        <!-- ردیف ۵: عملیات روی قالب انتخابی -->
+                        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Command="{Binding DuplicateTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
                                     ToolTip="کپی قالب انتخابی به‌عنوان نسخه جدید">
                                 <StackPanel Orientation="Horizontal">
@@ -171,6 +174,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
@@ -251,6 +255,12 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <WrapPanel Grid.Row="5" Margin="0,8,0,0">
+                            <Button Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="ذخیره قالب" Margin="0,0,8,0" FontSize="12" />
+                            <Button Command="{Binding DiscardTemplateChangesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Content="انصراف از تغییرات" FontSize="11" />
+                        </WrapPanel>
                     </Grid>
 
                     <!-- ستون ۳: پیش‌نمایش زنده -->

@@ -22,6 +22,9 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>پاسخ بولی آماده برای فراخوانی‌های بدون داده خروجی</summary>
     public bool NextBoolResult { get; set; } = true;
 
+    /// <summary>پاسخ معوق PUT برای آزمون عملیات هم‌زمان.</summary>
+    public Task<bool>? PendingPutResult { get; set; }
+
     /// <summary>خطای تنظیم‌شده برای LastError</summary>
     public string? FakeError { get; set; }
 
@@ -122,7 +125,7 @@ public sealed class FakeApiClient : IApiClient
     {
         Calls.Add(("PUT-bool", endpoint));
         LastBody = body;
-        return Task.FromResult(NextBoolResult);
+        return PendingPutResult ?? Task.FromResult(NextBoolResult);
     }
 
     /// <summary>PUT ناشناس با نتیجه بولی — چرخه هجدهم (تنظیمات سرور لایسنس پیش از ورود)</summary>

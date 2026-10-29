@@ -54,4 +54,37 @@ public class PrintTemplateDesignerTests
         vm.SelectedTemplate!.Body = "<div>نسخه تازه</div>";
         vm.PreviewHtml.Should().BeNull();
     }
+
+    [Fact]
+    public async Task Reload_does_not_discard_unsaved_edits()
+    {
+        var (vm, api, snackbar) = Create("<div>نسخه قبلی</div>");
+        var template = vm.SelectedTemplate!;
+        template.Body = "<div>تغییر ذخیره نشده</div>";
+        var calls = api.Calls.Count;
+        await vm.LoadTemplatesAsync();
+        vm.SelectedTemplate.Should().BeSameAs(template);
+        template.Body.Should().Contain("تغییر ذخیره نشده");
+        api.Calls.Count.Should().Be(calls);
+        snackbar.Messages.Should().Contain(m => m.Message.Contains("ذخیره"));
+    }
+
+    [Fact]
+    public async Task Save_does_not_discard_edits_made_while_request_is_pending()
+    {
+        var (vm, api, snackbar) = Create("<div>نسخه قبلی</div>");
+        var template = vm.SelectedTemplate!;
+        template.Body = "<div>نسخه ارسالی</div>";
+        var completion = new TaskCompletionSource<bool>();
+        api.PendingPutResult = completion.Task;
+        var saving = vm.SaveTemplateCommand.ExecuteAsync(null);
+        vm.IsTemplateReady.Should().BeFalse();
+        template.Body = "<div>تغییر پس از ارسال</div>";
+        completion.SetResult(true);
+        await saving;
+        vm.SelectedTemplate.Should().BeSameAs(template);
+        template.Body.Should().Contain("تغییر پس از ارسال");
+        template.IsDirty.Should().BeTrue();
+        snackbar.Messages.Should().Contain(m => m.Message.Contains("هنوز ذخیره نشده"));
+    }
 }
