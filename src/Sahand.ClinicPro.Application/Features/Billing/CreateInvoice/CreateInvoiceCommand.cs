@@ -7,6 +7,8 @@ using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Accounting;
+using Sahand.ClinicPro.Domain.Entities.Clinical;
+using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
@@ -78,6 +80,23 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+
+        if (dto.ReceptionId is long receptionId)
+        {
+            var reception = await _unitOfWork.Repository<Reception>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.Id == receptionId && !r.IsDeleted, cancellationToken);
+            if (reception is null) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
+            if (reception.PatientId != dto.PatientId)
+                return Result<long>.Failure(new Error("BILLING.RECEPTION_PATIENT", "بیمار فاکتور با بیمار پذیرش مطابقت ندارد."));
+        }
+        if (dto.VisitId is long visitId)
+        {
+            var visit = await _unitOfWork.Repository<Visit>().QueryableNoTracking
+                .FirstOrDefaultAsync(v => v.Id == visitId && !v.IsDeleted, cancellationToken);
+            if (visit is null) return Result<long>.Failure(Error.NotFound("ویزیت", visitId));
+            if (visit.PatientId != dto.PatientId || (dto.ReceptionId.HasValue && visit.ReceptionId.HasValue && visit.ReceptionId != dto.ReceptionId))
+                return Result<long>.Failure(new Error("BILLING.VISIT_MISMATCH", "ویزیت با بیمار یا پذیرش فاکتور مطابقت ندارد."));
+        }
 
         // بیمه فقط وقتی مؤثر است که شرکت طرف قرارداد باشد و تنظیمات درمانگاه
         // برای دست‌کم یک دستهٔ موجود در فاکتور اجازهٔ اعمال بیمه بدهد.
