@@ -1162,8 +1162,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         var settings = response.Data;
         var visits = settings.FirstOrDefault(x => x.Key == "ApplyToDoctorVisits")?.Value;
         var services = settings.FirstOrDefault(x => x.Key == "ApplyToMedicalServices")?.Value;
-        if (bool.TryParse(visits, out var applyVisits)) ApplyInsuranceToDoctorVisits = applyVisits;
-        if (bool.TryParse(services, out var applyServices)) ApplyInsuranceToMedicalServices = applyServices;
+        ApplyInsuranceToDoctorVisits = !bool.TryParse(visits, out var applyVisits) || applyVisits;
+        ApplyInsuranceToMedicalServices = !bool.TryParse(services, out var applyServices) || applyServices;
         RecalculateCost();
     }
 
