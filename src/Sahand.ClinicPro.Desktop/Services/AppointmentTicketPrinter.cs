@@ -51,7 +51,7 @@ public static class AppointmentTicketPrinter
         // پیش‌تر این متد خودش PrintDialog می‌ساخت و مستقیم می‌فرستاد؛ حالا
         // PrintFlow تنظیم Printer.ShowPreview را می‌خواند و بر اساس آن پیش‌نمایش
         // فارسی نمایش می‌دهد یا همان چاپ مستقیم قدیمی را انجام می‌دهد.
-        return PrintFlow.Print(doc, $"قبض نوبت {code}", printerName, TicketWidth, TicketHeight);
+        return PrintFlow.Print(doc, $"قبض نوبت {code}", printerName, TicketWidth, TicketHeight, jobKey: "AppointmentTicket");
     }
 
     /// <summary>عرض کاغذ فیش حرارتی ۸۰ میلی‌متری بر حسب پیکسل (۹۶dpi)</summary>

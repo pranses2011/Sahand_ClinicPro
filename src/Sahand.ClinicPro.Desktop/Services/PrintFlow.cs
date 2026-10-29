@@ -54,17 +54,20 @@ public static class PrintFlow
     /// <param name="pageWidth">عرض کاغذ (پیکسل ۹۶dpi) — فقط برای مسیر چاپ مستقیم؛ تهی = خودکار چاپگر</param>
     /// <param name="pageHeight">ارتفاع کاغذ (پیکسل ۹۶dpi) — تهی = خودکار چاپگر</param>
     /// <param name="showPreview">پیش‌نمایش اختصاصی؛ تهی یعنی تنظیم عمومی</param>
-    /// <param name="copies">تعداد نسخه ارسالی به درایور</param>
+    /// <param name="copies">تعداد نسخه؛ تهی یعنی تنظیم سند یا یک نسخه</param>
+    /// <param name="jobKey">کلید سند برای دریافت تنظیمات اختصاصی</param>
     /// <returns>true اگر سند به چاپگر ارسال شد</returns>
     public static bool Print(FlowDocument document, string title, string? printerName = null,
-        double? pageWidth = null, double? pageHeight = null, bool? showPreview = null, int copies = 1)
+        double? pageWidth = null, double? pageHeight = null, bool? showPreview = null, int? copies = null,
+        string? jobKey = null)
     {
-        copies = NormalizeCopies(copies);
-        if (ResolvePreview(showPreview, PreviewEnabled))
+        var effectiveCopies = NormalizeCopies(copies ?? (jobKey is null ? 1 : PrintJobSettings.CopiesFor(jobKey)));
+        var effectivePreview = showPreview ?? (jobKey is null ? null : PrintJobSettings.PreviewFor(jobKey));
+        if (ResolvePreview(effectivePreview, PreviewEnabled))
         {
             // پیش‌نمایش — مالکیت پنجره با پنجرهٔ فعال برنامه؛ کاربر از همان‌جا چاپ می‌کند
             var preview = new PrintPreviewWindow(document, title, printerName,
-                pageWidth: pageWidth, pageHeight: pageHeight, copies: copies)
+                pageWidth: pageWidth, pageHeight: pageHeight, copies: effectiveCopies)
             {
                 Owner = System.Windows.Application.Current?.Windows
                     .Cast<Window>().FirstOrDefault(w => w.IsActive)
@@ -75,7 +78,7 @@ public static class PrintFlow
         }
 
         // چاپ مستقیم — بدون هیچ پنجره‌ای (رفتار پیشین)
-        return PrintDirect(document, title, printerName, pageWidth, pageHeight, copies);
+        return PrintDirect(document, title, printerName, pageWidth, pageHeight, effectiveCopies);
     }
 
     /// <summary>پیش‌نمایش اختصاصی در صورت وجود بر تنظیم عمومی مقدم است.</summary>

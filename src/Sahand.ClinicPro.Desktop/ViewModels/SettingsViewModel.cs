@@ -800,7 +800,7 @@ public partial class SettingsViewModel : ViewModelBase
             foreach (var row in PrintJobs)
             {
                 if (row.SupportsPrinter) PrintJobSettings.SetPrinter(row.Key, row.Printer);
-                if (row.SupportsReceiptOptions)
+                if (row.SupportsFlowOptions)
                 {
                     PrintJobSettings.SetCopies(row.Key, row.Copies);
                     PrintJobSettings.SetPreview(row.Key, row.Preview);
@@ -1496,8 +1496,9 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
     public bool SupportsPrinter => Key is "ReceptionReceipt" or "AppointmentTicket" or "Prescription"
         or "LabResult" or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report";
 
-    /// <summary>تنظیم نسخه و پیش‌نمایش فقط برای موتور داخلی قبض پذیرش متصل است.</summary>
-    public bool SupportsReceiptOptions => Key == "ReceptionReceipt";
+    /// <summary>سندهایی که از دروازهٔ FlowDocument و تنظیمات اختصاصی استفاده می‌کنند.</summary>
+    public bool SupportsFlowOptions => Key is "ReceptionReceipt" or "AppointmentTicket" or "LabResult"
+        or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report";
 
     /// <summary>عنوان سند</summary>
     public string Title { get; set; } = string.Empty;

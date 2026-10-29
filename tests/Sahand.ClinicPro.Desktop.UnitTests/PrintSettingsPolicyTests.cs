@@ -25,8 +25,8 @@ public class PrintSettingsPolicyTests
 
     [Theory]
     [InlineData("ReceptionReceipt", true, true)]
-    [InlineData("AppointmentTicket", true, false)]
-    [InlineData("PatientCard", true, false)]
+    [InlineData("AppointmentTicket", true, true)]
+    [InlineData("PatientCard", true, true)]
     [InlineData("Invoice", false, false)]
     [InlineData("ImagingReport", false, false)]
     [InlineData("Payslip", false, false)]
@@ -34,7 +34,7 @@ public class PrintSettingsPolicyTests
     {
         var row = new PrintJobRow { Key = key };
         row.SupportsPrinter.Should().Be(printer);
-        row.SupportsReceiptOptions.Should().Be(receiptOptions);
+        row.SupportsFlowOptions.Should().Be(receiptOptions);
         row.Preview.Should().BeNull();
     }
 }
