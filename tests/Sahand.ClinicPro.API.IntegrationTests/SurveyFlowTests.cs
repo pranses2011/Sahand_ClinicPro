@@ -199,6 +199,16 @@ public class SurveyFlowTests
                 VisitDate = DateTime.UtcNow,
                 Status = Domain.Enums.VisitStatus.Completed
             });
+            var futurePatient = new Patient
+            {
+                MedicalRecordNo = "MRN-SURVEY-FUTURE", NationalCode = "0055500099",
+                FirstName = "آینده", LastName = "آزمایشی", Mobile = "09129990099",
+                Gender = Domain.Enums.Gender.Female, IsActive = true
+            };
+            context.Patients.Add(futurePatient);
+            await context.SaveChangesAsync();
+            context.Visits.Add(new Visit { PatientId = futurePatient.Id, DoctorId = doctorId,
+                VisitDate = DateTime.UtcNow.AddDays(3), Status = Domain.Enums.VisitStatus.Completed });
             await context.SaveChangesAsync();
         }
 
@@ -207,8 +217,12 @@ public class SurveyFlowTests
         var created = await ReadAsync<JsonElementPacket>(create);
         var surveyId = created.Data.GetProperty("surveyId").GetInt64();
 
-        var send = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
+        // بدون نشانی صریح، پیامک به دامنهٔ فرضی و بررسی‌نشده ارسال نمی‌شود.
+        var missingUrl = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
             new { baseUrl = (string?)null });
+        missingUrl.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var send = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
+            new { baseUrl = "https://example.com" });
         send.StatusCode.Should().Be(HttpStatusCode.OK,
             because: "نظرسنجی فعال و ویزیت امروز موجود است");
         var payload = await ReadAsync<SendLinksPacket>(send);
@@ -224,6 +238,7 @@ public class SurveyFlowTests
                 .Where(q => q.Status == Domain.Enums.SmsStatus.Queued)
                 .ToListAsync();
             queued.Should().Contain(q => q.Recipient == "09129990001");
+            queued.Should().NotContain(q => q.Recipient == "09129990099");
             queued.Should().Contain(q => q.Message != null && q.Message.Contains($"/s/{surveyId}"));
         }
     }

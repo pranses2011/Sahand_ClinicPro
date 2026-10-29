@@ -59,65 +59,52 @@ public partial class SurveyQuestionItem : ObservableObject
     /// <param name="json">متن خام JSON آرایهٔ سوالات از سرور</param>
     /// <returns>آیتم‌های سازندهٔ پویا — خالی در نبود/خرابی متن</returns>
     public static List<SurveyQuestionItem> ParseList(string? json)
+        => TryParseList(json, out var items) ? items : new();
+
+    /// <summary>خواندن محافظه‌کارانه؛ قالب ناشناخته نباید با ذخیرهٔ ویرایش از بین برود.</summary>
+    public static bool TryParseList(string? json, out List<SurveyQuestionItem> result)
     {
-        var result = new List<SurveyQuestionItem>();
-        if (string.IsNullOrWhiteSpace(json))
-            return result;
+        result = new();
+        if (string.IsNullOrWhiteSpace(json)) return true;
         try
         {
             using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.ValueKind != JsonValueKind.Array)
-                return result;
-
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return false;
             foreach (var q in doc.RootElement.EnumerateArray())
             {
-                if (q.ValueKind != JsonValueKind.Object)
-                    continue;
-
-                // متن — کلید «text» (قرارداد جدید) یا «q» (قرارداد قدیمی)
-                string? rawText = null;
-                if (q.TryGetProperty("text", out var t))
-                    rawText = t.GetString();
-                else if (q.TryGetProperty("q", out var qk))
-                    rawText = qk.GetString();
-                var text = rawText ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-
-                // نوع — rating پیش‌فرض
-                var typeKey = q.TryGetProperty("type", out var ty) ? ty.GetString() : "rating";
-                var type = typeKey switch
+                if (q.ValueKind != JsonValueKind.Object || q.EnumerateObject().Any(p => p.Name is not ("text" or "q" or "type" or "options"))) return false;
+                if (q.TryGetProperty("text", out _) && q.TryGetProperty("q", out _)) return false;
+                if (!q.TryGetProperty("text", out var textElement) && !q.TryGetProperty("q", out textElement)) return false;
+                if (textElement.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(textElement.GetString())) return false;
+                var typeKey = "rating";
+                if (q.TryGetProperty("type", out var ty))
                 {
-                    "text" => TypeOptions[1],
-                    "choice" => TypeOptions[2],
-                    _ => TypeOptions[0]
-                };
-
-                // گزینه‌ها — آرایهٔ JSON یا رشتهٔ جداشده با «|»
-                string choices = string.Empty;
+                    if (ty.ValueKind != JsonValueKind.String) return false;
+                    typeKey = ty.GetString() ?? "";
+                }
+                if (typeKey is not ("rating" or "text" or "choice")) return false;
+                var choices = "";
                 if (q.TryGetProperty("options", out var opt))
                 {
+                    if (typeKey != "choice" && opt.ValueKind != JsonValueKind.Null) return false;
                     if (opt.ValueKind == JsonValueKind.Array)
-                        choices = string.Join("|", opt.EnumerateArray()
-                            .Select(o => o.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)));
-                    else if (opt.ValueKind == JsonValueKind.String)
-                        choices = opt.GetString() ?? string.Empty;
+                    {
+                        if (opt.EnumerateArray().Any(o => o.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(o.GetString()) || o.GetString()!.Contains('|'))) return false;
+                        choices = string.Join("|", opt.EnumerateArray().Select(o => o.GetString()));
+                    }
+                    else if (opt.ValueKind == JsonValueKind.String) choices = opt.GetString() ?? "";
+                    else if (opt.ValueKind != JsonValueKind.Null) return false;
                 }
-
-                result.Add(new SurveyQuestionItem
+                result.Add(new SurveyQuestionItem { Text = textElement.GetString()!, QuestionType = typeKey switch
                 {
-                    Text = text,
-                    QuestionType = type,
-                    Choices = choices
-                });
+                    "text" => TypeOptions[1], "choice" => TypeOptions[2], _ => TypeOptions[0]
+                }, Choices = choices });
             }
+            return true;
         }
-        catch (JsonException)
-        {
-            // متن خراب/قدیمی — فهرست خالی؛ فرم ویرایش سوال پیش‌فرض می‌گذارد
-        }
-        return result;
+        catch (JsonException) { result.Clear(); return false; }
     }
+
 }
 
 /// <summary>ستون توزیع ستاره‌ها — ارتفاع نوار از پیش مقیاس‌شده</summary>
@@ -139,6 +126,9 @@ public partial class SurveyViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private int _resultsVersion;
+    [ObservableProperty] private bool _isResultsLoading;
+    [ObservableProperty] private string _resultsMessage = "نظرسنجی را برای مشاهدهٔ نتایج انتخاب کنید.";
 
     /// <summary>عنوان صفحه</summary>
     public override string Title => "نظرسنجی بیماران";
@@ -196,7 +186,7 @@ public partial class SurveyViewModel : ViewModelBase
 
     /// <summary>متن کارت کل پاسخ‌ها</summary>
     [ObservableProperty]
-    private string _totalResponsesText = "۰";
+    private string _totalResponsesText = "—";
 
     /// <summary>متن کارت میانگین کل</summary>
     [ObservableProperty]
@@ -204,7 +194,7 @@ public partial class SurveyViewModel : ViewModelBase
 
     /// <summary>متن کارت پاسخ ۳۰ روز اخیر</summary>
     [ObservableProperty]
-    private string _last30Text = "۰";
+    private string _last30Text = "—";
 
     /// <summary>توزیع ستاره‌ها — ۵ تا ۱</summary>
     public ObservableCollection<StarBar> Stars { get; } = new();
@@ -226,15 +216,22 @@ public partial class SurveyViewModel : ViewModelBase
     /// <summary>بارگذاری داده زبانه فعال</summary>
     partial void OnTabIndexChanged(int value)
     {
-        if (value == 1 && ResultsSurvey is not null)
-            _ = LoadResultsAsync();
+        if (value == 1 && ResultsSurvey is not null) _ = LoadResultsAsync();
     }
 
-    /// <summary>با انتخاب نظرسنجی نتایج، آمار بارگذاری شود</summary>
     partial void OnResultsSurveyChanged(SurveyListRow? value)
     {
-        if (value is not null && TabIndex == 1)
-            _ = LoadResultsAsync();
+        _resultsVersion++;
+        ResetResults();
+        IsResultsLoading = false;
+        ResultsMessage = value is null ? "نظرسنجی را برای مشاهدهٔ نتایج انتخاب کنید." : "نتایج هنوز دریافت نشده‌اند.";
+        if (value is not null && TabIndex == 1) _ = LoadResultsAsync();
+    }
+
+    private void ResetResults()
+    {
+        TotalResponsesText = AverageText = Last30Text = "—";
+        Stars.Clear(); DoctorRatings.Clear(); Comments.Clear();
     }
 
     /* ─── تب ۱: فرمان‌ها ─── */
@@ -247,11 +244,17 @@ public partial class SurveyViewModel : ViewModelBase
         try
         {
             var response = await _api.GetAsync<SurveysResponse>("surveys");
+            if (response?.Data is null)
+            {
+                _snackbar.Error(_api.LastError ?? "دریافت فهرست نظرسنجی‌ها ناموفق بود");
+                return;
+            }
+            var selectedId = SelectedSurvey?.Id;
+            var resultsId = ResultsSurvey?.Id;
             Surveys.Clear();
-            foreach (var s in response?.Data ?? new List<SurveyDto>())
-                Surveys.Add(ToRow(s));
-            if (Surveys.Count > 0 && ResultsSurvey is null)
-                ResultsSurvey = Surveys[0];
+            foreach (var s in response.Data) Surveys.Add(ToRow(s));
+            SelectedSurvey = Surveys.FirstOrDefault(s => s.Id == selectedId);
+            ResultsSurvey = Surveys.FirstOrDefault(s => s.Id == resultsId) ?? Surveys.FirstOrDefault();
         }
         finally
         {
@@ -287,14 +290,19 @@ public partial class SurveyViewModel : ViewModelBase
         IsBusy = true;
         try
         {
+            if (!SurveyQuestionItem.TryParseList(SelectedSurvey.QuestionsJson, out var existing))
+            {
+                _snackbar.Error("ساختار سؤالات این نظرسنجی پشتیبانی نمی‌شود؛ برای جلوگیری از حذف اطلاعات، ویرایش باز نشد.");
+                return;
+            }
             IsEditing = true;
             _editingId = SelectedSurvey.Id;
             FormTitle = SelectedSurvey.Title;
             FormDescription = SelectedSurvey.Description;
             FormType = SelectedSurvey.TypeText switch
             {
-                "Service" => TypeOptions[1],
-                "Doctor" => TypeOptions[2],
+                "کیفیت خدمات" => TypeOptions[1],
+                "ارزیابی پزشک" => TypeOptions[2],
                 _ => TypeOptions[0]
             };
 
@@ -306,16 +314,7 @@ public partial class SurveyViewModel : ViewModelBase
             // مشترک ParseList بارگذاری می‌شوند؛ فقط در نبود/خرابی متن،
             // سوال پیش‌فرض پیشنهاد می‌شود.
             Questions.Clear();
-            var existing = SurveyQuestionItem.ParseList(SelectedSurvey.QuestionsJson);
-            if (existing.Count > 0)
-            {
-                foreach (var q in existing)
-                    Questions.Add(q);
-            }
-            else
-            {
-                Questions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
-            }
+            foreach (var q in existing) Questions.Add(q);
             IsFormOpen = true;
         }
         finally
@@ -342,6 +341,13 @@ public partial class SurveyViewModel : ViewModelBase
             return;
         }
 
+        if (FormTitle.Trim().Length > 150)
+        { _snackbar.Error("عنوان نظرسنجی حداکثر ۱۵۰ نویسه است"); return; }
+        if (Questions.Any(q => string.IsNullOrWhiteSpace(q.Text)))
+        { _snackbar.Error("متن همهٔ سؤال‌ها را وارد کنید"); return; }
+        if (Questions.Any(q => q.TypeKey == "choice" && q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length < 2))
+        { _snackbar.Error("برای سؤال چندگزینه‌ای حداقل دو گزینه وارد کنید"); return; }
+
         IsBusy = true;
         try
         {
@@ -361,7 +367,7 @@ public partial class SurveyViewModel : ViewModelBase
                 description = FormDescription,
                 questions = questionsJson,
                 surveyType = typeKey,
-                isActive = (bool?)true
+                isActive = (bool?)null
             };
 
             var ok = IsEditing
@@ -454,18 +460,24 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadResultsAsync()
     {
-        if (ResultsSurvey is null) return;
-
-        IsBusy = true;
+        var selected = ResultsSurvey;
+        if (selected is null) return;
+        var version = ++_resultsVersion;
+        ResetResults();
+        IsResultsLoading = true;
+        ResultsMessage = "در حال دریافت نتایج…";
         try
         {
-            var response = await _api.GetAsync<ResultsResponse>($"surveys/{ResultsSurvey.Id}/results");
+            var response = await _api.GetAsync<ResultsResponse>($"surveys/{selected.Id}/results");
+            if (version != _resultsVersion || ResultsSurvey?.Id != selected.Id) return;
             var data = response?.Data;
             if (data is null)
             {
-                _snackbar.Error(_api.LastError ?? "دریافت نتایج ناموفق بود");
+                ResultsMessage = "دریافت نتایج ناموفق بود.";
+                _snackbar.Error(_api.LastError ?? ResultsMessage);
                 return;
             }
+            ResultsMessage = $"نتایج نظرسنجی «{selected.Title}»";
 
             // کارت‌های خلاصه
             TotalResponsesText = Money.Format(data.Summary.TotalResponses);
@@ -475,16 +487,16 @@ public partial class SurveyViewModel : ViewModelBase
             Last30Text = Money.Format(data.Summary.ResponsesLast30Days);
 
             // توزیع ستاره‌ها — نوار افقی درصدی
-            var maxStar = Math.Max(1, data.StarDistribution.Max(s => s.Count));
+            var maxStar = Math.Max(1, data.StarDistribution.Select(s => s.Count).DefaultIfEmpty(0).Max());
             Stars.Clear();
             foreach (var s in data.StarDistribution)
             {
-                var starText = s.Star == 1 ? "⭐" : new string('⭐', s.Star);
+                var starText = s.Star == 1 ? "⭐" : new string('⭐', Math.Clamp(s.Star, 0, 5));
                 Stars.Add(new StarBar(s.Star, s.Count, 100.0 * s.Count / maxStar, starText));
             }
 
             // میانگین پزشکان — نوار مقایسه‌ای
-            var maxDoctor = Math.Max(0.01, data.DoctorRatings.Max(d => d.Average));
+            var maxDoctor = Math.Max(0.01, data.DoctorRatings.Select(d => d.Average).DefaultIfEmpty(0).Max());
             DoctorRatings.Clear();
             foreach (var d in data.DoctorRatings)
                 DoctorRatings.Add(new DoctorRatingRow(d.DoctorId, d.DoctorName,
@@ -494,14 +506,22 @@ public partial class SurveyViewModel : ViewModelBase
             Comments.Clear();
             foreach (var c in data.RecentComments)
             {
-                var rating = c.Rating.HasValue ? new string('⭐', c.Rating.Value) : "بدون امتیاز";
+                var rating = c.Rating.HasValue ? new string('⭐', Math.Clamp((int)c.Rating.Value, 0, 5)) : "بدون امتیاز";
                 Comments.Add(new SurveyCommentRow(c.Id, c.PatientName, c.DoctorName,
                     rating, c.Comment, c.SubmittedShamsi));
             }
         }
+        catch (Exception)
+        {
+            if (version == _resultsVersion)
+            {
+                ResultsMessage = "دریافت نتایج ناموفق بود.";
+                _snackbar.Error(_api.LastError ?? ResultsMessage);
+            }
+        }
         finally
         {
-            IsBusy = false;
+            if (version == _resultsVersion) IsResultsLoading = false;
         }
     }
 
@@ -516,7 +536,7 @@ public partial class SurveyViewModel : ViewModelBase
             "Doctor" => "ارزیابی پزشک",
             _ => "رضایت بیماران"
         };
-        return new SurveyListRow(s.Id, s.Title, s.Description, s.Type,
+        return new SurveyListRow(s.Id, s.Title, s.Description, typeText,
             s.IsActive, s.IsActive ? "🟢 فعال" : "🔴 غیرفعال",
             s.ResponseCount,
             s.AverageRating > 0 ? s.AverageRating.ToString("0.##") + " از ۵" : "—",

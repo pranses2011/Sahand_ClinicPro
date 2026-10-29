@@ -23,9 +23,14 @@ namespace Sahand.ClinicPro.API.Controllers;
 public class SurveysController : ApiBaseController
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IConfiguration _configuration;
 
-    /// <summary>سازنده با تزریق واحد کار</summary>
-    public SurveysController(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    /// <summary>سازنده با تزریق واحد کار و تنظیمات نشانی نظرسنجی</summary>
+    public SurveysController(IUnitOfWork unitOfWork, IConfiguration configuration)
+    {
+        _unitOfWork = unitOfWork;
+        _configuration = configuration;
+    }
 
     /// <summary>فهرست نظرسنجی‌ها با شمارنده پاسخ و میانگین امتیاز</summary>
     [HttpGet]
@@ -264,9 +269,16 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
         if (!surveyActive)
             return BadRequest(ApiResponse<object>.Failure("نظرسنجی فعال یافت نشد"));
 
-        // نشانی پایه لینک — پیش‌فرض دامنه محصول؛ با request قابل تغییر
-        var baseUrl = (request?.BaseUrl ?? "https://survey.sahand-clinicpro.ir").TrimEnd('/');
-        var link = $"{baseUrl}/s/{id}";
+        // سرویس عمومی پاسخ‌گویی در این برنامه تعبیه نشده است. ارسال به دامنهٔ
+        // حدسی می‌تواند پیامک حاوی لینک نامعتبر به بیماران بفرستد؛ فقط نشانی
+        // صریح سرویس بیرونی که مدیر نصب پیکربندی کرده قابل استفاده است.
+        var configuredUrl = string.IsNullOrWhiteSpace(request?.BaseUrl)
+            ? _configuration["Surveys:PublicBaseUrl"] : request!.BaseUrl;
+        if (!Uri.TryCreate(configuredUrl?.Trim(), UriKind.Absolute, out var publicUri) ||
+            publicUri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(publicUri.UserInfo) ||
+            !string.IsNullOrEmpty(publicUri.Query) || !string.IsNullOrEmpty(publicUri.Fragment))
+            return BadRequest(ApiResponse<object>.Failure("نشانی HTTPS سرویس عمومی پاسخ‌گویی نظرسنجی تنظیم نشده یا نامعتبر است؛ پیش از ارسال پیامک آن را تنظیم و بررسی کنید"));
+        var link = $"{publicUri.AbsoluteUri.TrimEnd('/')}/s/{id}";
 
         // مرز امروز به وقت محلی ایران (۱۱۰۴۰۰+ ثانیه از UTC، بدون DST)
         var iranNow = DateTime.UtcNow.AddHours(3.5);
@@ -274,7 +286,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
 
         // ویزیت‌های امروز با وضعیت معنادار (شروع‌شده/در جریان/تکمیل‌شده) و بیمار دارای موبایل
         var visits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
-            .Where(v => v.VisitDate >= todayStart
+            .Where(v => v.VisitDate >= todayStart && v.VisitDate < todayStart.AddDays(1)
                      && v.Status != Domain.Enums.VisitStatus.Draft
                      && v.Patient != null && v.Patient.Mobile != "")
             .Select(v => new
