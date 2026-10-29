@@ -568,6 +568,10 @@ public partial class SurveyViewModel : ViewModelBase
             return;
         }
 
+        if (Views.AppDialog.Confirm("ارسال لینک نظرسنجی",
+                $"لینک نظرسنجی «{SelectedSurvey.Title}» برای ویزیت‌های واجد شرایط امروز در صف پیامک قرار گیرد؟\n" +
+                "ارسال مجدد می‌تواند برای همان بیمار پیامک تکراری بسازد؛ از صحت سرویس عمومی و نشانی آن اطمینان پیدا کنید.",
+                Views.AppDialogIcon.Warning) != true) return;
         IsBusy = true;
         try
         {

@@ -346,8 +346,8 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
         // ویزیت‌های امروز با وضعیت معنادار (شروع‌شده/در جریان/تکمیل‌شده) و بیمار دارای موبایل
         var visits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
             .Where(v => v.VisitDate >= todayStart && v.VisitDate < todayStart.AddDays(1)
-                     && v.Status != Domain.Enums.VisitStatus.Draft
-                     && v.Patient != null && v.Patient.Mobile != "")
+                     && (v.Status == VisitStatus.Started || v.Status == VisitStatus.InProgress || v.Status == VisitStatus.Completed)
+                     && v.Patient != null && v.Patient.Mobile != null && v.Patient.Mobile.Trim() != "")
             .Select(v => new
             {
                 v.PatientId,
@@ -370,7 +370,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
                 $"لطفاً با ثبت نظرتان کیفیت خدمات امروز را به ما کمک کنید: {link}";
             await queueRepo.AddAsync(new SmsQueueItem
             {
-                Recipient = v.Mobile,
+                Recipient = v.Mobile.Trim(),
                 Message = message,
                 ScheduledAt = DateTime.UtcNow,
                 Status = SmsStatus.Queued,

@@ -205,8 +205,16 @@ public class SurveyFlowTests
                 FirstName = "آینده", LastName = "آزمایشی", Mobile = "09129990099",
                 Gender = Domain.Enums.Gender.Female, IsActive = true
             };
-            context.Patients.Add(futurePatient);
+            var blankMobile = new Patient
+            {
+                MedicalRecordNo = "MRN-SURVEY-BLANK", NationalCode = "0055500088",
+                FirstName = "بدون شماره", LastName = "آزمایشی", Mobile = "   ",
+                Gender = Domain.Enums.Gender.Female, IsActive = true
+            };
+            context.Patients.AddRange(futurePatient, blankMobile);
             await context.SaveChangesAsync();
+            context.Visits.Add(new Visit { PatientId = blankMobile.Id, DoctorId = doctorId,
+                VisitDate = DateTime.UtcNow, Status = Domain.Enums.VisitStatus.Completed });
             context.Visits.Add(new Visit { PatientId = futurePatient.Id, DoctorId = doctorId,
                 VisitDate = DateTime.UtcNow.AddDays(3), Status = Domain.Enums.VisitStatus.Completed });
             await context.SaveChangesAsync();
@@ -239,6 +247,7 @@ public class SurveyFlowTests
                 .ToListAsync();
             queued.Should().Contain(q => q.Recipient == "09129990001");
             queued.Should().NotContain(q => q.Recipient == "09129990099");
+            queued.Should().NotContain(q => string.IsNullOrWhiteSpace(q.Recipient));
             queued.Should().Contain(q => q.Message != null && q.Message.Contains($"/s/{surveyId}"));
         }
     }
