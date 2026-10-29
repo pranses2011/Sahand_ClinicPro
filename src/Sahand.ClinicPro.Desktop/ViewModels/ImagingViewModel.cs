@@ -541,6 +541,8 @@ public partial class ImagingViewModel : ViewModelBase
         public string? BodyPart { get; }
         /// <summary>وضعیت عددی (ImagingOrderStatus)</summary>
         public int Status { get; set; }
+        /// <summary>فقط درخواست منتظر یا زمان‌بندی‌شده قابل ثبت به‌عنوان انجام‌شده است.</summary>
+        public bool CanMarkPerformed => Status is 1 or 2;
         /// <summary>متن وضعیت</summary>
         public string StatusText => Status switch
         {
@@ -649,11 +651,14 @@ public partial class ImagingViewModel : ViewModelBase
     [RelayCommand]
     private Task LoadImagingOrdersAsync() => LoadImagingOrdersCoreAsync(notifyWhenEmpty: true);
 
-    /// <summary>شروع انجام مطالعه (گردش وضعیت صف کار)</summary>
+    /// <summary>ثبت انجام‌شدن مطالعه، نه صرفاً آغاز آن.</summary>
     [RelayCommand]
     private async Task StartStudyAsync(ImagingOrderRow? row)
     {
-        if (row is null) return;
+        if (row is null || !row.CanMarkPerformed) return;
+        if (Views.AppDialog.Confirm("ثبت انجام تصویربرداری",
+                $"آیا تصویربرداری {row.ModalityFa} برای {row.PatientName} واقعاً انجام شده است؟ وضعیت به «انجام‌شده» تغییر می‌کند.",
+                Views.AppDialogIcon.Warning) != true) return;
         if (await _api.PostAsync("imaging/orders/status", new { orderId = row.Id, status = 3 }))
         {
             row.Status = 3;

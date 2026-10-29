@@ -135,6 +135,19 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
         if (order is null)
             return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.OrderId));
 
+        // از بازگشت گزارش نهایی یا درخواست لغوشده به صف انجام جلوگیری شود.
+        // گزارش نهایی فقط از مسیر ثبت گزارش ایجاد می‌شود، نه تغییر وضعیت صرف.
+        var allowed = (order.Status, request.Status) switch
+        {
+            (ImagingOrderStatus.Ordered, ImagingOrderStatus.Scheduled or ImagingOrderStatus.Performed or ImagingOrderStatus.Cancelled) => true,
+            (ImagingOrderStatus.Scheduled, ImagingOrderStatus.Performed or ImagingOrderStatus.Cancelled) => true,
+            (ImagingOrderStatus.Scheduled, ImagingOrderStatus.Scheduled) => true,
+            (ImagingOrderStatus.Performed, ImagingOrderStatus.Performed) => true,
+            (ImagingOrderStatus.Cancelled, ImagingOrderStatus.Cancelled) => true,
+            _ => false
+        };
+        if (!allowed)
+            return Result.Failure(new Error("INVALID_IMAGING_TRANSITION", "تغییر وضعیت این درخواست مجاز نیست؛ صف را تازه‌سازی کنید"));
         order.Status = request.Status;
         if (request.Status == ImagingOrderStatus.Performed)
             order.PerformedAt ??= DateTime.UtcNow;

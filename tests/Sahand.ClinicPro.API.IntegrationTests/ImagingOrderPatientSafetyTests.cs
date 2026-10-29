@@ -32,4 +32,31 @@ public class ImagingOrderPatientSafetyTests
         saved.Modality.Should().Be(ImagingModality.MRI);
         saved.BodyPart.Should().Be("مچ دست چپ");
     }
+    [Fact]
+    public async Task Status_transitions_do_not_reopen_reported_or_cancelled_orders()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "IMG-STATUS-01", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var order = new ImagingOrder { PatientId = patient.Id, BodyPart = "زانو", Modality = ImagingModality.MRI, Status = ImagingOrderStatus.Ordered };
+        db.Add(order);
+        await db.SaveChangesAsync();
+        var handler = new UpdateImagingOrderStatusCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        (await handler.Handle(new(order.Id, ImagingOrderStatus.Reported), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(order.Id, (ImagingOrderStatus)99), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(order.Id, ImagingOrderStatus.Performed), default)).IsSuccess.Should().BeTrue();
+        order.PerformedAt.Should().NotBeNull();
+        (await handler.Handle(new(order.Id, ImagingOrderStatus.Scheduled), default)).IsSuccess.Should().BeFalse();
+        order.Status = ImagingOrderStatus.Reported;
+        await db.SaveChangesAsync();
+        (await handler.Handle(new(order.Id, ImagingOrderStatus.Performed), default)).IsSuccess.Should().BeFalse();
+        order.Status.Should().Be(ImagingOrderStatus.Reported);
+        order.Status = ImagingOrderStatus.Cancelled;
+        await db.SaveChangesAsync();
+        (await handler.Handle(new(order.Id, ImagingOrderStatus.Performed), default)).IsSuccess.Should().BeFalse();
+    }
+
 }
