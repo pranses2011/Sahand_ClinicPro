@@ -67,6 +67,10 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     /// <summary>ثبت برای ویرایش</summary>
     public void Update(T entity) => DbSet.Update(entity);
 
+    /// <summary>تغییر قطعی یک فیلد ردیابی‌شده، حتی اگر مقدار پیشین برابر باشد.</summary>
+    public void MarkPropertyModified<TProperty>(T entity, Expression<Func<T, TProperty>> property)
+        => Context.Entry(entity).Property(property).IsModified = true;
+
     /// <summary>ثبت برای حذف نرم — توسط SoftDeleteInterceptor به ویرایش تبدیل می‌شود</summary>
     public void Remove(T entity) => DbSet.Remove(entity);
 }

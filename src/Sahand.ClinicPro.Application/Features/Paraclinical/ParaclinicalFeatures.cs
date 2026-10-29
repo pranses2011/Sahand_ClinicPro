@@ -211,6 +211,7 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
         // تغییر فیلد حسابرسی موجب اعمال شرط rowversion هنگام ذخیره می‌شود؛
         // تعارض باید تا بیرون pipeline انتشار یابد تا کل تراکنش rollback شود.
         patient.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Repository<Domain.Entities.People.Patient>().MarkPropertyModified(patient, p => p.UpdatedAt);
         var plan = new DentalTreatmentPlan
         {
             PatientId = request.PatientId,

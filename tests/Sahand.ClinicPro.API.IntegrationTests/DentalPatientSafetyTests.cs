@@ -119,4 +119,19 @@ public class DentalPatientSafetyTests
         db.Set<DentalTreatmentPlan>().Should().HaveCount(2);
     }
 
+    [Fact]
+    public async Task Patient_touch_marks_only_audit_field_modified_even_when_value_is_unchanged()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-TOUCH", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var repository = scope.ServiceProvider.GetRequiredService<IUnitOfWork>().Repository<Patient>();
+        repository.MarkPropertyModified(patient, p => p.UpdatedAt);
+        db.Entry(patient).Property(p => p.UpdatedAt).IsModified.Should().BeTrue();
+        db.Entry(patient).Property(p => p.FirstName).IsModified.Should().BeFalse();
+    }
+
 }
