@@ -46,8 +46,8 @@ public class InvoiceFormSafetyTests
         await vm.CalculateQuoteCommand.ExecuteAsync(null);
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         var body = System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody);
-        body.GetProperty("method").GetInt32().Should().Be(5);
-        body.GetProperty("amount").GetDecimal().Should().Be(100);
+        body.GetProperty("Method").GetInt32().Should().Be(5);
+        body.GetProperty("Amount").GetDecimal().Should().Be(100);
     }
 
     [Fact]

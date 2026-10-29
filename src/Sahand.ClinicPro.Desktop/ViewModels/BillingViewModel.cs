@@ -643,13 +643,22 @@ public partial class InvoiceFormViewModel : ObservableObject
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
             if (received == 0)
             { _snackbar.Success($"فاکتور #{invoiceId} صادر شد؛ پرداختی ثبت نشد."); CloseRequested?.Invoke(this, EventArgs.Empty); return; }
-            var paymentOk = await _api.PostAsync("payments/idempotent", new
+            PaymentAttempt attempt;
+            try
             {
-                requestId = Guid.NewGuid(), invoiceId, patientId = patient.Id, amount = received, method,
-                referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(), cardNumber = (string?)null
-            });
+                attempt = PaymentAttempt.Reserve(_api, invoiceId.Value, patient.Id, received, method,
+                    string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(), null);
+            }
+            catch (Exception)
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما رزرو ایمن پرداخت ناموفق بود و پرداخت ارسال نشد؛ در صندوق بررسی کنید."; return; }
+            if (!attempt.ContextMatches)
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید."; return; }
+            var paymentOk = await _api.PostAsync("payments/idempotent", attempt.Request);
             if (!paymentOk)
-            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ نتیجه پرداخت نامعلوم است. پیش از تلاش مجدد، سوابق پرداخت را بررسی کنید. " + _api.LastError; return; }
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ نتیجه پرداخت نامعلوم است. پس از بررسی وجه و سوابق، همان فاکتور را در صندوق باز کنید. " + _api.LastError; return; }
+            try { attempt.Clear(); }
+            catch (Exception)
+            { ErrorMessage = $"پرداخت فاکتور #{invoiceId} تأیید شد ولی فایل بازیابی پاک نشد؛ آن را در صندوق بررسی کنید."; return; }
             _snackbar.Success($"فاکتور #{invoiceId} و پرداخت ثبت شدند؛ چاپ خودکار انجام نشده است.");
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
