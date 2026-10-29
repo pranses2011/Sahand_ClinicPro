@@ -344,4 +344,48 @@ public class ReceptionsViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
     }
 
+    [Fact]
+    public async Task Unknown_reception_invoice_can_be_recovered_for_same_patient()
+    {
+        var directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "clinicpro-reception-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new InvoiceRecoveryStore(directory);
+            var api = MakeApi();
+            api.CannedResponses["receptions"] = new { data = 123L };
+            api.CannedResponses["invoices/preview"] = new { data = new { subTotal = 500000m, discountAmount = 0m,
+                insuranceShare = 0m, tax = 0m, patientPayable = 500000m, appliedInsuranceId = (long?)null, quoteVersion = "quote-reception" } };
+            var vm = new ReceptionsViewModel(api, new FakeSnackbar(), store);
+            vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+            vm.SelectedDoctor = vm.Doctors.First();
+            await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+            vm.IsReceptionOutcomeUnknown.Should().BeTrue();
+            var pending = store.Load("test-api", 7);
+            pending.Should().NotBeNull();
+            pending!.Request.ReceptionId.Should().Be(123);
+            pending.Request.RequestId.Should().NotBeNull();
+            pending.Request.ExpectedQuote.Should().Be("quote-reception");
+            await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+            api.Calls.Count(x => x.Endpoint == "receptions" && x.Method == "POST").Should().Be(1);
+            var form = new InvoiceFormViewModel(api, new FakeSnackbar(), store)
+            { Patient = new QuickPatient(7, "بیمار", "", "", null, null, null) };
+            form.CanRetryInvoice.Should().BeTrue();
+            form.InvoiceRecoveryInfo.Should().Contain("پذیرش 123");
+        }
+        finally { if (System.IO.Directory.Exists(directory)) System.IO.Directory.Delete(directory, true); }
+    }
+
+    [Fact]
+    public async Task Failed_invoice_preview_stops_before_invoice_creation()
+    {
+        var api = MakeApi();
+        api.CannedResponses["receptions"] = new { data = 123L };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.SelectedDoctor = vm.Doctors.First();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        vm.IsReceptionOutcomeUnknown.Should().BeTrue();
+        api.Calls.Should().Contain(x => x.Endpoint == "invoices/preview");
+        api.Calls.Should().NotContain(x => x.Endpoint == "invoices/idempotent");
+    }
 }
