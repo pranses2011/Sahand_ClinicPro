@@ -61,7 +61,7 @@ public partial class ImagingViewModel : ViewModelBase
     // ─────────────── ثبت درخواست تازه ───────────────
     /// <summary>انواع مودالیتهٔ تصویربرداری</summary>
     public ObservableCollection<string> ImagingTypes { get; } =
-        new() { "سونوگرافی", "رادیوگرافی", "MRI", "CT Scan", "ماموگرافی", "آنژیوگرافی" };
+        new() { "سونوگرافی", "رادیوگرافی", "MRI", "CT Scan", "ماموگرافی" };
     /// <summary>نمایهٔ نوع تصویربرداری</summary>
     [ObservableProperty] private int _imagingTypeIndex;
     /// <summary>ناحیهٔ بدن (متن آزاد)</summary>
@@ -74,6 +74,13 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private string _imagingPatientSearch = string.Empty;
     /// <summary>بیمار منتخب</summary>
     [ObservableProperty] private QuickPatient? _imagingPatient;
+    [ObservableProperty] private bool _isSavingImagingOrder;
+    [ObservableProperty] private bool _isSearchingImagingPatient;
+    /// <summary>فرم هنگام جستجوی بیمار یا ثبت درخواست قفل می‌شود.</summary>
+    public bool CanEditImagingOrder => !IsSavingImagingOrder && !IsSearchingImagingPatient;
+    partial void OnIsSavingImagingOrderChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingOrder));
+    partial void OnIsSearchingImagingPatientChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingOrder));
+
     /// <summary>ناحیه‌های بدن — گزینه‌های پیشنهادی</summary>
     public string[] BodyRegions { get; } =
         { "سر و گردن", "قفسه سینه", "شکم و لگن", "ستون فقرات", "اندام فوقانی", "اندام تحتانی", "مفصل شانه", "مفصل زانو", "تروماتیک" };
@@ -451,32 +458,50 @@ public partial class ImagingViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveImagingOrderAsync()
     {
+        if (!CanEditImagingOrder) return;
         if (ImagingPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        var ok = await _api.PostAsync("imaging/orders", new
+        // ترتیب فهرست رابط با مقادیر enum یکسان نیست: MRI = ۴ و CT = ۳.
+        var modality = ImagingTypeIndex switch { 0 => 1, 1 => 2, 2 => 4, 3 => 3, 4 => 5, _ => 0 };
+        if (modality == 0) { _snackbar.Error("نوع تصویربرداری معتبر را انتخاب کنید"); return; }
+        var bodyPart = ImagingRegion?.Trim();
+        if (string.IsNullOrWhiteSpace(bodyPart) || bodyPart.Length > 200)
+        { _snackbar.Error("ناحیهٔ بدن الزامی و حداکثر ۲۰۰ نویسه است"); return; }
+        var patient = ImagingPatient;
+        var request = new
         {
-            patientId = ImagingPatient.Id,
-            referringDoctorId = (long?)null,
-            modality = ImagingTypeIndex + 1,
-            bodyPart = BodyRegions[Math.Clamp(System.Array.IndexOf(BodyRegions, ImagingRegion ?? "سر و گردن"), 0, 8)],
-            priority = ImagingUrgent ? 1 : 3,
-            clinicalInfo = ImagingClinicalInfo
-        });
-        if (ok)
+            patientId = patient.Id, referringDoctorId = (long?)null, modality, bodyPart,
+            priority = ImagingUrgent ? 1 : 3, clinicalInfo = ImagingClinicalInfo
+        };
+        IsSavingImagingOrder = true;
+        try
         {
-            _snackbar.Success("درخواست تصویربرداری ثبت شد");
-            ImagingClinicalInfo = null;
-            ImagingUrgent = false;
-            await LoadImagingOrdersCoreAsync(notifyWhenEmpty: false);
+            bool ok;
+            try { ok = await _api.PostAsync("imaging/orders", request); }
+            catch
+            { _snackbar.Error("پاسخ ثبت دریافت نشد؛ پیش از تلاش مجدد صف تصویربرداری را بررسی کنید."); return; }
+            if (ok)
+            {
+                _snackbar.Success("درخواست تصویربرداری ثبت شد");
+                if (ImagingPatient?.Id == patient.Id) { ImagingClinicalInfo = null; ImagingUrgent = false; }
+                await LoadImagingOrdersCoreAsync(notifyWhenEmpty: false);
+            }
+            else _snackbar.Error((_api.LastError ?? "ثبت درخواست ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد صف را بررسی کنید.");
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت درخواست ناموفق بود");
+        finally { IsSavingImagingOrder = false; }
     }
 
-    /// <summary>جستجوی بیمار تصویربرداری</summary>
+    /// <summary>جستجوی بیمار تصویربرداری؛ نتیجهٔ قدیمی پس از جستجوی ناموفق انتخاب نمی‌ماند.</summary>
     [RelayCommand]
     private async Task SearchImagingPatientAsync()
     {
-        var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, ImagingPatientSearch);
-        if (patient is not null) ImagingPatient = patient;
+        if (!CanEditImagingOrder) return;
+        if (ImagingPatient is not null && (!string.IsNullOrWhiteSpace(ImagingClinicalInfo) || ImagingUrgent) &&
+            Views.AppDialog.Confirm("تغییر بیمار", "اطلاعات بالینی و اولویتِ ثبت‌نشده برای بیمار فعلی پاک می‌شود. ادامه می‌دهید؟", Views.AppDialogIcon.Warning) != true) return;
+        if (ImagingPatient is not null) { ImagingClinicalInfo = null; ImagingUrgent = false; }
+        ImagingPatient = null;
+        IsSearchingImagingPatient = true;
+        try { ImagingPatient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, ImagingPatientSearch); }
+        finally { IsSearchingImagingPatient = false; }
     }
 
     /* ── بخش فایل‌های DICOM — گام R4 (حفظ‌شده) ── */

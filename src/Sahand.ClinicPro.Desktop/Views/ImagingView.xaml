@@ -230,7 +230,7 @@
 
                         <!-- درخواست تازه -->
                         <Border Style="{StaticResource Card}">
-                            <StackPanel>
+                            <StackPanel IsEnabled="{Binding CanEditImagingOrder}">
                                 <TextBlock Text="➕ درخواست تصویربرداری تازه" Style="{StaticResource SectionTitle}" />
                                 <!-- فرم فشردهٔ سه‌ستونه — مطابق طرح تأییدی: بیمار | نوع | ناحیه در یک ردیف -->
                                 <Grid>
@@ -261,7 +261,7 @@
                                         <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding ImagingTypes}" SelectedIndex="{Binding ImagingTypeIndex}" materialDesign:HintAssist.Hint="نوع تصویربرداری" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4" VerticalAlignment="Center">
-                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding BodyRegions}" SelectedItem="{Binding ImagingRegion}" IsEditable="True" Text="{Binding ImagingRegion}" materialDesign:HintAssist.Hint="ناحیهٔ بدن" />
+                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding BodyRegions}" IsEditable="True" Text="{Binding ImagingRegion, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ناحیهٔ بدن" />
                                     </StackPanel>
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"

@@ -28,7 +28,9 @@ public class CreateImagingOrderCommandValidator : AbstractValidator<CreateImagin
     public CreateImagingOrderCommandValidator()
     {
         RuleFor(x => x.Dto.PatientId).GreaterThan(0).WithMessage("شناسه بیمار الزامی است");
-        RuleFor(x => x.Dto.BodyPart).NotEmpty().WithMessage("ناحیه بدن الزامی است");
+        RuleFor(x => x.Dto.BodyPart).NotEmpty().MaximumLength(200).WithMessage("ناحیه بدن الزامی و حداکثر ۲۰۰ نویسه است");
+        RuleFor(x => x.Dto.Modality).IsInEnum().WithMessage("نوع تصویربرداری نامعتبر است");
+        RuleFor(x => x.Dto.Priority).IsInEnum().WithMessage("اولویت نامعتبر است");
     }
 }
 
@@ -44,13 +46,22 @@ public class CreateImagingOrderCommandHandler : IRequestHandler<CreateImagingOrd
     public async Task<Result<long>> Handle(CreateImagingOrderCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (string.IsNullOrWhiteSpace(dto.BodyPart) || dto.BodyPart.Trim().Length > 200 ||
+            !Enum.IsDefined(dto.Modality) || !Enum.IsDefined(dto.Priority))
+            return Result<long>.Failure(new Error("INVALID_IMAGING_ORDER", "نوع، ناحیه یا اولویت تصویربرداری معتبر نیست"));
+        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+                .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        if (dto.ReferringDoctorId.HasValue && !await _unitOfWork.Repository<Domain.Entities.People.Doctor>()
+                .AnyAsync(d => d.Id == dto.ReferringDoctorId.Value && !d.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("پزشک", dto.ReferringDoctorId.Value));
 
         var order = new ImagingOrder
         {
             PatientId = dto.PatientId,
             ReferringDoctorId = dto.ReferringDoctorId,
             Modality = dto.Modality,
-            BodyPart = dto.BodyPart,
+            BodyPart = dto.BodyPart.Trim(),
             Priority = dto.Priority,
             ClinicalInfo = dto.ClinicalInfo,
             Status = ImagingOrderStatus.Ordered
