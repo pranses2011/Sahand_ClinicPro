@@ -172,6 +172,7 @@ public class ImagingOrderSafetyTests
     [InlineData("{invalid")]
     [InlineData("{\"futureField\":\"data\"}")]
     [InlineData("{\"safety\":[123]}")]
+    [InlineData("{\"safety\":[\"چک‌لیست ناشناخته\"]}")]
     public async Task Unsupported_report_details_cannot_be_overwritten(string details)
     {
         var api = new FakeApiClient();

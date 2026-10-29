@@ -723,7 +723,7 @@ public partial class ImagingViewModel : ViewModelBase
         ReportImpression = value.Impression;
         ReportRecommendation = value.Recommendation;
         DoseCtdi = null; DoseDlp = null; CriticalFinding = false;
-        CriticalNotifiedTo = null; ReportComparison = ComparisonOptions[0];
+        CriticalNotifiedTo = null; CriticalMethod = CriticalMethodOptions[0]; ReportComparison = ComparisonOptions[0];
         ReportStatus = "نهایی و امضاشده"; Measurements.Clear();
         HasUnsupportedReportDetails = !SupportedReportDetails(value.ReportDetails);
         ReportMessage = HasUnsupportedReportDetails
@@ -799,6 +799,7 @@ public partial class ImagingViewModel : ViewModelBase
                         break;
                     case "measurements": case "safety":
                         if (v.ValueKind != JsonValueKind.Array || v.EnumerateArray().Any(x => x.ValueKind != JsonValueKind.String)) return false;
+                        if (p.Name == "safety" && v.EnumerateArray().Any(x => !SafetyFor(SelectedImagingOrder?.Modality).Contains(x.GetString()))) return false;
                         break;
                     default: return false;
                 }
