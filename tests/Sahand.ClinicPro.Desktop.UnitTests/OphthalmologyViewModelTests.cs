@@ -65,4 +65,40 @@ public class OphthalmologyViewModelTests
         vm.EyeHistory.Should().ContainSingle();
     }
 
+
+    [Fact]
+    public async Task Existing_clinical_findings_round_trip_without_extra_prefix_and_history_reloads()
+    {
+        const string findings = "یافته‌ها: بررسی اول\nاسلیت‌لمپ/فوندوس راست: بدون ضایعه";
+        var api = new FakeApiClient();
+        api.CannedResponses["patients/search?term=1234"] = new { data = new[] { new { id = 7, firstName = "علی", lastName = "رضایی", nationalCode = "1234", mobile = "" } } };
+        api.CannedResponses["eye/exams?patientId=7"] = new { data = new[] { new { findings, dateShamsi = "1405/01/01" } } };
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatientSearch = "1234" };
+        await vm.SearchEyePatientCommand.ExecuteAsync(null);
+        vm.EyeFindings.Should().Be(findings);
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("findings").GetString().Should().Be(findings);
+        vm.EyeFindings.Should().Be(findings);
+        vm.EyeHistory.Should().ContainSingle();
+        api.Calls.Count(c => c.Method == "GET" && c.Endpoint == "eye/exams?patientId=7").Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Exam_save_locks_patient_switch_and_releases_after_failure()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingPostResult = null };
+        // این مسیر POST بولی است، پاسخ معوق جداگانه دارد.
+        api.PendingBoolPostResult = completion.Task;
+        var vm = new OphthalmologyViewModel(api, new FakeSnackbar()) { EyePatient = Patient(7), EyeFindings = "یافته" };
+        var save = vm.SaveEyeExamCommand.ExecuteAsync(null);
+        vm.IsEyeExamEnabled.Should().BeFalse();
+        vm.CanSelectEyePatient.Should().BeFalse();
+        vm.ClearEyePatientCommand.Execute(null);
+        vm.EyePatient!.Id.Should().Be(7);
+        completion.SetResult(false);
+        await save;
+        vm.IsEyeExamEnabled.Should().BeTrue();
+        vm.EyeFindings.Should().Be("یافته");
+    }
 }

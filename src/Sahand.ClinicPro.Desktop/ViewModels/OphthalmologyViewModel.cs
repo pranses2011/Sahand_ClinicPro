@@ -25,8 +25,15 @@ public partial class OphthalmologyViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isEyeHistoryLoading;
     /// <summary>تا پایان بارگذاری سابقه، ویرایش یا ثبت معاینه مجاز نیست.</summary>
-    public bool IsEyeExamEnabled => EyePatient is not null && !IsEyeHistoryLoading;
+    [ObservableProperty] private bool _isEyeSaving;
+    public bool CanSelectEyePatient => !IsEyeSaving;
+    public bool IsEyeExamEnabled => EyePatient is not null && !IsEyeHistoryLoading && !IsEyeSaving;
     partial void OnIsEyeHistoryLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEyeExamEnabled));
+    partial void OnIsEyeSavingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsEyeExamEnabled));
+        OnPropertyChanged(nameof(CanSelectEyePatient));
+    }
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "چشم‌پزشکی";
@@ -170,6 +177,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SearchEyePatientAsync()
     {
+        if (IsEyeSaving) return;
         // هنگام جستجوی بیمار دیگر، فرم و ثبت بیمار قبلی فوراً غیرفعال شود.
         EyePatient = null;
         var searchVersion = ++_patientRequestVersion;
@@ -180,7 +188,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     }
 
     /// <summary>بازیابی آخرین معاینهٔ چشم بیمار + سابقه — GET eye/exams</summary>
-    private async Task LoadEyeHistoryAsync()
+    private async Task LoadEyeHistoryAsync(bool populateForm = true)
     {
         if (EyePatient is null) return;
         var patientId = EyePatient.Id;
@@ -202,8 +210,13 @@ public partial class OphthalmologyViewModel : ViewModelBase
             _snackbar.Error(_api.LastError ?? "دریافت سابقهٔ معاینه ناموفق بود");
             return;
         }
+        EyeHistory.Clear();
+        HistoryTrendText = string.Empty;
         if (exams.Count == 0) return;
 
+        // هنگام نوسازی پس از ثبت، داده‌های فرم در حال ویرایش دست‌نخورده می‌مانند.
+        if (populateForm)
+        {
         // آخرین معاینه → پر کردن فرم برای ادامهٔ پرونده
         var last = exams[0];
         OdSphere = last.Od?.Sphere?.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -227,6 +240,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
             OsVisionIndex = Array.IndexOf(VisionOptions, osAcuity);
         if (last.ColorVision is { } cv && ColorVisionOptions.Contains(cv))
             ColorVisionIndex = Array.IndexOf(ColorVisionOptions, cv);
+        }
 
         // روند: مقایسهٔ تازه‌ترین معاینه با قبلی (فشار چشم و نمرهٔ عدسی راست)
         if (exams.Count >= 2)
@@ -264,6 +278,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [RelayCommand]
     private void ClearEyePatient()
     {
+        if (IsEyeSaving) return;
         // حتی در نبود بیمار منتخب، جستجوی در حال اجرا باید بی‌اثر شود.
         _patientRequestVersion++;
         EyePatient = null;
@@ -280,8 +295,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
     {
         if (EyePatient is null)
         { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        if (IsEyeHistoryLoading)
-        { _snackbar.Error("تا پایان بارگذاری سابقه صبر کنید"); return; }
+        if (IsEyeHistoryLoading || IsEyeSaving)
+        { _snackbar.Error("تا پایان عملیات معاینه صبر کنید"); return; }
 
         // تبدیل ارقام فارسی/عربی و جلوگیری از ذخیرهٔ بی‌صدای مقدار نامعتبر به صورت null.
         static bool IntValue(string? text, out int? value)
@@ -313,7 +328,13 @@ public partial class OphthalmologyViewModel : ViewModelBase
         // چشم بی‌صدا دور ریخته می‌شد و رکورد معاینهٔ چشم «ثبت‌شده» بدون نسخهٔ
         // عینک ذخیره می‌شد (گزارش مالک: قابلیت‌ها پیاده نشده‌اند).
         var patient = EyePatient;
-        var ok = await _api.PostAsync("eye/exams", new
+        IsEyeSaving = true;
+        try
+        {
+        bool ok;
+        try
+        {
+        ok = await _api.PostAsync("eye/exams", new
         {
             patientId = patient.Id,
             visitId = (long?)null,
@@ -329,8 +350,21 @@ public partial class OphthalmologyViewModel : ViewModelBase
             // تجویز عینک — نسخهٔ زندهٔ ساخته‌شده از رفرکشن و PD
             eyewearPrescription = GlassesPrescriptionText
         });
-        if (ok) _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
-        else _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود");
+        }
+        catch
+        {
+            _snackbar.Error("پاسخ ثبت معاینه دریافت نشد؛ پیش از تلاش مجدد سابقهٔ بیمار را بررسی کنید.");
+            return;
+        }
+        if (!ok) { _snackbar.Error(_api.LastError ?? "ثبت معاینه ناموفق بود"); return; }
+        _snackbar.Success($"معاینهٔ چشم برای «{patient.FullName}» ثبت شد");
+        if (EyePatient?.Id == patient.Id)
+        {
+            try { await LoadEyeHistoryAsync(populateForm: false); }
+            catch { _snackbar.Warning("معاینه ثبت شد، اما نوسازی سابقه ناموفق بود."); }
+        }
+        }
+        finally { IsEyeSaving = false; }
     }
 
     /// <summary>
@@ -342,7 +376,9 @@ public partial class OphthalmologyViewModel : ViewModelBase
     {
         var parts = new List<string>();
         void Add(string title, string? text) { if (!string.IsNullOrWhiteSpace(text)) parts.Add($"{title}: {text.Trim()}"); }
-        Add("یافته‌ها", EyeFindings);
+        // محتوای یافته‌های قبلی ممکن است خود شامل برچسب‌های تاریخی باشد؛
+        // بازکردن یا افزودن پیشوند دوباره باعث تکرار و تغییر متن بالینی می‌شود.
+        if (!string.IsNullOrWhiteSpace(EyeFindings)) parts.Add(EyeFindings.Trim());
         Add("اسلیت‌لمپ/فوندوس راست", SlitOd);
         Add("اسلیت‌لمپ/فوندوس چپ", SlitOs);
         if (!string.IsNullOrWhiteSpace(PachymetryOd) || !string.IsNullOrWhiteSpace(PachymetryOs))

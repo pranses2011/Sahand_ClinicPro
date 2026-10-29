@@ -42,7 +42,7 @@
                                      فیزیوتراپی/تصویربرداری جستجو می‌شد؛ اکنون معاینه و سابقه
                                      به پروندهٔ همین بیمار وصل است ═══ -->
                                 <Border Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12">
-                                <Grid>
+                                <Grid IsEnabled="{Binding CanSelectEyePatient}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2.4*" />
                                         <ColumnDefinition Width="Auto" />
@@ -154,6 +154,8 @@
                                         <TextBlock Text="یافته‌ها و تشخیص" FontSize="10.5" Opacity="0.6" />
                                         <TextBox Text="{Binding EyeFindings, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
                                                  TextWrapping="Wrap" Height="60" />
+                                        <TextBlock Text="جزئیات تخصصی معاینهٔ قبلی به‌صورت متن در یافته‌ها نمایش داده می‌شوند."
+                                                   TextWrapping="Wrap" FontSize="10" Opacity="0.7" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
 

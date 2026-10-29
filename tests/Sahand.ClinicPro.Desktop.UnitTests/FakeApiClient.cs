@@ -24,6 +24,7 @@ public sealed class FakeApiClient : IApiClient
 
     /// <summary>پاسخ معوق PUT برای آزمون عملیات هم‌زمان.</summary>
     public Task<bool>? PendingPutResult { get; set; }
+    public Task<bool>? PendingBoolPostResult { get; set; }
 
     /// <summary>پاسخ معوق POST برای آزمون درخواست ثبت نوبت.</summary>
     public Task<object?>? PendingPostResult { get; set; }
@@ -115,7 +116,7 @@ public sealed class FakeApiClient : IApiClient
     {
         Calls.Add(("POST-bool", endpoint));
         LastBody = body;
-        return Task.FromResult(NextBoolResult);
+        return PendingBoolPostResult ?? Task.FromResult(NextBoolResult);
     }
 
     /// <summary>POST ناشناس با نتیجه بولی — چرخه هجدهم (فعال‌سازی لایسنس پیش از ورود)</summary>
