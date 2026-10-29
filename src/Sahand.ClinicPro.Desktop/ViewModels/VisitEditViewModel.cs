@@ -32,6 +32,7 @@ public partial class VisitEditViewModel : ObservableObject
     private readonly bool _openedExisting;
     private bool _existingVisitLoaded;
     private bool _visitEditable = true;
+    private bool _hasExistingVitals;
     private string? _soapSubjective, _soapObjective, _soapAssessment, _soapPlan;
     private string? _originalSecondaryDiagnoses, _initialSecondaryRepresentation;
     private System.Windows.Threading.DispatcherTimer? _clock;
@@ -260,6 +261,7 @@ public partial class VisitEditViewModel : ObservableObject
                 v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode ?? "تشخیص ثبت‌شده");
         if (v.VitalSigns is { } vit)
         {
+            _hasExistingVitals = true;
             BpText = vit.BloodPressureSystolic.HasValue ? $"{vit.BloodPressureSystolic}/{vit.BloodPressureDiastolic}" : null;
             HrText = vit.HeartRate?.ToString();
             TempText = vit.Temperature?.ToString();
@@ -895,6 +897,7 @@ public partial class VisitEditViewModel : ObservableObject
             }
 
             _visitId = response.Data.Value;
+            if (vitals is not null) _hasExistingVitals = true;
             SaveStateText = complete
                 ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}"
                 : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}";
@@ -945,7 +948,7 @@ public partial class VisitEditViewModel : ObservableObject
         if (!TryInt(HrText, out var hr) || !TryDecimal(TempText, out var temp) ||
             !TryInt(Spo2Text, out var spo2) || !TryDecimal(WeightText, out var weight) ||
             !TryDecimal(HeightText, out var height) || !TryInt(BsText, out var sugar)) return false;
-        if (sys is null && dia is null && hr is null && temp is null && spo2 is null && weight is null && height is null && sugar is null) return true;
+        if (!_hasExistingVitals && sys is null && dia is null && hr is null && temp is null && spo2 is null && weight is null && height is null && sugar is null) return true;
         var result = new Sahand.ClinicPro.Application.DTOs.Visits.VitalSignsInputDto(sys, dia, hr, temp, spo2, weight, height, sugar);
         if (!Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit.VisitVitalsSafety.IsValid(result)) return false;
         vitals = result;
