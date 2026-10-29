@@ -31,7 +31,8 @@ public class DentalPatientSafetyTests
         (await handler.Handle(new(999999, null, 0, 0, "{}"), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(patient.Id, null, -1, 0, "{}"), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(patient.Id, null, 0, -1, "{}"), default)).IsSuccess.Should().BeFalse();
-        (await handler.Handle(new(patient.Id, null, 0, 0, "{}"), default)).IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 0, 0, "{}"), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 0, 0, "{\"teeth\":{},\"rows\":[]}"), default)).IsSuccess.Should().BeTrue();
         db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.DentalTreatmentPlan>().Should().ContainSingle();
     }
     [Theory]
@@ -79,6 +80,23 @@ public class DentalPatientSafetyTests
         if (!editable) data.GetProperty("note").GetString().Should().Be(details);
         else data.GetProperty("teeth").GetProperty("11").GetInt32().Should().Be(2);
         plan.PlanDetails.Should().Be(details);
+    }
+
+    [Fact]
+    public async Task Existing_unsupported_chart_cannot_be_hidden_by_a_new_empty_chart()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-LEGACY", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        db.Add(new DentalTreatmentPlan { PatientId = patient.Id, PlanDetails = "جزئیات قدیمی" });
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var result = await handler.Handle(new(patient.Id, null, 0, 0, "{\"teeth\":{},\"rows\":[]}"), default);
+        result.IsSuccess.Should().BeFalse();
+        db.Set<DentalTreatmentPlan>().Should().ContainSingle().Which.PlanDetails.Should().Be("جزئیات قدیمی");
     }
 
 }
