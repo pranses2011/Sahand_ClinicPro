@@ -93,6 +93,13 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         if (order is null)
             return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.Dto.OrderId));
 
+        // گزارش نهایی و لغوشده نباید با پیش‌نویس یا الحاقیهٔ فاقد تاریخچه
+        // بازنویسی شوند. مسیر الحاقیهٔ واقعی هنوز پیاده‌سازی نشده است.
+        if (order.Status is ImagingOrderStatus.Reported or ImagingOrderStatus.Cancelled)
+            return Result.Failure(new Error("IMAGING_REPORT_LOCKED", "گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست"));
+        if (request.Dto.IsFinal && string.IsNullOrWhiteSpace(request.Dto.Findings) && string.IsNullOrWhiteSpace(request.Dto.Impression))
+            return Result.Failure(new Error("IMAGING_REPORT_EMPTY", "برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"));
+
         order.Technique = request.Dto.Technique;
         order.Findings = request.Dto.Findings;
         order.Impression = request.Dto.Impression;

@@ -59,4 +59,27 @@ public class ImagingOrderPatientSafetyTests
         (await handler.Handle(new(order.Id, ImagingOrderStatus.Performed), default)).IsSuccess.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Final_reports_cannot_be_empty_or_overwritten_and_cancelled_orders_reject_reports()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "IMG-REPORT-01", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var order = new ImagingOrder { PatientId = patient.Id, BodyPart = "زانو", Modality = ImagingModality.MRI, Status = ImagingOrderStatus.Performed };
+        db.Add(order);
+        await db.SaveChangesAsync();
+        var handler = new SubmitImagingReportCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        (await handler.Handle(new(new(order.Id, null, null, null, null)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new(order.Id, null, "یافته اصلی", null, null)), default)).IsSuccess.Should().BeTrue();
+        order.Status.Should().Be(ImagingOrderStatus.Reported);
+        (await handler.Handle(new(new(order.Id, null, "بازنویسی", null, null, IsFinal: false)), default)).IsSuccess.Should().BeFalse();
+        order.Findings.Should().Be("یافته اصلی");
+        order.Status = ImagingOrderStatus.Cancelled;
+        await db.SaveChangesAsync();
+        (await handler.Handle(new(new(order.Id, null, "گزارش", null, null)), default)).IsSuccess.Should().BeFalse();
+    }
+
 }

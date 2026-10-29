@@ -284,7 +284,7 @@
                                 <TextBlock Text="هشدار: درخواست‌های ثبت‌شده با نسخه‌های پیشین را پیش از انجام با ارجاع اصلی تطبیق دهید؛ نوع MRI/CT و ناحیهٔ تایپ‌شده ممکن است نادرست ثبت شده باشد. اصلاح جدید سوابق قبلی را خودکار تغییر نمی‌دهد."
                                            Foreground="#8A4B08" Background="#FFF5DE" Padding="8" TextWrapping="Wrap" Margin="0,0,0,8" />
                                 <TextBlock Text="{Binding QueueStatus, Mode=OneWay}" Foreground="#8A4B08" TextWrapping="Wrap" Margin="0,0,0,6" />
-                                <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}"
+                                <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}" IsEnabled="{Binding CanEditImagingReport}"
                                           AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300" MinHeight="110" RowHeight="34"
                                           Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                                     <DataGrid.Columns>
@@ -512,7 +512,7 @@
 
             <!-- ═══════════ ۳) گزارش‌نویسی ═══════════ -->
             <TabItem Header="📝 گزارش‌نویسی">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8" IsEnabled="{Binding CanEditImagingReport}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" />
@@ -523,7 +523,7 @@
                         <StackPanel Grid.Column="0">
                             <Border Background="#FFECEA" BorderBrush="#F0B8B2" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,12"
                                     Visibility="{Binding CriticalFinding, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="🚨 یافتهٔ بحرانی فعال است: پس از نهایی‌کردن گزارش، اطلاع‌رسانی به پزشک درخواست‌کننده الزامی و در دفتر شاخص‌ها ثبت می‌شود." Foreground="#9E1F17" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="🚨 یافتهٔ بحرانی فعال است: اطلاع‌رسانی را جداگانه انجام دهید؛ این فرم فقط اطلاعات واردشده را ثبت می‌کند و پیامک یا تماس خودکار ارسال نمی‌کند." Foreground="#9E1F17" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </Border>
                             <Border Background="#FFF4E0" BorderBrush="#F2CE96" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,12"
                                     Visibility="{Binding DoseHigh, Converter={StaticResource BoolToVisibility}}">
@@ -570,8 +570,7 @@
                                             <ComboBox ItemsSource="{Binding ComparisonOptions}" SelectedItem="{Binding ReportComparison}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="وضعیت گزارش" Style="{StaticResource FieldLabel}" />
-                                            <ComboBox ItemsSource="{Binding ReportStatusOptions}" SelectedItem="{Binding ReportStatus}" />
+                                            <TextBlock Text="وضعیت را دکمهٔ ذخیره تعیین می‌کند؛ امضای دیجیتال و الحاقیه پشتیبانی نمی‌شود." TextWrapping="Wrap" FontSize="11" />
                                         </StackPanel>
                                     </Grid>
                                     <Grid>
@@ -608,7 +607,7 @@
                                     </Grid>
 
                                     <WrapPanel Margin="0,14,0,0">
-                                        <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره و امضای نهایی"
+                                        <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیرهٔ گزارش نهایی"
                                                 Command="{Binding SaveReportCommand}">
                                             <Button.CommandParameter><sys:Boolean>True</sys:Boolean></Button.CommandParameter>
                                         </Button>
@@ -677,7 +676,7 @@
                                 </ItemsControl>
                                 <TextBlock Text="آمادگی انجام:" FontWeight="SemiBold" Margin="2,8,2,4" />
                                 <ProgressBar Height="10" Minimum="0" Maximum="100" Value="{Binding SafetyProgress, Mode=OneWay}" Foreground="#00897B" Background="#E7F0ED" />
-                                <TextBlock Text="تکمیل همهٔ موارد ایمنی برای شروع انجام الزامی است و همراه گزارش ذخیره می‌شود." Margin="2,6,2,0" FontSize="11.5" TextWrapping="Wrap" />
+                                <TextBlock Text="چک‌لیست کمکی است و فقط هنگام ذخیرهٔ گزارش ثبت می‌شود؛ کنترل مستقل ایمنی مطابق رویهٔ بخش الزامی است." Margin="2,6,2,0" FontSize="11.5" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 
@@ -692,6 +691,7 @@
                                         <DataGridTextColumn Header="سطح مرجع دوز (DRL)" Binding="{Binding Drl, Converter={StaticResource PersianDigits}}" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <TextBlock Text="مقادیر این جدول نمونه هستند و مرجع درمانگاه محسوب نمی‌شوند؛ هشدار خودکار دوز غیرفعال است. از پروتکل و حدود تأییدشدهٔ مرکز استفاده کنید." FontWeight="Bold" Foreground="#9E1F17" TextWrapping="Wrap" Margin="2,8" />
                                 <TextBlock Text="آمادگی‌های اختصاصی: MRI غربالگری فلز و ضربان‌ساز · CT با کنتراست بررسی کراتینین و حساسیت · سونوگرافی شکم ناشتایی ۶ ساعته · ماموگرافی عدم استفاده از دئودورانت. وضعیت هر مورد در چک‌لیست بیمار ثبت و همراه گزارش در پرونده می‌ماند." FontSize="11.5" Opacity="0.7" TextWrapping="Wrap" Margin="2,10,2,0" />
                             </StackPanel>
                         </Border>

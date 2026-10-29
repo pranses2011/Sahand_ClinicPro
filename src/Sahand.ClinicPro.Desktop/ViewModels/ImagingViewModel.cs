@@ -168,6 +168,11 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>آیا درخواستی انتخاب شده</summary>
     public bool HasSelectedImagingOrder => SelectedImagingOrder is not null;
 
+    [ObservableProperty] private bool _isSavingImagingReport;
+    /// <summary>زمان ثبت گزارش، ویرایش و انتخاب از صف قفل می‌شود.</summary>
+    public bool CanEditImagingReport => !IsSavingImagingReport;
+    partial void OnIsSavingImagingReportChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingReport));
+
     /// <summary>شرح حال بالینی مطالعهٔ انتخابی</summary>
     [ObservableProperty] private string? _reportClinicalInfo;
     /// <summary>تکنیک انجام</summary>
@@ -192,10 +197,10 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private string? _doseCtdi;
     /// <summary>دوز DLP (mGy·cm)</summary>
     [ObservableProperty] private string? _doseDlp;
-    /// <summary>سطح مرجع دوز مدالیتهٔ جاری (mGy) — برای CT مغز ۵۵</summary>
-    public double CurrentDrl => SelectedImagingOrder?.Modality switch { "CT" => 55, "Mammography" => 2.5, _ => 0 };
-    /// <summary>دوز بالاتر از سطح مرجع است؟</summary>
-    public bool DoseHigh => CurrentDrl > 0 && double.TryParse((DoseCtdi ?? "").Replace('/', '.'), out var v) && v > CurrentDrl;
+    /// <summary>مرجع بالینی تنظیم‌شده در این نسخه موجود نیست.</summary>
+    public double CurrentDrl => 0;
+    /// <summary>هشدار خودکار تا تعریف مرجع معتبر برای پروتکل و بیمار غیرفعال است.</summary>
+    public bool DoseHigh => false;
     partial void OnDoseCtdiChanged(string? value) => OnPropertyChanged(nameof(DoseHigh));
     /// <summary>یافتهٔ بحرانی فعال است؟</summary>
     [ObservableProperty] private bool _criticalFinding;
@@ -569,13 +574,13 @@ public partial class ImagingViewModel : ViewModelBase
         /// <summary>اطلاعات بالینی</summary>
         public string? ClinicalInfo { get; }
         /// <summary>تکنیک</summary>
-        public string? Technique { get; }
+        public string? Technique { get; set; }
         /// <summary>یافته‌ها</summary>
-        public string? Findings { get; }
+        public string? Findings { get; set; }
         /// <summary>نتیجه‌گیری</summary>
-        public string? Impression { get; }
+        public string? Impression { get; set; }
         /// <summary>توصیه</summary>
-        public string? Recommendation { get; }
+        public string? Recommendation { get; set; }
         /// <summary>جزئیات ساخت‌یافته (JSON)</summary>
         public string? ReportDetails { get; set; }
         /// <summary>زمان ثبت</summary>
@@ -813,61 +818,75 @@ public partial class ImagingViewModel : ViewModelBase
         ImageSourceChanged?.Invoke();
     }
 
-    /// <summary>ذخیره و امضای گزارش (یا پیش‌نویس) — همراه جزئیات ساخت‌یافته</summary>
+    /// <summary>ذخیره گزارش نهایی یا پیش‌نویس؛ این مسیر امضای دیجیتال ندارد.</summary>
     [RelayCommand]
     private async Task SaveReportAsync(bool isFinal)
     {
-        if (SelectedImagingOrder is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
+        if (!CanEditImagingReport) return;
+        var order = SelectedImagingOrder;
+        if (order is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
+        if (order.Status is 4 or 5) { _snackbar.Error("گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود."); return; }
+        if (isFinal && string.IsNullOrWhiteSpace(ReportFindings) && string.IsNullOrWhiteSpace(ReportImpression))
+        { _snackbar.Error("برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"); return; }
         if (isFinal && CriticalFinding && string.IsNullOrWhiteSpace(CriticalNotifiedTo))
+        { _snackbar.Error("یافتهٔ بحرانی: گیرندهٔ اطلاع‌رسانی را وارد کنید"); return; }
+        decimal? ctdi = null, dlp = null;
+        if (!string.IsNullOrWhiteSpace(DoseCtdi))
         {
-            _snackbar.Error("یافتهٔ بحرانی: گیرندهٔ اطلاع‌رسانی را وارد کنید");
-            return;
+            if (!Helpers.PlainNumber.TryParse(DoseCtdi, out var c) || c < 0)
+            { _snackbar.Error("دوز CTDIvol باید عدد غیرمنفی باشد"); return; }
+            ctdi = c;
+        }
+        if (!string.IsNullOrWhiteSpace(DoseDlp))
+        {
+            if (!Helpers.PlainNumber.TryParse(DoseDlp, out var d) || d < 0)
+            { _snackbar.Error("دوز DLP باید عدد غیرمنفی باشد"); return; }
+            dlp = d;
         }
         var details = new
         {
-            ctdi = double.TryParse((DoseCtdi ?? "").Replace('/', '.'), out var c) ? c : (double?)null,
-            dlp = double.TryParse((DoseDlp ?? "").Replace('/', '.'), out var d) ? d : (double?)null,
+            ctdi,
+            dlp,
             comparison = ReportComparison,
-            status = isFinal ? ReportStatus : "پیش‌نویس",
+            status = isFinal ? "نهایی" : "پیش‌نویس",
             critical = CriticalFinding,
             criticalTo = CriticalFinding ? CriticalNotifiedTo : null,
             criticalMethod = CriticalFinding ? CriticalMethod : null,
             measurements = Measurements.ToArray(),
             safety = SafetyItems.Where(i => i.IsChecked).Select(i => i.Text).ToArray(),
         };
-        var ok = await _api.PutAsync("imaging/reports", new
+        var request = new
         {
-            orderId = SelectedImagingOrder.Id,
-            technique = ReportTechnique,
-            findings = ReportFindings,
-            impression = ReportImpression,
-            recommendation = ReportRecommendation,
-            reportDetails = JsonSerializer.Serialize(details),
-            isFinal
-        });
-        if (ok)
+            orderId = order.Id, technique = ReportTechnique, findings = ReportFindings,
+            impression = ReportImpression, recommendation = ReportRecommendation,
+            reportDetails = JsonSerializer.Serialize(details), isFinal
+        };
+        IsSavingImagingReport = true;
+        try
         {
-            SelectedImagingOrder.ReportDetails = JsonSerializer.Serialize(details);
-            if (isFinal)
+            bool ok;
+            try { ok = await _api.PutAsync("imaging/reports", request); }
+            catch { _snackbar.Error("پاسخ ثبت گزارش دریافت نشد؛ پیش از تلاش مجدد وضعیت مطالعه را بررسی کنید."); return; }
+            if (!ok) { _snackbar.Error((_api.LastError ?? "ثبت گزارش ناموفق بود") + "؛ در صورت قطع ارتباط وضعیت مطالعه را بررسی کنید."); return; }
+            order.Technique = request.technique;
+            order.Findings = request.findings;
+            order.Impression = request.impression;
+            order.Recommendation = request.recommendation;
+            order.ReportDetails = request.reportDetails;
+            if (isFinal) { order.Status = 4; order.ReportedAt = DateTime.UtcNow; }
+            else if (order.Status is 1 or 2) order.Status = 3;
+            if (SelectedImagingOrder?.Id == order.Id)
             {
-                SelectedImagingOrder.Status = 4;
-                SelectedImagingOrder.ReportedAt = DateTime.UtcNow;
-                ReportMessage = CriticalFinding
-                    ? "گزارش نهایی امضا شد و اطلاع یافتهٔ بحرانی در دفتر شاخص‌ها ثبت گردید."
-                    : "گزارش نهایی امضا و در پروندهٔ بیمار ثبت شد.";
-                _snackbar.Success("گزارش تصویربرداری نهایی شد");
+                DraftStamp = isFinal ? "گزارش نهایی ذخیره شد" : "پیش‌نویس ذخیره شد";
+                ReportMessage = isFinal
+                    ? "گزارش نهایی ذخیره شد؛ امضای دیجیتال و اطلاع‌رسانی خودکار انجام نشده است."
+                    : "پیش‌نویس ذخیره شد؛ گزارش هنوز نهایی نیست.";
             }
-            else
-            {
-                if (SelectedImagingOrder.Status is 1 or 2) SelectedImagingOrder.Status = 3;
-                DraftStamp = "پیش‌نویس ذخیره شد";
-                ReportMessage = "پیش‌نویس ذخیره شد؛ گزارش هنوز نهایی نیست.";
-                _snackbar.Success("پیش‌نویس گزارش ذخیره شد");
-            }
+            _snackbar.Success(isFinal ? "گزارش تصویربرداری نهایی شد" : "پیش‌نویس گزارش ذخیره شد");
             ApplyWorkFilter();
             RaiseStats();
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت گزارش ناموفق بود");
+        finally { IsSavingImagingReport = false; }
     }
 
     /// <summary>آپلود فایل تصویر برای درخواست انتخاب‌شده — انتخاب از دیسک</summary>

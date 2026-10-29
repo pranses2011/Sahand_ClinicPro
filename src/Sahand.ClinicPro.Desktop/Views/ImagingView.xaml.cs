@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Sahand.ClinicPro.Desktop.ViewModels;
+using Sahand.ClinicPro.Desktop.Services;
 
 namespace Sahand.ClinicPro.Desktop.Views;
 
@@ -265,7 +266,7 @@ public partial class ImagingView : UserControl
             };
         }
 
-        doc.Blocks.Add(Para("گزارش تصویربرداری — درمانگاه سهند (ClinicPro)", 16, true));
+        doc.Blocks.Add(Para("چاپ متن فعلی فرم تصویربرداری — ممکن است ذخیره نشده باشد", 16, true));
         doc.Blocks.Add(Para($"بیمار: {o.PatientName}   ·   مطالعه: {o.ModalityFa} {o.BodyPart}   ·   وضعیت: {o.StatusText}"));
         if (!string.IsNullOrWhiteSpace(_vm.ReportClinicalInfo))
             doc.Blocks.Add(Para("شرح حال: " + _vm.ReportClinicalInfo));
@@ -280,11 +281,9 @@ public partial class ImagingView : UserControl
         if (!string.IsNullOrWhiteSpace(_vm.DoseCtdi) || !string.IsNullOrWhiteSpace(_vm.DoseDlp))
             doc.Blocks.Add(Para($"دوز تابش: CTDIvol = {_vm.DoseCtdi ?? "—"} mGy · DLP = {_vm.DoseDlp ?? "—"} mGy·cm"));
         if (_vm.CriticalFinding)
-            doc.Blocks.Add(Para($"یافتهٔ بحرانی — اطلاع داده شد به: {_vm.CriticalNotifiedTo} ({_vm.CriticalMethod})", 12, true));
+            doc.Blocks.Add(Para($"یافتهٔ بحرانی — گیرندهٔ واردشده توسط کاربر (ارسال خودکار نیست): {_vm.CriticalNotifiedTo} ({_vm.CriticalMethod})", 12, true));
         doc.Blocks.Add(Para("امضای رادیولوژیست: ______________________", 12, true));
 
-        var dialog = new PrintDialog();
-        if (dialog.ShowDialog() == true)
-            dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, "گزارش تصویربرداری");
+        PrintFlow.Print(doc, "گزارش تصویربرداری", PrintJobSettings.PrinterFor("ImagingReport"), jobKey: "ImagingReport");
     }
 }

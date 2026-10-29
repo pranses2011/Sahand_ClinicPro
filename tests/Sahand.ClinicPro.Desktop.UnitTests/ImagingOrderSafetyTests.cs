@@ -129,4 +129,43 @@ public class ImagingOrderSafetyTests
         vm.CurrentImageBytes.Should().Equal(2);
     }
 
+    [Fact]
+    public async Task Report_save_snapshots_selected_study_and_does_not_touch_new_selection()
+    {
+        var pending = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingPutResult = pending.Task };
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        var first = Order(1, "MRI");
+        var second = Order(2, "CT");
+        vm.SelectedImagingOrder = first;
+        vm.ReportFindings = "یافته بیمار اول";
+        vm.DoseCtdi = "۱۲٫۵";
+        var save = vm.SaveReportCommand.ExecuteAsync(true);
+        vm.CanEditImagingReport.Should().BeFalse();
+        vm.SelectedImagingOrder = second;
+        vm.ReportFindings = "یافته بیمار دوم";
+        pending.SetResult(true);
+        await save;
+        vm.CanEditImagingReport.Should().BeTrue();
+        vm.ReportFindings.Should().Be("یافته بیمار دوم");
+        second.Status.Should().Be(1);
+        first.Status.Should().Be(4);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("orderId").GetInt64().Should().Be(1);
+        using var details = JsonDocument.Parse(body.GetProperty("reportDetails").GetString()!);
+        details.RootElement.GetProperty("ctdi").GetDecimal().Should().Be(12.5m);
+    }
+
+    [Fact]
+    public async Task Invalid_dose_and_empty_final_report_do_not_send()
+    {
+        var api = new FakeApiClient();
+        var vm = new ImagingViewModel(api, new FakeSnackbar()) { SelectedImagingOrder = Order(1, "CT") };
+        await vm.SaveReportCommand.ExecuteAsync(true);
+        vm.ReportFindings = "یافته";
+        vm.DoseDlp = "عدد نامعتبر";
+        await vm.SaveReportCommand.ExecuteAsync(true);
+        api.Calls.Should().NotContain(c => c.Method == "PUT-bool" && c.Endpoint == "imaging/reports");
+    }
+
 }
