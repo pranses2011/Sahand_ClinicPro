@@ -40,7 +40,8 @@ public record CreateInvoiceDto(
     long? InsuranceCompanyId,
     decimal TaxPercent,
     List<InvoiceItemDto> Items,
-    string? Description = null);
+    string? Description = null,
+    string? ExpectedQuote = null);
 
 /// <summary>قلم فاکتور در پاسخ</summary>
 public record InvoiceItemDetailDto(
@@ -89,3 +90,7 @@ public record PaymentListDto(
     PaymentMethod Method,
     string DateShamsi,
     string? ReferenceNumber);
+
+/// <summary>پیش‌نمایش قطعی قابل مقایسه با محاسبه هنگام صدور.</summary>
+public record InvoicePreviewDto(decimal SubTotal, decimal DiscountAmount, decimal InsuranceShare, decimal Tax,
+    decimal PatientPayable, long? AppliedInsuranceId, string QuoteVersion);

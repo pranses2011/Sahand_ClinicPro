@@ -47,6 +47,12 @@ public class InvoicesController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>پیش‌نمایش فقط‌خواندنی با نسخه قابل تطبیق هنگام صدور.</summary>
+    [HttpPost("preview")]
+    [HasPermission("invoices.create")]
+    public async Task<IActionResult> Preview([FromBody] CreateInvoiceDto dto)
+        => ToResponse(await _mediator.Send(new PreviewInvoiceQuery(dto)));
+
     /// <summary>صدور فاکتور جدید — سهم بیمه محاسبه و سند حسابداری تولید می‌شود</summary>
     [HttpPost]
     [HasPermission("invoices.create")]
@@ -55,6 +61,8 @@ public class InvoicesController : ApiBaseController
         try
         {
             var result = await _mediator.Send(new CreateInvoiceCommand(dto));
+            if (result.IsFailure && result.Error.Code == "BILLING.QUOTE_CHANGED")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
             if (result.IsSuccess)
                 return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");
             return ToResponse(result);
