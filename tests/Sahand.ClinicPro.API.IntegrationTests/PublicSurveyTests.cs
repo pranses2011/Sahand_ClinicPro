@@ -42,6 +42,7 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
     {
         const string questions = "[{\"text\":\"کیفیت؟\",\"type\":\"rating\"}]";
         long surveyId;
+        const string expiredToken = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
@@ -51,6 +52,8 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
             db.AddRange(patient, doctor, survey);
             await db.SaveChangesAsync();
             db.Visits.Add(new Visit { PatientId = patient.Id, DoctorId = doctor.Id, VisitDate = DateTime.UtcNow, Status = VisitStatus.Completed });
+            db.SurveyInvitations.Add(new SurveyInvitation { SurveyId = survey.Id,
+                TokenHash = Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(expiredToken))), ExpiresAt = DateTime.UtcNow.AddSeconds(-1) });
             await db.SaveChangesAsync();
             surveyId = survey.Id;
         }
@@ -71,7 +74,7 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
             sms.Message.Should().Contain("https://survey.example.test/s/#");
             token = sms.Message!.Split("/s/#")[1];
             token.Should().HaveLength(43);
-            var invitation = await db.SurveyInvitations.SingleAsync(x => x.SurveyId == surveyId);
+            var invitation = await db.SurveyInvitations.SingleAsync(x => x.SurveyId == surveyId && x.ExpiresAt > DateTime.UtcNow);
             invitation.TokenHash.Should().Be(Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(token))));
             invitation.TokenHash.Should().NotContain(token);
             invitation.ExpiresAt.Should().BeAfter(DateTime.UtcNow.AddDays(6));
@@ -83,6 +86,7 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
         page.Headers.CacheControl!.NoStore.Should().BeTrue();
         page.Headers.GetValues("Content-Security-Policy").Single().Should().Contain("frame-ancestors 'none'");
         (await client.PostAsJsonAsync("/s/read", new { token = "wrong" })).StatusCode.Should().Be(HttpStatusCode.Gone);
+        (await client.PostAsJsonAsync("/s/read", new { token = expiredToken })).StatusCode.Should().Be(HttpStatusCode.Gone);
         var read = await client.PostAsJsonAsync("/s/read", new { token });
         read.StatusCode.Should().Be(HttpStatusCode.OK);
         using (var readDoc = JsonDocument.Parse(await read.Content.ReadAsStringAsync()))
@@ -99,6 +103,11 @@ public class PublicSurveyTests : IClassFixture<PublicSurveyApiFactory>
         var saved = await dbVerify.SurveyResponses.SingleAsync(r => r.SurveyId == surveyId);
         saved.PatientId.Should().BeNull(); saved.DoctorId.Should().BeNull(); saved.VisitId.Should().BeNull();
         saved.Answers.Should().Contain("5");
-        (await dbVerify.SurveyInvitations.SingleAsync(x => x.SurveyId == surveyId)).UsedAt.Should().NotBeNull();
+        (await dbVerify.SurveyInvitations.SingleAsync(x => x.SurveyId == surveyId && x.ExpiresAt > DateTime.UtcNow)).UsedAt.Should().NotBeNull();
+        // سیاست جداگانهٔ صفحه عمومی اجازهٔ تلاش نامحدود از یک IP نمی‌دهد.
+        var statuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 25; i++)
+            statuses.Add((await client.PostAsJsonAsync("/s/read", new { token = "wrong" })).StatusCode);
+        statuses.Should().Contain(HttpStatusCode.TooManyRequests);
     }
 }
