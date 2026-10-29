@@ -7,6 +7,12 @@ namespace Sahand.ClinicPro.Domain.Entities.Billing;
 /// </summary>
 public class Invoice : AuditableEntity, ISoftDeletable
 {
+    /// <summary>شناسه یکتای درخواست صدور برای بازپخش ایمن.</summary>
+    public Guid? RequestId { get; set; }
+
+    /// <summary>اثر انگشت داده اصلی درخواست صدور.</summary>
+    public string? RequestFingerprint { get; set; }
+
     /// <summary>شماره فاکتور - یکتا</summary>
     public string? InvoiceNumber { get; set; }
 

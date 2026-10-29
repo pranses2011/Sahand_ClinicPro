@@ -53,6 +53,16 @@ public class InvoicesController : ApiBaseController
     public async Task<IActionResult> Preview([FromBody] CreateInvoiceDto dto)
         => ToResponse(await _mediator.Send(new PreviewInvoiceQuery(dto)));
 
+    /// <summary>صدور یا بازپخش همان درخواست با شناسه الزامی.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("invoices.create")]
+    public async Task<IActionResult> CreateIdempotent([FromBody] CreateInvoiceDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه پایدار درخواست فاکتور الزامی است.", 400));
+        return await Create(dto);
+    }
+
     /// <summary>صدور فاکتور جدید — سهم بیمه محاسبه و سند حسابداری تولید می‌شود</summary>
     [HttpPost]
     [HasPermission("invoices.create")]
@@ -61,7 +71,7 @@ public class InvoicesController : ApiBaseController
         try
         {
             var result = await _mediator.Send(new CreateInvoiceCommand(dto));
-            if (result.IsFailure && result.Error.Code == "BILLING.QUOTE_CHANGED")
+            if (result.IsFailure && result.Error.Code is "BILLING.QUOTE_CHANGED" or "BILLING.REQUEST_CONFLICT")
                 return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
             if (result.IsSuccess)
                 return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");

@@ -85,12 +85,31 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
     public async Task<Result<long>> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.RequestId == Guid.Empty || !InvoiceAmountSafety.Valid(dto))
+            return Result<long>.Failure(new Error("BILLING.AMOUNTS_INVALID", "شناسه درخواست، تعداد، مبلغ یا اطلاعات فاکتور نامعتبر است."));
+        string? fingerprint = null;
+        if (dto.RequestId.HasValue)
+        {
+            // بررسی شعبه حتی برای بازپخش؛ شناسه فاکتور شعبه دیگر افشا نشود.
+            if (!await _unitOfWork.Repository<Patient>().QueryableNoTracking
+                    .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+                return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+            fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(dto with { RequestId = null })));
+            var prior = await _unitOfWork.Repository<Invoice>().QueryableNoTracking
+                .FirstOrDefaultAsync(i => i.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.PatientId == dto.PatientId && prior.RequestFingerprint == fingerprint
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("BILLING.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای فاکتور دیگری استفاده شده است."));
+        }
         var calculation = await CalculateAsync(dto, preview: false, cancellationToken);
         if (calculation.IsFailure) return Result<long>.Failure(calculation.Error);
         var invoice = calculation.Value.Invoice;
         var patient = calculation.Value.Patient;
         if (dto.ExpectedQuote is not null && dto.ExpectedQuote != QuoteVersion(dto, invoice))
             return Result<long>.Failure(new Error("BILLING.QUOTE_CHANGED", "مبلغ یا تنظیمات فاکتور تغییر کرده است؛ پیش‌نمایش را دوباره دریافت کنید."));
+        invoice.RequestId = dto.RequestId;
+        invoice.RequestFingerprint = fingerprint;
         await _unitOfWork.Repository<Invoice>().AddAsync(invoice, cancellationToken);
 
         // ═══ چرخهٔ ۷۵ — ریشهٔ «فاکتور شماره — سعید نجفی» در دفتر روزنامه ═══
@@ -136,7 +155,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(new
         {
-            Request = dto with { ExpectedQuote = null }, invoice.InsuranceCompanyId, invoice.SubTotal,
+            Request = dto with { ExpectedQuote = null, RequestId = null }, invoice.InsuranceCompanyId, invoice.SubTotal,
             invoice.DiscountAmount, invoice.InsuranceDiscount, invoice.Tax, invoice.TotalAmount,
             Items = invoice.Items.Select(i => new { i.ServiceId, i.Quantity, i.UnitPrice, i.DiscountAmount,
                 i.InsuranceShare, i.InsurancePercent, i.PatientShare, i.TotalPrice, i.DoctorId,

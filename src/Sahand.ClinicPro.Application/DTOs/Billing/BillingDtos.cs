@@ -41,7 +41,8 @@ public record CreateInvoiceDto(
     decimal TaxPercent,
     List<InvoiceItemDto> Items,
     string? Description = null,
-    string? ExpectedQuote = null);
+    string? ExpectedQuote = null,
+    Guid? RequestId = null);
 
 /// <summary>قلم فاکتور در پاسخ</summary>
 public record InvoiceItemDetailDto(

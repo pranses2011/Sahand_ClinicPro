@@ -1251,6 +1251,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("مانده حساب");
 
+                    b.Property<string>("RequestFingerprint")
+                        .IsUnicode(false)
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1298,6 +1306,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InvoiceDate")
                         .HasDatabaseName("IX_Invoice_InvoiceDate");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoice_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("InvoiceNumber")
                         .IsUnique()
