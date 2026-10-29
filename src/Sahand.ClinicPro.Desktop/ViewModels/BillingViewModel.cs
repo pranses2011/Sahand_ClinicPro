@@ -1,3 +1,7 @@
+using System.Text.Json;
+using Sahand.ClinicPro.Application.DTOs.Billing;
+using Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
+using Sahand.ClinicPro.Domain.Enums;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -46,8 +50,8 @@ public partial class InvoiceItemVM : ObservableObject
     private PerformerOption? _performer;
 
     public decimal Total => Quantity * UnitPrice;
-    public decimal TotalInsurance => Quantity * InsuranceShare;
-    public decimal TotalPatient => Quantity * PatientShare;
+    public decimal TotalInsurance => Math.Round(Total * InsuranceShare / 100m);
+    public decimal TotalPatient => Total - TotalInsurance;
     partial void OnQuantityChanged(int value) => RaiseTotals();
     partial void OnUnitPriceChanged(decimal value) => RaiseTotals();
     partial void OnInsuranceShareChanged(decimal value) => RaiseTotals();
@@ -259,6 +263,26 @@ public partial class InvoiceFormViewModel : ObservableObject
     private int _serviceSearchVersion;
     private int _patientSearchVersion;
     private bool _invoiceSubmissionLocked;
+    private InvoicePreviewDto? _quote;
+    private string? _quoteInputs;
+    public string QuoteStatus => _quote is null ? "برای محاسبه قطعی، «محاسبه فاکتور» را بزنید." :
+        _quote.AppliedInsuranceId.HasValue ? "محاسبه سرور: بیمه اعمال شده است." : "محاسبه سرور: بیمه اعمال نشده است.";
+    public string QuotedDiscountText => _quote is null ? "—" : Money.Format(_quote.DiscountAmount);
+    private void InvalidateQuote()
+    {
+        _quote = null;
+        _quoteInputs = null;
+        NotifyQuote();
+    }
+    private void NotifyQuote()
+    {
+        OnPropertyChanged(nameof(QuoteStatus)); OnPropertyChanged(nameof(QuotedDiscountText));
+        OnPropertyChanged(nameof(InsuranceShareText)); OnPropertyChanged(nameof(TaxText));
+        OnPropertyChanged(nameof(PayableText)); OnPropertyChanged(nameof(RemainingText));
+        OnPropertyChanged(nameof(Payable)); OnPropertyChanged(nameof(Remaining));
+    }
+    partial void OnPatientChanged(QuickPatient? value) => InvalidateQuote();
+    partial void OnDoctorIndexChanged(int value) => InvalidateQuote();
     [ObservableProperty] private bool _hasInvalidInvoiceInput;
     public bool CanEditInvoice => !IsBusy && !_invoiceSubmissionLocked;
     partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditInvoice));
@@ -290,7 +314,15 @@ public partial class InvoiceFormViewModel : ObservableObject
     /// دوباره خوانده می‌شود (در نبود تعرفهٔ بیمه، همان تعرفهٔ آزاد نمایش می‌یابد)
     /// تا قیمت اقلام تازه دقیق باشد</summary>
     partial void OnInsuranceIndexChanged(int value)
-        => _ = LoadServicesAsync(ServiceSearch);
+    {
+        InvalidateQuote();
+        if (Items.Count > 0)
+        {
+            Items.Clear();
+            _snackbar.Warning("با تغییر بیمه، اقلام حذف شدند؛ خدمات را با تعرفه جدید دوباره انتخاب کنید.");
+        }
+        _ = LoadServicesAsync(ServiceSearch);
+    }
 
     /// <summary>بیمه‌ها</summary>
     public ObservableCollection<InsuranceOption> InsuranceCompanies { get; } = new();
@@ -345,26 +377,26 @@ public partial class InvoiceFormViewModel : ObservableObject
     public decimal GrossTotal => Items.Sum(i => i.Total);
 
     /// <summary>سهم بیمه</summary>
-    public decimal InsuranceShare => Items.Sum(i => i.TotalInsurance);
+    public decimal InsuranceShare => _quote?.InsuranceShare ?? 0m;
 
     /// <summary>پس از تخفیف</summary>
     public decimal AfterDiscount => Math.Max(0, GrossTotal - DiscountAmount);
 
     /// <summary>مالیات</summary>
-    public decimal TaxAmount => Math.Round(AfterDiscount * TaxPercent / 100m);
+    public decimal TaxAmount => _quote?.Tax ?? 0m;
 
     /// <summary>قابل پرداخت</summary>
-    public decimal Payable => AfterDiscount + TaxAmount;
+    public decimal Payable => _quote?.PatientPayable ?? 0m;
 
     /// <summary>باقیمانده</summary>
     public decimal Remaining => Math.Max(0, Payable - ReceivedAmount);
 
     /// <summary>متن‌های نمایشی</summary>
     public string GrossTotalText => Money.Format(GrossTotal);
-    public string InsuranceShareText => Money.Format(InsuranceShare);
-    public string TaxText => Money.Format(TaxAmount);
-    public string PayableText => Money.Format(Payable);
-    public string RemainingText => Money.Format(Remaining);
+    public string InsuranceShareText => _quote is null ? "—" : Money.Format(InsuranceShare);
+    public string TaxText => _quote is null ? "—" : Money.Format(TaxAmount);
+    public string PayableText => _quote is null ? "—" : Money.Format(Payable);
+    public string RemainingText => _quote is null ? "—" : Money.Format(Remaining);
 
     /// <summary>در حال ثبت</summary>
     [ObservableProperty]
@@ -382,6 +414,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     {
         _api = api;
         _snackbar = snackbar;
+        Items.CollectionChanged += (_, _) => RaiseTotals();
         _ = InitializeAsync();
     }
 
@@ -514,11 +547,13 @@ public partial class InvoiceFormViewModel : ObservableObject
     }
 
     partial void OnTaxPercentChanged(decimal value) => RaiseTotals();
-    partial void OnReceivedAmountChanged(decimal value) => RaiseTotals();
+    partial void OnReceivedAmountChanged(decimal value)
+    { OnPropertyChanged(nameof(Remaining)); OnPropertyChanged(nameof(RemainingText)); }
 
     /// <summary>بازمحاسبه نمایش‌ها</summary>
     private void RaiseTotals()
     {
+        InvalidateQuote();
         OnPropertyChanged(nameof(GrossTotal));
         OnPropertyChanged(nameof(InsuranceShare));
         OnPropertyChanged(nameof(AfterDiscount));
@@ -532,37 +567,72 @@ public partial class InvoiceFormViewModel : ObservableObject
         OnPropertyChanged(nameof(RemainingText));
     }
 
+    private CreateInvoiceDto? BuildInvoiceRequest()
+    {
+        if (HasInvalidInvoiceInput) { ErrorMessage = "ورودی عددی نامعتبر است؛ پیش از صدور آن را اصلاح کنید."; return null; }
+        if (Patient is null || Patient.Id <= 0) { ErrorMessage = "ابتدا بیمار را به‌طور یکتا انتخاب کنید"; return null; }
+        if (Items.Count == 0 || Items.Any(i => i.Quantity <= 0 || i.ServiceId is not > 0)) { ErrorMessage = "خدمت و تعداد معتبر انتخاب کنید"; return null; }
+        if (InsuranceIndex < 0 || InsuranceIndex >= InsuranceCompanies.Count)
+        { ErrorMessage = "بیمه را صریحاً انتخاب کنید."; return null; }
+        var insurance = InsuranceCompanies[InsuranceIndex];
+        var doctor = DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex] : null;
+        var dto = new CreateInvoiceDto(Patient.Id, null, null, InvoiceType.Visit, insurance.Id > 0 ? insurance.Id : null,
+            TaxPercent, Items.Select(i => new InvoiceItemDto(i.ServiceId, i.Name, i.Quantity, i.UnitPrice,
+                DiscountPercent, doctor?.Id, 0, i.Performer?.Id)).ToList(), $"فاکتور دستی — {Patient.FullName}");
+        if (!InvoiceAmountSafety.Valid(dto)) { ErrorMessage = "تعداد، مبلغ، درصد یا نوع فاکتور نامعتبر است."; return null; }
+        return dto;
+    }
+
+    /// <summary>محاسبه فاکتور در سرور و نمایش مبلغی که کاربر تأیید می‌کند.</summary>
+    [RelayCommand]
+    private async Task CalculateQuoteAsync()
+    {
+        if (!CanEditInvoice) return;
+        ErrorMessage = string.Empty;
+        var dto = BuildInvoiceRequest();
+        if (dto is null) return;
+        var snapshot = JsonSerializer.Serialize(dto);
+        IsBusy = true;
+        try
+        {
+            var response = await _api.PostAsync<InvoicePreviewResponse>("invoices/preview", dto);
+            if (response?.Data is null || string.IsNullOrWhiteSpace(response.Data.QuoteVersion))
+            { InvalidateQuote(); ErrorMessage = _api.LastError ?? "محاسبه فاکتور ناموفق بود."; return; }
+            var current = BuildInvoiceRequest();
+            if (current is null || JsonSerializer.Serialize(current) != snapshot)
+            { InvalidateQuote(); ErrorMessage = "اطلاعات فاکتور تغییر کرد؛ دوباره محاسبه کنید."; return; }
+            _quote = response.Data;
+            _quoteInputs = snapshot;
+            NotifyQuote();
+        }
+        catch (Exception) { InvalidateQuote(); ErrorMessage = "دریافت محاسبه فاکتور ناموفق بود."; }
+        finally { IsBusy = false; }
+    }
+    public sealed class InvoicePreviewResponse { public InvoicePreviewDto? Data { get; set; } }
+
     /// <summary>صدور و پرداخت فقط پس از تطبیق مبلغ قطعی سرور.</summary>
     [RelayCommand]
     private async Task SaveAndPrintAsync()
     {
         if (!CanEditInvoice) return;
-        if (HasInvalidInvoiceInput) { ErrorMessage = "ورودی عددی نامعتبر است؛ پیش از صدور آن را اصلاح کنید."; return; }
-        if (Patient is null || Patient.Id <= 0) { ErrorMessage = "ابتدا بیمار را به‌طور یکتا انتخاب کنید"; return; }
-        if (Items.Count == 0 || Items.Any(i => i.Quantity <= 0 || i.ServiceId is not > 0)) { ErrorMessage = "خدمت و تعداد معتبر انتخاب کنید"; return; }
-        if (InsuranceCompanies.Count == 0 || InsuranceIndex != 0 || InsuranceCompanies[0].Id != 0 || DiscountAmount != 0 || DiscountPercent != 0 || TaxPercent != 0)
-        { ErrorMessage = "در این فرم فعلاً فقط فاکتور آزاد بدون تخفیف و مالیات مجاز است؛ محاسبه بیمه و تخفیف نیازمند پیش‌نمایش معتبر سرور است."; return; }
-        if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > Payable || decimal.Truncate(ReceivedAmount) != ReceivedAmount)
+        var dto = BuildInvoiceRequest();
+        if (dto is null) return;
+        if (_quote is null || _quoteInputs != JsonSerializer.Serialize(dto))
+        { InvalidateQuote(); ErrorMessage = "ابتدا محاسبه فاکتور را دریافت و مبلغ آن را بررسی کنید."; return; }
+        if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > _quote.PatientPayable || decimal.Truncate(ReceivedAmount) != ReceivedAmount)
         { ErrorMessage = "مبلغ دریافتی یا روش پرداخت نامعتبر است."; return; }
-        var patient = Patient;
-        var expectedAmount = Payable;
+        var patient = Patient!;
+        var expectedAmount = _quote.PatientPayable;
         var received = ReceivedAmount;
         var method = PaymentMethodIndex switch { 0 => 1, 1 => 2, 2 => 5, 3 => 4, _ => 0 };
-        var doctor = DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex] : null;
+        var request = dto with { ExpectedQuote = _quote.QuoteVersion };
         IsBusy = true;
         var sentInvoice = false;
         long? invoiceId = null;
         try
         {
             sentInvoice = true;
-            var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
-            {
-                patientId = patient.Id, receptionId = (long?)null, visitId = (long?)null, type = 1,
-                insuranceCompanyId = (long?)null, taxPercent = 0m,
-                items = Items.Select(i => new { serviceId = i.ServiceId, description = i.Name, quantity = i.Quantity,
-                    unitPrice = i.UnitPrice, discountPercent = 0m, performedById = i.Performer?.Id, doctorId = doctor?.Id }).ToList(),
-                description = $"فاکتور دستی — {patient.FullName}"
-            });
+            var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", request);
             _invoiceSubmissionLocked = true;
             OnPropertyChanged(nameof(CanEditInvoice));
             if (invoice?.Data is null or <= 0)

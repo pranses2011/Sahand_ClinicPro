@@ -8,6 +8,8 @@ public class InvoiceFormSafetyTests
 {
     private static InvoiceFormViewModel Create(FakeApiClient api)
     {
+        api.CannedResponses["invoices/preview"] = new { data = new { subTotal = 100m, discountAmount = 0m,
+            insuranceShare = 0m, tax = 0m, patientPayable = 100m, appliedInsuranceId = (long?)null, quoteVersion = "TEST-QUOTE" } };
         var vm = new InvoiceFormViewModel(api, new FakeSnackbar())
         {
             Patient = new QuickPatient(7, "بیمار", "", "", null, null, null),
@@ -25,6 +27,7 @@ public class InvoiceFormSafetyTests
         api.CannedResponses["invoices"] = new { data = 42L };
         api.CannedResponses["invoices/42"] = new { data = new { id = 42L, patientId = 7L, remainingAmount = 90m } };
         var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         vm.ErrorMessage.Should().Contain("منطبق نیست");
         vm.CanEditInvoice.Should().BeFalse();
@@ -40,6 +43,7 @@ public class InvoiceFormSafetyTests
         api.CannedResponses["invoices"] = new { data = 42L };
         api.CannedResponses["invoices/42"] = new { data = new { id = 42L, patientId = 7L, remainingAmount = 100m } };
         var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         var body = System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody);
         body.GetProperty("method").GetInt32().Should().Be(5);
@@ -47,14 +51,16 @@ public class InvoiceFormSafetyTests
     }
 
     [Fact]
-    public async Task Unknown_invoice_response_and_unsupported_discount_are_not_retried()
+    public async Task Unknown_invoice_response_and_unquoted_changes_are_not_retried()
     {
         var api = new FakeApiClient();
         var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
         vm.DiscountPercent = 10;
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(x => x.Endpoint == "invoices");
         vm.DiscountPercent = 0;
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         api.Calls.Count(x => x.Endpoint == "invoices").Should().Be(1);

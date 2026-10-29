@@ -70,11 +70,11 @@
                                 <TextBlock Text="پزشک (اختیاری)" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding Doctors}" SelectedIndex="{Binding DoctorIndex}" DisplayMemberPath="Name" />
                                 <TextBlock Text="بیمه" Style="{StaticResource FieldCaption}" />
-                                <ComboBox IsEnabled="False" ToolTip="بیمه تا آماده‌شدن پیش‌نمایش معتبر در این فرم غیرفعال است" ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
+                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="نرخ مالیات (٪)" Style="{StaticResource FieldCaption}" />
-                                <TextBox IsEnabled="False" Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                <TextBox Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 <TextBlock Text="پیش‌فرض معمولاً صفر است" FontSize="9.5" Opacity="0.5" Margin="1,4,1,0" />
                             </StackPanel>
                         </Grid>
@@ -103,8 +103,8 @@
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="تعداد" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                     <DataGridTextColumn Header="قیمت واحد" Binding="{Binding UnitPrice, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                                    <DataGridTextColumn Header="سهم بیمه" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
-                                    <DataGridTextColumn Header="سهم بیمار" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="تخمین بیمه پیش از تخفیف" Binding="{Binding TotalInsurance, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                                    <DataGridTextColumn Header="تخمین بیمار پیش از تخفیف" Binding="{Binding TotalPatient, Mode=OneWay, Converter={StaticResource CurrencyRial}}" Width="Auto" IsReadOnly="True" FontFamily="{DynamicResource App.CodeFont}" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                     <DataGridTemplateColumn Header="" Width="Auto" MaxWidth="420">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -157,7 +157,7 @@
                     Background="{DynamicResource MaterialDesign.Brush.Background}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="فقط فاکتور آزاد بدون تخفیف و مالیات؛ بیمه و چاپ در این فرم هنوز پشتیبانی نمی‌شوند." Foreground="#B00020" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding QuoteStatus}" Foreground="#176AC2" TextWrapping="Wrap" Margin="0,0,0,8" />
                         <TextBlock Text="💰 خلاصه فاکتور" FontWeight="Bold" FontSize="14" Margin="2,0,2,10" />
 
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="جمع کل (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
@@ -167,7 +167,7 @@
                         <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی (MoneyInput)
                              + مبدل ریال↔نمایش برای حالت تومان -->
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
-                                 IsEnabled="False" behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
+                                 behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                                  FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="تخفیف (مبلغ)"/>
                         <TextBlock Text="تخفیف — درصد" Style="{StaticResource FieldCaption}" />
                         <Grid>
@@ -175,10 +175,13 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" IsEnabled="False" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                            <TextBox Grid.Column="0" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" FontFamily="{DynamicResource App.CodeFont}" />
                             <TextBlock Grid.Column="1" Text="٪" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </Grid>
 
+                        <TextBlock Text="تخفیف قطعی محاسبه‌شده توسط سرور" Style="{StaticResource FieldCaption}" />
+                        <TextBlock Text="{Binding QuotedDiscountText}" FontWeight="SemiBold" />
+                        <Button Command="{Binding CalculateQuoteCommand}" Content="محاسبه فاکتور" Margin="0,8" />
                         <TextBlock Style="{StaticResource FieldCaption}"><Run Text="سهم بیمه (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock>
                         <TextBlock Text="{Binding InsuranceShareText, Mode=OneWay}" FontSize="14" FontWeight="Bold"
                                    FontFamily="{DynamicResource App.CodeFont}" Foreground="#2E7D32" />
