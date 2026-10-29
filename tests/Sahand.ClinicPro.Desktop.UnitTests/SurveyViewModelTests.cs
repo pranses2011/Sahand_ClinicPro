@@ -215,4 +215,20 @@ public class SurveyViewModelTests
         vm.IsFormOpen.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Pending_toggle_locks_other_survey_operations_and_does_not_repeat()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingBoolPostResult = completion.Task };
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var vm = new SurveyViewModel(api, new FakeSnackbar()) { SelectedSurvey = Row(4, questions: "[]") };
+        var toggle = vm.ToggleActiveCommand.ExecuteAsync(null);
+        vm.CanEditSurvey.Should().BeFalse();
+        await vm.ToggleActiveCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST-bool" && c.Endpoint == "surveys/4/toggle-active").Should().Be(1);
+        completion.SetResult(false);
+        await toggle;
+        vm.CanEditSurvey.Should().BeTrue();
+    }
+
 }

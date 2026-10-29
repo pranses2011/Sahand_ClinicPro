@@ -307,11 +307,13 @@ public partial class SurveyViewModel : ViewModelBase
                 comments = ResponseComment, questionsSnapshot = survey.QuestionsJson,
                 answers = ResponseAnswers.Select(a => a.Answer?.Trim()).ToArray()
             });
-            if (!ok) { _snackbar.Error(_api.LastError ?? "ثبت پاسخ ناموفق بود"); return; }
+            if (!ok) { _snackbar.Error((_api.LastError ?? "ثبت پاسخ ناموفق بود") + "؛ در صورت قطع ارتباط ممکن است پاسخ ثبت شده باشد؛ پیش از تلاش مجدد نتایج را بررسی کنید."); return; }
             _snackbar.Success($"پاسخ ناشناس نظرسنجی «{survey.Title}» ثبت شد");
             if (ReferenceEquals(_respondingSurvey, survey)) CancelResponseForm();
             await LoadSurveysAsync();
         }
+        catch (Exception)
+        { _snackbar.Error("پاسخ سرور دریافت نشد؛ ممکن است پاسخ ثبت شده باشد. پیش از تلاش مجدد نتایج را بررسی کنید."); }
         finally { IsSurveySaving = false; IsBusy = false; }
     }
 
@@ -572,9 +574,11 @@ public partial class SurveyViewModel : ViewModelBase
             }
             else
             {
-                _snackbar.Error(_api.LastError ?? "ذخیره ناموفق بود");
+                _snackbar.Error((_api.LastError ?? "ذخیره ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد فهرست را بررسی کنید.");
             }
         }
+        catch (Exception)
+        { _snackbar.Error("پاسخ ذخیره دریافت نشد؛ پیش از تلاش مجدد فهرست را بررسی کنید."); }
         finally
         {
             IsSurveySaving = false;
@@ -590,6 +594,7 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     private async Task ToggleActiveAsync()
     {
+        if (IsSurveySaving) return;
         if (SelectedSurvey is null)
         {
             _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید");
@@ -597,6 +602,7 @@ public partial class SurveyViewModel : ViewModelBase
         }
 
         IsBusy = true;
+        IsSurveySaving = true;
         try
         {
             var ok = await _api.PostAsync($"surveys/{SelectedSurvey.Id}/toggle-active", null);
@@ -606,10 +612,13 @@ public partial class SurveyViewModel : ViewModelBase
                 await LoadSurveysAsync();
             }
             else
-                _snackbar.Error(_api.LastError ?? "تغییر وضعیت ناموفق بود");
+                _snackbar.Error((_api.LastError ?? "تغییر وضعیت ناموفق بود") + "؛ پیش از تلاش مجدد فهرست را تازه‌سازی و وضعیت را بررسی کنید.");
         }
+        catch (Exception)
+        { _snackbar.Error("پاسخ تغییر وضعیت دریافت نشد؛ پیش از تلاش مجدد فهرست را تازه‌سازی کنید."); }
         finally
         {
+            IsSurveySaving = false;
             IsBusy = false;
         }
     }
@@ -618,6 +627,7 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SendLinksAsync()
     {
+        if (IsSurveySaving) return;
         if (SelectedSurvey is null)
         {
             _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید");
@@ -629,6 +639,7 @@ public partial class SurveyViewModel : ViewModelBase
                 "ارسال مجدد می‌تواند برای همان بیمار پیامک تکراری بسازد؛ از صحت سرویس عمومی و نشانی آن اطمینان پیدا کنید.",
                 Views.AppDialogIcon.Warning) != true) return;
         IsBusy = true;
+        IsSurveySaving = true;
         try
         {
             var response = await _api.PostAsync<SendLinksResponse>(
@@ -641,10 +652,13 @@ public partial class SurveyViewModel : ViewModelBase
                     : $"{count} پیامک لینک نظرسنجی در صف ارسال قرار گرفت");
             }
             else
-                _snackbar.Error(_api.LastError ?? "ارسال لینک ناموفق بود");
+                _snackbar.Error((_api.LastError ?? "ارسال لینک ناموفق بود") + "؛ احتمال ایجاد پیامک در صف وجود دارد، پیش از تلاش مجدد صف را بررسی کنید.");
         }
+        catch (Exception)
+        { _snackbar.Error("پاسخ ارسال دریافت نشد؛ پیش از تلاش مجدد صف پیامک را بررسی کنید تا پیام تکراری ساخته نشود."); }
         finally
         {
+            IsSurveySaving = false;
             IsBusy = false;
         }
     }
