@@ -107,6 +107,8 @@
                                             </UniformGrid>
                                             <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
+                                            <TextBlock Text="حدت بینایی با اصلاح (عینک / لنز)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdCorrectedVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
@@ -129,6 +131,8 @@
                                             </UniformGrid>
                                             <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
+                                            <TextBlock Text="حدت بینایی با اصلاح (عینک / لنز)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsCorrectedVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"

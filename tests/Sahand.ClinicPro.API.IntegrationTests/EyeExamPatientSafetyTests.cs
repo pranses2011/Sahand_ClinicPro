@@ -56,4 +56,23 @@ public class EyeExamPatientSafetyTests
         db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.EyeExamRecord>().Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task Corrected_visual_acuity_is_stored_separately_and_length_checked()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "EYE-CORRECTED", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new SaveEyeExamCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var exam = Command(patient.Id, null) with { Findings = null, RightCorrectedVisualAcuity = "20/20" };
+        (await handler.Handle(exam with { RightCorrectedVisualAcuity = "12345678901" }, default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(exam, default)).IsSuccess.Should().BeTrue();
+        var saved = db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.EyeExamRecord>().Single();
+        saved.RightCorrectedVisualAcuity.Should().Be("20/20");
+        saved.RightVisualAcuity.Should().BeNull();
+        saved.LeftCorrectedVisualAcuity.Should().BeNull();
+    }
+
 }

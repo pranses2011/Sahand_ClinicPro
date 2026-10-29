@@ -194,4 +194,18 @@ public class OphthalmologyViewModelTests
         api.Calls.Count(c => c.Method == "POST-bool" && c.Endpoint == "eye/exams").Should().Be(1);
     }
 
+    [Fact]
+    public async Task Corrected_acuity_is_sent_independently_and_reset_after_save()
+    {
+        var api = new FakeApiClient();
+        var vm = await Ready(api, 3);
+        vm.OdCorrectedVisionIndex = Array.IndexOf(vm.VisionOptions, "20/20");
+        await vm.SaveEyeExamCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("rightCorrectedVisualAcuity").GetString().Should().Be("20/20");
+        body.GetProperty("rightVisualAcuity").ValueKind.Should().Be(JsonValueKind.Null);
+        body.GetProperty("leftCorrectedVisualAcuity").ValueKind.Should().Be(JsonValueKind.Null);
+        vm.OdCorrectedVisionIndex.Should().Be(-1);
+    }
+
 }

@@ -5448,6 +5448,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<int?>("LeftAxis")
                         .HasColumnType("int");
 
+                    b.Property<string>("LeftCorrectedVisualAcuity")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("حدت بینایی چپ با اصلاح");
+
                     b.Property<decimal?>("LeftCylinder")
                         .HasPrecision(4, 2)
                         .HasColumnType("decimal(4,2)")
@@ -5476,6 +5481,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("RightAxis")
                         .HasColumnType("int");
+
+                    b.Property<string>("RightCorrectedVisualAcuity")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("حدت بینایی راست با اصلاح");
 
                     b.Property<decimal?>("RightCylinder")
                         .HasPrecision(4, 2)

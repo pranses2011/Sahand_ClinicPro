@@ -297,7 +297,7 @@ public record SaveEyeExamCommand(
     string? RightVisualAcuity, string? LeftVisualAcuity,
     decimal? PupilDistance, string? ColorVision,
     string? Findings, string? EyewearPrescription,
-    string? VisualField = null) : IRequest<Result<long>>;
+    string? VisualField = null, string? RightCorrectedVisualAcuity = null, string? LeftCorrectedVisualAcuity = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت معاینه چشم</summary>
 public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Result<long>>
@@ -319,12 +319,13 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
             return Result<long>.Failure(new Error("VISIT_PATIENT_MISMATCH", "ویزیت معتبر و متعلق به این بیمار یافت نشد"));
         if (!EyeExamValueSafety.IsValid(request.RightSphere, request.RightCylinder, request.RightAxis,
                 request.LeftSphere, request.LeftCylinder, request.LeftAxis, request.RightIop, request.LeftIop, request.PupilDistance) ||
-            request.RightVisualAcuity?.Length > 10 || request.LeftVisualAcuity?.Length > 10 || request.ColorVision?.Length > 100)
+            request.RightVisualAcuity?.Length > 10 || request.LeftVisualAcuity?.Length > 10 ||
+            request.RightCorrectedVisualAcuity?.Length > 10 || request.LeftCorrectedVisualAcuity?.Length > 10 || request.ColorVision?.Length > 100)
             return Result<long>.Failure(new Error("INVALID_EYE_EXAM", "مقادیر معاینه یا دقت آن‌ها با محدوده ذخیره‌سازی سازگار نیست"));
         if (request.RightSphere is null && request.RightCylinder is null && request.RightAxis is null &&
             request.LeftSphere is null && request.LeftCylinder is null && request.LeftAxis is null &&
             request.RightIop is null && request.LeftIop is null && request.PupilDistance is null &&
-            new[] { request.RightVisualAcuity, request.LeftVisualAcuity, request.ColorVision,
+            new[] { request.RightVisualAcuity, request.LeftVisualAcuity, request.RightCorrectedVisualAcuity, request.LeftCorrectedVisualAcuity, request.ColorVision,
                 request.Findings, request.EyewearPrescription, request.VisualField }.All(string.IsNullOrWhiteSpace))
             return Result<long>.Failure(new Error("EMPTY_EYE_EXAM", "حداقل یک اندازه یا یافتهٔ معاینه لازم است"));
         var exam = new EyeExamRecord
@@ -342,6 +343,8 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
             LeftIop = request.LeftIop,
             RightVisualAcuity = request.RightVisualAcuity,
             LeftVisualAcuity = request.LeftVisualAcuity,
+            RightCorrectedVisualAcuity = request.RightCorrectedVisualAcuity,
+            LeftCorrectedVisualAcuity = request.LeftCorrectedVisualAcuity,
             PupilDistance = request.PupilDistance,
             VisualField = request.VisualField,
             ColorVision = request.ColorVision,

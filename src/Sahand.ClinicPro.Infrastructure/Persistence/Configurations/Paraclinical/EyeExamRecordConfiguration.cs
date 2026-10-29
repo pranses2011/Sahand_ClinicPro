@@ -18,6 +18,8 @@ public class EyeExamRecordConfiguration : IEntityTypeConfiguration<EyeExamRecord
         builder.Property(x => x.LeftCylinder).HasPrecision(4, 2).HasComment("استوانه چپ");
         builder.Property(x => x.RightVisualAcuity).HasMaxLength(10).HasComment("حدت بینایی راست");
         builder.Property(x => x.LeftVisualAcuity).HasMaxLength(10).HasComment("حدت بینایی چپ");
+        builder.Property(x => x.RightCorrectedVisualAcuity).HasMaxLength(10).HasComment("حدت بینایی راست با اصلاح");
+        builder.Property(x => x.LeftCorrectedVisualAcuity).HasMaxLength(10).HasComment("حدت بینایی چپ با اصلاح");
         builder.Property(x => x.PupilDistance).HasPrecision(4, 1).HasComment("فاصقه مردمک");
         builder.Property(x => x.ColorVision).HasMaxLength(100).HasComment("تست تشخیص رنگ");
 

@@ -51,6 +51,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [ObservableProperty] private string? _odAxis;
     [ObservableProperty] private string? _odAdd;
     [ObservableProperty] private int _odVisionIndex = -1;
+    [ObservableProperty] private int _odCorrectedVisionIndex = -1;
     [ObservableProperty] private string? _odIop;
 
     /* ── اندازه‌های چشم چپ (OS) ── */
@@ -59,6 +60,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
     [ObservableProperty] private string? _osAxis;
     [ObservableProperty] private string? _osAdd;
     [ObservableProperty] private int _osVisionIndex = -1;
+    [ObservableProperty] private int _osCorrectedVisionIndex = -1;
     [ObservableProperty] private string? _osIop;
 
     /// <summary>فاصلهٔ مردمک‌چشمی (PD)</summary>
@@ -169,7 +171,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
         OdSphere = OdCylinder = OdAxis = OdAdd = OdIop = null;
         OsSphere = OsCylinder = OsAxis = OsAdd = OsIop = null;
         Pd = EyeFindings = null;
-        OdVisionIndex = OsVisionIndex = ColorVisionIndex = -1;
+        OdVisionIndex = OsVisionIndex = OdCorrectedVisionIndex = OsCorrectedVisionIndex = ColorVisionIndex = -1;
         SlitOd = SlitOs = PachymetryOd = PachymetryOs = null;
         VisualFieldText = SpecialTestsText = ImagingNote = DiagnosisText = null;
         CarePlanText = DrugPrescriptionText = FollowUpText = null;
@@ -279,8 +281,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
         foreach (var e in exams)
             EyeHistory.Add(new EyeExamRow(
                 e.DateShamsi ?? "—",
-                e.Od is null ? "—" : $"S {e.Od.Sphere?.ToString() ?? "—"} / C {e.Od.Cylinder?.ToString() ?? "—"} / AX {e.Od.Axis?.ToString() ?? "—"} / VA {e.Od.Acuity ?? "—"} / IOP {e.Od.Iop?.ToString() ?? "—"}",
-                e.Os is null ? "—" : $"S {e.Os.Sphere?.ToString() ?? "—"} / C {e.Os.Cylinder?.ToString() ?? "—"} / AX {e.Os.Axis?.ToString() ?? "—"} / VA {e.Os.Acuity ?? "—"} / IOP {e.Os.Iop?.ToString() ?? "—"}",
+                e.Od is null ? "—" : $"S {e.Od.Sphere?.ToString() ?? "—"} / C {e.Od.Cylinder?.ToString() ?? "—"} / AX {e.Od.Axis?.ToString() ?? "—"} / VA {e.Od.Acuity ?? "—"} / VA اصلاح‌شده {e.Od.CorrectedAcuity ?? "—"} / IOP {e.Od.Iop?.ToString() ?? "—"}",
+                e.Os is null ? "—" : $"S {e.Os.Sphere?.ToString() ?? "—"} / C {e.Os.Cylinder?.ToString() ?? "—"} / AX {e.Os.Axis?.ToString() ?? "—"} / VA {e.Os.Acuity ?? "—"} / VA اصلاح‌شده {e.Os.CorrectedAcuity ?? "—"} / IOP {e.Os.Iop?.ToString() ?? "—"}",
                 e.Findings, e.VisualField, e.EyewearPrescription,
                 $"PD: {e.Pd?.ToString() ?? "—"} · دید رنگی: {e.ColorVision ?? "—"}"));
     }
@@ -356,7 +358,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
 
         if (rightSphere is null && rightCylinder is null && rightAxis is null && leftSphere is null &&
             leftCylinder is null && leftAxis is null && rightIop is null && leftIop is null && pd is null &&
-            OdVisionIndex < 0 && OsVisionIndex < 0 && ColorVisionIndex < 0 &&
+            OdVisionIndex < 0 && OsVisionIndex < 0 && OdCorrectedVisionIndex < 0 && OsCorrectedVisionIndex < 0 && ColorVisionIndex < 0 &&
             new[] { OdAdd, OsAdd, EyeFindings, SlitOd, SlitOs, PachymetryOd, PachymetryOs,
                 VisualFieldText, SpecialTestsText, ImagingNote, DiagnosisText, CarePlanText,
                 DrugPrescriptionText, FollowUpText }.All(string.IsNullOrWhiteSpace))
@@ -383,6 +385,8 @@ public partial class OphthalmologyViewModel : ViewModelBase
             rightIop, leftIop,
             rightVisualAcuity = VisionOptions.ElementAtOrDefault(OdVisionIndex),
             leftVisualAcuity = VisionOptions.ElementAtOrDefault(OsVisionIndex),
+            rightCorrectedVisualAcuity = VisionOptions.ElementAtOrDefault(OdCorrectedVisionIndex),
+            leftCorrectedVisualAcuity = VisionOptions.ElementAtOrDefault(OsCorrectedVisionIndex),
             pupilDistance = pd,
             colorVision = ColorVisionOptions.ElementAtOrDefault(ColorVisionIndex),
             visualField = string.IsNullOrWhiteSpace(VisualFieldText) ? null : VisualFieldText.Trim(),
@@ -462,6 +466,7 @@ public partial class OphthalmologyViewModel : ViewModelBase
         public decimal? Cylinder { get; set; }
         public int? Axis { get; set; }
         public string? Acuity { get; set; }
+        public string? CorrectedAcuity { get; set; }
         public int? Iop { get; set; }
     }
 }
