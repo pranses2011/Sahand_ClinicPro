@@ -138,8 +138,8 @@ public class VisitEditSafetyTests
         var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
         vm.LabTests.Add(new LabTestOptionRow { Id = 17, Name = "آزمون", IsSelected = true });
         await vm.SendToLabCommand.ExecuteAsync(null);
-        var call = api.Calls.Single(c => c.Endpoint == "lab/orders");
-        var json = JsonSerializer.SerializeToElement(call.Body);
+        api.Calls.Should().ContainSingle(c => c.Endpoint == "lab/orders");
+        var json = JsonSerializer.SerializeToElement(api.LastBody);
         json.GetProperty("visitId").GetInt64().Should().Be(42);
         vm.StopTimers();
     }

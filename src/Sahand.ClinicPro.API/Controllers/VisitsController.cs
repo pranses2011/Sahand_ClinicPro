@@ -55,11 +55,11 @@ public class VisitsController : ApiBaseController
         try
         {
             var result = await _mediator.Send(new SaveVisitCommand(dto));
-            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message));
+            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
             if (result.IsFailure) return ToResponse(result);
             return CreatedResponse(Result<long>.Success(result.Value.Id), nameof(GetById), new { id = result.Value.Id }, "ویزیت ذخیره شد");
         }
-        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.")); }
+        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.", 409)); }
     }
 
     /// <summary>ذخیره با دریافت نسخهٔ دقیق برای ویرایش بعدی.</summary>
@@ -70,11 +70,11 @@ public class VisitsController : ApiBaseController
         try
         {
             var result = await _mediator.Send(new SaveVisitCommand(dto));
-            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message));
+            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
             if (result.IsFailure) return ToResponse(result);
             return CreatedResponse(result, nameof(GetById), new { id = result.Value.Id }, "ویزیت ذخیره شد");
         }
-        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.")); }
+        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.", 409)); }
     }
 
     /// <summary>صف ویزیت امروز — فعلی + در انتظار + انجام‌شده</summary>
