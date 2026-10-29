@@ -224,6 +224,9 @@ public class SurveyViewModelTests
         var vm = new SurveyViewModel(api, new FakeSnackbar()) { SelectedSurvey = Row(4, questions: "[]") };
         var toggle = vm.ToggleActiveCommand.ExecuteAsync(null);
         vm.CanEditSurvey.Should().BeFalse();
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("editVersion").GetString().Should().Be("VERSION-1");
+        body.GetProperty("desiredActive").GetBoolean().Should().BeTrue();
         await vm.ToggleActiveCommand.ExecuteAsync(null);
         api.Calls.Count(c => c.Method == "POST-bool" && c.Endpoint == "surveys/4/toggle-active").Should().Be(1);
         completion.SetResult(false);

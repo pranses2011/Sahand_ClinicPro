@@ -149,15 +149,21 @@ public class SurveysController : ApiBaseController
     /// <summary>فعال/غیرفعال‌سازی نظرسنجی</summary>
     [HttpPost("{id:long}/toggle-active")]
     [HasPermission("surveys.manage")]
-    public async Task<IActionResult> ToggleActive(long id)
+    public async Task<IActionResult> ToggleActive(long id, [FromBody] ToggleSurveyRequest request)
     {
         var survey = await _unitOfWork.Repository<Survey>().QueryableTracking
-            .FirstOrDefaultAsync(s => s.Id == id);
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
         if (survey is null)
             return BadRequest(ApiResponse<object>.Failure("نظرسنجی یافت نشد"));
 
-        survey.IsActive = !survey.IsActive;
-        await _unitOfWork.SaveEntitiesAsync();
+        if (string.IsNullOrWhiteSpace(request.EditVersion) || request.EditVersion != SurveyEditVersion.Create(survey))
+            return Conflict(ApiResponse<object>.Failure("وضعیت نظرسنجی تغییر کرده است؛ فهرست را تازه‌سازی کنید."));
+        if (request.DesiredActive == survey.IsActive)
+            return BadRequest(ApiResponse<object>.Failure("وضعیت درخواستی با وضعیت فعلی یکسان است."));
+        survey.IsActive = request.DesiredActive;
+        try { await _unitOfWork.SaveEntitiesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        { return Conflict(ApiResponse<object>.Failure("نظرسنجی همزمان تغییر کرد؛ فهرست را تازه‌سازی کنید.")); }
         return Ok(ApiResponse<object>.SuccessMessage(
             survey.IsActive ? "نظرسنجی فعال شد" : "نظرسنجی غیرفعال شد"));
     }
@@ -500,6 +506,9 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
     /// <summary>درخواست ایجاد/ویرایش نظرسنجی — سوالات JSON با سازنده پویای کلاینت</summary>
     public record CreateSurveyRequest(string Title, string? Description, string? Questions,
         SurveyType? SurveyType, bool? IsActive, string? EditVersion = null);
+
+    /// <summary>درخواست صریح تغییر وضعیت با نسخه مشاهده‌شده.</summary>
+    public record ToggleSurveyRequest(string? EditVersion, bool DesiredActive);
 
     /// <summary>درخواست ثبت پاسخ</summary>
     public record SubmitResponseRequest(long? PatientId, long? VisitId, long? DoctorId,

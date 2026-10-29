@@ -945,12 +945,18 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task ToggleSurveyAsync(SurveyRow? row)
     {
         row ??= SelectedSurvey;
-        if (row is null) return;
+        if (row is null || IsBusy) return;
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
         IsBusy = true;
-        var ok = await _api.PostAsync($"surveys/{row.Id}/toggle-active", null);
-        IsBusy = false;
-        if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
-        else _snackbar.Error(_api.LastError ?? "عملیات ناموفق بود");
+        try
+        {
+            var ok = await _api.PostAsync($"surveys/{row.Id}/toggle-active", new { editVersion = row.EditVersion, desiredActive = !row.IsActive });
+            if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
+            else _snackbar.Error((_api.LastError ?? "عملیات ناموفق بود") + "؛ پیش از تکرار وضعیت را بررسی کنید.");
+        }
+        catch (Exception) { _snackbar.Error("پاسخ تغییر وضعیت دریافت نشد؛ پیش از تکرار فهرست را تازه‌سازی کنید."); }
+        finally { IsBusy = false; }
     }
 
     /// <summary>

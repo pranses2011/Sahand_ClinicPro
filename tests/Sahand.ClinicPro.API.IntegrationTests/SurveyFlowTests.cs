@@ -170,7 +170,7 @@ public class SurveyFlowTests
         var surveyId = created.Data.GetProperty("surveyId").GetInt64();
 
         // غیرفعال‌سازی با toggle
-        var toggle = await client.PostAsync($"/api/v1/surveys/{surveyId}/toggle-active", null);
+        var toggle = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/toggle-active", new { editVersion = await GetEditVersion(client, surveyId), desiredActive = false });
         toggle.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var submit = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses",
@@ -532,6 +532,22 @@ public class SurveyFlowTests
         using var scope = _factory.Services.CreateScope();
         var survey = await scope.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(x => x.Id == id);
         survey.SurveyType.Should().Be(Sahand.ClinicPro.Domain.Enums.SurveyType.Service);
+    }
+
+
+    [Fact]
+    public async Task Stale_toggle_does_not_invert_status_or_repeat()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "تغییر وضعیت امن" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        var first = await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = version, desiredActive = false });
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        var retry = await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = version, desiredActive = false });
+        retry.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(await client.GetAsync("/api/v1/surveys"));
+        rows.Data.Single(x => x.Id == id).IsActive.Should().BeFalse();
     }
 
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);

@@ -601,11 +601,14 @@ public partial class SurveyViewModel : ViewModelBase
             return;
         }
 
+        var survey = SelectedSurvey;
+        if (string.IsNullOrWhiteSpace(survey.EditVersion))
+        { _snackbar.Error("نسخه نظرسنجی موجود نیست؛ سرور و برنامه را همزمان به‌روز و فهرست را تازه‌سازی کنید."); return; }
         IsBusy = true;
         IsSurveySaving = true;
         try
         {
-            var ok = await _api.PostAsync($"surveys/{SelectedSurvey.Id}/toggle-active", null);
+            var ok = await _api.PostAsync($"surveys/{survey.Id}/toggle-active", new { editVersion = survey.EditVersion, desiredActive = !survey.IsActive });
             if (ok)
             {
                 _snackbar.Success("وضعیت نظرسنجی تغییر کرد");
