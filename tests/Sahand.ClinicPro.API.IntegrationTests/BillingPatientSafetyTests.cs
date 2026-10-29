@@ -177,4 +177,14 @@ public class BillingPatientSafetyTests
         var empty = await handler.Handle(new RecordPaymentCommand(dto with { RequestId = Guid.Empty }), default);
         empty.IsFailure.Should().BeTrue();
     }
+    [Fact]
+    public async Task Idempotent_payment_endpoint_requires_a_nonempty_key_before_dispatch()
+    {
+        var mediator = new Mock<MediatR.IMediator>(MockBehavior.Strict);
+        var controller = new Sahand.ClinicPro.API.Controllers.PaymentsController(mediator.Object);
+        var dto = new RecordPaymentDto(1, 1, 100, PaymentMethod.Cash);
+        (await controller.RecordIdempotent(dto)).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        (await controller.RecordIdempotent(dto with { RequestId = Guid.Empty })).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        mediator.VerifyNoOtherCalls();
+    }
 }
