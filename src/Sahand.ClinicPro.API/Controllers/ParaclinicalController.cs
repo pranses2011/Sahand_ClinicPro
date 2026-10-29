@@ -88,8 +88,15 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateImagingOrderStatusCommand command)
     {
-        var result = await _mediator.Send(command);
-        return ToResponse(result, "وضعیت درخواست به‌روز شد");
+        try
+        {
+            var result = await _mediator.Send(command);
+            return ToResponse(result, "وضعیت درخواست به‌روز شد");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("درخواست همزمان تغییر کرده است؛ صف را تازه‌سازی کنید", 409));
+        }
     }
 
     /// <summary>ثبت گزارش رادیولوژی</summary>
@@ -97,8 +104,15 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> SubmitReport([FromBody] ImagingReportDto dto)
     {
-        var result = await _mediator.Send(new SubmitImagingReportCommand(dto));
-        return ToResponse(result, "گزارش ثبت شد");
+        try
+        {
+            var result = await _mediator.Send(new SubmitImagingReportCommand(dto));
+            return ToResponse(result, "گزارش ثبت شد");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("گزارش همزمان تغییر کرده است؛ صف و گزارش را تازه‌سازی کنید", 409));
+        }
     }
 
     /// <summary>ثبت طرح درمان دندانپزشکی</summary>

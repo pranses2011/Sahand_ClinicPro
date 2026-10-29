@@ -125,11 +125,8 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
             order.ReportedAt = DateTime.UtcNow;
         }
 
-        try { await _unitOfWork.SaveEntitiesAsync(cancellationToken); }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Result.Failure(new Error("IMAGING_CONFLICT", "درخواست همزمان تغییر کرده است؛ صف و گزارش را تازه‌سازی کنید"));
-        }
+        // خطای همزمانی باید از pipeline عبور کند تا تراکنش کامل rollback شود.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result.Success();
     }
 }
@@ -172,11 +169,8 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
         if (request.Status == ImagingOrderStatus.Scheduled)
             order.ScheduledAt ??= DateTime.UtcNow;
 
-        try { await _unitOfWork.SaveEntitiesAsync(cancellationToken); }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Result.Failure(new Error("IMAGING_CONFLICT", "درخواست همزمان تغییر کرده است؛ صف را تازه‌سازی کنید"));
-        }
+        // خطای همزمانی باید از pipeline عبور کند تا تراکنش کامل rollback شود.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result.Success();
     }
 }
