@@ -68,6 +68,13 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         if (invoice is null)
             return Result<long>.Failure(Error.NotFound("فاکتور", dto.InvoiceId.Value));
 
+        if (invoice.PatientId != dto.PatientId)
+            return Result<long>.Failure(new Error("PAYMENT.PATIENT_MISMATCH", "بیمار پرداخت با بیمار فاکتور مطابقت ندارد."));
+        if (invoice.Status is InvoiceStatus.Cancelled or InvoiceStatus.Refunded or InvoiceStatus.Draft)
+            return Result<long>.Failure(new Error("PAYMENT.INVOICE_STATUS", "ثبت پرداخت برای فاکتور پیش‌نویس، ابطال‌شده یا برگشت‌خورده مجاز نیست."));
+        if (!Enum.IsDefined(dto.Method))
+            return Result<long>.Failure(new Error("PAYMENT.METHOD", "روش پرداخت معتبر نیست."));
+
         if (invoice.RemainingAmount < dto.Amount)
             return Result<long>.Failure(new Error("OVERPAYMENT",
                 $"مبلغ پرداخت بیش از مانده فاکتور است — مانده {invoice.RemainingAmount:N0} ریال"));
