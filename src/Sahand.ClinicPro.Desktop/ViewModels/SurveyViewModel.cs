@@ -16,7 +16,7 @@ internal static class SurveyNumberFormatting
 /// <summary>ردیف نظرسنجی — تب ۱ فرم ۳۴</summary>
 public record SurveyListRow(long Id, string Title, string? Description, string TypeText,
     bool IsActive, string ActiveText, int ResponseCount, string AverageText,
-    string? QuestionsJson)
+    string? QuestionsJson, string? EditVersion = null)
 {
     public string QuestionCountText => SurveyQuestionItem.TryParseList(QuestionsJson, out var questions)
         ? SurveyNumberFormatting.Count(questions.Count) : "—";
@@ -149,6 +149,7 @@ public partial class SurveyViewModel : ViewModelBase
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
     private int _resultsVersion;
+    private string? _editingVersion;
     [ObservableProperty] private bool _isResultsLoading;
     [ObservableProperty] private string _resultsMessage = "نظرسنجی را برای مشاهدهٔ نتایج انتخاب کنید.";
 
@@ -420,6 +421,11 @@ public partial class SurveyViewModel : ViewModelBase
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(SelectedSurvey.EditVersion))
+        {
+            _snackbar.Error("نسخهٔ ویرایش در فهرست موجود نیست؛ سرور و برنامه را همزمان به‌روز و فهرست را تازه‌سازی کنید.");
+            return;
+        }
         IsBusy = true;
         try
         {
@@ -430,6 +436,7 @@ public partial class SurveyViewModel : ViewModelBase
             }
             IsEditing = true;
             _editingId = SelectedSurvey.Id;
+            _editingVersion = SelectedSurvey.EditVersion;
             FormTitle = SelectedSurvey.Title;
             FormDescription = SelectedSurvey.Description;
             FormType = SelectedSurvey.TypeText switch
@@ -515,7 +522,8 @@ public partial class SurveyViewModel : ViewModelBase
                 description = FormDescription,
                 questions = questionsJson,
                 surveyType = typeKey,
-                isActive = (bool?)null
+                isActive = (bool?)null,
+                editVersion = IsEditing ? _editingVersion : null
             };
 
             var ok = IsEditing
@@ -713,7 +721,7 @@ public partial class SurveyViewModel : ViewModelBase
             s.IsActive, s.IsActive ? "🟢 فعال" : "🔴 غیرفعال",
             s.ResponseCount,
             s.AverageRating > 0 ? s.AverageRating.ToString("0.##") + " از ۵" : "—",
-            s.Questions);
+            s.Questions, s.EditVersion);
     }
 
     /* ─── پاسخ‌های API ─── */
@@ -735,6 +743,7 @@ public partial class SurveyViewModel : ViewModelBase
         public double AverageRating { get; set; }
         /// <summary>سوالات JSON — چرخهٔ ۲۸: از GET / فهرست برای طراح ویرایش</summary>
         public string? Questions { get; set; }
+        public string? EditVersion { get; set; }
     }
 
     private sealed class SendLinksResponse

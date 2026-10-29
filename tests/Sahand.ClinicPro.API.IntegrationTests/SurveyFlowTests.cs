@@ -90,7 +90,8 @@ public class SurveyFlowTests
             description = "نسخه دوم",
             questions = (string?)null,
             surveyType = 2,
-            isActive = false
+            isActive = false,
+            editVersion = row.EditVersion
         });
         update.StatusCode.Should().Be(HttpStatusCode.OK,
             because: "ویرایش با مجوز manage مجاز است");
@@ -284,7 +285,7 @@ public class SurveyFlowTests
         ok.StatusCode.Should().Be(HttpStatusCode.OK);
 
         const string changed = "[{\"text\":\"پرسش تغییر یافته\",\"type\":\"text\"}]";
-        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{surveyId}", new { title = "پاسخ پویا", questions = changed, surveyType = 1 });
+        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{surveyId}", new { title = "پاسخ پویا", questions = changed, surveyType = 1, editVersion = await GetEditVersion(client, surveyId) });
         update.StatusCode.Should().Be(HttpStatusCode.OK);
         var stale = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
         { questionsSnapshot = questions, answers = new[] { "5", "ب", "متن" } });
@@ -344,7 +345,7 @@ public class SurveyFlowTests
             id = legacy.Id;
         }
         var update = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new
-        { title = "فرم قدیمی", questions = "invalid legacy", isActive = false });
+        { title = "فرم قدیمی", questions = "invalid legacy", isActive = false, editVersion = await GetEditVersion(client, id) });
         update.StatusCode.Should().Be(HttpStatusCode.OK);
         using var verify = _factory.Services.CreateScope();
         var saved = await verify.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(s => s.Id == id);
@@ -490,6 +491,30 @@ public class SurveyFlowTests
 
     /* ─── بسته‌های پاسخ ─── */
 
+    private static async Task<string> GetEditVersion(HttpClient client, long id)
+    {
+        var response = await client.GetAsync("/api/v1/surveys");
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(response);
+        return rows.Data.Single(s => s.Id == id).EditVersion;
+    }
+
+    [Fact]
+    public async Task Stale_or_unversioned_survey_editor_cannot_overwrite_newer_changes()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "نسخه اول", questions = "[]" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        var saved = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر اول", questions = "[]", editVersion = version });
+        saved.StatusCode.Should().Be(HttpStatusCode.OK);
+        var stale = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر کهنه", questions = "[]", editVersion = version });
+        stale.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var oldClient = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "کلاینت قدیمی", questions = "[]" });
+        oldClient.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(await client.GetAsync("/api/v1/surveys"));
+        rows.Data.Single(s => s.Id == id).Title.Should().Be("تغییر اول");
+    }
+
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);
 
     private sealed record LoginPacket(bool IsSuccess, LoginData Data);
@@ -498,7 +523,7 @@ public class SurveyFlowTests
 
     private sealed record ListPacket<T>(bool IsSuccess, List<T> Data);
 
-    private sealed record SurveyListDto(long Id, string Title, bool IsActive, int ResponseCount);
+    private sealed record SurveyListDto(long Id, string Title, bool IsActive, int ResponseCount, string EditVersion);
 
     private sealed record ResultsPacket(bool IsSuccess, ResultsData Data);
 

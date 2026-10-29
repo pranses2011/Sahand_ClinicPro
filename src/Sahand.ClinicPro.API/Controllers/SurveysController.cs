@@ -38,24 +38,18 @@ public class SurveysController : ApiBaseController
     [HasPermission("surveys.view")]
     public async Task<IActionResult> GetSurveys()
     {
-        var surveys = await _unitOfWork.Repository<Survey>().QueryableNoTracking
+        var source = await _unitOfWork.Repository<Survey>().QueryableNoTracking
             .Where(s => !s.IsDeleted)
             .OrderByDescending(s => s.Id)
-            .Select(s => new SurveyListItemDto(
-                s.Id,
-                s.Title,
-                s.Description,
-                s.SurveyType.ToString(),
-                s.IsActive,
-                s.Responses.Count,
-                s.Responses.Where(r => r.Rating != null).Average(r => (double?)r.Rating!) ?? 0,
-                // ═══ چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک) ═══ «نظرسنجی‌ها طراحی
-                // نمی‌شوند، فقط به لیست اضافه می‌شوند» — ریشه: فهرست، سوالات JSON
-                // را برنمی‌گرداند و فرم ویرایش هر بار سوالات را از نو بازنویسی
-                // می‌کرد؛ اکنون متن خام سوالات هم در فهرست می‌آید تا طراح،
-                // سوالات موجود را بارگذاری و ویرایش کند
-                s.Questions))
-            .ToListAsync();
+            .Select(s => new
+            {
+                s.Id, s.Title, s.Description, s.SurveyType, s.IsActive, s.Questions, s.RowVersion,
+                ResponseCount = s.Responses.Count,
+                AverageRating = s.Responses.Where(r => r.Rating != null).Average(r => (double?)r.Rating!) ?? 0
+            }).ToListAsync();
+        var surveys = source.Select(s => new SurveyListItemDto(s.Id, s.Title, s.Description,
+            s.SurveyType.ToString(), s.IsActive, s.ResponseCount, s.AverageRating, s.Questions,
+            SurveyEditVersion.Create(s.Id, s.Title, s.Description, s.SurveyType, s.IsActive, s.Questions, s.RowVersion))).ToList();
         return Ok(ApiResponse<object>.Success(surveys));
     }
 
@@ -105,6 +99,11 @@ public class SurveysController : ApiBaseController
         if (!string.Equals(survey.Questions, request.Questions, StringComparison.Ordinal) && !ValidQuestions(request.Questions))
             return BadRequest(ApiResponse<object>.Failure("سؤال‌های نظرسنجی نامعتبرند؛ نوع، متن و گزینه‌ها را بررسی کنید (حداکثر ۱۰۰ سؤال)"));
 
+        // نسخهٔ بازشده باید با دادهٔ فعلی سرور برابر باشد؛ کلاینت قدیمی نیز
+        // نمی‌تواند بدون آگاهی آخرین تغییر را پنهان کند.
+        if (string.IsNullOrWhiteSpace(request.EditVersion) || request.EditVersion != SurveyEditVersion.Create(survey))
+            return Conflict(ApiResponse<object>.Failure("نظرسنجی پس از باز شدن فرم تغییر کرده یا نسخهٔ برنامه قدیمی است؛ فهرست را تازه‌سازی کنید."));
+
         // پاسخ‌های ثبت‌شده حفظ می‌شوند؛ ویرایش سوالات روی پاسخ‌های قبلی اثری ندارد
         survey.Title = title;
         survey.Description = request.Description?.Trim();
@@ -114,7 +113,9 @@ public class SurveysController : ApiBaseController
             survey.IsActive = request.IsActive.Value;
         survey.UpdatedAt = DateTime.UtcNow;
 
-        await _unitOfWork.SaveEntitiesAsync();
+        try { await _unitOfWork.SaveEntitiesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        { return Conflict(ApiResponse<object>.Failure("نظرسنجی همزمان تغییر کرد؛ فهرست را تازه‌سازی کنید.")); }
         return Ok(ApiResponse<object>.SuccessMessage("نظرسنجی به‌روزرسانی شد"));
     }
 
@@ -488,11 +489,11 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
     /// <summary>ردیف نظرسنجی</summary>
     public record SurveyListItemDto(long Id, string Title, string? Description,
         string Type, bool IsActive, int ResponseCount, double AverageRating,
-        string? Questions);
+        string? Questions, string EditVersion);
 
     /// <summary>درخواست ایجاد/ویرایش نظرسنجی — سوالات JSON با سازنده پویای کلاینت</summary>
     public record CreateSurveyRequest(string Title, string? Description, string? Questions,
-        SurveyType? SurveyType, bool? IsActive);
+        SurveyType? SurveyType, bool? IsActive, string? EditVersion = null);
 
     /// <summary>درخواست ثبت پاسخ</summary>
     public record SubmitResponseRequest(long? PatientId, long? VisitId, long? DoctorId,

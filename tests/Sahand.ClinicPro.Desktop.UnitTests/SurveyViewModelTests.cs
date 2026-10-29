@@ -8,7 +8,7 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 public class SurveyViewModelTests
 {
     private static SurveyListRow Row(long id, bool active = false, string? questions = null) =>
-        new(id, $"نظرسنجی {id}", null, "کیفیت خدمات", active, active ? "فعال" : "غیرفعال", 0, "—", questions);
+        new(id, $"نظرسنجی {id}", null, "کیفیت خدمات", active, active ? "فعال" : "غیرفعال", 0, "—", questions, "VERSION-1");
 
     [Fact]
     public async Task Editing_inactive_survey_preserves_status_and_type()
@@ -22,6 +22,7 @@ public class SurveyViewModelTests
         var body = JsonSerializer.SerializeToElement(api.LastBody);
         body.GetProperty("isActive").ValueKind.Should().Be(JsonValueKind.Null);
         body.GetProperty("surveyType").GetInt32().Should().Be(2);
+        body.GetProperty("editVersion").GetString().Should().Be("VERSION-1");
         body.GetProperty("questions").ValueKind.Should().Be(JsonValueKind.Null);
     }
 
@@ -146,6 +147,15 @@ public class SurveyViewModelTests
         while (vm.Questions.Count < 100) vm.AddQuestionCommand.Execute(null);
         vm.AddQuestionCommand.Execute(null);
         vm.Questions.Should().HaveCount(100);
+    }
+
+    [Fact]
+    public void Editing_without_server_version_is_blocked()
+    {
+        var vm = new SurveyViewModel(new FakeApiClient(), new FakeSnackbar())
+        { SelectedSurvey = Row(4, questions: "[]") with { EditVersion = null } };
+        vm.OpenEditFormCommand.Execute(null);
+        vm.IsFormOpen.Should().BeFalse();
     }
 
 }
