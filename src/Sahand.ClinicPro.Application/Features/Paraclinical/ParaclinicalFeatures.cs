@@ -151,6 +151,11 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
     /// <summary>اجرای ثبت طرح درمان</summary>
     public async Task<Result<long>> Handle(CreateDentalPlanCommand request, CancellationToken cancellationToken)
     {
+        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+                .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.TotalCost < 0 || request.EstimatedSessions < 0)
+            return Result<long>.Failure(new Error("INVALID_DENTAL_PLAN", "مبلغ و تعداد جلسات نمی‌توانند منفی باشند"));
         var plan = new DentalTreatmentPlan
         {
             PatientId = request.PatientId,

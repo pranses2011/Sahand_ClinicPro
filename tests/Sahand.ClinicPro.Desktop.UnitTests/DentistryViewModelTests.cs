@@ -66,4 +66,24 @@ public class DentistryViewModelTests
         vm.ClinicalNote.Should().BeEmpty();
         vm.DentalPatient.Should().BeNull();
     }
+
+    [Fact]
+    public async Task Pending_save_locks_chart_and_patient_selection()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = ApiWithPatient();
+        api.PendingBoolPostResult = completion.Task;
+        var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        vm.ClinicalNote = "یادداشت";
+        var save = vm.SaveDentalChartCommand.ExecuteAsync(null);
+        vm.IsDentalChartEnabled.Should().BeFalse();
+        vm.CanSelectDentalPatient.Should().BeFalse();
+        vm.ClearDentalPatientCommand.Execute(null);
+        vm.DentalPatient!.Id.Should().Be(1);
+        completion.SetResult(false);
+        await save;
+        vm.IsDentalChartEnabled.Should().BeTrue();
+        vm.ClinicalNote.Should().Be("یادداشت");
+    }
 }

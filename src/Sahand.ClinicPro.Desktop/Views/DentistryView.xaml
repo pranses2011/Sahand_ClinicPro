@@ -54,7 +54,7 @@
                                  برای چه کسی ذخیره می‌شود» — چارت و طرح درمان اکنون به
                                  پروندهٔ همین بیمار وصل است و با جستجو، آخرین چارتِ ذخیره‌شده
                                  خودکار بازیابی می‌شود ═══ -->
-                            <Grid Grid.Row="0" Grid.ColumnSpan="3">
+                            <Grid Grid.Row="0" Grid.ColumnSpan="3" IsEnabled="{Binding CanSelectDentalPatient}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="2.4*" />
                                     <ColumnDefinition Width="Auto" />

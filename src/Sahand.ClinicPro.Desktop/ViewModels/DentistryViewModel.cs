@@ -104,8 +104,15 @@ public partial class DentistryViewModel : ViewModelBase
     private readonly Dictionary<string, int> _toothState = new();
     [ObservableProperty] private bool _isChartLoading;
     [ObservableProperty] private bool _isChartReady;
+    [ObservableProperty] private bool _isDentalSaving;
+    public bool CanSelectDentalPatient => !IsDentalSaving;
     /// <summary>ویرایش و ثبت تنها پس از بارگذاری موفق پرونده مجاز است.</summary>
-    public bool IsDentalChartEnabled => DentalPatient is not null && IsChartReady && !IsChartLoading;
+    public bool IsDentalChartEnabled => DentalPatient is not null && IsChartReady && !IsChartLoading && !IsDentalSaving;
+    partial void OnIsDentalSavingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSelectDentalPatient));
+        OnPropertyChanged(nameof(IsDentalChartEnabled));
+    }
     partial void OnIsChartLoadingChanged(bool value) => OnPropertyChanged(nameof(IsDentalChartEnabled));
     partial void OnIsChartReadyChanged(bool value) => OnPropertyChanged(nameof(IsDentalChartEnabled));
 
@@ -325,6 +332,7 @@ public partial class DentistryViewModel : ViewModelBase
     [RelayCommand]
     private async Task SearchDentalPatientAsync()
     {
+        if (IsDentalSaving) return;
         DentalPatient = null;
         var version = ++_patientVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, DentalPatientSearch);
@@ -422,26 +430,38 @@ public partial class DentistryViewModel : ViewModelBase
             clinical = ClinicalNote, isChildChart = IsChildChart
         };
         var planDetails = System.Text.Json.JsonSerializer.Serialize(new { teeth, rows, extras });
-        var ok = await _api.PostAsync("dental/plans", new
+        IsDentalSaving = true;
+        try
+        {
+        bool ok;
+        try { ok = await _api.PostAsync("dental/plans", new
         {
             patientId = patient.Id,
             dentistId = (long?)null,
             totalCost = DentalPlan.Sum(r => r.Price),
             estimatedSessions = DentalPlan.Count,
             planDetails
-        });
+        }); }
+        catch
+        {
+            _snackbar.Error("پاسخ ذخیرهٔ چارت دریافت نشد؛ پیش از تلاش مجدد پرونده را بررسی کنید.");
+            return;
+        }
         if (ok)
         {
             _snackbar.Success($"چارت و طرح درمان برای «{patient.FullName}» ذخیره شد");
             if (version == _patientVersion && DentalPatient?.Id == patient.Id) DentalChartInfo = $"آخرین ذخیرهٔ چارت: {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)}";
         }
-        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ چارت ناموفق بود");
+        else _snackbar.Error((_api.LastError ?? "ذخیرهٔ چارت ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد پرونده را بررسی کنید.");
+        }
+        finally { IsDentalSaving = false; }
     }
 
     /// <summary>پاک‌کردن بیمار دندانپزشکی — چارت تازه برای بیمار بعدی</summary>
     [RelayCommand]
     private void ClearDentalPatient()
     {
+        if (IsDentalSaving) return;
         _patientVersion++;
         DentalPatient = null;
         DentalPatientSearch = string.Empty;
