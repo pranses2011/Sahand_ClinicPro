@@ -419,13 +419,14 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void SelectReferralPatient(PhysioReferralRow? referral)
+    private async Task SelectReferralPatientAsync(PhysioReferralRow? referral)
     {
         if (referral is null || IsPhysioSaving || referral.PatientId <= 0) return;
         if (PhysioPatient?.Id == referral.PatientId) return;
         if (PhysioPatient is not null && !_confirmPatientChange()) return;
         PhysioPatient = new QuickPatient(referral.PatientId, referral.PatientName ?? "", referral.NationalCode ?? "",
             referral.Mobile ?? "", null, null, null, null, referral.Gender);
+        await LoadReferralsAsync(referral.PatientId);
     }
 
     // ─────────────── سابقه و نمودار روند ───────────────

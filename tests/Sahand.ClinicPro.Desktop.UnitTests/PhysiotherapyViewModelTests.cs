@@ -234,7 +234,7 @@ public class PhysiotherapyViewModelTests
         var vm = new PhysiotherapyViewModel(api, new FakeSnackbar(), () => false) { PhysioPatient = Patient(1), PhysioNotes = "حفظ شود" };
         await vm.LoadRecentReferralsCommand.ExecuteAsync(null);
         vm.Referrals.Should().ContainSingle().Which.Note.Should().Be("درد زانو");
-        vm.SelectReferralPatientCommand.Execute(vm.Referrals[0]);
+        await vm.SelectReferralPatientCommand.ExecuteAsync(vm.Referrals[0]);
         vm.PhysioPatient!.Id.Should().Be(1);
         vm.PhysioNotes.Should().Be("حفظ شود");
         api.CannedResponses.Remove("physiotherapy/referrals");
