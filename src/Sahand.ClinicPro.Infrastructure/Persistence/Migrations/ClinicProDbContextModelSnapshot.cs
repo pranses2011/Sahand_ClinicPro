@@ -3552,6 +3552,21 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyInvitation", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    b.Property<long>("SurveyId").HasColumnType("bigint");
+                    b.Property<string>("TokenHash").IsRequired().HasMaxLength(64).HasColumnType("nvarchar(64)");
+                    b.Property<DateTime>("ExpiresAt").HasColumnType("datetime2");
+                    b.Property<DateTime?>("UsedAt").IsConcurrencyToken().HasColumnType("datetime2");
+                    b.HasKey("Id");
+                    b.HasIndex("TokenHash").IsUnique();
+                    b.HasIndex("ExpiresAt");
+                    b.HasIndex("SurveyId");
+                    b.ToTable("SurveyInvitations");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyResponse", b =>
                 {
                     b.Property<long>("Id")
@@ -10856,6 +10871,15 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyInvitation", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Communication.Survey", null)
+                        .WithMany()
+                        .HasForeignKey("SurveyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyResponse", b =>

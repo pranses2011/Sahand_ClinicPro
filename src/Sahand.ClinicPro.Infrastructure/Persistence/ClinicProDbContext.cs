@@ -335,6 +335,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه Surveys</summary>
     public DbSet<Survey> Surveys { get; set; }
 
+    /// <summary>دعوت‌های یک‌بارمصرف نظرسنجی عمومی.</summary>
+    public DbSet<SurveyInvitation> SurveyInvitations { get; set; }
+
     /// <summary>مجموعه SurveyResponses</summary>
     public DbSet<SurveyResponse> SurveyResponses { get; set; }
 
