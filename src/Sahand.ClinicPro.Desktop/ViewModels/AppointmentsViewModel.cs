@@ -164,6 +164,12 @@ public partial class AppointmentsViewModel : ViewModelBase
     private readonly INavigationService _navigation;
     private System.Windows.Threading.DispatcherTimer? _debounce;
 
+    /// <summary>جلوگیری از تغییر فرم در زمان ثبت نوبت.</summary>
+    [ObservableProperty]
+    private bool _isBooking;
+    public bool CanEditBooking => !IsBooking;
+    partial void OnIsBookingChanged(bool value) => OnPropertyChanged(nameof(CanEditBooking));
+
     /// <summary>عنوان صفحه</summary>
     public override string Title => "نوبت‌دهی";
 
@@ -916,12 +922,19 @@ public partial class AppointmentsViewModel : ViewModelBase
         if (SelectedDoctor is null) { _snackbar.Error("ابتدا پزشک را انتخاب کنید"); return; }
         if (SelectedSlot is null) { _snackbar.Error("ابتدا ساعت نوبت را انتخاب کنید"); return; }
 
+        // اسلات‌ها ممکن است به‌صورت ناهمگام تازه‌سازی و انتخاب جاری پاک شود؛
+        // همه داده‌های چاپ و درخواست را پیش از انتظار از یک انتخاب بگیرید.
+        var patient = SelectedPatient;
+        var doctor = SelectedDoctor;
+        var slot = SelectedSlot;
+        var ticketDate = SelectedDateShamsi;
+        var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
         var body = new
         {
-            patientId = SelectedPatient.Id,
-            doctorId = SelectedDoctor.Id,
-            dateShamsi = SelectedDateShamsi,
-            time = SelectedSlot.Time,
+            patientId = patient.Id,
+            doctorId = doctor.Id,
+            dateShamsi = ticketDate,
+            time = slot.Time,
             type = SelectedTypeIndex + 1,
             source = 1,
             // ═══ چرخهٔ ۷۸ — اولویت انتخابی کاربر ارسال می‌شود ═══
@@ -933,12 +946,22 @@ public partial class AppointmentsViewModel : ViewModelBase
         };
 
         IsBusy = true;
-        var response = await _api.PostAsync<BookResponse>("appointments", body);
-        IsBusy = false;
+        IsBooking = true;
+        BookResponse? response;
+        try { response = await _api.PostAsync<BookResponse>("appointments", body); }
+        catch
+        {
+            _snackbar.Error("پاسخ ثبت نوبت دریافت نشد؛ پیش از تلاش مجدد فهرست نوبت‌ها را بررسی کنید.");
+            IsBooking = false;
+            return;
+        }
+        finally { IsBusy = false; }
 
         if (response?.Data is null)
         {
-            _snackbar.Error(_api.LastError ?? (response is null ? "ثبت نوبت ناموفق بود" : "این ساعت رزرو شده است"));
+            IsBooking = false;
+            var error = _api.LastError ?? (response is null ? "پاسخ ثبت نوبت دریافت نشد" : "ثبت نوبت ناموفق بود");
+            _snackbar.Error($"{error} — پیش از تلاش مجدد فهرست نوبت‌ها را بررسی کنید.");
             return;
         }
 
@@ -951,11 +974,9 @@ public partial class AppointmentsViewModel : ViewModelBase
         // چاپگر نوبت‌دهی انتخاب‌شده چاپ می‌شود (بدون هیچ دیالوگی). نام چاپگر و
         // پرچم خودکار در ذخیره‌گاه محلی هم آینه می‌شوند تا بدون درخواست اضافهٔ
         // شبکه در دسترس باشند.
-        var ticketPatient = SelectedPatient.FullName;
-        var ticketDoctor = SelectedDoctor.Name;
-        var ticketDate = SelectedDateShamsi;
-        var ticketTime = SelectedSlot?.Time ?? string.Empty;
-        var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
+        var ticketPatient = patient.FullName;
+        var ticketDoctor = doctor.Name;
+        var ticketTime = slot.Time;
         var autoPrintTicket = LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket");
         var ticketData = new AppointmentTicketData(
             response.Data.PatientName ?? ticketPatient, ticketDoctor,
@@ -969,6 +990,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         foreach (var s in Slots) s.IsSelected = false;
         // چرخهٔ ۷۶ — ویزارد برای نوبت بعدی به گام نخست بازمی‌گردد
         WizardStep = 0;
+        IsBooking = false;
         await LoadSlotsAsync();
         await LoadTodayAppointmentsAsync();
         if (autoPrintTicket)

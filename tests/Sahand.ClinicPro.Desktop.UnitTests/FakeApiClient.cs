@@ -25,6 +25,9 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>پاسخ معوق PUT برای آزمون عملیات هم‌زمان.</summary>
     public Task<bool>? PendingPutResult { get; set; }
 
+    /// <summary>پاسخ معوق POST برای آزمون درخواست ثبت نوبت.</summary>
+    public Task<object?>? PendingPostResult { get; set; }
+
     /// <summary>خطای تنظیم‌شده برای LastError</summary>
     public string? FakeError { get; set; }
 
@@ -75,11 +78,14 @@ public sealed class FakeApiClient : IApiClient
     }
 
     /// <summary>POST عمومی</summary>
-    public Task<T?> PostAsync<T>(string endpoint, object? body, CancellationToken ct = default)
+    public async Task<T?> PostAsync<T>(string endpoint, object? body, CancellationToken ct = default)
     {
         Calls.Add(("POST", endpoint));
         LastBody = body;
-        return Task.FromResult(Resolve<T>(endpoint));
+        if (PendingPostResult is null) return Resolve<T>(endpoint);
+        var response = await PendingPostResult;
+        if (response is null) return default;
+        return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response, JsonOptions), JsonOptions);
     }
 
     /// <summary>PUT عمومی</summary>

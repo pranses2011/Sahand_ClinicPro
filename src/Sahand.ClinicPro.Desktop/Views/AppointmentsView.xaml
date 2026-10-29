@@ -124,7 +124,7 @@
         <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}">
             <!-- ═══════════ تب ۱: رزرو نوبت ═══════════ -->
             <TabItem Header="رزرو نوبت جدید">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" IsEnabled="{Binding CanEditBooking}">
                     <Grid Margin="4,8">
                         <Grid.RowDefinitions>
                             <!-- ═══ چرخهٔ ۷۶ — فرم مرحله‌ای: نوار گام + سه گام + ناوبری ═══ -->
