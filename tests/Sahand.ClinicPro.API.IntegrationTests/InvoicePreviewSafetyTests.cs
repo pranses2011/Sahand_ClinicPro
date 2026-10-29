@@ -61,4 +61,41 @@ public class InvoicePreviewSafetyTests
         result.Error.Code.Should().Be("BILLING.TARIFF_CHANGED");
         (await db.Set<Invoice>().CountAsync()).Should().Be(0);
     }
+    [Fact]
+    public async Task Invoice_request_replays_before_tariff_revalidation_and_rejects_other_content()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "QUOTE-REPLAY", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000002" };
+        var service = new Service { ServiceName = "خدمت", DefaultPrice = 100, IsActive = true };
+        db.AddRange(patient, service); await db.SaveChangesAsync();
+        var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
+            new() { new InvoiceItemDto(service.Id, "خدمت", 1, 100, 0, null, 0) });
+        var quote = await handler.PreviewAsync(new PreviewInvoiceQuery(dto), default);
+        quote.IsSuccess.Should().BeTrue();
+        var request = dto with { ExpectedQuote = quote.Value.QuoteVersion, RequestId = Guid.NewGuid() };
+        var first = await handler.Handle(new CreateInvoiceCommand(request), default);
+        first.IsSuccess.Should().BeTrue();
+        service.DefaultPrice = 200; await db.SaveChangesAsync();
+        var repeat = await handler.Handle(new CreateInvoiceCommand(request), default);
+        repeat.IsSuccess.Should().BeTrue(); repeat.Value.Should().Be(first.Value);
+        var conflict = await handler.Handle(new CreateInvoiceCommand(request with { Description = "تغییر" }), default);
+        conflict.Error.Code.Should().Be("BILLING.REQUEST_CONFLICT");
+        (await db.Set<Invoice>().CountAsync()).Should().Be(1);
+        (await handler.Handle(new CreateInvoiceCommand(request with { RequestId = Guid.Empty }), default)).IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Idempotent_invoice_endpoint_rejects_missing_or_empty_key()
+    {
+        var mediator = new Moq.Mock<MediatR.IMediator>(Moq.MockBehavior.Strict);
+        var controller = new Sahand.ClinicPro.API.Controllers.InvoicesController(mediator.Object);
+        var dto = new CreateInvoiceDto(1, null, null, InvoiceType.Other, null, 0,
+            new() { new InvoiceItemDto(null, "خدمت", 1, 100, 0, null, 0) });
+        (await controller.CreateIdempotent(dto)).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        (await controller.CreateIdempotent(dto with { RequestId = Guid.Empty })).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
+        mediator.VerifyNoOtherCalls();
+    }
 }
