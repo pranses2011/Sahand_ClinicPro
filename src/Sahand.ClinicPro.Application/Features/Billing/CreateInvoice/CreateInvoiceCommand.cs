@@ -76,6 +76,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
     public async Task<Result<long>> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (!InvoiceAmountSafety.Valid(dto))
+            return Result<long>.Failure(new Error("BILLING.AMOUNTS_INVALID", "تعداد، مبلغ، درصد یا شناسه اقلام فاکتور نامعتبر یا خارج از دقت مجاز است."));
 
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
         if (patient is null || patient.IsDeleted)
@@ -90,6 +92,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             if (reception is null || reception.IsDeleted) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
             if (reception.PatientId != dto.PatientId)
                 return Result<long>.Failure(new Error("BILLING.RECEPTION_PATIENT", "بیمار فاکتور با بیمار پذیرش مطابقت ندارد."));
+            if (reception.Status == ReceptionStatus.Cancelled)
+                return Result<long>.Failure(new Error("BILLING.RECEPTION_CANCELLED", "برای پذیرش لغوشده صدور فاکتور مجاز نیست."));
             // اقلام قدیمی فاکتور شناسه دارو ندارند؛ وجود هر فاکتور قبلی، حتی
             // ابطال‌شده یا حذف نرم‌شده، مانع تشخیص ایمن مبلغ مصرفی قبلی است.
             // فاکتورهای بدون مصرفی همچنان می‌توانند جداگانه صادر شوند.
@@ -267,6 +271,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 : item.ServiceId is long itemServiceId && insuredTariffShareByService.TryGetValue(itemServiceId, out var tariffShare)
                     ? tariffShare
                     : defaultInsurancePercent;
+            if (!InvoiceAmountSafety.ValidPercent(itemInsurancePercent))
+                return Result<long>.Failure(new Error("BILLING.INSURANCE_PERCENT", "درصد سهم بیمه در تنظیمات یا تعرفه نامعتبر است."));
             var insuranceShare = net * itemInsurancePercent / 100m;
             var patientShare = net - insuranceShare;
 
@@ -310,6 +316,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         }
 
         var tax = (subTotal - totalDiscount) * dto.TaxPercent / 100m;
+        if (subTotal - totalDiscount - totalInsuranceShare + tax > InvoiceAmountSafety.MaxRial)
+            return Result<long>.Failure(new Error("BILLING.AMOUNT_OVERFLOW", "مبلغ فاکتور از سقف قابل ذخیره بیشتر است."));
         invoice.SubTotal = subTotal;
         invoice.DiscountAmount = totalDiscount;
         invoice.InsuranceDiscount = totalInsuranceShare;
