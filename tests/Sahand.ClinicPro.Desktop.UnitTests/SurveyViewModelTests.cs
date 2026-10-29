@@ -23,13 +23,14 @@ public class SurveyViewModelTests
         body.GetProperty("isActive").ValueKind.Should().Be(JsonValueKind.Null);
         body.GetProperty("surveyType").GetInt32().Should().Be(2);
         body.GetProperty("editVersion").GetString().Should().Be("VERSION-1");
-        body.GetProperty("questions").ValueKind.Should().Be(JsonValueKind.Null);
+        body.GetProperty("questions").GetString().Should().Be("[]");
     }
 
     [Theory]
     [InlineData("{not json}")]
     [InlineData("[{\"text\":\"سؤال\",\"type\":\"unsupported\"}]")]
     [InlineData("[{\"text\":\"سؤال\",\"type\":\"rating\",\"required\":true}]")]
+    [InlineData("[{\"text\":\"اول\",\"text\":\"دوم\",\"type\":\"text\"}]")]
     public void Unsupported_questions_do_not_open_edit_form(string questions)
     {
         var api = new FakeApiClient();
@@ -156,6 +157,19 @@ public class SurveyViewModelTests
         { SelectedSurvey = Row(4, questions: "[]") with { EditVersion = null } };
         vm.OpenEditFormCommand.Execute(null);
         vm.IsFormOpen.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Title_only_edit_preserves_exact_legacy_question_json()
+    {
+        const string original = "[{ \"q\": \"انتخاب؟\", \"type\": \"choice\", \"options\": \"الف|ب\" }]";
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var vm = new SurveyViewModel(api, new FakeSnackbar()) { SelectedSurvey = Row(4, questions: original) };
+        vm.OpenEditFormCommand.Execute(null);
+        vm.FormTitle = "عنوان جدید";
+        await vm.SaveFormCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("questions").GetString().Should().Be(original);
     }
 
 }

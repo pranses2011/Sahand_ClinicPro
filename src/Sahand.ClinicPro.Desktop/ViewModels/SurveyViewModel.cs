@@ -82,7 +82,10 @@ public partial class SurveyQuestionItem : ObservableObject
             if (doc.RootElement.ValueKind != JsonValueKind.Array) return false;
             foreach (var q in doc.RootElement.EnumerateArray())
             {
-                if (q.ValueKind != JsonValueKind.Object || q.EnumerateObject().Any(p => p.Name is not ("text" or "q" or "type" or "options"))) return false;
+                if (q.ValueKind != JsonValueKind.Object) return false;
+                var properties = q.EnumerateObject().ToList();
+                if (properties.Any(p => p.Name is not ("text" or "q" or "type" or "options")) ||
+                    properties.Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != properties.Count) return false;
                 if (q.TryGetProperty("text", out _) && q.TryGetProperty("q", out _)) return false;
                 if (!q.TryGetProperty("text", out var textElement) && !q.TryGetProperty("q", out textElement)) return false;
                 if (textElement.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(textElement.GetString())) return false;
@@ -150,6 +153,10 @@ public partial class SurveyViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private int _resultsVersion;
     private string? _editingVersion;
+    private string? _originalQuestionsJson;
+    private string? _initialQuestionsRepresentation;
+    private string? CurrentQuestionsRepresentation() => Questions.Count == 0 ? null :
+        "[" + string.Join(",", Questions.Select(q => q.ToJson())) + "]";
     [ObservableProperty] private bool _isResultsLoading;
     [ObservableProperty] private string _resultsMessage = "نظرسنجی را برای مشاهدهٔ نتایج انتخاب کنید.";
 
@@ -455,6 +462,8 @@ public partial class SurveyViewModel : ViewModelBase
             // سوال پیش‌فرض پیشنهاد می‌شود.
             Questions.Clear();
             foreach (var q in existing) Questions.Add(q);
+            _originalQuestionsJson = SelectedSurvey.QuestionsJson;
+            _initialQuestionsRepresentation = CurrentQuestionsRepresentation();
             IsFormOpen = true;
         }
         finally
@@ -509,9 +518,10 @@ public partial class SurveyViewModel : ViewModelBase
                 "ارزیابی پزشک" => 3,
                 _ => 1
             };
-            var questionsJson = Questions.Count == 0
-                ? null
-                : "[" + string.Join(",", Questions.Select(q => q.ToJson())) + "]";
+            var representation = CurrentQuestionsRepresentation();
+            // ویرایش صرف عنوان نباید قالب JSON سؤال‌ها یا لینک‌های در حال پاسخ را تغییر دهد.
+            var questionsJson = IsEditing && representation == _initialQuestionsRepresentation
+                ? _originalQuestionsJson : representation;
 
             if (questionsJson?.Length > 200_000)
             { _snackbar.Error("حجم سؤال‌ها بیش از حد مجاز است؛ متن یا تعداد آن‌ها را کاهش دهید"); return; }
