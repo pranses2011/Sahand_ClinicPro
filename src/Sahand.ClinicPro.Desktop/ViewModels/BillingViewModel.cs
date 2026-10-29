@@ -657,8 +657,9 @@ public partial class InvoiceFormViewModel : ObservableObject
         if (dto is null) return;
         if (_quote is null || _quoteInputs != JsonSerializer.Serialize(dto))
         { InvalidateQuote(); ErrorMessage = "ابتدا محاسبه فاکتور را دریافت و مبلغ آن را بررسی کنید."; return; }
-        if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > _quote.PatientPayable || decimal.Truncate(ReceivedAmount) != ReceivedAmount)
-        { ErrorMessage = "مبلغ دریافتی یا روش پرداخت نامعتبر است."; return; }
+        if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > _quote.PatientPayable ||
+            decimal.Truncate(ReceivedAmount) != ReceivedAmount || (ReceivedAmount > 0 && ReferenceNumber?.Trim().Length > 50))
+        { ErrorMessage = "مبلغ دریافتی، روش پرداخت یا شماره پیگیری نامعتبر است."; return; }
         var patient = Patient!;
         var expectedAmount = _quote.PatientPayable;
         var received = ReceivedAmount;

@@ -64,7 +64,9 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
         var plain = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
         var payment = JsonSerializer.Deserialize<PendingPayment>(plain) ?? throw new InvalidDataException("درخواست پرداخت خوانده نشد.");
         if (payment.Server != server || payment.InvoiceId != invoiceId || payment.RequestId == Guid.Empty ||
-            payment.PatientId <= 0 || payment.Amount <= 0 || payment.Method is < 1 or > 5)
+            payment.PatientId <= 0 || payment.Amount <= 0 || payment.Amount > 999999999999999999m ||
+            decimal.Truncate(payment.Amount) != payment.Amount || payment.Method is < 1 or > 5 ||
+            payment.ReferenceNumber?.Length > 50 || payment.CardNumber?.Length > 20)
             throw new InvalidDataException("درخواست پرداخت ذخیره‌شده معتبر نیست.");
         return payment;
     }

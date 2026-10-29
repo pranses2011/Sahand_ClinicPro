@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
@@ -96,6 +96,11 @@ partial void OnMethodIndexChanged(int value)
         // برای کارتخوان، شمارهٔ پیگیری توصیه‌شده ولی الزامی نیست (کاریو کارتخوان
         // ممکن است در لحظه چاپ ندهد)؛ چهار رقم کارت هم اختیاری است — درست مثل
         // فرم ثبت پرداخت ماژول مالی؛ تنها قاعده: اگر کارت ارسال شود باید ۴ رقم باشد
+        if (ReferenceNumber?.Trim().Length > 50)
+        {
+            ErrorMessage = "شماره پیگیری حداکثر ۵۰ نویسه است";
+            return;
+        }
         if (IsCard && !string.IsNullOrWhiteSpace(CardNumber) && CardNumber.Trim().Length != 4)
         {
             ErrorMessage = "چهار رقم آخر کارت باید دقیقاً ۴ رقم باشد";
