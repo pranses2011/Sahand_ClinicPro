@@ -241,6 +241,8 @@
         <DockPanel Grid.Row="2" Margin="0,10,0,0">
             <ProgressBar IsIndeterminate="True" Width="24" Height="16" DockPanel.Dock="Left" Margin="0,0,10,0"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+            <Button DockPanel.Dock="Left" Command="{Binding RetryInvoiceCommand}" IsEnabled="{Binding CanRetryInvoice}"
+                    Content="ارسال دوباره همان فاکتور" Margin="0,0,10,0" />
             <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" VerticalAlignment="Center"
                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
         </DockPanel>

@@ -301,6 +301,10 @@ public partial class InvoiceFormViewModel : ObservableObject
     private int _serviceSearchVersion;
     private int _patientSearchVersion;
     private bool _invoiceSubmissionLocked;
+    private CreateInvoiceDto? _pendingInvoiceRequest;
+    private long? _pendingInvoiceBranch;
+    public bool CanRetryInvoice => !IsBusy && _invoiceSubmissionLocked && _pendingInvoiceRequest is not null &&
+        ((_api as ApiClient)?.BranchId == _pendingInvoiceBranch);
     private InvoicePreviewDto? _quote;
     private string? _quoteInputs;
     public string QuoteStatus => _quote is null ? "برای محاسبه قطعی، «محاسبه فاکتور» را بزنید." :
@@ -323,7 +327,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     partial void OnDoctorIndexChanged(int value) => InvalidateQuote();
     [ObservableProperty] private bool _hasInvalidInvoiceInput;
     public bool CanEditInvoice => !IsBusy && !_invoiceSubmissionLocked;
-    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditInvoice));
+    partial void OnIsBusyChanged(bool value) { OnPropertyChanged(nameof(CanEditInvoice)); OnPropertyChanged(nameof(CanRetryInvoice)); }
 
     /// <summary>عنوان</summary>
     [ObservableProperty]
@@ -664,20 +668,24 @@ public partial class InvoiceFormViewModel : ObservableObject
         var expectedAmount = _quote.PatientPayable;
         var received = ReceivedAmount;
         var method = PaymentMethodIndex switch { 0 => 1, 1 => 2, 2 => 5, 3 => 4, _ => 0 };
-        var request = dto with { ExpectedQuote = _quote.QuoteVersion };
+        var request = dto with { ExpectedQuote = _quote.QuoteVersion, RequestId = Guid.NewGuid() };
         var invoiceBranch = (_api as ApiClient)?.BranchId;
         IsBusy = true;
         var sentInvoice = false;
         long? invoiceId = null;
         try
         {
+            _pendingInvoiceRequest = request;
+            _pendingInvoiceBranch = invoiceBranch;
             sentInvoice = true;
-            var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", request);
+            var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices/idempotent", request);
             _invoiceSubmissionLocked = true;
             OnPropertyChanged(nameof(CanEditInvoice));
             if (invoice?.Data is null or <= 0)
             { ErrorMessage = "نتیجه صدور فاکتور نامعلوم است؛ پیش از تکرار، فهرست فاکتورها را بررسی کنید. " + _api.LastError; return; }
             invoiceId = invoice.Data;
+            _pendingInvoiceRequest = null;
+            OnPropertyChanged(nameof(CanRetryInvoice));
             var detail = await _api.GetAsync<PaymentWindowViewModel.InvoiceDetailEnvelope>($"invoices/{invoiceId}");
             if (detail?.Data is null || detail.Data.Id != invoiceId || detail.Data.PatientId != patient.Id || detail.Data.RemainingAmount != expectedAmount)
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
@@ -711,6 +719,28 @@ public partial class InvoiceFormViewModel : ObservableObject
                 ? $"فاکتور #{invoiceId} صادر شده؛ وضعیت پرداخت را پیش از تلاش مجدد در صندوق بررسی کنید."
                 : "نتیجه صدور فاکتور نامعلوم است؛ پیش از تلاش مجدد فهرست فاکتورها را بررسی کنید.";
         }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>ارسال مجدد همان درخواست؛ پس از پاسخ نامعلوم پرداخت خودکار انجام نمی‌شود.</summary>
+    [RelayCommand]
+    private async Task RetryInvoiceAsync()
+    {
+        if (!CanRetryInvoice || _pendingInvoiceRequest is null) return;
+        var request = _pendingInvoiceRequest;
+        if ((_api as ApiClient)?.BranchId != _pendingInvoiceBranch)
+        { ErrorMessage = "شعبه تغییر کرده است؛ فاکتور را در شعبه اصلی بررسی کنید."; return; }
+        IsBusy = true;
+        try
+        {
+            var result = await _api.PostAsync<InvoiceCreateResult>("invoices/idempotent", request);
+            if (result?.Data is null or <= 0)
+            { ErrorMessage = "نتیجه فاکتور همچنان نامعلوم است؛ همان درخواست را بررسی کنید و فاکتور جدید نسازید. " + _api.LastError; return; }
+            _pendingInvoiceRequest = null;
+            OnPropertyChanged(nameof(CanRetryInvoice));
+            ErrorMessage = $"فاکتور #{result.Data} تأیید شد؛ پرداخت خودکار انجام نشد. هویت، مبلغ و پرداخت را در صندوق بررسی کنید.";
+        }
+        catch (Exception) { ErrorMessage = "نتیجه فاکتور همچنان نامعلوم است؛ پیش از صدور تازه سوابق را بررسی کنید."; }
         finally { IsBusy = false; }
     }
 
