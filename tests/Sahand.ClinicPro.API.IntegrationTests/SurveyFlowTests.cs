@@ -379,6 +379,31 @@ public class SurveyFlowTests
         (await dbVerify.SurveyResponses.CountAsync(r => r.SurveyId == surveyId)).Should().Be(2);
     }
 
+    [Fact]
+    public async Task Result_dates_and_times_use_iran_day_even_across_midnight()
+    {
+        var client = await LoginAsync();
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "تاریخ پاسخ" });
+        var id = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        // ۲۱:۰۰ UTC برابر ۰۰:۳۰ روز بعد در تهران است. Kind مانند دادهٔ SQL نامشخص است.
+        var storedUtc = new DateTime(2026, 1, 1, 21, 0, 0, DateTimeKind.Unspecified);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            db.SurveyResponses.Add(new SurveyResponse
+            {
+                SurveyId = id, Comments = "نظر آزمایشی", Answers = "[]", SubmittedAt = storedUtc, CreatedAt = storedUtc
+            });
+            await db.SaveChangesAsync();
+        }
+        var result = await client.GetAsync($"/api/v1/surveys/{id}/results");
+        result.StatusCode.Should().Be(HttpStatusCode.OK);
+        var data = (await ReadAsync<JsonElementPacket>(result)).Data;
+        var expectedDay = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(new DateTime(2026, 1, 2));
+        data.GetProperty("recentComments")[0].GetProperty("submittedShamsi").GetString().Should().Be(expectedDay + " — 00:30");
+        data.GetProperty("recentAnswers")[0].GetProperty("submittedShamsi").GetString().Should().Be(expectedDay);
+    }
+
     /* ─── کمکی‌ها ─── */
 
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>

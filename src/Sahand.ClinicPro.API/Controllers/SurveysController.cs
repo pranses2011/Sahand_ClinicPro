@@ -378,16 +378,20 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
                 r.Rating,
                 r.Comments!,
                 r.SubmittedAt.HasValue
-                    ? PersianDateHelper.ToShamsi(r.SubmittedAt.Value) + " — " + r.SubmittedAt.Value.ToString("HH:mm")
-                    : PersianDateHelper.ToShamsi(r.CreatedAt)))
+                    ? PersianDateHelper.ToShamsi(IranDisplayTime(r.SubmittedAt.Value)) + " — " + IranDisplayTime(r.SubmittedAt.Value).ToString("HH:mm")
+                    : PersianDateHelper.ToShamsi(IranDisplayTime(r.CreatedAt))))
             .ToList();
 
         var recentAnswers = responses.Where(r => !string.IsNullOrWhiteSpace(r.Answers))
             .OrderByDescending(r => r.SubmittedAt ?? r.CreatedAt).Take(20)
-            .Select(r => new SurveyAnswerDto(r.Id, PersianDateHelper.ToShamsi(r.SubmittedAt ?? r.CreatedAt), r.Answers!)).ToList();
+            .Select(r => new SurveyAnswerDto(r.Id, PersianDateHelper.ToShamsi(IranDisplayTime(r.SubmittedAt ?? r.CreatedAt)), r.Answers!)).ToList();
         var result = new SurveyResultsDto(summary, distribution, perDoctor.ToList(), comments, recentAnswers);
         return Ok(ApiResponse<object>.Success(result));
     }
+
+    // زمان پاسخ در UTC ذخیره می‌شود؛ SQL Server معمولاً Kind را حفظ نمی‌کند.
+    private static DateTime IranDisplayTime(DateTime timestamp) =>
+        TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.SpecifyKind(timestamp, DateTimeKind.Utc), "Iran Standard Time");
 
     /// <summary>
     /// ارسال لینک پیامکی نظرسنجی به بیماران ویزیت‌شده امروز (گام V3-الف):
