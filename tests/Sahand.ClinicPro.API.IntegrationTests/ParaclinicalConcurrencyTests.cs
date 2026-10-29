@@ -43,10 +43,13 @@ public class ParaclinicalConcurrencyTests
             .ThrowsAsync(new DbUpdateConcurrencyException());
         mediator.Setup(x => x.Send(It.IsAny<CreateDentalPlanCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateConcurrencyException());
+        mediator.Setup(x => x.Send(It.IsAny<RecordPhysioSessionCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateConcurrencyException());
         var controller = new ParaclinicalController(mediator.Object, Mock.Of<IUnitOfWork>(),
             Mock.Of<IWebHostEnvironment>(), Mock.Of<IConfiguration>());
         (await controller.SubmitReport(new ImagingReportDto(1, null, "یافته", null, null))).Should().BeOfType<ConflictObjectResult>();
         (await controller.UpdateOrderStatus(new UpdateImagingOrderStatusCommand(1, ImagingOrderStatus.Performed))).Should().BeOfType<ConflictObjectResult>();
         (await controller.CreateDentalPlan(new CreateDentalPlanCommand(1, null, 0, 0, "{}"))).Should().BeOfType<ConflictObjectResult>();
+        (await controller.RecordSession(new RecordPhysioSessionCommand(1, null, 1, null, 20, 0))).Should().BeOfType<ConflictObjectResult>();
     }
 }

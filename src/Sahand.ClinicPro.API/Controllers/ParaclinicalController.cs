@@ -294,7 +294,12 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("physiotherapy.create")]
     public async Task<IActionResult> RecordSession([FromBody] RecordPhysioSessionCommand command)
     {
-        var result = await _mediator.Send(command);
+        Result<long> result;
+        try { result = await _mediator.Send(command); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پرونده همزمان تغییر کرده است؛ سابقه جلسات را دوباره بررسی کنید", 409));
+        }
         if (result.IsSuccess)
             // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
             return CreatedResponse(result, nameof(GetTodayOrders), new { }, "جلسه ثبت شد");

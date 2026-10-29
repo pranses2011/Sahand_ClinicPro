@@ -251,11 +251,17 @@ public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSes
     /// <summary>اجرای ثبت جلسه</summary>
     public async Task<Result<long>> Handle(RecordPhysioSessionCommand request, CancellationToken cancellationToken)
     {
-        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
-                .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken))
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>().GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
-        if (request.SessionNumber < 1 || request.PainScore > 10 || request.Duration is <= 0)
+        if (request.SessionNumber < 1 || request.PainScore > 10 || request.Duration is <= 0 or > 1440)
             return Result<long>.Failure(new Error("INVALID_PHYSIO_SESSION", "شماره جلسه، مدت یا شدت درد معتبر نیست"));
+        if (await _unitOfWork.Repository<PhysiotherapySession>().AnyAsync(
+            s => s.PatientId == request.PatientId && !s.IsDeleted && s.SessionNumber == request.SessionNumber, cancellationToken))
+            return Result<long>.Failure(new Error("PHYSIO_SESSION_DUPLICATE", "این شماره جلسه برای بیمار قبلاً ثبت شده است؛ سابقه را تازه‌سازی کنید"));
+        // شرط rowversion بیمار، بررسی شماره و ثبت را در رقابت همزمان محافظت می‌کند.
+        patient.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Repository<Domain.Entities.People.Patient>().MarkPropertyModified(patient, p => p.UpdatedAt);
         var session = new PhysiotherapySession
         {
             PatientId = request.PatientId,

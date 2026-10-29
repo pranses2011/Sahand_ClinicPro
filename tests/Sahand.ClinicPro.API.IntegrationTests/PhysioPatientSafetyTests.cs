@@ -24,7 +24,9 @@ public class PhysioPatientSafetyTests
         (await handler.Handle(new(patient.Id, null, 0, null, 20, 5), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(patient.Id, null, 1, null, 0, 5), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(patient.Id, null, 1, null, 20, 11), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 1, null, 1441, 5), default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(new(patient.Id, null, 1, null, 20, 0), default)).IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 1, null, 20, 0), default)).IsSuccess.Should().BeFalse();
         db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession>().Should().ContainSingle();
     }
 }
