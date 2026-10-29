@@ -1762,6 +1762,19 @@ public partial class ReceptionsViewModel : ViewModelBase
     private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment, decimal? confirmedPayable = null)
     {
         if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;
+        try
+        {
+            if (_invoiceRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient!.Id) is not null)
+            {
+                _snackbar.Error("فاکتور حل‌نشده‌ای برای این بیمار روی این دستگاه وجود دارد؛ پیش از پذیرش جدید، آن را در صندوق بررسی کنید.");
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("بازیابی فاکتور بیمار قابل بررسی نیست؛ پذیرش ارسال نشد. با پشتیبانی تماس بگیرید.");
+            return;
+        }
         IsSubmitting = true;
         var receptionBranch = (_api as ApiClient)?.BranchId;
         try

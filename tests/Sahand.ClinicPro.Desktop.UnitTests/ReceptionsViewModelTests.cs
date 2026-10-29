@@ -388,4 +388,26 @@ public class ReceptionsViewModelTests
         api.Calls.Should().Contain(x => x.Endpoint == "invoices/preview");
         api.Calls.Should().NotContain(x => x.Endpoint == "invoices/idempotent");
     }
+    [Fact]
+    public async Task Existing_pending_invoice_blocks_new_reception_before_any_side_effect()
+    {
+        var directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "clinicpro-reception-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new InvoiceRecoveryStore(directory);
+            var request = new Sahand.ClinicPro.Application.DTOs.Billing.CreateInvoiceDto(7, null, null,
+                Sahand.ClinicPro.Domain.Enums.InvoiceType.Visit, null, 0,
+                new() { new Sahand.ClinicPro.Application.DTOs.Billing.InvoiceItemDto(null, "ویزیت", 1, 100, 0, 1, 0) },
+                ExpectedQuote: "q", RequestId: Guid.NewGuid());
+            store.Reserve(new PendingInvoice(request,
+                new Sahand.ClinicPro.Application.DTOs.Billing.InvoicePreviewDto(100, 0, 0, 0, 100, null, "q"), "test-api", null));
+            var api = MakeApi();
+            var vm = new ReceptionsViewModel(api, new FakeSnackbar(), store);
+            vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+            vm.SelectedDoctor = vm.Doctors.First();
+            await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+            api.Calls.Should().NotContain(x => x.Endpoint == "receptions" && x.Method == "POST");
+        }
+        finally { if (System.IO.Directory.Exists(directory)) System.IO.Directory.Delete(directory, true); }
+    }
 }
