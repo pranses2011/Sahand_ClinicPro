@@ -570,7 +570,7 @@ public partial class ImagingViewModel : ViewModelBase
         /// <summary>زمان ثبت</summary>
         public DateTime CreatedAt { get; }
         /// <summary>ساعت ثبت نمایشی</summary>
-        public string TimeText => CreatedAt.ToLocalTime().ToString("HH:mm");
+        public string TimeText => IranClock.FromUtc(CreatedAt).ToString("HH:mm");
         /// <summary>زمان انجام</summary>
         public DateTime? PerformedAt { get; set; }
         /// <summary>زمان گزارش</summary>

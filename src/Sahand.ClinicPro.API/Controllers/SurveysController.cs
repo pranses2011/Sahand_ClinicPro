@@ -421,13 +421,12 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
             return BadRequest(ApiResponse<object>.Failure("نشانی HTTPS سرویس عمومی پاسخ‌گویی نظرسنجی تنظیم نشده یا نامعتبر است؛ پیش از ارسال پیامک آن را تنظیم و بررسی کنید"));
         var link = $"{publicUri.AbsoluteUri.TrimEnd('/')}/s/{id}";
 
-        // مرز امروز به وقت محلی ایران (۱۱۰۴۰۰+ ثانیه از UTC، بدون DST)
-        var iranNow = DateTime.UtcNow.AddHours(3.5);
-        var todayStart = iranNow.Date.AddHours(-3.5);
+        // مرزهای روز ایران بر اساس منطقه زمانی، به UTC برای ستون ویزیت.
+        var (todayStart, tomorrowStart) = PersianDateHelper.IranDayUtcBounds(DateTime.UtcNow);
 
         // ویزیت‌های امروز با وضعیت معنادار (شروع‌شده/در جریان/تکمیل‌شده) و بیمار دارای موبایل
         var visits = await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>().QueryableNoTracking
-            .Where(v => v.VisitDate >= todayStart && v.VisitDate < todayStart.AddDays(1)
+            .Where(v => v.VisitDate >= todayStart && v.VisitDate < tomorrowStart
                      && (v.Status == VisitStatus.Started || v.Status == VisitStatus.InProgress || v.Status == VisitStatus.Completed)
                      && v.Patient != null && v.Patient.Mobile != null && v.Patient.Mobile.Trim() != "")
             .Select(v => new

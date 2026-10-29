@@ -23,6 +23,10 @@ public static class IranClock
     /// <summary>اکنون به وقت رسمی ایران</summary>
     public static DateTime Now => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, IranZone);
 
+    /// <summary>زمان ذخیره‌شده به UTC را برای نمایش به وقت ایران تبدیل می‌کند.</summary>
+    public static DateTime FromUtc(DateTime value) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(value, DateTimeKind.Utc), IranZone);
+
     /// <summary>امروز (نیمه‌شب) به وقت رسمی ایران</summary>
     public static DateTime Today => Now.Date;
 }

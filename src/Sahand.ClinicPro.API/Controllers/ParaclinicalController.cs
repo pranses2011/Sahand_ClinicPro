@@ -51,10 +51,10 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.create")]
     public async Task<IActionResult> GetTodayOrders()
     {
-        var today = DateTime.UtcNow.Date;
+        var (todayStart, tomorrowStart) = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranDayUtcBounds(DateTime.UtcNow);
         var items = await _unitOfWork.Repository<Domain.Entities.Paraclinical.ImagingOrder>()
             .QueryableNoTracking
-            .Where(o => o.CreatedAt >= today && !o.IsDeleted)
+            .Where(o => o.CreatedAt >= todayStart && o.CreatedAt < tomorrowStart && !o.IsDeleted)
             .OrderByDescending(o => o.Id)
             .Take(100)
             .Select(o => new

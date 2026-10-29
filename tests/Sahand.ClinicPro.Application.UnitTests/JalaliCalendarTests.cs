@@ -136,4 +136,15 @@ public class JalaliCalendarTests
             JalaliCalendar.ToGregorian(jy, jm, jd).Should().Be(date.Date);
         }
     }
+    [Fact]
+    public void Iran_day_bounds_include_iran_midnight_and_exclude_the_next_midnight()
+    {
+        var instant = new DateTime(2026, 1, 1, 21, 0, 0, DateTimeKind.Utc);
+        var (start, end) = PersianDateHelper.IranDayUtcBounds(instant);
+        start.Should().Be(new DateTime(2026, 1, 1, 20, 30, 0, DateTimeKind.Utc));
+        end.Should().Be(new DateTime(2026, 1, 2, 20, 30, 0, DateTimeKind.Utc));
+        PersianDateHelper.IranDayUtcBounds(start.AddTicks(-1)).End.Should().Be(start);
+        PersianDateHelper.IranDayUtcBounds(end).Start.Should().Be(end);
+    }
+
 }
