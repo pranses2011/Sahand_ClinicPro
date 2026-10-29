@@ -94,12 +94,15 @@ public class PrintTemplatesController : ApiBaseController
 
         var clinic = await ClinicInfoAsync();
         var sample = PrintTemplateRenderer.SampleData(t.Type.ToString());
-        var body = PrintTemplateRenderer.Render(t.HtmlBody, sample)
-            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        sample.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
+        sample.TryAdd("clinic_address", clinic.Address ?? "");
+        sample.TryAdd("clinic_phone", clinic.Phone ?? "");
+        sample.TryAdd("print_date", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var body = PrintTemplateRenderer.Render(t.HtmlBody, sample);
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, t.AccentColor, t.FontSize, t.FontFamily,
-            t.ShowClinicLogo, t.PaperSize);
+            t.ShowClinicLogo, t.PaperSize).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, paperSize = t.PaperSize, type = t.Type.ToString() }));
     }
@@ -138,13 +141,16 @@ public class PrintTemplatesController : ApiBaseController
             }));
 
         var clinic = await ClinicInfoAsync();
-        var body = PrintTemplateRenderer.Render(template.HtmlBody,
-                request.Variables ?? new Dictionary<string, object?>())
-            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var variables = request.Variables ?? new Dictionary<string, object?>();
+        variables.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
+        variables.TryAdd("clinic_address", clinic.Address ?? "");
+        variables.TryAdd("clinic_phone", clinic.Phone ?? "");
+        variables.TryAdd("print_date", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var body = PrintTemplateRenderer.Render(template.HtmlBody, variables);
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, template.AccentColor, template.FontSize, template.FontFamily,
-            template.ShowClinicLogo, template.PaperSize);
+            template.ShowClinicLogo, template.PaperSize).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, templateId = template.Id, templateName = template.TemplateName }));
     }

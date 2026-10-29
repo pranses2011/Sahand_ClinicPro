@@ -6,6 +6,8 @@ using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Domain.Enums;
+using Sahand.ClinicPro.Domain.Entities.People;
 
 namespace Sahand.ClinicPro.Application.Features.Receptions.Queries.GetReceptionReceipt;
 
@@ -55,19 +57,29 @@ public class GetReceptionReceiptQueryHandler
                 x.Description ?? "قلم فاکتور", x.Quantity, x.UnitPrice))
             .ToList();
 
-        var payments = invoices.SelectMany(i => i.Payments.Where(p => !p.IsDeleted)).ToList();
+        var payments = invoices.SelectMany(i => i.Payments.Where(p => !p.IsDeleted
+            && !p.IsReturned && p.Status == PaymentRecordStatus.Completed)).ToList();
         var lastPayment = payments.OrderBy(p => p.Id).LastOrDefault();
-        var itemsTotal = invoices.Sum(i => i.TotalAmount);
+        var mixedPayment = payments.Select(p => p.Method).Distinct().Skip(1).Any();
+        var itemsTotal = invoices.Sum(i => i.SubTotal);
+        var payable = invoices.Sum(i => i.TotalAmount);
         var paid = invoices.Sum(i => i.PaidAmount);
 
         var doctorName = reception.Doctor?.Employee is { } emp
             ? $"{emp.FirstName} {emp.LastName}"
             : reception.ServiceName ?? "خدمت درمانی";
 
+        if (reception.Doctor is null && reception.PerformedByEmployeeId is { } performerId)
+        {
+            var performer = await _unitOfWork.Repository<Employee>().QueryableNoTracking
+                .FirstOrDefaultAsync(e => e.Id == performerId, cancellationToken);
+            if (performer is not null) doctorName = $"{performer.FirstName} {performer.LastName}";
+        }
+
         return Result<ReceptionReceiptDto>.Success(new ReceptionReceiptDto(
             ReceptionId: reception.Id,
             ReceptionNumber: reception.ReceptionNumber,
-            InvoiceNumbers: string.Join("، ", invoices.Select(i => i.InvoiceNumber ?? i.Id.ToString())),
+            InvoiceNumbers: string.Join("، ", invoices.Select(i => i.InvoiceNumber ?? "—")),
             PatientName: reception.Patient is { } p ? $"{p.FirstName} {p.LastName}" : "—",
             NationalCode: reception.Patient?.NationalCode,
             Mobile: reception.Patient?.Mobile,
@@ -79,13 +91,15 @@ public class GetReceptionReceiptQueryHandler
             TimeText: reception.ReceptionDate.ToString("HH:mm"),
             Items: items,
             ItemsTotal: itemsTotal,
-            InsuranceShare: invoices.Sum(i => i.InsuranceDiscount),
-            PatientShare: Math.Max(0, itemsTotal - invoices.Sum(i => i.InsuranceDiscount)),
-            Payable: itemsTotal - invoices.Sum(i => i.InsuranceDiscount),
+            InsuranceShare: invoices.Sum(i => i.InsuranceDiscount + i.SupplementaryDiscount),
+            PatientShare: payable,
+            Payable: payable,
             Paid: paid,
-            PaymentMethod: lastPayment is null ? 1 : (int)lastPayment.Method,
-            ReferenceNumber: lastPayment?.ReferenceNumber,
-            CardNumber: lastPayment?.CardNumber));
+            PaymentMethod: mixedPayment ? 7 : lastPayment is null ? 0 : (int)lastPayment.Method,
+            ReferenceNumber: mixedPayment ? null : lastPayment?.ReferenceNumber,
+            CardNumber: mixedPayment ? null : lastPayment?.CardNumber,
+            Discount: invoices.Sum(i => i.DiscountAmount),
+            Tax: invoices.Sum(i => i.Tax)));
     }
 }
 

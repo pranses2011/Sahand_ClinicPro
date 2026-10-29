@@ -45,10 +45,13 @@ public class PrintTemplateReceiptTests
         var first = (OkObjectResult)await controller.Render("ReceptionReceipt", request, auth);
         JsonSerializer.SerializeToElement(first.Value).GetProperty("Data").GetProperty("useOriginalReceptionReceipt").GetBoolean().Should().BeTrue();
         await controller.SetDefault(html.Id);
+        var customPreview = (OkObjectResult)await controller.Preview(html.Id);
+        var customPreviewHtml = JsonSerializer.SerializeToElement(customPreview.Value).GetProperty("Data").GetProperty("html").GetString();
+        customPreviewHtml.Should().NotContain("__PRINT_DATE__");
         var second = (OkObjectResult)await controller.Render("ReceptionReceipt", request, auth);
         var data = JsonSerializer.SerializeToElement(second.Value).GetProperty("Data");
         data.GetProperty("templateId").GetInt64().Should().Be(html.Id);
-        data.GetProperty("html").GetString().Should().Contain("نام نمونه");
+        data.GetProperty("html").GetString().Should().Contain("نام نمونه").And.NotContain("__PRINT_DATE__");
         var invalid = new SavePrintTemplateDto("قبض غیرفعال", "ReceptionReceipt", null, "<div>متن قبض</div>", "A5", "Portrait", 12, null, false, null, false, true);
         (await controller.Create(invalid)).Should().BeOfType<BadRequestObjectResult>();
     }

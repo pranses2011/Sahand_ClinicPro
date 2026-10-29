@@ -62,7 +62,24 @@ public sealed record ReceptionReceipt(
     string? ReferenceNumber,
     string? CardNumber,
     // نام درمانگاه از سرور لایسنس (تنظیم ClinicInfo) — عنوان قبض؛ نه نام نرم‌افزار
-    string? ClinicName = null);
+    string? ClinicName = null,
+    string? ReceptionNumberText = null,
+    string? InvoiceNumbersText = null,
+    decimal Discount = 0,
+    decimal Tax = 0)
+{
+    /// <summary>شماره‌های ثبت‌شده بدون تبدیل و حذف پیشوندها.</summary>
+    public string DisplayReceptionNumber => ReceptionNumberText ?? QueueNumber.ToString();
+    /// <summary>شماره‌های کامل فاکتورهای مرتبط.</summary>
+    public string DisplayInvoiceNumbers => InvoiceNumbersText ?? InvoiceNumber.ToString();
+
+    /// <summary>عنوان واقعی روش پرداخت؛ صفر یعنی پرداختی ثبت نشده است.</summary>
+    public string PaymentMethodText => PaymentMethod switch
+    {
+        1 => "نقدی", 2 => "کارتخوان", 3 => "آنلاین", 4 => "چک",
+        5 => "انتقال بانکی", 6 => "بیمه", 7 => "چند روش پرداخت", _ => "ثبت نشده"
+    };
+}
 
 /// <summary>
 /// چاپ قبض پذیرش و پرداخت — چرخهٔ ۸۲ (گزارش مالک):
@@ -120,7 +137,7 @@ public static class ReceptionReceiptPrinter
             ? receiptPrinter
             : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;
 
-        return PrintFlow.Print(doc, $"قبض پذیرش {receipt.QueueNumber}", printerName,
+        return PrintFlow.Print(doc, $"قبض پذیرش {receipt.DisplayReceptionNumber}", printerName,
             ReceiptWidth, height);
     }
 
@@ -173,7 +190,7 @@ public static class ReceptionReceiptPrinter
             Margin = new Thickness(0, 3, 0, 5),
         };
         queue.Inlines.Add(new Run("شمارهٔ صف  ") { FontSize = 11, Foreground = Brush("#37474F") });
-        queue.Inlines.Add(new Run(Persian(r.QueueNumber.ToString()))
+        queue.Inlines.Add(new Run(Persian(r.DisplayReceptionNumber))
         {
             FontSize = 22,
             FontWeight = FontWeights.Bold,
@@ -219,6 +236,10 @@ public static class ReceptionReceiptPrinter
         totals.Columns.Add(new TableColumn { Width = new GridLength(134) });
         var totalsRows = new TableRowGroup();
         AddTotalRow(totalsRows, "جمع اقلام", Money.FormatWithUnit(r.ItemsTotal));
+        if (r.Discount > 0m)
+            AddTotalRow(totalsRows, "تخفیف", Money.FormatWithUnit(r.Discount));
+        if (r.Tax > 0m)
+            AddTotalRow(totalsRows, "مالیات", Money.FormatWithUnit(r.Tax));
         if (r.InsuranceShare > 0m)
             AddTotalRow(totalsRows, "سهم بیمه", Money.FormatWithUnit(r.InsuranceShare));
         if (r.PatientShare > 0m)
@@ -256,7 +277,7 @@ public static class ReceptionReceiptPrinter
 
         var method = new Paragraph { Margin = new Thickness(0, 1, 0, 1) };
         method.Inlines.Add(new Run("روش پرداخت: ") { FontWeight = FontWeights.Bold });
-        method.Inlines.Add(new Run(r.PaymentMethod == 2 ? "کارتخوان (POS)" : "نقدی"));
+        method.Inlines.Add(new Run(r.PaymentMethodText));
         doc.Blocks.Add(method);
 
         if (r.PaymentMethod == 2)
@@ -267,12 +288,12 @@ public static class ReceptionReceiptPrinter
                 doc.Blocks.Add(Line("کارت", $"**** {Persian(r.CardNumber!)}"));
         }
 
-        doc.Blocks.Add(Line("شمارهٔ فاکتور", Persian(r.InvoiceNumber.ToString())));
+        doc.Blocks.Add(Line("شمارهٔ فاکتور", Persian(r.DisplayInvoiceNumbers)));
         doc.Blocks.Add(Divider());
 
         // ─── پانوشت ───
-        doc.Blocks.Add(Center("از پرداخت شما سپاسگزاریم", 10.5, FontWeights.SemiBold, "#37474F"));
-        doc.Blocks.Add(Center("این قبض سند دریافت وجه است — آن را تا پایان مراجعه نگه دارید",
+        doc.Blocks.Add(Center("از مراجعه شما سپاسگزاریم", 10.5, FontWeights.SemiBold, "#37474F"));
+        doc.Blocks.Add(Center("این قبض را تا پایان مراجعه نگه دارید",
             8.5, FontWeights.Normal, "#78909C"));
         doc.Blocks.Add(Center($"چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)} — " +
                               PersianDateHelper.ToClockFa(IranClock.Now, withSeconds: false),

@@ -810,11 +810,11 @@ public partial class ReceptionsViewModel : ViewModelBase
         var vars = new Dictionary<string, object?>
         {
             ["clinic_name"] = receipt.ClinicName,
-            ["clinic_phone"] = string.Empty,
             ["patient_name"] = receipt.PatientName,
             ["patient_national_code"] = receipt.NationalCode ?? string.Empty,
             ["patient_mobile"] = receipt.Mobile ?? string.Empty,
-            ["queue_number"] = receipt.QueueNumber,
+            ["queue_number"] = receipt.DisplayReceptionNumber,
+            ["reception_code"] = receipt.DisplayReceptionNumber,
             ["reception_date"] = receipt.DateText,
             ["reception_time"] = receipt.TimeText,
             ["service_name"] = receipt.ServiceName ?? receipt.DoctorName,
@@ -828,15 +828,52 @@ public partial class ReceptionsViewModel : ViewModelBase
             ["items_total"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.ItemsTotal),
             ["insurance_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.InsuranceShare),
             ["patient_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.PatientShare),
+            ["payable"] = Money.FormatWithUnit(receipt.Payable),
+            ["amount"] = Money.FormatWithUnit(receipt.Payable),
+            ["discount"] = Money.FormatWithUnit(receipt.Discount),
+            ["tax"] = Money.FormatWithUnit(receipt.Tax),
             ["paid_amount"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.Paid),
-            ["payment_method"] = receipt.PaymentMethod == 2 ? "کارتخوان" : receipt.PaymentMethod == 1 ? "نقدی" : "—",
-            ["invoice_number"] = receipt.InvoiceNumber == 0 ? string.Empty : receipt.InvoiceNumber.ToString(),
+            ["payment_method"] = receipt.PaymentMethodText,
+            ["invoice_number"] = receipt.DisplayInvoiceNumbers,
             ["print_date"] = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)
         };
-        if (await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
-                $"قبض پذیرش — {receipt.PatientName}", () => ReceptionReceiptPrinter.Print(receipt)))
-            return;
-        ReceptionReceiptPrinter.Print(receipt);
+        var result = await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
+            $"قبض پذیرش — {receipt.PatientName}", () => ReceptionReceiptPrinter.Print(receipt));
+        if (result == TemplatePrintOutcome.Fallback)
+        {
+            _snackbar.Warning("قالب انتخابی دریافت نشد؛ قبض با طرح داخلی چاپ می‌شود.");
+            result = ReceptionReceiptPrinter.Print(receipt) ? TemplatePrintOutcome.Printed : TemplatePrintOutcome.NotPrinted;
+        }
+        if (result == TemplatePrintOutcome.Printed)
+            _snackbar.Success("قبض به چاپگر ارسال شد");
+        else if (result == TemplatePrintOutcome.NotPrinted)
+            _snackbar.Info("قبض به چاپگر ارسال نشد");
+        else
+            _snackbar.Info("پنجره چاپ قالب بسته شد؛ نتیجه دیالوگ چاپ مرورگر قابل تأیید نیست");
+    }
+
+    private async Task<ReceptionReceipt?> LoadReceiptAsync(long receptionId)
+    {
+        var response = await _api.GetAsync<ReceptionReceiptResponse>($"receptions/{receptionId}/receipt");
+        var d = response?.Data;
+        if (d is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت اطلاعات ذخیره‌شده قبض ناموفق بود");
+            return null;
+        }
+        return new ReceptionReceipt(
+            QueueNumber: d.ReceptionId, InvoiceNumber: 0,
+            PatientName: d.PatientName, NationalCode: d.NationalCode, Mobile: d.Mobile,
+            DoctorName: d.DoctorName, ServiceName: d.ServiceName, RoomName: d.RoomName,
+            InsuranceName: d.InsuranceName, DateText: d.DateText, TimeText: d.TimeText,
+            Items: d.Items.Select(i => new ReceptionReceiptItem(i.Name, i.Quantity, i.UnitPrice)).ToList(),
+            ItemsTotal: d.ItemsTotal, InsuranceShare: d.InsuranceShare, PatientShare: d.PatientShare,
+            Payable: d.Payable, Paid: d.Paid, PaymentMethod: d.PaymentMethod,
+            ReferenceNumber: d.ReferenceNumber, CardNumber: d.CardNumber,
+            ClinicName: await GetReceiptClinicNameAsync(),
+            ReceptionNumberText: string.IsNullOrWhiteSpace(d.ReceptionNumber) ? "—" : d.ReceptionNumber,
+            InvoiceNumbersText: string.IsNullOrWhiteSpace(d.InvoiceNumbers) ? "—" : d.InvoiceNumbers,
+            Discount: d.Discount, Tax: d.Tax);
     }
 
     [RelayCommand]
@@ -844,45 +881,15 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         row ??= SelectedReception;
         if (row is null) { _snackbar.Error("ابتدا یک پذیرش را از فهرست انتخاب کنید"); return; }
-        var response = await _api.GetAsync<ReceptionReceiptResponse>($"receptions/{row.Id}/receipt");
-        var d = response?.Data;
-        if (d is null)
+        try
         {
-            _snackbar.Error(_api.LastError ?? "دریافت اطلاعات قبض ناموفق بود");
-            return;
+            var receipt = await LoadReceiptAsync(row.Id);
+            if (receipt is not null) await PrintReceiptAsync(receipt);
         }
-        long queueNo = 0;
-        if (!string.IsNullOrWhiteSpace(d.ReceptionNumber))
-            long.TryParse(new string(d.ReceptionNumber.Where(char.IsDigit).ToArray()), out queueNo);
-        var receipt = new ReceptionReceipt(
-            QueueNumber: queueNo != 0 ? queueNo : d.ReceptionId,
-            InvoiceNumber: 0,
-            PatientName: d.PatientName,
-            NationalCode: d.NationalCode,
-            Mobile: d.Mobile,
-            DoctorName: d.DoctorName,
-            ServiceName: d.ServiceName,
-            RoomName: d.RoomName,
-            InsuranceName: d.InsuranceName,
-            DateText: d.DateText,
-            TimeText: d.TimeText,
-            Items: d.Items.Select(i => new ReceptionReceiptItem(i.Name, i.Quantity, i.UnitPrice)).ToList(),
-            ItemsTotal: d.ItemsTotal,
-            InsuranceShare: d.InsuranceShare,
-            PatientShare: d.PatientShare,
-            Payable: d.Payable,
-            Paid: d.Paid,
-            PaymentMethod: d.PaymentMethod,
-            ReferenceNumber: d.ReferenceNumber,
-            CardNumber: d.CardNumber,
-            ClinicName: await GetReceiptClinicNameAsync());
-        // شمارهٔ فاکتور در متن قبض از InvoiceNumbers می‌آید؛ برای سازگاری با
-        // سازندهٔ قبض، شمارهٔ نخست فاکتور به‌صورت عددی استخراج می‌شود
-        var firstInvoice = (d.InvoiceNumbers ?? string.Empty).Split('،')[0].Trim();
-        if (long.TryParse(new string(firstInvoice.Where(char.IsDigit).ToArray()), out var invNo) && invNo > 0)
-            receipt = receipt with { InvoiceNumber = invNo };
-        await PrintReceiptAsync(receipt);
-        _snackbar.Success($"قبض پذیرش {d.PatientName} دوباره چاپ شد");
+        catch (Exception ex)
+        {
+            _snackbar.Error($"چاپ قبض انجام نشد: {ex.Message}");
+        }
     }
 
     /// <summary>نمایش پذیرش‌های تاریخ شمسی انتخابی — تاریخچه برای چاپ مجدد قبض</summary>
@@ -1674,10 +1681,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             {
                 IsBusy = false;
                 var proceed = Views.AppDialog.Confirm("ثبت مصرف لوازم ناموفق",
-                    $"پذیرش با شماره صف {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
+                    $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
                 if (!proceed)
                 {
-                    _snackbar.Info($"پذیرش ثبت شد — شماره صف {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید)");
+                    _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید)");
                     await LoadAsync();
                     return;
                 }
@@ -1721,7 +1728,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             invoiceFailed = true;
             IsBusy = false;
             Views.AppDialog.Error("صدور فاکتور ناموفق",
-                $"پذیرش با شماره صف {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
+                $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
         }
 
         // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
@@ -1757,17 +1764,17 @@ public partial class ReceptionsViewModel : ViewModelBase
         // پیام پایانی صادقانه — وضعیت واقعی هر سه حلقه (پذیرش/فاکتور/پرداخت)
         // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
         if (invoiceFailed)
-            _snackbar.Info($"پذیرش ثبت شد — شماره صف {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
+            _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
         else if (paymentFailed)
-            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
+            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
         else if (consumablesSkipped)
-            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
+            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
         else if (consumeResult is not null)
-            _snackbar.Success($"پذیرش موفق — شماره صف {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
         else if (payment is not null)
-            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
         else
-            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش: {queueNo} (فاکتور صادر شد)");
 
         // ═══ چرخهٔ ۸۲ (گزارش مالک) — چاپ قبض پذیرش پس از پرداخت ═══
         // «بعد از پذیرش و پرداخت و انتخاب روش پرداخت و تأیید، قبضی چاپ نمیشه؛
@@ -1777,52 +1784,15 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چاپ از دروازهٔ PrintFlow می‌گذرد، پس تنظیم «پیش‌نمایش قبل از چاپ» هم
         // رعایت می‌شود. خطای چاپ نباید زنجیرهٔ ثبت‌شده را زیر سؤال ببرد، لذا در
         // try/catch جدا و با پیام ملایم اعلام می‌شود.
-        if (!invoiceFailed && !paymentFailed && payment is not null && invoice?.Data is { } invoiceNo)
+        if (!invoiceFailed && !paymentFailed && payment is not null && invoice?.Data is > 0)
         {
             try
             {
-                // اقلام قبض — همان اقلام فاکتور (خدمت/ویزیت + لوازم مصرفی با قیمت بچ)
-                var lines = new List<ReceptionReceiptItem>();
-                if (isServiceMode)
-                    foreach (var line in SelectedServices)
-                        lines.Add(new ReceptionReceiptItem(line.Service.Name, line.Quantity, line.Service.Price));
-                else
-                    lines.Add(new ReceptionReceiptItem($"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee));
-                foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
-                    lines.Add(new ReceptionReceiptItem($"لوازم مصرفی: {consumed.Name}",
-                        consumed.Quantity, consumed.UnitPrice));
-
-                var paidNow = PatientShare + (consumeResult?.TotalCost ?? 0m);
-                var invoiceTotal = lines.Sum(l => l.Total);
-                var now = IranClock.Now;
-
-                var receipt = new ReceptionReceipt(
-                    QueueNumber: queueNo ?? 0,
-                    InvoiceNumber: invoiceNo,
-                    PatientName: FoundPatient?.FullName ?? "—",
-                    NationalCode: FoundPatient?.NationalCode,
-                    Mobile: FoundPatient?.Mobile,
-                    DoctorName: isServiceMode
-                        ? (SelectedPerformer?.FullName ?? "—")
-                        : (SelectedDoctor?.Name ?? "—"),
-                    ServiceName: isServiceMode ? BuildServiceSummary() : null,
-                    RoomName: SelectedRoom?.DisplayName,
-                    InsuranceName: company?.Name ?? "آزاد (بدون بیمه)",
-                    DateText: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
-                        .ToShamsi(now),
-                    TimeText: now.ToString("HH:mm"),
-                    Items: lines,
-                    ItemsTotal: invoiceTotal,
-                    InsuranceShare: InsuranceShare,
-                    PatientShare: PatientShare,
-                    Payable: paidNow,
-                    Paid: paidNow,
-                    PaymentMethod: payment.Method,
-                    ReferenceNumber: payment.ReferenceNumber,
-                    CardNumber: payment.CardNumber,
-                    ClinicName: await GetReceiptClinicNameAsync());
-
-                await PrintReceiptAsync(receipt);
+                // چاپ اولیه و چاپ مجدد از یک منبع مالی ذخیره‌شده استفاده می‌کنند؛
+                // در صورت شکست دریافت، قبض حدسی یا دارای شناسه به جای شماره صادر نمی‌شود.
+                var receipt = await LoadReceiptAsync(reception.Data.Value);
+                if (receipt is not null) await PrintReceiptAsync(receipt);
+                else _snackbar.Warning("پذیرش و پرداخت ثبت شد؛ داده قبض دریافت نشد، از چاپ مجدد استفاده کنید.");
             }
             catch (Exception ex)
             {
@@ -2001,6 +1971,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         public decimal PatientShare { get; set; }
         public decimal Payable { get; set; }
         public decimal Paid { get; set; }
+        public decimal Discount { get; set; }
+        public decimal Tax { get; set; }
         public int PaymentMethod { get; set; }
         public string? ReferenceNumber { get; set; }
         public string? CardNumber { get; set; }

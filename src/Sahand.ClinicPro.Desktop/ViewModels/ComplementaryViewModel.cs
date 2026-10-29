@@ -457,7 +457,10 @@ public partial class ComplementaryViewModel : ViewModelBase
                 new TemplateVariable("مالی", "➕", "جمع جزء", "subtotal"),
                 new TemplateVariable("مالی", "🏷️", "تخفیف", "discount"),
                 new TemplateVariable("مالی", "🛡️", "سهم بیمه", "insurance_share"),
+                new TemplateVariable("مالی", "🏷️", "تخفیف", "discount"),
+                new TemplateVariable("مالی", "🧮", "مالیات", "tax"),
                 new TemplateVariable("مالی", "👛", "سهم بیمار", "patient_share"),
+                new TemplateVariable("مالی", "💰", "قابل پرداخت", "payable"),
                 new TemplateVariable("مالی", "💰", "قابل پرداخت", "total"),
                 new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
                 new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
@@ -534,6 +537,7 @@ public partial class ComplementaryViewModel : ViewModelBase
                 new TemplateVariable("مالی", "📄", "شماره فاکتور", "invoice_number"),
                 new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
                 new TemplateVariable("درمانگاه", "📞", "تلفن درمانگاه", "clinic_phone"),
+                new TemplateVariable("درمانگاه", "📍", "نشانی درمانگاه", "clinic_address"),
                 new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
             },
             ["MedicalCertificate"] = new[]

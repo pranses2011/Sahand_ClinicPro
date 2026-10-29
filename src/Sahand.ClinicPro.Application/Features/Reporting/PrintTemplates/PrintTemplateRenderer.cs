@@ -207,12 +207,17 @@ public static class PrintTemplateRenderer
         },
         "ReceptionReceipt" => new Dictionary<string, object?>
         {
-            ["patient_name"] = "زهرا موسوی",
-            ["reception_date"] = "۱۴۰۵/۰۷/۱۴",
-            ["reception_code"] = "REC-3344",
-            ["service_name"] = "ویزیت متخصص داخلی",
-            ["amount"] = "۴۵۰٬۰۰۰ ریال",
-            ["payment_method"] = "نقدی"
+            ["patient_name"] = "بیمار نمونه",
+            ["patient_national_code"] = "۰۰۰۰۰۰۰۰۰۰", ["patient_mobile"] = "۰۹۰۰۰۰۰۰۰۰۰",
+            ["reception_date"] = "۱۴۰۵/۰۷/۱۴", ["reception_time"] = "۱۰:۳۰",
+            ["reception_code"] = "RCP-3344", ["queue_number"] = "RCP-3344",
+            ["service_name"] = "ویزیت نمونه", ["performer_name"] = "پزشک نمونه",
+            ["room_name"] = "اتاق نمونه", ["insurance_name"] = "بیمه نمونه",
+            ["items_html"] = "<table class='pt'><tr><th>شرح</th><th>تعداد</th><th>مبلغ</th></tr><tr><td>ویزیت نمونه</td><td>۱</td><td>۵۰۰٬۰۰۰ ریال</td></tr></table>",
+            ["items_total"] = "۵۰۰٬۰۰۰ ریال", ["discount"] = "۰ ریال", ["tax"] = "۰ ریال",
+            ["insurance_share"] = "۵۰٬۰۰۰ ریال", ["patient_share"] = "۴۵۰٬۰۰۰ ریال",
+            ["amount"] = "۴۵۰٬۰۰۰ ریال", ["payable"] = "۴۵۰٬۰۰۰ ریال", ["paid_amount"] = "۴۵۰٬۰۰۰ ریال",
+            ["invoice_number"] = "INV-123", ["payment_method"] = "نقدی"
         },
         "MedicalCertificate" => new Dictionary<string, object?>
         {
@@ -258,7 +263,7 @@ public static class PrintTemplateRenderer
         ["LabResult"] = new[] { "patient_name", "order_number", "result_date", "results_html", "verified_by" },
         ["ImagingOrder"] = new[] { "patient_name", "modality", "order_number", "order_date", "clinical_info" },
         ["AppointmentTicket"] = new[] { "patient_name", "doctor_name", "appointment_date", "appointment_time", "queue_number", "tracking_code" },
-        ["ReceptionReceipt"] = new[] { "patient_name", "reception_date", "reception_code", "service_name", "amount", "payment_method" },
+        ["ReceptionReceipt"] = new[] { "patient_name", "patient_national_code", "patient_mobile", "queue_number", "reception_code", "reception_date", "reception_time", "service_name", "performer_name", "room_name", "insurance_name", "items_html", "items_total", "insurance_share", "discount", "tax", "patient_share", "payable", "amount", "paid_amount", "payment_method", "invoice_number", "clinic_name", "clinic_phone", "clinic_address", "print_date" },
         ["MedicalCertificate"] = new[] { "patient_name", "doctor_name", "issue_date", "content", "duration" },
         ["PayrollSlip"] = new[] { "employee_name", "period", "base_salary", "overtime_pay", "insurance", "tax", "net_pay" }
     };

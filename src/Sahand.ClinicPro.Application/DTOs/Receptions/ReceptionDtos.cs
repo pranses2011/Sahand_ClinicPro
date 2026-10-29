@@ -56,7 +56,9 @@ public record ReceptionReceiptDto(
     decimal Paid,
     int PaymentMethod,
     string? ReferenceNumber,
-    string? CardNumber);
+    string? CardNumber,
+    decimal Discount = 0,
+    decimal Tax = 0);
 
 /// <summary>درخواست ثبت پذیرش</summary>
 public record CreateReceptionDto(
