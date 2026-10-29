@@ -90,3 +90,31 @@ public sealed class PaymentRecoveryStore : IPaymentRecoveryStore
         File.Delete(PathFor(payment.Server, payment.InvoiceId));
     }
 }
+
+/// <summary>رزرو مشترک پرداخت پذیرش یا فاکتور پیش از ارسال به سرور.</summary>
+public sealed class PaymentAttempt
+{
+    private readonly IApiClient _api;
+    private readonly IPaymentRecoveryStore? _store;
+    public PendingPayment Request { get; }
+
+    private PaymentAttempt(IApiClient api, IPaymentRecoveryStore? store, PendingPayment request)
+    { _api = api; _store = store; Request = request; }
+
+    public static PaymentAttempt Reserve(IApiClient api, long invoiceId, long patientId, decimal amount, int method,
+        string? referenceNumber, string? cardNumber, IPaymentRecoveryStore? store = null)
+    {
+        var client = api as ApiClient;
+        store ??= client is null ? null : new PaymentRecoveryStore();
+        var request = new PendingPayment(invoiceId, patientId, amount, method, referenceNumber, cardNumber,
+            Guid.NewGuid(), client?.PaymentRecoveryServer ?? "test-api", client?.BranchId);
+        store?.Reserve(request);
+        return new PaymentAttempt(api, store, request);
+    }
+
+    public bool ContextMatches => _api is not ApiClient client ||
+        (client.PaymentRecoveryServer == Request.Server && client.BranchId == Request.BranchId);
+
+    /// <summary>فقط پس از تأیید موفقیت پرداخت سرور فراخوانی شود.</summary>
+    public void Clear() => _store?.Clear(Request);
+}
