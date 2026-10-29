@@ -156,4 +156,27 @@ public class DentistryViewModelTests
         vm.DentalPlan.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Print_snapshot_contains_both_dentitions_without_assuming_unrecorded_teeth_and_is_independent()
+    {
+        var vm = new DentistryViewModel(ApiWithPatient(), new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        vm.CreatePrintSnapshot().Should().BeNull();
+        await vm.SearchDentalPatientCommand.ExecuteAsync(null);
+        vm.UpperTeeth.First(t => t.Number == 11).Condition = 2;
+        vm.IsChildChart = true;
+        vm.UpperTeeth.First(t => t.Number == 51).Condition = 0;
+        vm.DentalPlan.Add(new DentalPlanRow(51, "ترمیم", 456, "پیشنهاد", "#FFF"));
+        var snapshot = vm.CreatePrintSnapshot()!;
+        snapshot.PatientId.Should().Be(1);
+        snapshot.Teeth.Should().HaveCount(2).And.Contain(11, 2).And.Contain(51, 0);
+        var lines = Sahand.ClinicPro.Desktop.Services.DentalPrintService.ChartLines(snapshot);
+        lines.Should().ContainSingle(x => x.Contains("۱۱") && x.Contains("ترمیم‌شده"));
+        lines.Should().ContainSingle(x => x.Contains("۵۱") && x.Contains("سالم"));
+        lines.Should().NotContain(x => x.Contains("۱۲"));
+        vm.DentalPlan.Clear();
+        vm.UpperTeeth.First(t => t.Number == 51).Condition = 1;
+        snapshot.Plan.Should().ContainSingle().Which.Price.Should().Be(456);
+        snapshot.Teeth[51].Should().Be(0);
+    }
+
 }

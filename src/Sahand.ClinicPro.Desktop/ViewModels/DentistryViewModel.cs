@@ -218,6 +218,21 @@ public partial class DentistryViewModel : ViewModelBase
         }
     }
 
+    /// <summary>عکس مستقل از وضعیت‌های ثبت‌شدهٔ هر دو چارت برای چاپ؛ دندان نامعلوم سالم فرض نمی‌شود.</summary>
+    public DentalPrintSnapshot? CreatePrintSnapshot()
+    {
+        if (!IsDentalChartEnabled || DentalPatient is not { } patient) return null;
+        var teeth = new Dictionary<string, int>(_toothState);
+        foreach (var tooth in UpperTeeth.Concat(LowerTeeth))
+        {
+            var key = tooth.Number.ToString();
+            if (tooth.Condition >= 0) teeth[key] = tooth.Condition;
+            else teeth.Remove(key);
+        }
+        return new DentalPrintSnapshot(patient.Id, patient.FullName, patient.NationalCode,
+            teeth.ToDictionary(x => int.Parse(x.Key), x => x.Value), DentalPlan.ToArray());
+    }
+
     /* ── بیمار و ماندگاری چارت (چرخهٔ ۲۸) ── */
 
     /// <summary>عبارت جستجوی بیمار دندانپزشکی</summary>

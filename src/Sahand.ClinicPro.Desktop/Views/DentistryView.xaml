@@ -20,6 +20,8 @@
 
         <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
             <DockPanel>
+                <Button DockPanel.Dock="Left" Click="PrintDentalChart_Click" IsEnabled="{Binding IsDentalChartEnabled}"
+                        Margin="8,0,0,0" Padding="14,7" Content="چاپ چارت" />
                 <Button DockPanel.Dock="Left" Command="{Binding SaveDentalChartCommand}" IsEnabled="{Binding IsDentalChartEnabled}"
                         Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره چارت" />
                 <StackPanel Orientation="Horizontal">
@@ -516,7 +518,10 @@
                                      وضعیت هر ۳۲ دندان + ردیف‌های طرح، در طرح درمان بیمارِ
                                      جستجوشده ذخیره می‌شود و دفعهٔ بعد با جستجوی همان بیمار
                                      بازیابی می‌گردد -->
-                                <Button Grid.Row="2" Command="{Binding SaveDentalChartCommand}" Margin="0,8,0,0"
+                                <StackPanel Grid.Row="2">
+                                <Button Click="PrintDentalPlan_Click" IsEnabled="{Binding IsDentalChartEnabled}" Margin="0,8,0,0"
+                                        Content="چاپ پیش‌نویس طرح درمان" ToolTip="چاپ از مقادیر فرم است و ذخیره یا رزرو نوبت انجام نمی‌دهد" />
+                                <Button Command="{Binding SaveDentalChartCommand}" Margin="0,8,0,0"
                                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
                                         HorizontalAlignment="Stretch"
                                         ToolTip="وضعیت همهٔ دندان‌ها و ردیف‌های طرح درمان در پروندهٔ بیمار ذخیره می‌شود">
@@ -525,6 +530,7 @@
                                         <TextBlock Text="💾 ذخیرهٔ چارت و طرح درمان" Margin="8,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
+                                </StackPanel>
                             </Grid>
                         </Grid>
         </ScrollViewer>
