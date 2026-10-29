@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Models;
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
@@ -28,14 +30,17 @@ public class PaymentsController : ApiBaseController
     [HasPermission("payments.create")]
     public async Task<IActionResult> Record([FromBody] RecordPaymentDto dto)
     {
-        var result = await _mediator.Send(new RecordPaymentCommand(dto));
-        if (result.IsSuccess)
-            // چرخهٔ سی‌امین — نام اکشن «GetAll» در این کنترلر وجود ندارد؛
-            // در نتیجه هر ثبتِ موفقِ پرداخت پس از ذخیره با «No route matches
-            // the supplied values» فرو می‌ریخت و کلاینت ۵۰۰ می‌گرفت. هدف
-            // طبیعی، فهرست تراکنش‌های امروز همان صندوق است.
-            return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new RecordPaymentCommand(dto));
+            if (result.IsSuccess)
+                return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
+            return ToResponse(result);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("فاکتور همزمان تغییر کرد؛ پیش از تلاش مجدد وضعیت پرداخت و مانده را بررسی کنید.", 409));
+        }
     }
 
     /// <summary>خلاصه صندوق امروز — کارت‌های آماری فرم ۱۴</summary>

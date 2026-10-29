@@ -118,4 +118,21 @@ public class BillingPatientSafetyTests
         (await db.Set<Invoice>().IgnoreQueryFilters().CountAsync()).Should().Be(1);
     }
 
+    [Fact]
+    public async Task Payment_rejects_fractional_or_inconsistent_balance_before_writing()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "PAY-BALANCE", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, PaidAmount = 20, RemainingAmount = 90, Status = InvoiceStatus.Issued };
+        db.Add(invoice); await db.SaveChangesAsync();
+        var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), Mock.Of<ICurrentUserService>(), NullLogger<RecordPaymentCommandHandler>.Instance);
+        (await handler.Handle(new(new RecordPaymentDto(invoice.Id, patient.Id, 1.5m, PaymentMethod.Cash)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new RecordPaymentDto(invoice.Id, patient.Id, 10m, PaymentMethod.Cash)), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(new RecordPaymentDto(null, patient.Id, 10m, PaymentMethod.Cash)), default)).IsSuccess.Should().BeFalse();
+        db.Set<Payment>().Should().BeEmpty();
+    }
+
 }

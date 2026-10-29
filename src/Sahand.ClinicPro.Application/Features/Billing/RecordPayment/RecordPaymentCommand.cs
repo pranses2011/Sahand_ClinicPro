@@ -59,6 +59,9 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
     public async Task<Result<long>> Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.InvoiceId is not > 0 || dto.Amount <= 0 || dto.Amount > 999999999999999999m ||
+            decimal.Truncate(dto.Amount) != dto.Amount || dto.ReferenceNumber?.Length > 50 || dto.CardNumber?.Length > 20)
+            return Result<long>.Failure(new Error("PAYMENT.INVALID", "شناسه فاکتور، مبلغ صحیح ریالی یا اطلاعات پرداخت نامعتبر است."));
 
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
         if (patient is null || patient.IsDeleted)
@@ -74,6 +77,10 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
             return Result<long>.Failure(new Error("PAYMENT.INVOICE_STATUS", "ثبت پرداخت برای فاکتور پیش‌نویس، ابطال‌شده یا برگشت‌خورده مجاز نیست."));
         if (!Enum.IsDefined(dto.Method))
             return Result<long>.Failure(new Error("PAYMENT.METHOD", "روش پرداخت معتبر نیست."));
+
+        if (invoice.TotalAmount < 0 || invoice.PaidAmount < 0 || invoice.RemainingAmount < 0 ||
+            invoice.RemainingAmount != invoice.TotalAmount - invoice.PaidAmount)
+            return Result<long>.Failure(new Error("PAYMENT.INVOICE_BALANCE", "مانده فاکتور ناسازگار است؛ پیش از ثبت پرداخت بررسی مالی لازم است."));
 
         if (invoice.RemainingAmount < dto.Amount)
             return Result<long>.Failure(new Error("OVERPAYMENT",
