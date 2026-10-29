@@ -100,4 +100,24 @@ public class InvoiceFormSafetyTests
         body.GetProperty("ExpectedQuote").GetString().Should().Be("TEST-QUOTE");
     }
 
+    [Fact]
+    public async Task Too_long_payment_reference_blocks_invoice_before_creation()
+    {
+        var api = new FakeApiClient();
+        var vm = Create(api);
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
+        vm.ReferenceNumber = new string('x', 51);
+        await vm.SaveAndPrintCommand.ExecuteAsync(null);
+        vm.ErrorMessage.Should().Contain("نامعتبر");
+        api.Calls.Should().NotContain(x => x.Endpoint == "invoices");
+    }
+
+    [Fact]
+    public void Reception_payment_rejects_reference_longer_than_server_limit()
+    {
+        var vm = new ReceptionPayViewModel("100") { MethodIndex = 1, ReferenceNumber = new string('x', 51) };
+        vm.ConfirmCommand.Execute(null);
+        vm.Result.Should().BeNull();
+        vm.ErrorMessage.Should().Contain("۵۰");
+    }
 }
