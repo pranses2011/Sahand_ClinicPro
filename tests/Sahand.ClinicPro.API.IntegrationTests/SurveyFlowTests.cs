@@ -550,6 +550,28 @@ public class SurveyFlowTests
         rows.Data.Single(x => x.Id == id).IsActive.Should().BeFalse();
     }
 
+
+    [Fact]
+    public async Task Delete_requires_the_observed_version_and_keeps_response_rows()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "حذف امن" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var old = await GetEditVersion(client, id);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{id}/responses", new { rating = 4 }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = old, desiredActive = false }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.DeleteAsync($"/api/v1/surveys/{id}?editVersion={old}")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var current = await GetEditVersion(client, id);
+        (await client.DeleteAsync($"/api/v1/surveys/{id}?editVersion={current}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var stored = await db.Surveys.IgnoreQueryFilters().SingleAsync(x => x.Id == id);
+        stored.IsDeleted.Should().BeTrue();
+        (await db.SurveyResponses.IgnoreQueryFilters().CountAsync(x => x.SurveyId == id)).Should().Be(1);
+    }
+
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);
 
     private sealed record LoginPacket(bool IsSuccess, LoginData Data);

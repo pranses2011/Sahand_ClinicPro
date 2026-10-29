@@ -131,18 +131,22 @@ public class SurveysController : ApiBaseController
     /// </summary>
     [HttpDelete("{id:long}")]
     [HasPermission("surveys.manage")]
-    public async Task<IActionResult> DeleteSurvey(long id)
+    public async Task<IActionResult> DeleteSurvey(long id, [FromQuery] string? editVersion)
     {
         var survey = await _unitOfWork.Repository<Survey>().QueryableTracking
             .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted);
         if (survey is null)
             return BadRequest(ApiResponse<object>.Failure("نظرسنجی یافت نشد"));
 
+        if (string.IsNullOrWhiteSpace(editVersion) || editVersion != SurveyEditVersion.Create(survey))
+            return Conflict(ApiResponse<object>.Failure("نظرسنجی تغییر کرده است؛ پیش از حذف فهرست را تازه‌سازی کنید."));
         // حذف نرم — رکورد و پاسخ‌ها در دیتابیس می‌مانند ولی از فهرست‌ها کنار می‌روند
         survey.IsDeleted = true;
         survey.IsActive = false;
         survey.UpdatedAt = DateTime.UtcNow;
-        await _unitOfWork.SaveEntitiesAsync();
+        try { await _unitOfWork.SaveEntitiesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        { return Conflict(ApiResponse<object>.Failure("نظرسنجی همزمان تغییر کرد؛ پیش از حذف فهرست را تازه‌سازی کنید.")); }
         return Ok(ApiResponse<object>.SuccessMessage($"نظرسنجی «{survey.Title}» حذف شد"));
     }
 

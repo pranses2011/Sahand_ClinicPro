@@ -1039,15 +1039,18 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         row ??= SelectedSurvey;
         if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+        if (IsBusy) return;
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
 
         var confirmed = Views.AppDialog.Confirm(
             "حذف نظرسنجی",
-            $"نظرسنجی «{row.Title}» حذف شود؟\nپاسخ‌های ثبت‌شده در دیتابیس حفظ می‌شوند.",
+            $"نظرسنجی «{row.Title}» حذف شود؟\nپاسخ‌ها در دیتابیس باقی می‌مانند، اما این نظرسنجی و نتایج آن از برنامه خارج می‌شوند و بازیابی از این صفحه ممکن نیست.",
             Views.AppDialogIcon.Warning);
         if (confirmed != true) return;
 
         IsBusy = true;
-        var ok = await _api.DeleteAsync($"surveys/{row.Id}");
+        var ok = await _api.DeleteAsync($"surveys/{row.Id}?editVersion={Uri.EscapeDataString(row.EditVersion)}");
         IsBusy = false;
         if (ok) { _snackbar.Success("نظرسنجی حذف شد"); await LoadSurveysAsync(); }
         else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
