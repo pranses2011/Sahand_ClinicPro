@@ -125,7 +125,7 @@ public class VisitEditSafetyTests
         var snack = new FakeSnackbar();
         var vm = new VisitEditViewModel(api, snack, 7, 8);
         await vm.SendToImagingCommand.ExecuteAsync(null);
-        vm.SendToPhysioCommand.Execute(null);
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
         api.Calls.Should().NotContain(c => c.Endpoint == "imaging/orders" || c.Endpoint == "physiotherapy/sessions");
         vm.StopTimers();
     }

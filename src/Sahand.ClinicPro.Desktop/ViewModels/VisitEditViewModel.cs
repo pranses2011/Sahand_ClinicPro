@@ -737,10 +737,46 @@ public partial class VisitEditViewModel : ObservableObject
     [ObservableProperty]
     private string? _physioReferralNote;
 
-    /// <summary>ارجاع مستقل هنوز در سرور پشتیبانی نمی‌شود؛ جلسه ساختگی ثبت نمی‌کنیم.</summary>
+    private Sahand.ClinicPro.Application.Features.Paraclinical.CreatePhysiotherapyReferralCommand? _pendingPhysioReferral;
+    public bool CanEditPhysioReferral => _pendingPhysioReferral is null && !IsBusy;
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditPhysioReferral));
+
+    /// <summary>ارسال ارجاع واقعی مستقل از جلسات؛ تلاش مجدد همان شناسه را استفاده می‌کند.</summary>
     [RelayCommand]
-    private void SendToPhysio() => _snackbar.Error(
-        "ثبت ارجاع مستقل فیزیوتراپی هنوز پشتیبانی نمی‌شود؛ از بخش فیزیوتراپی برای ثبت جلسه واقعی استفاده کنید.");
+    private async Task SendToPhysioAsync()
+    {
+        if (IsBusy) return;
+        if (_pendingPhysioReferral is null)
+        {
+            var note = PhysioReferralNote?.Trim();
+            if (string.IsNullOrWhiteSpace(note) || note.Length > 2000)
+            { _snackbar.Error("شرح ارجاع را با حداکثر ۲۰۰۰ نویسه وارد کنید."); return; }
+            if (!await SaveCoreAsync(silent: false) || _visitId is null) return;
+            _pendingPhysioReferral = new(Guid.NewGuid(), _visitId.Value, _patientId, _doctorId, note);
+            OnPropertyChanged(nameof(CanEditPhysioReferral));
+        }
+        IsBusy = true;
+        try
+        {
+            var response = await _api.PostAsync<PhysioReferralSaveResponse>("physiotherapy/referrals", _pendingPhysioReferral);
+            if (response?.Data is not > 0)
+            {
+                _snackbar.Error("نتیجه ارجاع نامعلوم است؛ با همین دکمه دوباره تلاش کنید یا فهرست ارجاعات را بررسی کنید. " + _api.LastError);
+                return;
+            }
+            _pendingPhysioReferral = null;
+            PhysioReferralNote = null;
+            OnPropertyChanged(nameof(CanEditPhysioReferral));
+            _snackbar.Success("ارجاع مستقل فیزیوتراپی ثبت شد؛ جلسه درمان ثبت نشده است.");
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("نتیجه ارجاع نامعلوم است؛ با همین دکمه دوباره تلاش کنید یا فهرست ارجاعات را بررسی کنید.");
+        }
+        finally { IsBusy = false; }
+    }
+
+    public sealed class PhysioReferralSaveResponse { public long? Data { get; set; } }
 
     /* ─── تب ۵: گشودن نسخه‌نویسی با زمینهٔ ویزیت ─── */
 
