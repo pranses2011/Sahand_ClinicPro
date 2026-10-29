@@ -75,4 +75,20 @@ public class PhysiotherapyViewModelTests
         vm.IsPhysioSessionEnabled.Should().BeTrue();
         vm.PhysioNotes.Should().Be("یادداشت فعلی");
     }
+    [Fact]
+    public async Task Explicit_zero_pain_on_body_map_is_kept_in_session_snapshot()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.SelectZone("زانو راست");
+        vm.SetZonePainCommand.Execute(0);
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("painScore").GetInt32().Should().Be(0);
+        using var note = JsonDocument.Parse(body.GetProperty("progressNote").GetString()!);
+        note.RootElement.GetProperty("bodyMap").GetProperty("زانو راست").GetInt32().Should().Be(0);
+        note.RootElement.GetProperty("bodyMap").TryGetProperty("زانو چپ", out _).Should().BeFalse();
+    }
+
 }

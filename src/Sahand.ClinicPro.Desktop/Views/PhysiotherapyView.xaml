@@ -234,9 +234,9 @@
                                 <ColumnDefinition Width="*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="70" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="شاخص / تست استاندارد" FontWeight="Bold" FontSize="11.5" />
-                            <TextBlock Grid.Column="1" Text="شروع دوره" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="1" Text="اولین مقدار موجود" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="2" Text="امروز" FontWeight="Bold" FontSize="11.5" />
-                            <TextBlock Grid.Column="3" Text="مقایسه (خاکستری: شروع — سبزآبی: امروز)" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="3" Text="مقایسه (خاکستری: مقدار نخست — سبزآبی: امروز)" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="4" Text="بهبود" FontWeight="Bold" FontSize="11.5" />
                         </Grid>
                         <ItemsControl ItemsSource="{Binding Assessments}">

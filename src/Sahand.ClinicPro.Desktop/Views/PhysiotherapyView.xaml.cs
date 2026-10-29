@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Sahand.ClinicPro.Desktop.Helpers;
+using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
@@ -120,12 +121,12 @@ public partial class PhysiotherapyView : UserControl
         if (_vm.IsFemale != _builtFemale) { BuildBodyMap(); return; }
         foreach (var (zone, rect) in _zoneRects)
         {
-            var pain = _vm.ZonePain.TryGetValue(zone, out var v) ? v : 0;
+            var measured = _vm.ZonePain.TryGetValue(zone, out var pain);
             var selected = zone == _vm.SelectedZone;
-            if (pain <= 0 && !selected) { rect.Visibility = Visibility.Collapsed; continue; }
+            if (!measured && !selected) { rect.Visibility = Visibility.Collapsed; continue; }
             rect.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(
-                pain > 0 ? (pain <= 2 ? "#66BB6A" : pain <= 5 ? "#FFA726" : "#EF5350") : "#00897B"));
-            rect.Opacity = pain > 0 ? 0.60 : 0.55;
+                measured ? (pain <= 2 ? "#66BB6A" : pain <= 5 ? "#FFA726" : "#EF5350") : "#00897B"));
+            rect.Opacity = measured ? 0.60 : 0.55;
             rect.Visibility = Visibility.Visible;
         }
     }
@@ -146,8 +147,10 @@ public partial class PhysiotherapyView : UserControl
     private void PrintHomeProgram_Click(object sender, RoutedEventArgs e)
     {
         if (_vm is null) return;
-        var dialog = new PrintDialog();
-        if (dialog.ShowDialog() != true) return;
+        if (!_vm.IsPhysioSessionEnabled || _vm.PhysioPatient is null)
+        { AppDialog.Error("چاپ تمرین خانگی", "ابتدا بیمار و سابقهٔ او را بارگذاری کنید."); return; }
+        if (string.IsNullOrWhiteSpace(_vm.HomeProgram))
+        { AppDialog.Error("چاپ تمرین خانگی", "ابتدا متن برنامهٔ تمرین خانگی را وارد کنید."); return; }
         var doc = new FlowDocument
         {
             PagePadding = new Thickness(48),
@@ -161,6 +164,6 @@ public partial class PhysiotherapyView : UserControl
         doc.Blocks.Add(new Paragraph(new Run(_vm.HomeProgram ?? string.Empty)) { FontSize = 13 });
         doc.Blocks.Add(new Paragraph(new Run("لطفاً تمرین‌ها را روزانه طبق برنامه انجام دهید و در صورت تشدید درد با درمانگاه تماس بگیرید."))
         { FontSize = 11 });
-        dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, "تمرین خانگی فیزیوتراپی");
+        PrintFlow.Print(doc, "تمرین خانگی فیزیوتراپی");
     }
 }

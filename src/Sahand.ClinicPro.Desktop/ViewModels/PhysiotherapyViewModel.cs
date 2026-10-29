@@ -345,7 +345,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             $"درد (VAS): از {pain.BaseValue?.ToString() ?? "ثبت نشده"} به {pain.NowValue?.ToString() ?? "ثبت نشده"} ({pain.ImprovementText} بهبود)" + Environment.NewLine +
             $"ناتوانی Oswestry: از {osw.BaseValue?.ToString() ?? "ثبت نشده"} به {osw.NowValue?.ToString() ?? "ثبت نشده"} ({osw.ImprovementText} بهبود)" + Environment.NewLine +
             $"خم‌شدن کمر: از {flex.BaseValue?.ToString() ?? "ثبت نشده"} به {flex.NowValue?.ToString() ?? "ثبت نشده"} ({flex.ImprovementText} بهبود)" + Environment.NewLine +
-            $"میانگین بهبود دوره: {TotalImprovementText}" + Environment.NewLine +
+            $"میانگین تغییر شاخص‌های موجود در حداکثر ۲۰ جلسهٔ اخیر: {TotalImprovementText}" + Environment.NewLine +
             "این گزارش نیازمند بررسی و تأیید درمانگر است.";
     }
 
@@ -516,7 +516,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
 
         var details = new
         {
-            bodyMap = ZonePain.Where(z => z.Value > 0).ToDictionary(z => z.Key, z => z.Value),
+            bodyMap = ZonePain.ToDictionary(z => z.Key, z => z.Value),
             redFlags = RedFlags.Where(f => f.IsChecked).Select(f => f.Text).ToArray(),
             assessments = Assessments.Select(a => new { name = a.Name, @base = a.BaseValue, now = a.NowValue }).ToArray(),
             flexion = Assessments[2].NowValue,
