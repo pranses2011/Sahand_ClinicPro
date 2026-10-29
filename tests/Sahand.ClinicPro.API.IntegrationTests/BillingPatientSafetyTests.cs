@@ -241,4 +241,21 @@ public class BillingPatientSafetyTests
         db.Set<Reception>().Should().BeEmpty();
         patient.LastVisitDate.Should().BeNull();
     }
+    [Fact]
+    public async Task Invoice_search_prioritizes_exact_id_before_similar_numbers_and_paging()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "SEARCH-RANK", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000005" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var target = new Invoice { PatientId = patient.Id, InvoiceNumber = "UNIQUE", InvoiceDate = new DateTime(2020, 1, 1) };
+        db.Add(target); await db.SaveChangesAsync();
+        for (var n = 0; n < 20; n++) db.Add(new Invoice { PatientId = patient.Id, InvoiceNumber = $"INV-{target.Id}-{n}", InvoiceDate = new DateTime(2025, 1, 1) });
+        await db.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQueryHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var page = new Sahand.ClinicPro.Application.Common.Models.PagedRequest { PageNumber = 1, PageSize = 15, Search = target.Id.ToString() };
+        var result = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
+        result.Value.Data!.First().Id.Should().Be(target.Id);
+    }
 }
