@@ -256,4 +256,22 @@ public class ReceptionsViewModelTests
         ReceptionsViewModel.CanAutomaticallyPay(detail, 9, 7, 100m).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Search_result_is_discarded_after_user_changes_search_text()
+    {
+        var api = MakeApi();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["patients/search?term=old"] = pending.Task;
+        var vm = MakeVm(api);
+        vm.SmartSearch = "old";
+        var search = vm.SmartSearchCommand.ExecuteAsync(null);
+        vm.IsSearchingPatient.Should().BeTrue();
+        vm.SmartSearch = "new";
+        pending.SetResult(new { data = new[] { new { id = 7, firstName = "بیمار", lastName = "قدیمی", nationalCode = "", mobile = "" } } });
+        await search;
+        vm.FoundPatient.Should().BeNull();
+        vm.PatientResults.Should().BeEmpty();
+        vm.IsSearchingPatient.Should().BeFalse();
+    }
+
 }

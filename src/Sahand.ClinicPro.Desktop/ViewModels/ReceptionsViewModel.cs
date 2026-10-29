@@ -44,6 +44,18 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>عبارت جستجو — نام/نام‌خانوادگی/کد ملی/کد پیگیری APT/موبایل</summary>
     [ObservableProperty]
     private string _smartSearch = string.Empty;
+    private int _patientSearchVersion;
+    partial void OnSmartSearchChanged(string value)
+    {
+        _patientSearchVersion++;
+        FoundPatient = null;
+        FoundAppointmentInfo = null;
+        SelectedSearchResult = null;
+        PatientResults = new ObservableCollection<QuickPatient>();
+    }
+
+    [ObservableProperty]
+    private bool _isSearchingPatient;
 
     /// <summary>بیمار یافته‌شده</summary>
     [ObservableProperty]
@@ -946,70 +958,53 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SmartSearchAsync()
     {
+        if (IsSubmitting || IsCreatingUnidentifiedPatient || IsSearchingPatient) return;
         var term = SmartSearch.Trim();
         if (term.Length < 2) { _snackbar.Error("بخشی از نام، کد ملی، موبایل یا کد پیگیری نوبت را وارد کنید"); return; }
-
-        IsBusy = true;
+        var version = ++_patientSearchVersion;
+        IsSearchingPatient = true;
         FoundPatient = null;
         FoundAppointmentInfo = null;
-        Inquiry = null;
         SelectedSearchResult = null;
-
-        if (term.StartsWith("APT", StringComparison.OrdinalIgnoreCase))
+        PatientResults = new ObservableCollection<QuickPatient>();
+        try
         {
-            // جستجو با کد پیگیری نوبت
-            var appts = await _api.PostAsync<AppointmentsViewModel.SearchResponse>("appointments/search", new
+            if (term.StartsWith("APT", StringComparison.OrdinalIgnoreCase))
             {
-                search = term, pageNumber = 1, pageSize = 5
-            });
-            var appt = appts?.Data?.FirstOrDefault();
-            if (appt is null)
-            {
-                IsBusy = false;
-                _snackbar.Error("نوبتی با این کد پیگیری یافت نشد");
-                return;
+                var appts = await _api.PostAsync<AppointmentsViewModel.SearchResponse>("appointments/search", new
+                { search = term, pageNumber = 1, pageSize = 5 });
+                if (version != _patientSearchVersion) return;
+                var matches = appts?.Data?.Where(a => string.Equals(a.AppointmentCode, term, StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+                if (matches is null || matches.Count != 1)
+                { _snackbar.Error("نوبت یکتا با این کد یافت نشد؛ اطلاعات را بررسی کنید."); return; }
+                var appt = matches[0];
+                if (string.IsNullOrWhiteSpace(appt.PatientMobile))
+                { _snackbar.Error("شماره بیمار در نوبت موجود نیست؛ بیمار را جداگانه جستجو کنید."); return; }
+                var patients = await FindPatientsAsync(appt.PatientMobile);
+                if (version != _patientSearchVersion) return;
+                var patientMatches = patients?.Where(x => !string.IsNullOrWhiteSpace(appt.PatientMobile) && x.Mobile == appt.PatientMobile).Take(2).ToList();
+                if (patientMatches is null || patientMatches.Count != 1)
+                { _snackbar.Error("بیمار یکتا برای این نوبت یافت نشد؛ بیمار را جداگانه جستجو کنید."); return; }
+                FoundPatient = patientMatches[0];
+                FoundAppointmentInfo = $"نوبت {appt.DateShamsi} ساعت {appt.Time} — {appt.DoctorName}";
+                var doctor = Doctors.FirstOrDefault(d => d.Name == appt.DoctorName);
+                if (doctor is not null) SelectedDoctor = doctor;
             }
-            // بیمارِ نوبت با موبایل (تطابق دقیق — موبایل نوبت داریم)
-            var patient = (await FindPatientsAsync(appt.PatientMobile ?? ""))
-                .FirstOrDefault(x => x.Mobile == appt.PatientMobile);
-            if (patient is null)
+            else
             {
-                IsBusy = false;
-                _snackbar.Error("بیمار نوبت یافت نشد");
-                return;
-            }
-            FoundPatient = patient;
-            FoundAppointmentInfo = $"نوبت {appt.DateShamsi} ساعت {appt.Time} — {appt.DoctorName}";
-            var doctor = Doctors.FirstOrDefault(d => d.Name == appt.DoctorName);
-            if (doctor is not null) SelectedDoctor = doctor;
-        }
-        else
-        {
-            // جستجوی بیمار — تطبیق جزئی نام/کد ملی/موبایل/پرونده از سمت سرور
-            var results = await FindPatientsAsync(term);
-
-            switch (results.Count)
-            {
-                case 0:
-                    _snackbar.Error("بیماری یافت نشد — بخشی از نام یا کد ملی را امتحان کنید یا ابتدا بیمار را ثبت کنید");
-                    break;
-
-                case 1:
-                    // تک‌نتیجه — انتخاب خودکار بدون نیاز به کلیک اضافه
-                    FoundPatient = results[0];
-                    _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}");
-                    break;
-
-                default:
-                    // چندنتیجه — فهرست برای انتخاب کاربر (گزارش شانزدهم مالک:
-                    // «جستجو موارد رو بیاره تا انتخاب بکنیم»)
-                    PatientResults = new ObservableCollection<QuickPatient>(results);
-                    _snackbar.Info($"{results.Count} بیمار یافت شد — از فهرست انتخاب کنید");
-                    break;
+                var results = await FindPatientsAsync(term);
+                if (version != _patientSearchVersion) return;
+                if (results is null) { _snackbar.Error(_api.LastError ?? "دریافت نتایج جستجو ناموفق بود"); return; }
+                if (results.Count == 0) _snackbar.Error("بیماری یافت نشد — بخشی از نام یا کد ملی را امتحان کنید یا ابتدا بیمار را ثبت کنید");
+                else if (results.Count == 1)
+                { FoundPatient = results[0]; _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}"); }
+                else
+                { PatientResults = new ObservableCollection<QuickPatient>(results); _snackbar.Info($"{results.Count} بیمار یافت شد — از فهرست انتخاب کنید"); }
             }
         }
-
-        IsBusy = false;
+        catch (Exception)
+        { if (version == _patientSearchVersion) _snackbar.Error("دریافت نتایج جستجو ناموفق بود؛ دوباره تلاش کنید."); }
+        finally { IsSearchingPatient = false; }
     }
 
     /// <summary>
@@ -1028,22 +1023,33 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// سیستمی بدون کد ملی؛ بیمار بلافاصله انتخاب می‌شود و تکمیل هویت
     /// بعداً از پروندهٔ بیمار انجام می‌گردد
     /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isCreatingUnidentifiedPatient;
+
     [RelayCommand]
     private async Task CreateUnidentifiedPatientAsync()
     {
+        if (IsSubmitting || IsSearchingPatient || IsCreatingUnidentifiedPatient) return;
+        IsCreatingUnidentifiedPatient = true;
+        try
+        {
         int? age = int.TryParse(UnidentifiedAgeText?.Trim(), out var a) ? a : null;
         var response = await _api.PostAsync<UnidentifiedPatientEnvelope>("patients/unidentified",
             new { gender = UnidentifiedGenderIndex + 1, approximateAge = age });
         var dto = response?.Data;
         if (dto is null)
         {
-            _snackbar.Error(_api.LastError ?? "ساخت پروندهٔ موقت ناموفق بود");
+            _snackbar.Error((_api.LastError ?? "پاسخ ساخت پرونده دریافت نشد") + "؛ پیش از تکرار وجود پرونده را بررسی کنید.");
             return;
         }
         FoundPatient = new QuickPatient(dto.Id, "بیمار ناشناس", dto.TemporaryCode ?? string.Empty,
             dto.Mobile ?? string.Empty, null, null, null, null, UnidentifiedGenderIndex + 1);
         PatientResults = new ObservableCollection<QuickPatient>();
         _snackbar.Success($"پروندهٔ موقت ساخته شد — کد موقت: {dto.TemporaryCode} (تکمیل هویت بعداً از پروندهٔ بیمار)");
+        }
+        catch (Exception) { _snackbar.Error("پاسخ ساخت پرونده دریافت نشد؛ پیش از تکرار وجود پرونده را بررسی کنید."); }
+        finally { IsCreatingUnidentifiedPatient = false; }
     }
 
     /// <summary>پاکت پاسخ ساخت بیمار ناشناس</summary>
@@ -1061,11 +1067,11 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? Mobile { get; set; }
     }
 
-    private async Task<List<QuickPatient>> FindPatientsAsync(string term)
+    private async Task<List<QuickPatient>?> FindPatientsAsync(string term)
     {
         var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
             $"patients/search?term={Uri.EscapeDataString(term)}");
-        if (response?.Data is null) return new List<QuickPatient>();
+        if (response?.Data is null) return null;
 
         return response.Data
             .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}",
@@ -1624,7 +1630,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     private bool _isSubmitting;
 
     /// <summary>فرم در طول زنجیرهٔ ثبت و چاپ قابل تغییر نیست.</summary>
-    public bool CanEditReception => !IsSubmitting;
+    public bool CanEditReception => !IsSubmitting && !IsCreatingUnidentifiedPatient;
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
