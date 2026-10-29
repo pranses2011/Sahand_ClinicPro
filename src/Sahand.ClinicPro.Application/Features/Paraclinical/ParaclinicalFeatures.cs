@@ -319,6 +319,12 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
                 request.LeftSphere, request.LeftCylinder, request.LeftAxis, request.RightIop, request.LeftIop, request.PupilDistance) ||
             request.RightVisualAcuity?.Length > 10 || request.LeftVisualAcuity?.Length > 10 || request.ColorVision?.Length > 100)
             return Result<long>.Failure(new Error("INVALID_EYE_EXAM", "مقادیر معاینه یا دقت آن‌ها با محدوده ذخیره‌سازی سازگار نیست"));
+        if (request.RightSphere is null && request.RightCylinder is null && request.RightAxis is null &&
+            request.LeftSphere is null && request.LeftCylinder is null && request.LeftAxis is null &&
+            request.RightIop is null && request.LeftIop is null && request.PupilDistance is null &&
+            new[] { request.RightVisualAcuity, request.LeftVisualAcuity, request.ColorVision,
+                request.Findings, request.EyewearPrescription, request.VisualField }.All(string.IsNullOrWhiteSpace))
+            return Result<long>.Failure(new Error("EMPTY_EYE_EXAM", "حداقل یک اندازه یا یافتهٔ معاینه لازم است"));
         var exam = new EyeExamRecord
         {
             PatientId = request.PatientId,

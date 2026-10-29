@@ -45,6 +45,7 @@ public class EyeExamPatientSafetyTests
         await db.SaveChangesAsync();
         var handler = new SaveEyeExamCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         var exam = Command(patient.Id, null);
+        (await handler.Handle(exam with { Findings = null }, default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(exam with { RightAxis = 181 }, default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(exam with { LeftIop = -1 }, default)).IsSuccess.Should().BeFalse();
         (await handler.Handle(exam with { RightSphere = 1.234m }, default)).IsSuccess.Should().BeFalse();
