@@ -369,8 +369,6 @@ public partial class ImagingViewModel : ViewModelBase
             if (crit is not null)
                 CriticalLog.Add($"{o.PatientName} — {o.ModalityFa} {o.BodyPart}: {crit}");
         }
-        if (CriticalLog.Count == 0)
-            CriticalLog.Add("امروز یافتهٔ بحرانی ثبت نشده است.");
     }
 
     private static double? ParseDose(ImagingOrderRow row)
@@ -379,7 +377,8 @@ public partial class ImagingViewModel : ViewModelBase
         try
         {
             using var doc = JsonDocument.Parse(row.ReportDetails);
-            if (doc.RootElement.TryGetProperty("ctdi", out var c) && c.TryGetDouble(out var v)) return v;
+            if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("ctdi", out var c) &&
+                c.ValueKind == JsonValueKind.Number && c.TryGetDouble(out var v) && double.IsFinite(v) && v >= 0) return v;
         }
         catch (JsonException) { }
         return null;
@@ -392,10 +391,10 @@ public partial class ImagingViewModel : ViewModelBase
         {
             using var doc = JsonDocument.Parse(details);
             var root = doc.RootElement;
-            if (root.TryGetProperty("critical", out var c) && c.ValueKind == JsonValueKind.True)
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("critical", out var c) && c.ValueKind == JsonValueKind.True)
             {
-                var to = root.TryGetProperty("criticalTo", out var t) ? t.GetString() : "";
-                var method = root.TryGetProperty("criticalMethod", out var m) ? m.GetString() : "";
+                var to = root.TryGetProperty("criticalTo", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "—";
+                var method = root.TryGetProperty("criticalMethod", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : "—";
                 return $"یافتهٔ بحرانی ← {to} · {method}";
             }
         }

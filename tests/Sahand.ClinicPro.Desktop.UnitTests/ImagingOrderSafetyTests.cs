@@ -215,4 +215,18 @@ public class ImagingOrderSafetyTests
         vm.SelectedImagingOrder.Should().BeSameAs(first);
     }
 
+    [Fact]
+    public async Task Queue_kpis_tolerate_legacy_json_and_do_not_count_placeholder_as_critical()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["imaging/orders"] = new { data = new[] {
+            new { id = 1, patientId = 1, patientName = "الف", modality = "CT", status = 3, priority = 3, reportDetails = "[]", createdAt = DateTime.UtcNow },
+            new { id = 2, patientId = 2, patientName = "ب", modality = "CT", status = 3, priority = 3, reportDetails = "{\"ctdi\":null}", createdAt = DateTime.UtcNow }
+        } };
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        await vm.LoadImagingOrdersCommand.ExecuteAsync(null);
+        vm.ImagingOrders.Should().HaveCount(2);
+        vm.CriticalLog.Should().BeEmpty();
+    }
+
 }
