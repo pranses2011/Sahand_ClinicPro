@@ -476,30 +476,38 @@ public partial class VisitEditViewModel : ObservableObject
     /* ═══════════ تب ۴: جستجوی تشخیص ═══════════ */
 
     /// <summary>جستجوی ICD-10 با Debounce</summary>
+    private int _diagnosisSearchVersion;
     partial void OnDiagnosisSearchChanged(string value)
     {
-        if (value.Length < 2) { DiagnosisResults.Clear(); return; }
-        _ = SearchDiagnosesAsync(value);
+        var version = ++_diagnosisSearchVersion;
+        DiagnosisResults.Clear();
+        if (value.Length < 2) return;
+        _ = SearchDiagnosesAsync(value, version);
     }
 
-    /// <summary>جستجوی تشخیص از داده مرجع</summary>
-    private async Task SearchDiagnosesAsync(string term)
+    /// <summary>جستجوی تشخیص از داده مرجع؛ پاسخ قدیمی نمایش داده نمی‌شود.</summary>
+    private async Task SearchDiagnosesAsync(string term, int version)
     {
-        var response = await _api.GetAsync<DiagnosesResponse>(
-            $"lookups/diagnoses?search={Uri.EscapeDataString(term)}&take=12");
-        DiagnosisResults.Clear();
-        if (response?.Data is null) return;
-        foreach (var d in response.Data)
-            DiagnosisResults.Add(new DiagnosisOption(d.Id, d.Code, d.Title));
+        try
+        {
+            var response = await _api.GetAsync<DiagnosesResponse>(
+                $"lookups/diagnoses?search={Uri.EscapeDataString(term)}&take=12");
+            if (version != _diagnosisSearchVersion) return;
+            if (response?.Data is null) { _snackbar.Error("دریافت نتایج تشخیص ناموفق بود."); return; }
+            foreach (var d in response.Data)
+                DiagnosisResults.Add(new DiagnosisOption(d.Id, d.Code, d.Title));
+        }
+        catch (Exception) { if (version == _diagnosisSearchVersion) _snackbar.Error("دریافت نتایج تشخیص ناموفق بود."); }
     }
 
     /// <summary>انتخاب تشخیص اصلی</summary>
     [RelayCommand]
     private void SelectDiagnosis(object? param)
     {
-        if (param is not DiagnosisOption option) return;
+        if (param is not DiagnosisOption option || !DiagnosisResults.Contains(option)) return;
         PrimaryDiagnosis = option;
         DiagnosisSearch = option.Code;
+        _diagnosisSearchVersion++;
         DiagnosisResults.Clear();
     }
 
@@ -507,7 +515,7 @@ public partial class VisitEditViewModel : ObservableObject
     [RelayCommand]
     private void AddSecondaryDiagnosis(object? param)
     {
-        if (param is DiagnosisOption option && !SecondaryDiagnoses.Contains(option.Title))
+        if (param is DiagnosisOption option && DiagnosisResults.Contains(option) && !SecondaryDiagnoses.Contains(option.Title))
             SecondaryDiagnoses.Add(option.Title);
     }
 
