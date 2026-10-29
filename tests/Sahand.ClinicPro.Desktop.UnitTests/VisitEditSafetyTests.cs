@@ -144,4 +144,24 @@ public class VisitEditSafetyTests
         vm.StopTimers();
     }
 
+    [Fact]
+    public async Task Unknown_physio_referral_result_retries_the_identical_request()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8) { PhysioReferralNote = "درمان زانو" };
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
+        var first = JsonSerializer.SerializeToElement(api.LastBody);
+        vm.CanEditPhysioReferral.Should().BeFalse();
+        api.CannedResponses["physiotherapy/referrals"] = new { data = 55L };
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
+        var second = JsonSerializer.SerializeToElement(api.LastBody);
+        second.GetProperty("RequestId").GetGuid().Should().Be(first.GetProperty("RequestId").GetGuid());
+        second.GetProperty("VisitId").GetInt64().Should().Be(42);
+        vm.PhysioReferralNote.Should().BeNull();
+        vm.CanEditPhysioReferral.Should().BeTrue();
+        api.Calls.Should().NotContain(c => c.Endpoint == "physiotherapy/sessions");
+        vm.StopTimers();
+    }
+
 }

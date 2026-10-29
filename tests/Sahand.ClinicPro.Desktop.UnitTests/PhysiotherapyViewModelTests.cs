@@ -224,4 +224,23 @@ public class PhysiotherapyViewModelTests
         api.Calls.Should().NotContain(x => x.Method == "POST-bool" && x.Endpoint == "physiotherapy/sessions");
     }
 
+    [Fact]
+    public async Task Referrals_show_real_data_and_patient_change_requires_confirmation()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/referrals"] = new { data = new[] {
+            new { id = 8, patientId = 2, visitId = 3, patientName = "بیمار دوم", note = "درد زانو", gender = 2 }
+        } };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar(), () => false) { PhysioPatient = Patient(1), PhysioNotes = "حفظ شود" };
+        await vm.LoadRecentReferralsCommand.ExecuteAsync(null);
+        vm.Referrals.Should().ContainSingle().Which.Note.Should().Be("درد زانو");
+        vm.SelectReferralPatientCommand.Execute(vm.Referrals[0]);
+        vm.PhysioPatient!.Id.Should().Be(1);
+        vm.PhysioNotes.Should().Be("حفظ شود");
+        api.CannedResponses.Remove("physiotherapy/referrals");
+        await vm.LoadRecentReferralsCommand.ExecuteAsync(null);
+        vm.Referrals.Should().ContainSingle();
+        vm.ReferralListCaption.Should().Contain("ناموفق");
+    }
+
 }
