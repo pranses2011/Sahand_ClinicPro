@@ -62,7 +62,9 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
         if (patient is null)
             return Result<AppointmentDetailDto>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
-        var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId, cancellationToken);
+        var doctor = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+            .Include(d => d.Employee)
+            .FirstOrDefaultAsync(d => d.Id == dto.DoctorId, cancellationToken);
         if (doctor is null || !doctor.IsActive)
             return Result<AppointmentDetailDto>.Failure(Error.NotFound("پزشک", dto.DoctorId));
 
@@ -148,7 +150,8 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
         return Result<AppointmentDetailDto>.Success(new AppointmentDetailDto(
             appointment.Id, appointment.AppointmentCode, dto.PatientId,
             $"{patient.FirstName} {patient.LastName}", dto.DoctorId,
-            "پزشک", null, dto.DateShamsi, dto.Time, appointment.Duration,
+            doctor.Employee is null ? "پزشک" : $"{doctor.Employee.FirstName} {doctor.Employee.LastName}".Trim(),
+            null, dto.DateShamsi, dto.Time, appointment.Duration,
             appointment.Status, appointment.AppointmentType, appointment.QueueNumber,
             appointment.EstimatedFee, appointment.IsFirstVisit, appointment.Notes));
     }

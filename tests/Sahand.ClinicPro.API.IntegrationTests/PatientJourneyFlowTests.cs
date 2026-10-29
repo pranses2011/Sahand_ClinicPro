@@ -265,6 +265,14 @@ public class PatientJourneyFlowTests
             because: "نوبت با ظرفیت آزاد و بدون تداخل است");
         var appointment = await ReadAsync<EntityPacket>(createAppointment);
         appointment.Data.Id.Should().BeGreaterThan(0);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var doctor = await db.Doctors.Include(d => d.Employee).SingleAsync(d => d.Id == doctorId);
+            var expectedName = doctor.Employee is null ? "پزشک" :
+                $"{doctor.Employee.FirstName} {doctor.Employee.LastName}".Trim();
+            appointment.Data.DoctorName.Should().Be(expectedName);
+        }
 
         // ── گام ۴: ثبت پذیرش مرتبط با نوبت ──
         var createReception = await client.PostAsJsonAsync("/api/v1/receptions", new
@@ -390,6 +398,7 @@ public class PatientJourneyFlowTests
     {
         public long Id { get; set; }
         public string NationalCode { get; set; } = string.Empty;
+        public string DoctorName { get; set; } = string.Empty;
     }
 
     /// <summary>پاکت فهرست</summary>
