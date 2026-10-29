@@ -49,6 +49,8 @@ public partial class ImagingViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmReportDiscard;
+    private string? _reportBaseline;
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "تصویربرداری";
@@ -162,9 +164,25 @@ public partial class ImagingViewModel : ViewModelBase
 
     // ─────────────── درخواست انتخاب‌شده و گزارش ───────────────
     /// <summary>درخواست انتخاب‌شده</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedImagingOrder))]
     private ImagingOrderRow? _selectedImagingOrder;
+    public ImagingOrderRow? SelectedImagingOrder
+    {
+        get => _selectedImagingOrder;
+        set
+        {
+            if (ReferenceEquals(_selectedImagingOrder, value)) return;
+            if (_selectedImagingOrder is not null && !IsSavingImagingReport && _reportBaseline is not null &&
+                _reportBaseline != ReportSnapshot() && !_confirmReportDiscard())
+            {
+                OnPropertyChanged(nameof(SelectedImagingOrder));
+                return;
+            }
+            _selectedImagingOrder = value;
+            OnPropertyChanged(nameof(SelectedImagingOrder));
+            OnPropertyChanged(nameof(HasSelectedImagingOrder));
+            OnSelectedImagingOrderChanged(value);
+        }
+    }
     /// <summary>آیا درخواستی انتخاب شده</summary>
     public bool HasSelectedImagingOrder => SelectedImagingOrder is not null;
 
@@ -463,10 +481,13 @@ public partial class ImagingViewModel : ViewModelBase
 
     // ─────────────── سازنده و بارگذاری ───────────────
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public ImagingViewModel(IApiClient api, ISnackbarService snackbar)
+    public ImagingViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmReportDiscard = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmReportDiscard = confirmReportDiscard ?? (() => Views.AppDialog.Confirm(
+            "تغییر مطالعه", "تغییرات ذخیره‌نشدهٔ گزارش و چک‌لیست پاک می‌شود. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
         // بارگذاری خودکار سازنده حذف شده است (چرخهٔ ۷۹) — داده در اولین
         // ناوبری با RefreshCommand بی‌صدا تازه می‌شود.
     }
@@ -694,7 +715,7 @@ public partial class ImagingViewModel : ViewModelBase
     }
 
     /// <summary>بازخورد انتخاب درخواست — پرکردن گزارش، ایمنی و فایل‌ها</summary>
-    partial void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
+    private void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
     {
         _fileRequestVersion++;
         _imageRequestVersion++;
@@ -703,7 +724,7 @@ public partial class ImagingViewModel : ViewModelBase
         CurrentImageBytes = null;
         CurrentImageName = null;
         ImageSourceChanged?.Invoke();
-        if (value is null) { ViewerMessage = "مطالعه‌ای انتخاب نشده است."; return; }
+        if (value is null) { _reportBaseline = null; ViewerMessage = "مطالعه‌ای انتخاب نشده است."; return; }
         try
         {
             OnSelectedImagingOrderChangedCore(value);
@@ -760,8 +781,16 @@ public partial class ImagingViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentDrl));
         OnPropertyChanged(nameof(DoseHigh));
         ViewerMessage = $"{value.ModalityFa} {value.BodyPart} — {value.PatientName}";
+        _reportBaseline = ReportSnapshot();
         _ = LoadImagingFilesAsync();
     }
+
+    private string ReportSnapshot() => JsonSerializer.Serialize(new
+    {
+        ReportClinicalInfo, ReportTechnique, ReportFindings, ReportImpression, ReportRecommendation,
+        DoseCtdi, DoseDlp, ReportComparison, CriticalFinding, CriticalNotifiedTo, CriticalMethod,
+        measurements = Measurements.ToArray(), safety = SafetyItems.Where(x => x.IsChecked).Select(x => x.Text).ToArray()
+    });
 
     // از بازنویسی دادهٔ نسخه‌های دیگر که این ویرایشگر قادر به نگهداری آن
     // نیست جلوگیری می‌کند؛ گزارش اصلی و چک‌لیست همچنان قابل مشاهده‌اند.
@@ -917,6 +946,7 @@ public partial class ImagingViewModel : ViewModelBase
             impression = ReportImpression, recommendation = ReportRecommendation,
             reportDetails = JsonSerializer.Serialize(details), isFinal
         };
+        var savedSnapshot = ReportSnapshot();
         IsSavingImagingReport = true;
         try
         {
@@ -932,6 +962,7 @@ public partial class ImagingViewModel : ViewModelBase
             if (isFinal) { order.Status = 4; order.ReportedAt = DateTime.UtcNow; }
             if (SelectedImagingOrder?.Id == order.Id)
             {
+                _reportBaseline = savedSnapshot;
                 DraftStamp = isFinal ? "گزارش نهایی ذخیره شد" : "پیش‌نویس ذخیره شد";
                 ReportMessage = isFinal
                     ? "گزارش نهایی ذخیره شد؛ امضای دیجیتال و اطلاع‌رسانی خودکار انجام نشده است."

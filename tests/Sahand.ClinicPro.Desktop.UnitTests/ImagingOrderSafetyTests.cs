@@ -95,7 +95,7 @@ public class ImagingOrderSafetyTests
         api.CannedResponses["imaging/files?orderId=2"] = new { data = new[] {
             new { id = 22, fileName = "دوم.dcm", isDicom = true }
         } };
-        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        var vm = new ImagingViewModel(api, new FakeSnackbar(), () => true);
         vm.SelectedImagingOrder = Order(1, "MRI");
         vm.SafetyItems[0].IsChecked = true;
         vm.SelectedImagingOrder = Order(2, "CT");
@@ -199,6 +199,20 @@ public class ImagingOrderSafetyTests
         vm.SelectedImagingOrder = order;
         vm.ReportClinicalInfo.Should().Be("شرح حال گزارش");
         vm.HasUnsupportedReportDetails.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Cancelling_study_change_preserves_unsaved_report()
+    {
+        var vm = new ImagingViewModel(new FakeApiClient(), new FakeSnackbar(), () => false);
+        var first = Order(1, "MRI");
+        vm.SelectedImagingOrder = first;
+        vm.ReportFindings = "یافته ذخیره‌نشده";
+        vm.SelectedImagingOrder = Order(2, "CT");
+        vm.SelectedImagingOrder.Should().BeSameAs(first);
+        vm.ReportFindings.Should().Be("یافته ذخیره‌نشده");
+        vm.SelectedImagingOrder = null;
+        vm.SelectedImagingOrder.Should().BeSameAs(first);
     }
 
 }
