@@ -101,4 +101,21 @@ public class VisitEditSafetyTests
         vm.StopTimers();
     }
 
+    [Fact]
+    public async Task Diagnosis_search_discards_late_results_after_the_text_changes()
+    {
+        var api = new FakeApiClient();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["lookups/diagnoses?search=old&take=12"] = pending.Task;
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.DiagnosisSearch = "old";
+        vm.DiagnosisSearch = "x";
+        pending.SetResult(new { data = new[] { new { id = 1L, code = "A", title = "قدیمی" } } });
+        await Task.Delay(100);
+        vm.DiagnosisResults.Should().BeEmpty();
+        vm.SelectDiagnosisCommand.Execute(new DiagnosisOption(1, "A", "قدیمی"));
+        vm.PrimaryDiagnosis.Should().BeNull();
+        vm.StopTimers();
+    }
+
 }
