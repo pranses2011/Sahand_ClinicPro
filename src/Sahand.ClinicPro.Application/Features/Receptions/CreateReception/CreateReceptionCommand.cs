@@ -54,7 +54,10 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
     {
         var dto = request.Dto;
 
-        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
+        // کوئری ردیابی‌شونده همچنان فیلتر شعبه/حذف را اعمال می‌کند؛ FindAsync
+        // می‌تواند موجودیت موجود در حافظه از شعبه دیگر را بازگرداند.
+        var patient = await _unitOfWork.Repository<Patient>().QueryableTracking
+            .FirstOrDefaultAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken);
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
@@ -69,15 +72,17 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
 
         if (dto.DoctorId is not null)
         {
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId.Value, cancellationToken);
+            var doctor = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .FirstOrDefaultAsync(d => d.Id == dto.DoctorId.Value && !d.IsDeleted, cancellationToken);
             if (doctor is null)
                 return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId.Value));
         }
 
+        Domain.Entities.Billing.Service? service = null;
         if (dto.ServiceId is not null)
         {
-            var service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
-                .GetByIdAsync(dto.ServiceId.Value, cancellationToken);
+            service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>().QueryableNoTracking
+                .FirstOrDefaultAsync(s => s.Id == dto.ServiceId.Value && !s.IsDeleted, cancellationToken);
             if (service is null)
                 return Result<long>.Failure(Error.NotFound("خدمت", dto.ServiceId.Value));
         }
@@ -89,8 +94,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         // بسته هدایت نشود.
         if (dto.RoomId is not null)
         {
-            var room = await _unitOfWork.Repository<ExaminationRoom>()
-                .GetByIdAsync(dto.RoomId.Value, cancellationToken);
+            var room = await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.Id == dto.RoomId.Value && !r.IsDeleted, cancellationToken);
             if (room is null || !room.IsActive)
                 return Result<long>.Failure(Error.NotFound("اتاق", dto.RoomId.Value));
         }
@@ -98,7 +103,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         Appointment? appointment = null;
         if (dto.AppointmentId is long appointmentId)
         {
-            appointment = await _unitOfWork.Repository<Appointment>().GetByIdAsync(appointmentId, cancellationToken);
+            appointment = await _unitOfWork.Repository<Appointment>().QueryableTracking
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && !a.IsDeleted, cancellationToken);
             if (appointment is null || appointment.IsDeleted)
                 return Result<long>.Failure(Error.NotFound("نوبت", appointmentId));
             if (appointment.PatientId != dto.PatientId || appointment.DoctorId != dto.DoctorId || dto.ServiceId is not null)
@@ -149,8 +155,7 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
             // چرخه ۲۴ — پذیرش خدمت درمانی (بدون پزشک)
             ServiceId = dto.ServiceId,
             ServiceName = dto.ServiceId is null ? null :
-                (dto.ServiceName ?? (await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
-                    .GetByIdAsync(dto.ServiceId.Value, cancellationToken))?.ServiceName),
+                (dto.ServiceName ?? service?.ServiceName),
             PerformedByEmployeeId = dto.PerformedByEmployeeId,
             // چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی)
             RoomId = dto.RoomId,

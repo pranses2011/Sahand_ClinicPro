@@ -222,4 +222,23 @@ public class BillingPatientSafetyTests
         (await handler.Handle(new CreateInvoiceCommand(dto), default)).IsFailure.Should().BeTrue();
         db.Set<Invoice>().Should().BeEmpty();
     }
+    [Fact]
+    public async Task Reception_rejects_tracked_patient_from_another_branch()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "BRANCH-RECEPTION", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000003", BranchId = 2 };
+        db.Add(patient); await db.SaveChangesAsync();
+        db.CurrentBranchId = 1;
+        var handler = new Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception.CreateReceptionCommandHandler(
+            scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            NullLogger<Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception.CreateReceptionCommandHandler>.Instance,
+            Mock.Of<IRealtimeNotifier>());
+        var dto = new Sahand.ClinicPro.Application.DTOs.Receptions.CreateReceptionDto(patient.Id, null, null, null, null, null, ServiceId: 1);
+        var result = await handler.Handle(new Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception.CreateReceptionCommand(dto), default);
+        result.IsFailure.Should().BeTrue();
+        db.Set<Reception>().Should().BeEmpty();
+        patient.LastVisitDate.Should().BeNull();
+    }
 }
