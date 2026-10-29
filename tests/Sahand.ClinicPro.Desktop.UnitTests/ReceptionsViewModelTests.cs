@@ -207,4 +207,40 @@ public class ReceptionsViewModelTests
         vm.IsBusy.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Late_insurance_inquiry_cannot_change_another_patient_or_allow_submission_while_pending()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] { new { id = 5, name = "بیمه", isContracted = true, coveragePercent = 60m } } };
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingPostResult = pending.Task;
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار اول", "", "", "بیمه", null, null, 5);
+        vm.SelectedDoctor = vm.Doctors.First();
+        var inquiry = vm.VerifyInsuranceCommand.ExecuteAsync(null);
+        vm.IsInquiring.Should().BeTrue();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        vm.FoundPatient = new QuickPatient(8, "بیمار دوم", "", "", "بیمه", null, null, 5);
+        pending.SetResult(new { data = new { isEligible = true, coveragePercent = 99m, approvalCode = "old" } });
+        await inquiry;
+        vm.Inquiry.Should().BeNull();
+        vm.CoveragePercent.Should().Be(60m);
+    }
+
+    [Fact]
+    public async Task Failed_inquiry_blocks_insured_reception_instead_of_assuming_a_free_invoice()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] { new { id = 5, name = "بیمه", isContracted = true, coveragePercent = 60m } } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", "بیمه", null, null, 5);
+        vm.SelectedDoctor = vm.Doctors.First();
+        await vm.VerifyInsuranceCommand.ExecuteAsync(null);
+        vm.Inquiry.Should().NotBeNull();
+        vm.CoveragePercent.Should().Be(0m);
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+    }
+
 }

@@ -86,7 +86,10 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// همچنان می‌تواند بعداً مقدار را عمداً عوض کند (مثلاً بیمهٔ تبعی).
     /// </summary>
     partial void OnFoundPatientChanged(QuickPatient? value)
-        => ApplyPatientInsurance(value);
+    {
+        InvalidateInquiry();
+        ApplyPatientInsurance(value);
+    }
 
     /// <summary>
     /// نشاندن بیمهٔ پروندهٔ بیمار روی کشوی بیمه — چرخهٔ ۴۴.
@@ -322,6 +325,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// </summary>
     partial void OnReceptionModeIndexChanged(int value)
     {
+        InvalidateInquiry();
         OnPropertyChanged(nameof(IsDoctorMode));
         OnPropertyChanged(nameof(IsServiceMode));
         RecalculateCost();
@@ -600,6 +604,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>شماره بیمه</summary>
     [ObservableProperty]
     private string _insuranceNumber = string.Empty;
+    partial void OnInsuranceNumberChanged(string value) => InvalidateInquiry();
 
     /// <summary>کد ارجاع</summary>
     [ObservableProperty]
@@ -1424,10 +1429,19 @@ public partial class ReceptionsViewModel : ViewModelBase
         public decimal TotalPrice { get; set; }
     }
 
+    private int _inquiryVersion;
+    private void InvalidateInquiry()
+    {
+        _inquiryVersion++;
+        Inquiry = null;
+        CoveragePercent = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex].CoveragePercent : 0m;
+    }
+
     /// <summary>تغییر بیمه → محاسبه هزینه + بارگذاری مجدد تعرفه‌ها با بیمهٔ جدید</summary>
     partial void OnInsuranceIndexChanged(int value)
     {
-        Inquiry = null;
+        InvalidateInquiry();
         var selectedCompany = value >= 0 && value < InsuranceCompanies.Count
             ? InsuranceCompanies[value]
             : null;
@@ -1442,8 +1456,9 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task VerifyInsuranceAsync()
     {
+        if (IsInquiring || IsSubmitting) return;
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        if (InsuranceIndex <= 0) { _snackbar.Error("ابتدا نوع بیمه را انتخاب کنید"); return; }
+        if (InsuranceIndex <= 0 || InsuranceIndex >= InsuranceCompanies.Count) { _snackbar.Error("ابتدا نوع بیمه را انتخاب کنید"); return; }
 
         // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع آف‌بای‌وان ═══
         // آیتم «آزاد» با شناسهٔ صفر در ابتدای کشوست و شرکت‌های واقعی از
@@ -1462,6 +1477,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Info("اعمال بیمه برای این دسته در تنظیمات درمانگاه غیرفعال است");
             return;
         }
+        var inquiryVersion = ++_inquiryVersion;
         IsInquiring = true;
         try
         {
@@ -1472,10 +1488,12 @@ public partial class ReceptionsViewModel : ViewModelBase
                 insuranceNumber = string.IsNullOrWhiteSpace(InsuranceNumber) ? null : InsuranceNumber.Trim()
             });
 
+            if (inquiryVersion != _inquiryVersion) return;
             if (response?.Data is null)
             {
-                Inquiry = new InquiryState(true, false, _api.LastError ?? "بیمه نامعتبر است", null, 0);
-                _snackbar.Error("بیمه نامعتبر: " + Inquiry.Message);
+                CoveragePercent = 0;
+                Inquiry = new InquiryState(true, false, _api.LastError ?? "استعلام بیمه ناموفق بود", null, 0);
+                _snackbar.Error("استعلام بیمه ناموفق بود: " + Inquiry.Message);
             }
             else
             {
@@ -1495,6 +1513,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
+            if (inquiryVersion != _inquiryVersion) return;
             // Timeout — «سامانه بیمه پاسخ نداد - ادامه بصورت آزاد؟»
             var proceed = Views.AppDialog.Confirm("عدم پاسخ سامانه بیمه", "سامانه بیمه پاسخ نداد. پذیرش به‌صورت آزاد ادامه یابد؟", Views.AppDialogIcon.Warning) == true;
             if (proceed)
@@ -1535,7 +1554,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var categoryEnabled = ReceptionModeIndex == 1
             ? ApplyInsuranceToMedicalServices
             : ApplyInsuranceToDoctorVisits;
-        var hasApplicableInsurance = hasContractedInsurance && categoryEnabled;
+        var hasApplicableInsurance = hasContractedInsurance && categoryEnabled && Inquiry is not { IsDone: true, IsEligible: false };
         // ستون سهم بیمه فقط وقتی دیده می‌شود که شرکت طرف قرارداد باشد و
         // تنظیم مستقل همان دستهٔ ویزیت/خدمت اجازهٔ اعمال بیمه بدهد.
         HasInsurance = hasApplicableInsurance;
@@ -1583,6 +1602,9 @@ public partial class ReceptionsViewModel : ViewModelBase
     private bool ValidateReception()
     {
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
+        if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
+        if (Inquiry is { IsDone: true, IsEligible: false })
+        { _snackbar.Error("استعلام بیمه تأیید نشده است؛ پیش از ثبت مجدداً استعلام کنید یا بیمهٔ آزاد را انتخاب کنید."); return false; }
         if (ReceptionModeIndex == 1)
         {
             if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }
