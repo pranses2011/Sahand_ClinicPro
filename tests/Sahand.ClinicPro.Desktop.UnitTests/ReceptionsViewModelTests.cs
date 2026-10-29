@@ -306,4 +306,26 @@ public class ReceptionsViewModelTests
         await submission;
     }
 
+    [Fact]
+    public async Task Appointment_search_uses_patient_and_doctor_ids_and_submits_appointment_id()
+    {
+        var api = MakeApi();
+        api.CannedResponses["appointments/search"] = new { data = new[] {
+            new { id = 77L, appointmentCode = "APT-123", patientId = 7L, doctorId = 1L,
+                patientMobile = "09120000000", doctorName = "نام نمایشی متفاوت", status = 1 } } };
+        api.CannedResponses["patients/search?term=09120000000"] = new { data = new[] {
+            new { id = 7L, firstName = "بیمار", lastName = "آزمایش", nationalCode = "", mobile = "09120000000" } } };
+        var vm = MakeVm(api);
+        vm.SmartSearch = "APT-123";
+        await vm.SmartSearchCommand.ExecuteAsync(null);
+        vm.FoundPatient!.Id.Should().Be(7);
+        vm.SelectedDoctor!.Id.Should().Be(1);
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingPostResult = pending.Task;
+        var submission = vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody).GetProperty("appointmentId").GetInt64().Should().Be(77);
+        pending.SetResult(null);
+        await submission;
+    }
+
 }

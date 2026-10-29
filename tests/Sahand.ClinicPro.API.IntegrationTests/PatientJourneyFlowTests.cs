@@ -283,6 +283,14 @@ public class PatientJourneyFlowTests
         });
         createReception.StatusCode.Should().Be(HttpStatusCode.Created,
             because: "پذیرش با نوبت معتبر ثبت می‌شود");
+        var duplicateReception = await client.PostAsJsonAsync("/api/v1/receptions", new
+        {
+            patientId = patient.Data.Id,
+            doctorId,
+            appointmentId = appointment.Data.Id
+        });
+        duplicateReception.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            because: "نوبت حاضرشده نباید مجدداً پذیرش شود");
 
         // ── گام ۵: ذخیره پیش‌نویس ویزیت (SOAP تدریجی) ──
         var saveVisit = await client.PostAsJsonAsync("/api/v1/visits", new

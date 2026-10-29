@@ -89,7 +89,9 @@ public class SearchAppointmentsQueryHandler : IRequestHandler<SearchAppointments
                 (int)a.Source,
                 a.EstimatedFee,
                 // چرخهٔ ۷۵ — اولویت برای نمایش رنگی در فهرست نوبت‌ها
-                (int)a.Priority))
+                (int)a.Priority,
+                a.PatientId,
+                a.DoctorId))
             .ToListAsync(cancellationToken);
 
         var paged = PagedResponse<AppointmentSearchItemDto>.Create(items, f.PageNumber, f.PageSize, totalCount);

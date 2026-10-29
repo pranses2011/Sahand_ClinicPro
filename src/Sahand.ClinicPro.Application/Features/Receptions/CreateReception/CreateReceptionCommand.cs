@@ -95,6 +95,18 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
                 return Result<long>.Failure(Error.NotFound("اتاق", dto.RoomId.Value));
         }
 
+        Appointment? appointment = null;
+        if (dto.AppointmentId is long appointmentId)
+        {
+            appointment = await _unitOfWork.Repository<Appointment>().GetByIdAsync(appointmentId, cancellationToken);
+            if (appointment is null || appointment.IsDeleted)
+                return Result<long>.Failure(Error.NotFound("نوبت", appointmentId));
+            if (appointment.PatientId != dto.PatientId || appointment.DoctorId != dto.DoctorId || dto.ServiceId is not null)
+                return Result<long>.Failure(new Error("RECEPTION.APPOINTMENT_MISMATCH", "بیمار یا پزشک پذیرش با نوبت مطابقت ندارد."));
+            if (appointment.Status is not (AppointmentStatus.Booked or AppointmentStatus.Confirmed))
+                return Result<long>.Failure(new Error("RECEPTION.APPOINTMENT_STATUS", "این نوبت برای پذیرش در وضعیت مجاز نیست."));
+        }
+
         // ساعت پذیرش باید عین ساعت دیواری درمانگاه باشد (گزارش مالک: ساعت
         // پذیرش GMT نشان داده می‌شد) — مُهر زمانی به وقت رسمی ایران ثبت می‌شود
         var now = PersianDateHelper.IranNow();
@@ -171,14 +183,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         if (patient.LastVisitDate is null || patient.LastVisitDate < now)
             patient.LastVisitDate = now;
 
-        // اگر از نوبت است — وضعیت نوبت به حاضر تغییر می‌کند
-        if (dto.AppointmentId.HasValue)
-        {
-            var appointment = await _unitOfWork.Repository<Appointment>()
-                .GetByIdAsync(dto.AppointmentId.Value, cancellationToken);
-            if (appointment is not null)
-                appointment.Status = AppointmentStatus.Arrived;
-        }
+        // نوبت فقط پس از تطبیق بیمار، پزشک و وضعیت، حاضر می‌شود.
+        if (appointment is not null) appointment.Status = AppointmentStatus.Arrived;
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 

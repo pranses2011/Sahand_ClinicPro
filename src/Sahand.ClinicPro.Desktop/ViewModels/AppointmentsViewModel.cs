@@ -1274,6 +1274,8 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string? AppointmentCode { get; set; }
+        public long? PatientId { get; set; }
+        public long? DoctorId { get; set; }
         public string PatientName { get; set; } = string.Empty;
         public string? PatientMobile { get; set; }
         public string DoctorName { get; set; } = string.Empty;

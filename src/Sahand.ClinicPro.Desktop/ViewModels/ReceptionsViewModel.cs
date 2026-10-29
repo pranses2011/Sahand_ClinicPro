@@ -45,9 +45,20 @@ public partial class ReceptionsViewModel : ViewModelBase
     [ObservableProperty]
     private string _smartSearch = string.Empty;
     private int _patientSearchVersion;
+    private long? _selectedAppointmentId;
+    private long? _selectedAppointmentPatientId;
+    private long? _selectedAppointmentDoctorId;
+    private void ClearSelectedAppointment()
+    {
+        _selectedAppointmentId = null;
+        _selectedAppointmentPatientId = null;
+        _selectedAppointmentDoctorId = null;
+        FoundAppointmentInfo = null;
+    }
     partial void OnSmartSearchChanged(string value)
     {
         _patientSearchVersion++;
+        ClearSelectedAppointment();
         FoundPatient = null;
         FoundAppointmentInfo = null;
         SelectedSearchResult = null;
@@ -100,6 +111,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     partial void OnFoundPatientChanged(QuickPatient? value)
     {
         InvalidateInquiry();
+        if (_selectedAppointmentId is not null && value?.Id != _selectedAppointmentPatientId) ClearSelectedAppointment();
         ApplyPatientInsurance(value);
     }
 
@@ -963,6 +975,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (term.Length < 2) { _snackbar.Error("بخشی از نام، کد ملی، موبایل یا کد پیگیری نوبت را وارد کنید"); return; }
         var version = ++_patientSearchVersion;
         IsSearchingPatient = true;
+        ClearSelectedAppointment();
         FoundPatient = null;
         FoundAppointmentInfo = null;
         SelectedSearchResult = null;
@@ -978,17 +991,23 @@ public partial class ReceptionsViewModel : ViewModelBase
                 if (matches is null || matches.Count != 1)
                 { _snackbar.Error("نوبت یکتا با این کد یافت نشد؛ اطلاعات را بررسی کنید."); return; }
                 var appt = matches[0];
+                if (appt.PatientId is null || appt.DoctorId is null || appt.Status is not (1 or 2))
+                { _snackbar.Error("شناسه بیمار یا پزشک نوبت موجود نیست یا نوبت در وضعیت قابل پذیرش نیست؛ سرور و برنامه را به‌روز کنید."); return; }
                 if (string.IsNullOrWhiteSpace(appt.PatientMobile))
                 { _snackbar.Error("شماره بیمار در نوبت موجود نیست؛ بیمار را جداگانه جستجو کنید."); return; }
                 var patients = await FindPatientsAsync(appt.PatientMobile);
                 if (version != _patientSearchVersion) return;
-                var patientMatches = patients?.Where(x => !string.IsNullOrWhiteSpace(appt.PatientMobile) && x.Mobile == appt.PatientMobile).Take(2).ToList();
+                var patientMatches = patients?.Where(x => x.Id == appt.PatientId && x.Mobile == appt.PatientMobile).Take(2).ToList();
                 if (patientMatches is null || patientMatches.Count != 1)
                 { _snackbar.Error("بیمار یکتا برای این نوبت یافت نشد؛ بیمار را جداگانه جستجو کنید."); return; }
+                var doctor = Doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
+                if (doctor is null) { _snackbar.Error("پزشک نوبت در فهرست فعال یافت نشد؛ نوبت را بررسی کنید."); return; }
                 FoundPatient = patientMatches[0];
+                _selectedAppointmentId = appt.Id;
+                _selectedAppointmentPatientId = appt.PatientId;
+                _selectedAppointmentDoctorId = appt.DoctorId;
                 FoundAppointmentInfo = $"نوبت {appt.DateShamsi} ساعت {appt.Time} — {appt.DoctorName}";
-                var doctor = Doctors.FirstOrDefault(d => d.Name == appt.DoctorName);
-                if (doctor is not null) SelectedDoctor = doctor;
+                SelectedDoctor = doctor;
             }
             else
             {
@@ -1610,6 +1629,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
         if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
+        if (_selectedAppointmentId is not null && (ReceptionModeIndex != 0 || FoundPatient.Id != _selectedAppointmentPatientId || SelectedDoctor?.Id != _selectedAppointmentDoctorId))
+        { _snackbar.Error("بیمار یا پزشک پذیرش با نوبت انتخاب‌شده مطابقت ندارد؛ نوبت را بررسی یا جستجو را پاک کنید."); return false; }
         if (Inquiry is { IsDone: true, IsEligible: false })
         { _snackbar.Error("استعلام بیمه تأیید نشده است؛ پیش از ثبت مجدداً استعلام کنید یا بیمهٔ آزاد را انتخاب کنید."); return false; }
         if (ReceptionModeIndex == 0 && ApplyInsuranceToDoctorVisits && Inquiry is { IsDone: true, IsEligible: true } &&
@@ -1699,7 +1720,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         {
             patientId = FoundPatient!.Id,
             doctorId = isServiceMode ? (long?)null : SelectedDoctor!.Id,
-            appointmentId = (long?)null,
+            appointmentId = _selectedAppointmentId,
             // صفر «آزاد صریح» است؛ null در سرور به بیمهٔ پرونده برمی‌گردد.
             insuranceCompanyId = company?.Id ?? 0L,
             referralCode = string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
