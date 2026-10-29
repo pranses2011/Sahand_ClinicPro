@@ -1729,6 +1729,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
         // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
         var confirmedPayable = PayableByPatient;
+        if (confirmedPayable <= 0m)
+        { _snackbar.Info("مبلغ قابل پرداخت مثبت نیست؛ برای صدور بدون پرداخت از «پذیرش و فاکتور» استفاده کنید."); return; }
         var payVm = new ReceptionPayViewModel(PayableByPatientDisplay);
         var payWindow = new Views.ReceptionPayWindow(payVm)
         {
