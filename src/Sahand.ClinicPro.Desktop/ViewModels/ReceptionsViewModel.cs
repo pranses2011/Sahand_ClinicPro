@@ -1713,10 +1713,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         // در پذیرش برای اونها هم هزینه به هزینه‌های بیمار اضافه بشه» — پیش از صدور
         // فاکتور، موجودی FEFO کم می‌شود و قیمت واقعی بچ‌ها برای اقلام فاکتور
         // برمی‌گردد؛ شکست مصرف (مثلاً کمبود هم‌زمان موجودی) با دیالوگ فارسی و
-        // حق انتخاب «ادامه بدون مصرفی» یا توقف صادقانه اعلام می‌شود — پذیرش
-        // ثبت‌شده باقی می‌ماند تا زنجیره دستی تکمیل شود.
+        // با نتیجهٔ نامعلوم ادامه نمی‌دهیم؛ پذیرش ثبت‌شده باقی می‌ماند تا
+        // مصرف و فاکتور به‌صورت دستی بررسی و تکمیل شوند.
         ConsumeResultDto? consumeResult = null;
-        var consumablesSkipped = false;
         if (isServiceMode && Consumables.Count > 0)
         {
             var consume = await _api.PostAsync<ConsumeResponse>("consumables/consume", new
@@ -1727,20 +1726,11 @@ public partial class ReceptionsViewModel : ViewModelBase
             if (consume?.Data is null)
             {
                 IsBusy = false;
-                var proceed = Views.AppDialog.Confirm("ثبت مصرف لوازم ناموفق",
-                    $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
-                if (!proceed)
-                {
-                    _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید)");
-                    await LoadAsync();
-                    return;
-                }
-                consumablesSkipped = true;
+                _snackbar.Error($"پذیرش با شناسه {reception.Data} ثبت شد؛ پاسخ برداشت لوازم دریافت نشد یا ناموفق بود. پیش از تکرار یا صدور فاکتور، مصرف و موجودی را بررسی کنید.");
+                await LoadAsync();
+                return;
             }
-            else
-            {
-                consumeResult = consume.Data;
-            }
+            consumeResult = consume.Data;
         }
 
         // ۲. صدور فاکتور خودکار — قلم ویزیت با کد خدمت K
@@ -1775,7 +1765,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             invoiceFailed = true;
             IsBusy = false;
             Views.AppDialog.Error("صدور فاکتور ناموفق",
-                $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
+                $"پذیرش با شناسه پذیرش {reception.Data} ثبت شد اما نتیجه صدور فاکتور مشخص نیست:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پیش از صدور دوباره، وجود فاکتور را در «صندوق و فاکتور» بررسی کنید.");
         }
 
         // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
@@ -1818,11 +1808,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         // پیام پایانی صادقانه — وضعیت واقعی هر سه حلقه (پذیرش/فاکتور/پرداخت)
         // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
         if (invoiceFailed)
-            _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
+            _snackbar.Info($"پذیرش ثبت شد — شناسه پذیرش {queueNo}؛ نتیجه فاکتور را پیش از تکرار در صندوق بررسی کنید");
         else if (paymentFailed)
             _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد، وضعیت پرداخت را در صندوق بررسی کنید");
-        else if (consumablesSkipped)
-            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
         else if (consumeResult is not null)
             _snackbar.Success($"پذیرش موفق — شناسه پذیرش {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
         else if (payment is not null)
