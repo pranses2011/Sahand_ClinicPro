@@ -182,6 +182,8 @@ public class ParaclinicalController : ApiBaseController
                         medical = ex.TryGetProperty("medical", out var me) ? me.GetString() : null,
                         prescription = ex.TryGetProperty("prescription", out var rx) ? rx.GetString() : null,
                         radio = ex.TryGetProperty("radio", out var ra) ? ra.GetString() : null,
+                        clinical = ex.TryGetProperty("clinical", out var cl) ? cl.GetString() : null,
+                        isChildChart = ex.TryGetProperty("isChildChart", out var child) && child.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False ? (bool?)child.GetBoolean() : null,
                         consent = ex.TryGetProperty("consent", out var co) && co.ValueKind == System.Text.Json.JsonValueKind.True
                     };
                 }

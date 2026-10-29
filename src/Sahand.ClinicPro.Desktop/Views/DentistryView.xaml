@@ -18,18 +18,29 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="ToothOutline" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="دندانپزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Left" Command="{Binding SaveDentalChartCommand}" IsEnabled="{Binding IsDentalChartEnabled}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره چارت" />
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="#E8F2FD" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="ToothOutline" Width="23" Height="23" Foreground="#176AC2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="پرونده دندان‌پزشکی" Foreground="#173657" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="چارت دندان، طرح درمان و یادداشت‌های پرونده" Foreground="#617992" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
         <Grid Margin="4,8">
                             <Grid.RowDefinitions>
                                 <!-- نوار بیمار دندانپزشکی — چرخهٔ ۲۸ -->
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -88,8 +99,8 @@
                                        FontSize="10.5" Opacity="0.65" VerticalAlignment="Center" />
 
                             <!-- چارت FDI -->
-                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="12" Padding="12"
-                                    Background="{DynamicResource MaterialDesign.Brush.Background}">
+                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="10" Padding="12" IsEnabled="{Binding IsDentalChartEnabled}"
+                                    Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
                                 <StackPanel>
                                     <DockPanel Margin="2,0,2,6">
                                         <TextBlock Text="ماگزیلا (فک بالا)" FontWeight="Bold" FontSize="12.5" />
@@ -345,6 +356,10 @@
                                                 <Setter Property="Opacity" Value="0.85" />
                                             </Style>
                                         </WrapPanel.Resources>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2" ToolTip="وضعیت هنوز ثبت نشده است">
+                                            <Border Style="{StaticResource LegendChip}" Background="#ECEFF1" />
+                                            <TextBlock Style="{StaticResource LegendLabel}" Text="ثبت نشده" />
+                                        </StackPanel>
                                         <!-- رنگ‌ها عیناً از ToothVM.Color (پوشهٔ ViewModelها):
                                              ۰ سالم #FFFFFF / ۱ پوسیدگی #E53935 / ۲ ترمیم #FDD835 /
                                              ۳ درمان #43A047 / ۴ روکش #1E88E5 / ۵ کشیده #37474F /
@@ -400,21 +415,24 @@
                                         </StackPanel>
                                     </Expander>
                                     <Expander Margin="2,6,2,0" Header="📖 کاتالوگ خدمات و تعرفه‌ها">
+                                        <StackPanel>
+                                        <TextBlock Text="{Binding CatalogMessage}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0" />
                                         <ItemsControl ItemsSource="{Binding CatalogItems}" Margin="0,6,0,0">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <TextBlock FontSize="11" Margin="0,1">
-                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · " /><Run Text="{Binding Category, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DurationMin, Mode=OneWay}" /><Run Text=" دقیقه · " /><Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
+                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" · تعرفه آزاد: " /><Run Text="{Binding Price, Mode=OneWay, Converter={StaticResource CurrencyRial}}" /><Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
                                                     </TextBlock>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                        </StackPanel>
                                     </Expander>
                                 </StackPanel>
                             </Border>
 
                             <!-- جزئیات و طرح درمان -->
-                            <Grid Grid.Row="2" Grid.Column="2">
+                            <Grid Grid.Row="2" Grid.Column="2" IsEnabled="{Binding IsDentalChartEnabled}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
@@ -432,24 +450,15 @@
                                         <Border Background="#E3F2FD" CornerRadius="6" Padding="8,4" Margin="0,8,0,0">
                                             <TextBlock Text="{Binding SelectedTooth.AnatomyText, Mode=OneWay, TargetNullValue=—}" FontSize="11" FontWeight="SemiBold" Foreground="#0D47A1" />
                                         </Border>
-                                        <TextBlock Text="خدمت از کاتالوگ دندانپزشکی" FontSize="10.5" Opacity="0.6" Margin="0,8,0,0" />
+                                        <TextBlock Text="خدمت فعال سامانه (تعرفه آزاد)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,0" />
                                         <ComboBox ItemsSource="{Binding CatalogItems}" SelectedItem="{Binding SelectedCatalogItem}" DisplayMemberPath="Display" />
+                                        <TextBlock Text="{Binding CatalogMessage}" FontSize="10" Foreground="#617992" TextWrapping="Wrap" />
                                         <TextBlock Text="سطح درگیر" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
                                         <ComboBox ItemsSource="{Binding SurfaceOptions}" SelectedItem="{Binding SelectedSurface}" />
                                         <TextBlock Text="نوبت پیشنهادی این قلم (روز و ساعت)" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
                                         <TextBox Text="{Binding PlanScheduleText, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: شنبه ۱۰:۰۰" />
-                                        <TextBlock Text="اسلات‌های هفته (سبز خالی · قرمز رزرو · زرد استراحت) — کلیک، نوبت را می‌نشاند" FontSize="9.5" Opacity="0.6" Margin="0,6,0,3" />
-                                        <ListBox ItemsSource="{Binding ScheduleSlots}" SelectedItem="{Binding SelectedSlot}" BorderThickness="0" Background="Transparent">
-                                            <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border CornerRadius="7" Padding="7,3" Margin="2" Background="{Binding Back}">
-                                                        <TextBlock Text="{Binding Display}" FontSize="10" FontWeight="SemiBold" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                        <TextBlock Text="یادداشت بالینی دندان" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
+                                        <TextBlock Text="این متن صرفاً یادداشت پیشنهادی است و نوبت واقعی رزرو نمی‌کند." FontSize="10" Foreground="#7B5B2C" TextWrapping="Wrap" />
+                                        <TextBlock Text="یادداشت بالینی پرونده" FontSize="10.5" Opacity="0.6" Margin="0,6,0,0" />
                                         <TextBox Text="{Binding ClinicalNote, UpdateSourceTrigger=PropertyChanged}" ToolTip="مثلاً: پوسیدگی سطح مزیال، حساس به سرما" />
                                         <Button Command="{Binding AddDentalPlanCommand}" Margin="0,10,0,0"
                                                 Style="{StaticResource MaterialDesignRaisedButton}">
@@ -514,5 +523,6 @@
                                 </Button>
                             </Grid>
                         </Grid>
+        </ScrollViewer>
     </Grid>
 </UserControl>

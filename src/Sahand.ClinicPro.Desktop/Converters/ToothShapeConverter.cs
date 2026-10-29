@@ -151,6 +151,7 @@ public sealed class ToothNumberBrushConverter : IValueConverter
         new(StringComparer.OrdinalIgnoreCase)
         {
             "#FFFFFF", // سالم
+            "#ECEFF1", // وضعیت ثبت نشده
             "#FDD835", // ترمیم‌شده — زرد روشن
         };
 
