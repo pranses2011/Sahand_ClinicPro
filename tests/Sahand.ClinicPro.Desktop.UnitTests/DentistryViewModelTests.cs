@@ -56,7 +56,7 @@ public class DentistryViewModelTests
     {
         var api = ApiWithPatient();
         api.CannedResponses.Remove("dental/chart?patientId=1");
-        var vm = new DentistryViewModel(api, new FakeSnackbar()) { DentalPatientSearch = "1234" };
+        var vm = new DentistryViewModel(api, new FakeSnackbar(), () => true) { DentalPatientSearch = "1234" };
         await vm.SearchDentalPatientCommand.ExecuteAsync(null);
         vm.IsDentalChartEnabled.Should().BeFalse();
         await vm.SaveDentalChartCommand.ExecuteAsync(null);
