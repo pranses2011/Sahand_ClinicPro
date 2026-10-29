@@ -78,7 +78,7 @@ public class VisitEditSafetyTests
         vm.Spo2Text = "۹۸";
         vm.HeightText = "۱۷۰";
         await vm.SaveDraftCommand.ExecuteAsync(null);
-        var body = JsonSerializer.SerializeToElement(api.LastBody).GetProperty("vitalSigns");
+        var body = JsonSerializer.SerializeToElement(api.LastBody, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }).GetProperty("vitalSigns");
         body.GetProperty("bloodPressureSystolic").GetInt32().Should().Be(120);
         body.GetProperty("heartRate").GetInt32().Should().Be(72);
         body.GetProperty("temperature").GetDecimal().Should().Be(37.5m);
