@@ -83,4 +83,24 @@ public class PaymentRecoveryStoreTests
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
     }
+    [Fact]
+    public void Shared_payment_attempt_can_be_recovered_in_payment_window()
+    {
+        var directory = TempFolder();
+        try
+        {
+            var api = new FakeApiClient();
+            var store = new PaymentRecoveryStore(directory);
+            var attempt = PaymentAttempt.Reserve(api, 512, 77, 100, 2, "trace", null, store);
+            attempt.ContextMatches.Should().BeTrue();
+            var vm = new PaymentWindowViewModel(api, 512, 100, store);
+            vm.IsPaymentOutcomeUnknown.Should().BeTrue();
+            vm.CanRetryPayment.Should().BeTrue();
+            vm.Amount.Should().Be(100);
+            store.Load("test-api", 512)!.RequestId.Should().Be(attempt.Request.RequestId);
+            attempt.Clear();
+            store.Load("test-api", 512).Should().BeNull();
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+    }
 }
