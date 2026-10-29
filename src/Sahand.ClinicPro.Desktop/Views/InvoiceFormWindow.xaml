@@ -25,7 +25,7 @@
 
         <TextBlock Grid.Row="0" Text="{Binding FormTitle, Mode=OneWay}" FontSize="17" FontWeight="Bold" Margin="0,0,0,8" />
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" IsEnabled="{Binding CanEditInvoice}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="12" />
@@ -70,11 +70,11 @@
                                 <TextBlock Text="پزشک (اختیاری)" Style="{StaticResource FieldCaption}" />
                                 <ComboBox ItemsSource="{Binding Doctors}" SelectedIndex="{Binding DoctorIndex}" DisplayMemberPath="Name" />
                                 <TextBlock Text="بیمه" Style="{StaticResource FieldCaption}" />
-                                <ComboBox ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
+                                <ComboBox IsEnabled="False" ToolTip="بیمه تا آماده‌شدن پیش‌نمایش معتبر در این فرم غیرفعال است" ItemsSource="{Binding InsuranceCompanies}" SelectedIndex="{Binding InsuranceIndex}" DisplayMemberPath="DisplayName" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="نرخ مالیات (٪)" Style="{StaticResource FieldCaption}" />
-                                <TextBox Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
+                                <TextBox IsEnabled="False" Text="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" TextAlignment="Center" />
                                 <TextBlock Text="پیش‌فرض معمولاً صفر است" FontSize="9.5" Opacity="0.5" Margin="1,4,1,0" />
                             </StackPanel>
                         </Grid>
@@ -166,7 +166,7 @@
                         <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی (MoneyInput)
                              + مبدل ریال↔نمایش برای حالت تومان -->
                         <TextBox behaviors:MoneyInput.IsEnabled="True"
-                                 behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
+                                 IsEnabled="False" behaviors:MoneyInput.NumericValue="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
                                  FontFamily="{DynamicResource App.CodeFont}" materialDesign:HintAssist.Hint="تخفیف (مبلغ)"/>
                         <TextBlock Text="تخفیف — درصد" Style="{StaticResource FieldCaption}" />
                         <Grid>
@@ -174,7 +174,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
+                            <TextBox Grid.Column="0" IsEnabled="False" Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                             <TextBlock Grid.Column="1" Text="٪" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0" />
                         </Grid>
 
@@ -218,10 +218,10 @@
                                 Background="#2E7D32" BorderBrush="#2E7D32" Height="42">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="CheckCircle" Width="17" Height="17" VerticalAlignment="Center" />
-                                <TextBlock Text="✅ ثبت و چاپ" Margin="9,0,0,0" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock Text="صدور فاکتور و پرداخت" Margin="9,0,0,0" FontSize="14" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding PreviewCommand}" Margin="0,8,0,0"
+                        <Button IsEnabled="False" ToolTip="پیش‌نمایش چاپ هنوز در این فرم متصل نیست" Command="{Binding PreviewCommand}" Margin="0,8,0,0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />

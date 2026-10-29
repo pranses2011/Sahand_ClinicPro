@@ -256,6 +256,11 @@ public partial class InvoiceFormViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private int _serviceSearchVersion;
+    private int _patientSearchVersion;
+    private bool _invoiceSubmissionLocked;
+    public bool CanEditInvoice => !IsBusy && !_invoiceSubmissionLocked;
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditInvoice));
 
     /// <summary>عنوان</summary>
     [ObservableProperty]
@@ -420,24 +425,32 @@ public partial class InvoiceFormViewModel : ObservableObject
             : (long?)null;
         var url = "lookups/services?search=" + Uri.EscapeDataString(term ?? string.Empty) +
                   (insuranceId is null ? "" : $"&insuranceCompanyId={insuranceId}");
-        var response = await _api.GetAsync<ServicesResponse>(url);
+        var version = ++_serviceSearchVersion;
+        SelectedService = null;
         Services.Clear();
-        if (response?.Data is null) return;
-        foreach (var s in response.Data)
-            Services.Add(new ServiceOption(s.ServiceId, s.ServiceCode, s.ServiceName,
-                s.Price, s.InsuranceShare, s.PatientShare));
+        try
+        {
+            var response = await _api.GetAsync<ServicesResponse>(url);
+            if (version != _serviceSearchVersion) return;
+            if (response?.Data is null) { _snackbar.Error("دریافت تعرفه خدمات ناموفق بود."); return; }
+            foreach (var s in response.Data)
+                Services.Add(new ServiceOption(s.ServiceId, s.ServiceCode, s.ServiceName,
+                    s.Price, s.InsuranceShare, s.PatientShare));
+        }
+        catch (Exception) { if (version == _serviceSearchVersion) _snackbar.Error("دریافت تعرفه خدمات ناموفق بود."); }
     }
 
     /// <summary>جستجوی بیمار با Enter</summary>
     [RelayCommand]
     private async Task SearchPatientAsync()
     {
-        var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(PatientSearch.Trim())}");
-        var p = response?.Data?.FirstOrDefault();
-        if (p is null) { _snackbar.Error("بیمار یافت نشد"); return; }
-        Patient = new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode,
-            p.Mobile, p.InsuranceName, p.Allergies, null);
+        if (!CanEditInvoice) return;
+        if (Patient is not null && Items.Count > 0) { _snackbar.Error("برای تغییر بیمار ابتدا اقلام فاکتور را حذف کنید."); return; }
+        Patient = null;
+        var version = ++_patientSearchVersion;
+        var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, PatientSearch);
+        if (version != _patientSearchVersion || !CanEditInvoice || patient is null) return;
+        Patient = patient;
         FormTitle = $"💰 صدور فاکتور — {Patient.FullName}";
     }
 
@@ -445,16 +458,21 @@ public partial class InvoiceFormViewModel : ObservableObject
     [RelayCommand]
     private void AddService()
     {
-        if (SelectedService is null) { _snackbar.Error("ابتدا خدمت را انتخاب کنید"); return; }
-        Items.Add(new InvoiceItemVM
+        if (!CanEditInvoice) return;
+        if (SelectedService is null || !Services.Contains(SelectedService)) { _snackbar.Error("ابتدا خدمت را از فهرست جاری انتخاب کنید"); return; }
+        if (ServiceQuantity <= 0 || ServiceQuantity > 99999999) { _snackbar.Error("تعداد خدمت نامعتبر است."); return; }
+        var item = new InvoiceItemVM
         {
             ServiceId = SelectedService.ServiceId,
             Code = SelectedService.ServiceCode ?? "K-—",
             Name = SelectedService.ServiceName,
             UnitPrice = SelectedService.Price,
+            Quantity = ServiceQuantity,
             InsuranceShare = InsuranceIndex > 0 ? SelectedService.InsuranceShare : 0,
             PatientShare = InsuranceIndex > 0 ? SelectedService.PatientShare : SelectedService.Price
-        });
+        };
+        item.PropertyChanged += (_, _) => RaiseTotals();
+        Items.Add(item);
         SelectedService = null;
         ServiceSearch = string.Empty;
         RaiseTotals();
@@ -512,88 +530,64 @@ public partial class InvoiceFormViewModel : ObservableObject
         OnPropertyChanged(nameof(RemainingText));
     }
 
-    /// <summary>ثبت و چاپ — زنجیره فاکتور + پرداخت</summary>
+    /// <summary>صدور و پرداخت فقط پس از تطبیق مبلغ قطعی سرور.</summary>
     [RelayCommand]
     private async Task SaveAndPrintAsync()
     {
-        if (Patient is null) { ErrorMessage = "ابتدا بیمار را انتخاب کنید"; return; }
-        if (Items.Count == 0) { ErrorMessage = "حداقل یک خدمت به فاکتور اضافه کنید"; return; }
-        if (ReceivedAmount < Payable) { ErrorMessage = "مبلغ دریافتی کمتر از قابل پرداخت است"; return; }
-
-        IsBusy = true;
-        // چرخه بیست‌وهفتم (بازبینی الگوی کشوی بیمه — ادامهٔ قانون ۵):
-        // کشوی بیمه گزینهٔ «آزاد» را با شناسهٔ صفر در نمایهٔ ۰ دارد (بند
-        // InitializeAsync بالا)؛ پس نمایهٔ انتخابی مستقیماً روی همان فهرست
-        // اعمال می‌شود. الگوی قدیمی «نمایه − ۱» که بیمهٔ قبلی را ثبت می‌کرد
-        // حذف گردید — هم‌راستا با LoadServicesAsync و AddService همین فایل.
-        var company = InsuranceIndex > 0 && InsuranceIndex < InsuranceCompanies.Count
-            ? InsuranceCompanies[InsuranceIndex]
-            : null;
-
-        // پزشک انتخاب‌شده سطح فاکتور — به همه اقلام منتسب می‌شود (چرخه دهم) تا
-        // انتساب خودکار «انجام‌دهنده از پرسنل مرتبط پزشک» در سرور فعال شود و
-        // سود خدمات در فیش حقوقی پزشک (حقوق درصدی) لحاظ گردد
+        if (!CanEditInvoice) return;
+        if (Patient is null || Patient.Id <= 0) { ErrorMessage = "ابتدا بیمار را به‌طور یکتا انتخاب کنید"; return; }
+        if (Items.Count == 0 || Items.Any(i => i.Quantity <= 0 || i.ServiceId is not > 0)) { ErrorMessage = "خدمت و تعداد معتبر انتخاب کنید"; return; }
+        if (InsuranceCompanies.Count == 0 || InsuranceIndex != 0 || InsuranceCompanies[0].Id != 0 || DiscountAmount != 0 || DiscountPercent != 0 || TaxPercent != 0)
+        { ErrorMessage = "در این فرم فعلاً فقط فاکتور آزاد بدون تخفیف و مالیات مجاز است؛ محاسبه بیمه و تخفیف نیازمند پیش‌نمایش معتبر سرور است."; return; }
+        if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > Payable || decimal.Truncate(ReceivedAmount) != ReceivedAmount)
+        { ErrorMessage = "مبلغ دریافتی یا روش پرداخت نامعتبر است."; return; }
+        var patient = Patient;
+        var expectedAmount = Payable;
+        var received = ReceivedAmount;
+        var method = PaymentMethodIndex switch { 0 => 1, 1 => 2, 2 => 5, 3 => 4, _ => 0 };
         var doctor = DoctorIndex >= 0 && DoctorIndex < Doctors.Count ? Doctors[DoctorIndex] : null;
-
-        // ۱. ثبت فاکتور
-        // ═══ چرخهٔ سی‌ویکم (گزارش مالک — قانون پنجم: ریشهٔ همین خطا در پذیرش) ═══
-        // ناهمخوانی نام فیلدها با قرارداد سرور: «serviceName»/«discount» نادیده
-        // گرفته می‌شد و نام اقلام فاکتور برای همیشه تهی ذخیره می‌شد؛ نام‌های
-        // صحیح قرارداد (description + discountPercent) ارسال می‌شود.
-        var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
+        IsBusy = true;
+        var sentInvoice = false;
+        long? invoiceId = null;
+        try
         {
-            patientId = Patient.Id,
-            receptionId = (long?)null,
-            visitId = (long?)null,
-            type = 1,
-            insuranceCompanyId = company?.Id,
-            taxPercent = TaxPercent,
-            items = Items.Select(i => new
+            sentInvoice = true;
+            var invoice = await _api.PostAsync<InvoiceCreateResult>("invoices", new
             {
-                serviceId = i.ServiceId,
-                description = i.Name,
-                quantity = i.Quantity,
-                unitPrice = i.UnitPrice,
-                discountPercent = 0m,
-                performedById = i.Performer?.Id,
-                doctorId = doctor?.Id
-            }),
-            description = $"فاکتور دستی — {Patient.FullName}"
-        });
-
-        if (invoice?.Data is null or 0)
-        {
-            IsBusy = false;
-            ErrorMessage = _api.LastError ?? "ثبت فاکتور ناموفق بود";
-            return;
-        }
-
-        // ۲. ثبت پرداخت
-        // چرخه سی‌ویکم — بررسی نتیجهٔ پرداخت: پیش‌تر بی‌شرط صدا زده می‌شد و شکستش
-        // خاموش می‌ماند؛ اکنون شکست با دیالوگ فارسی خودِ برنامه اعلام می‌شود
-        // (قانون ششم مالک — بدون MessageBox ویندوز) تا فاکتورِ بدهکار گم نشود
-        var paymentOk = await _api.PostAsync("payments", new
-        {
-            invoiceId = invoice.Data,
-            patientId = Patient.Id,
-            amount = ReceivedAmount,
-            method = PaymentMethodIndex + 1,
-            referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
-            cardNumber = (string?)null
-        });
-
-        IsBusy = false;
-        if (!paymentOk)
-        {
-            // فاکتور ثبت شده ولی پرداخت نه — فاکتور در وضعیت بدهکار می‌ماند
-            Views.AppDialog.Error("ثبت پرداخت ناموفق",
-                $"فاکتور #{invoice.Data} صادر شد اما ثبت پرداخت شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را از همان فهرست فاکتورها (کلید «ثبت پرداخت») تکمیل کنید.");
+                patientId = patient.Id, receptionId = (long?)null, visitId = (long?)null, type = 1,
+                insuranceCompanyId = (long?)null, taxPercent = 0m,
+                items = Items.Select(i => new { serviceId = i.ServiceId, description = i.Name, quantity = i.Quantity,
+                    unitPrice = i.UnitPrice, discountPercent = 0m, performedById = i.Performer?.Id, doctorId = doctor?.Id }).ToList(),
+                description = $"فاکتور دستی — {patient.FullName}"
+            });
+            _invoiceSubmissionLocked = true;
+            OnPropertyChanged(nameof(CanEditInvoice));
+            if (invoice?.Data is null or <= 0)
+            { ErrorMessage = "نتیجه صدور فاکتور نامعلوم است؛ پیش از تکرار، فهرست فاکتورها را بررسی کنید. " + _api.LastError; return; }
+            invoiceId = invoice.Data;
+            var detail = await _api.GetAsync<PaymentWindowViewModel.InvoiceDetailEnvelope>($"invoices/{invoiceId}");
+            if (detail?.Data is null || detail.Data.Id != invoiceId || detail.Data.PatientId != patient.Id || detail.Data.RemainingAmount != expectedAmount)
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
+            if (received == 0)
+            { _snackbar.Success($"فاکتور #{invoiceId} صادر شد؛ پرداختی ثبت نشد."); CloseRequested?.Invoke(this, EventArgs.Empty); return; }
+            var paymentOk = await _api.PostAsync("payments", new
+            {
+                invoiceId, patientId = patient.Id, amount = received, method,
+                referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(), cardNumber = (string?)null
+            });
+            if (!paymentOk)
+            { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ نتیجه پرداخت نامعلوم است. پیش از تلاش مجدد، سوابق پرداخت را بررسی کنید. " + _api.LastError; return; }
+            _snackbar.Success($"فاکتور #{invoiceId} و پرداخت ثبت شدند؛ چاپ خودکار انجام نشده است.");
             CloseRequested?.Invoke(this, EventArgs.Empty);
-            return;
         }
-
-        _snackbar.Success($"فاکتور #{invoice.Data} ثبت شد — چاپ در گام U19 متصل می‌شود");
-        CloseRequested?.Invoke(this, EventArgs.Empty);
+        catch (Exception)
+        {
+            if (sentInvoice) { _invoiceSubmissionLocked = true; OnPropertyChanged(nameof(CanEditInvoice)); }
+            ErrorMessage = invoiceId.HasValue
+                ? $"فاکتور #{invoiceId} صادر شده؛ وضعیت پرداخت را پیش از تلاش مجدد در صندوق بررسی کنید."
+                : "نتیجه صدور فاکتور نامعلوم است؛ پیش از تلاش مجدد فهرست فاکتورها را بررسی کنید.";
+        }
+        finally { IsBusy = false; }
     }
 
     /// <summary>پیش‌نمایش چاپ</summary>
@@ -603,7 +597,7 @@ public partial class InvoiceFormViewModel : ObservableObject
 
     /// <summary>بستن</summary>
     [RelayCommand]
-    private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
+    private void Close() { if (!IsBusy) CloseRequested?.Invoke(this, EventArgs.Empty); }
 
     public sealed class ServicesResponse
     {

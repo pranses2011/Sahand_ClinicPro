@@ -13,6 +13,8 @@ public partial class InvoiceFormWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
-        viewModel.CloseRequested += (_, _) => Close();
+        var closingAfterSuccess = false;
+        viewModel.CloseRequested += (_, _) => { closingAfterSuccess = true; Close(); };
+        Closing += (_, e) => { if (viewModel.IsBusy && !closingAfterSuccess) e.Cancel = true; };
     }
 }
