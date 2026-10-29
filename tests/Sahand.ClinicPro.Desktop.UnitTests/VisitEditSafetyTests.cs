@@ -118,4 +118,30 @@ public class VisitEditSafetyTests
         vm.StopTimers();
     }
 
+    [Fact]
+    public async Task Referrals_require_explicit_imaging_choices_and_do_not_create_fake_physio_sessions()
+    {
+        var api = new FakeApiClient();
+        var snack = new FakeSnackbar();
+        var vm = new VisitEditViewModel(api, snack, 7, 8);
+        await vm.SendToImagingCommand.ExecuteAsync(null);
+        vm.SendToPhysioCommand.Execute(null);
+        api.Calls.Should().NotContain(c => c.Endpoint == "imaging/orders" || c.Endpoint == "physiotherapy/sessions");
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Lab_order_is_linked_to_successfully_saved_visit()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.LabTests.Add(new LabTestOptionRow { Id = 17, Name = "آزمون", IsSelected = true });
+        await vm.SendToLabCommand.ExecuteAsync(null);
+        var call = api.Calls.Single(c => c.Endpoint == "lab/orders");
+        var json = JsonSerializer.SerializeToElement(call.Body);
+        json.GetProperty("visitId").GetInt64().Should().Be(42);
+        vm.StopTimers();
+    }
+
 }
