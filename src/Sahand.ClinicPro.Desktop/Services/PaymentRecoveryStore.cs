@@ -7,7 +7,13 @@ namespace Sahand.ClinicPro.Desktop.Services;
 
 /// <summary>درخواست دقیق پرداخت؛ اطلاعات فقط در فایل رمزگذاری‌شده محلی حفظ می‌شوند.</summary>
 public sealed record PendingPayment(long InvoiceId, long PatientId, decimal Amount, int Method,
-    string? ReferenceNumber, string? CardNumber, Guid RequestId, string Server, long? BranchId);
+    string? ReferenceNumber, string? CardNumber, Guid RequestId, string Server, long? BranchId)
+{
+    /// <summary>فقط فیلدهای قرارداد پرداخت به سرور ارسال می‌شوند.</summary>
+    public Sahand.ClinicPro.Application.DTOs.Billing.RecordPaymentDto ToRequest() =>
+        new(InvoiceId, PatientId, Amount, (Sahand.ClinicPro.Domain.Enums.PaymentMethod)Method,
+            ReferenceNumber, CardNumber, RequestId);
+}
 
 /// <summary>رزرو پیش از ارسال و نگهداری تا دریافت پاسخ موفق.</summary>
 public interface IPaymentRecoveryStore

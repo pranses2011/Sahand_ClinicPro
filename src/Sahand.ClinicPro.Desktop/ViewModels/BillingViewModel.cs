@@ -695,7 +695,7 @@ public partial class InvoiceFormViewModel : ObservableObject
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما رزرو ایمن پرداخت ناموفق بود و پرداخت ارسال نشد؛ در صندوق بررسی کنید."; return; }
             if (!attempt.ContextMatches)
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید."; return; }
-            var paymentOk = await _api.PostAsync("payments/idempotent", attempt.Request);
+            var paymentOk = await _api.PostAsync("payments/idempotent", attempt.Request.ToRequest());
             if (!paymentOk)
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد؛ نتیجه پرداخت نامعلوم است. پس از بررسی وجه و سوابق، همان فاکتور را در صندوق باز کنید. " + _api.LastError; return; }
             try { attempt.Clear(); }

@@ -1908,7 +1908,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                     else
                     {
                         sentPayment = true;
-                        var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", attempt.Request);
+                        var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", attempt.Request.ToRequest());
                         if (paymentResult?.Data is null || paymentResult.Data <= 0)
                         {
                             paymentFailed = true;

@@ -142,7 +142,7 @@ public partial class PaymentWindowViewModel : ObservableObject
                 return;
             }
             sent = true;
-            var ok = await _api.PostAsync("payments/idempotent", body);
+            var ok = await _api.PostAsync("payments/idempotent", body.ToRequest());
             if (!ok)
             {
                 IsPaymentOutcomeUnknown = true;
@@ -175,7 +175,7 @@ public partial class PaymentWindowViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var ok = await _api.PostAsync("payments/idempotent", _pendingPayment);
+            var ok = await _api.PostAsync("payments/idempotent", _pendingPayment!.ToRequest());
             if (!ok)
             { ErrorMessage = "نتیجه پرداخت همچنان نامعلوم است؛ قبل از پرداخت جدید سوابق را بررسی کنید. " + _api.LastError; return; }
             if (!ClearRecovery()) return;
