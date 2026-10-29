@@ -136,7 +136,7 @@ public partial class LabResultViewModel : ObservableObject
                 AbnormalFlag = i.AbnormalFlag,
                 StatusText = ItemStatusText(i.Status),
                 Result = i.Result,
-                ResultNumeric = i.ResultNumeric?.ToString() ?? string.Empty,
+                ResultNumeric = i.ResultNumeric?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
                 Comment = i.Comment
             }));
             // چرخهٔ ۶۷ — دکمهٔ چاپ فقط وقتی معنا دارد که نتیجه‌ای ثبت شده باشد
@@ -181,7 +181,7 @@ public partial class LabResultViewModel : ObservableObject
         decimal? resultNumeric = null;
         if (!string.IsNullOrWhiteSpace(SelectedItem.ResultNumeric))
         {
-            if (!decimal.TryParse(SelectedItem.ResultNumeric.Trim(), out var parsed))
+            if (!LabNumericResult.TryParse(SelectedItem.ResultNumeric, out var parsed))
             {
                 ErrorMessage = "نتیجه عددی معتبر نیست";
                 return;

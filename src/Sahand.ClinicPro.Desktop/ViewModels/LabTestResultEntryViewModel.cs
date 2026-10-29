@@ -211,20 +211,20 @@ public partial class LabTestResultEntryViewModel : ObservableObject
             HistoryRows = new System.Collections.ObjectModel.ObservableCollection<LabHistoryRow>(
                 found.Take(5).Select(f => new LabHistoryRow(
                     f.Date,
-                    Helpers.Money.ToPersianDigits(f.Value.ToString("0.####")),
+                    LabNumericResult.Format(f.Value),
                     f.Flag switch
                     {
                         "H" => "بالاتر از حد",
                         "L" => "پایین‌تر از حد",
                         "HH" => "بحرانی بالا",
                         "LL" => "بحرانی پایین",
-                        _ => "طبیعی"
+                        _ => "بدون هشدار ثبت‌شده"
                     },
                     f.Flag switch
                     {
                         "HH" or "LL" => "#E53935",
                         "H" or "L" => "#FB8C00",
-                        _ => "#43A047"
+                        _ => "#607D8B"
                     },
                     140d * (double)(Math.Abs(f.Value) / max))));
             HasHistory = HistoryRows.Count > 0;
@@ -246,7 +246,7 @@ public partial class LabTestResultEntryViewModel : ObservableObject
         decimal? resultNumeric = null;
         if (!string.IsNullOrWhiteSpace(ResultNumeric))
         {
-            if (!decimal.TryParse(ResultNumeric.Trim(), out var parsed))
+            if (!LabNumericResult.TryParse(ResultNumeric, out var parsed))
             {
                 ErrorMessage = "نتیجهٔ عددی معتبر نیست — مثال درست: ۱۲/۵ یا 12.5";
                 return;
@@ -322,13 +322,13 @@ public partial class LabTestResultEntryViewModel : ObservableObject
             "L" => "پایین‌تر از حد طبیعی",
             "HH" => "بحرانی بالا — اطلاع فوری پزشک",
             "LL" => "بحرانی پایین — اطلاع فوری پزشک",
-            _ => "در حد طبیعی"
+            _ => "بدون هشدار ثبت‌شده؛ طبیعی بودن تأیید نشده"
         };
         SavedFlagBrush = flag switch
         {
             "HH" or "LL" => "#E53935",
             "H" or "L" => "#FB8C00",
-            _ => "#43A047"
+            _ => "#607D8B"
         };
         HasSavedResult = true;
     }
