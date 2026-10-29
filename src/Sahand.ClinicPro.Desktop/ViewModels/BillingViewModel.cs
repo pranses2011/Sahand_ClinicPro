@@ -643,9 +643,9 @@ public partial class InvoiceFormViewModel : ObservableObject
             { ErrorMessage = $"فاکتور #{invoiceId} صادر شد، اما مبلغ یا هویت با پیش‌نمایش منطبق نیست؛ پرداخت ارسال نشد. در صندوق بررسی کنید."; return; }
             if (received == 0)
             { _snackbar.Success($"فاکتور #{invoiceId} صادر شد؛ پرداختی ثبت نشد."); CloseRequested?.Invoke(this, EventArgs.Empty); return; }
-            var paymentOk = await _api.PostAsync("payments", new
+            var paymentOk = await _api.PostAsync("payments/idempotent", new
             {
-                invoiceId, patientId = patient.Id, amount = received, method,
+                requestId = Guid.NewGuid(), invoiceId, patientId = patient.Id, amount = received, method,
                 referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(), cardNumber = (string?)null
             });
             if (!paymentOk)

@@ -11,6 +11,8 @@ public partial class PaymentWindowViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly long _invoiceId;
+    private object? _pendingPayment;
+    public bool CanRetryPayment => !IsBusy && IsPaymentOutcomeUnknown && _pendingPayment is not null;
 
     /// <summary>مبلغ باقیمانده — راهنمای کاربر</summary>
     public decimal RemainingAmount { get; }
@@ -47,8 +49,8 @@ public partial class PaymentWindowViewModel : ObservableObject
     private bool _isBusy;
     [ObservableProperty] private bool _isPaymentOutcomeUnknown;
     public bool CanEditPayment => !IsBusy && !IsPaymentOutcomeUnknown;
-    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditPayment));
-    partial void OnIsPaymentOutcomeUnknownChanged(bool value) => OnPropertyChanged(nameof(CanEditPayment));
+    partial void OnIsBusyChanged(bool value) { OnPropertyChanged(nameof(CanEditPayment)); OnPropertyChanged(nameof(CanRetryPayment)); }
+    partial void OnIsPaymentOutcomeUnknownChanged(bool value) { OnPropertyChanged(nameof(CanEditPayment)); OnPropertyChanged(nameof(CanRetryPayment)); }
 
     /// <summary>رویداد بستن</summary>
     public event EventHandler? CloseRequested;
@@ -89,15 +91,17 @@ public partial class PaymentWindowViewModel : ObservableObject
             var body = new
             {
                 invoiceId = _invoiceId, patientId = detail.PatientId, amount = Amount, method = MethodIndex + 1,
+                requestId = Guid.NewGuid(),
                 referenceNumber = string.IsNullOrWhiteSpace(ReferenceNumber) ? null : ReferenceNumber.Trim(),
                 cardNumber = string.IsNullOrWhiteSpace(CardNumber) ? null : CardNumber.Trim()
             };
+            _pendingPayment = body;
             sent = true;
-            var ok = await _api.PostAsync("payments", body);
+            var ok = await _api.PostAsync("payments/idempotent", body);
             if (!ok)
             {
                 IsPaymentOutcomeUnknown = true;
-                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ پیش از تلاش مجدد، فاکتور و سوابق پرداخت را بررسی کنید. " + _api.LastError;
+                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ می‌توانید همین درخواست را دوباره بررسی کنید یا پیش از پرداخت جدید سوابق را بررسی کنید. " + _api.LastError;
                 return;
             }
             Services.LocalSettingsStore.Set("ui.payment.lastMethod", MethodIndex.ToString());
@@ -108,10 +112,28 @@ public partial class PaymentWindowViewModel : ObservableObject
             if (sent)
             {
                 IsPaymentOutcomeUnknown = true;
-                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ پیش از تلاش مجدد، فاکتور و سوابق پرداخت را بررسی کنید.";
+                ErrorMessage = "نتیجه پرداخت نامعلوم است؛ می‌توانید همین درخواست را دوباره بررسی کنید یا پیش از پرداخت جدید سوابق را بررسی کنید.";
             }
             else ErrorMessage = "دریافت فاکتور ناموفق بود؛ پرداخت ارسال نشد.";
         }
+        finally { IsBusy = false; }
+    }
+
+    /// <summary>تکرار دقیق همان درخواست و شناسه، بدون ارسال پرداخت جدید.</summary>
+    [RelayCommand]
+    private async Task RetryPaymentAsync()
+    {
+        if (!CanRetryPayment) return;
+        IsBusy = true;
+        try
+        {
+            var ok = await _api.PostAsync("payments/idempotent", _pendingPayment);
+            if (!ok)
+            { ErrorMessage = "نتیجه پرداخت همچنان نامعلوم است؛ قبل از پرداخت جدید سوابق را بررسی کنید. " + _api.LastError; return; }
+            Services.LocalSettingsStore.Set("ui.payment.lastMethod", MethodIndex.ToString());
+            SaveSucceeded?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception) { ErrorMessage = "نتیجه پرداخت همچنان نامعلوم است؛ قبل از پرداخت جدید سوابق را بررسی کنید."; }
         finally { IsBusy = false; }
     }
 

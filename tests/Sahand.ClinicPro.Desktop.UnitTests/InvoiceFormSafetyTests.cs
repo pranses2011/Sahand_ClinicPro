@@ -33,7 +33,7 @@ public class InvoiceFormSafetyTests
         vm.CanEditInvoice.Should().BeFalse();
         await vm.SaveAndPrintCommand.ExecuteAsync(null);
         api.Calls.Count(x => x.Endpoint == "invoices").Should().Be(1);
-        api.Calls.Should().NotContain(x => x.Endpoint == "payments");
+        api.Calls.Should().NotContain(x => x.Endpoint == "payments/idempotent");
     }
 
     [Fact]

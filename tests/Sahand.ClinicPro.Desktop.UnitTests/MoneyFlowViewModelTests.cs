@@ -76,7 +76,7 @@ public class MoneyFlowViewModelTests
 
         succeeded.Should().BeTrue("پرداخت معتبر باید رویداد موفقیت را شلیک کند");
         api.Calls.Should().Contain(c => c.Method == "GET" && c.Endpoint == "invoices/512");
-        api.Calls.Should().Contain(c => c.Method == "POST-bool" && c.Endpoint == "payments");
+        api.Calls.Should().Contain(c => c.Method == "POST-bool" && c.Endpoint == "payments/idempotent");
         succeeded.Should().BeTrue();
         vm.ErrorMessage.Should().BeEmpty();
     }
@@ -274,7 +274,7 @@ public class MoneyFlowViewModelTests
         vm.IsPaymentOutcomeUnknown.Should().BeTrue();
         vm.ErrorMessage.Should().Contain("نامعلوم");
         await vm.SaveCommand.ExecuteAsync(null);
-        api.Calls.Count(c => c.Endpoint == "payments").Should().Be(1);
+        api.Calls.Count(c => c.Endpoint == "payments/idempotent").Should().Be(1);
     }
 
     [Fact]
@@ -285,10 +285,28 @@ public class MoneyFlowViewModelTests
         var vm = new PaymentWindowViewModel(api, 512, 100m) { Amount = 50m };
         await vm.SaveCommand.ExecuteAsync(null);
         vm.ErrorMessage.Should().Contain("مانده فاکتور تغییر");
-        api.Calls.Should().NotContain(c => c.Endpoint == "payments");
+        api.Calls.Should().NotContain(c => c.Endpoint == "payments/idempotent");
         api.CannedResponses["invoices/512"] = new { data = new { id = 999, patientId = 77, remainingAmount = 100m } };
         await vm.SaveCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Endpoint == "payments");
+        api.Calls.Should().NotContain(c => c.Endpoint == "payments/idempotent");
     }
 
+    [Fact]
+    public async Task Payment_retry_reuses_exact_request_without_refetching_balance()
+    {
+        var api = new FakeApiClient { NextBoolResult = false };
+        api.CannedResponses["invoices/512"] = new { data = new { id = 512, patientId = 77, remainingAmount = 100m } };
+        var vm = new PaymentWindowViewModel(api, 512, 100m) { Amount = 100m, MethodIndex = 0 };
+        await vm.SaveCommand.ExecuteAsync(null);
+        var original = System.Text.Json.JsonSerializer.Serialize(api.LastBody);
+        vm.IsPaymentOutcomeUnknown.Should().BeTrue();
+        api.NextBoolResult = true;
+        var succeeded = false;
+        vm.SaveSucceeded += (_, _) => succeeded = true;
+        await vm.RetryPaymentCommand.ExecuteAsync(null);
+        succeeded.Should().BeTrue();
+        System.Text.Json.JsonSerializer.Serialize(api.LastBody).Should().Be(original);
+        api.Calls.Count(c => c.Endpoint == "payments/idempotent").Should().Be(2);
+        api.Calls.Count(c => c.Endpoint == "invoices/512").Should().Be(1);
+    }
 }

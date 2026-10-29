@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
@@ -1868,8 +1868,9 @@ public partial class ReceptionsViewModel : ViewModelBase
             }
             else
             {
-                var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments", new
+                var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", new
                 {
+                    requestId = Guid.NewGuid(),
                     invoiceId = invoice.Data,
                     patientId = FoundPatient.Id,
                     amount = payable.Value,
