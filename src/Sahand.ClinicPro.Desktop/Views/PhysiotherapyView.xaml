@@ -57,7 +57,7 @@
                 <!-- ───── بیمار و پیشرفت دوره ───── -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <Grid>
+                        <Grid IsEnabled="{Binding CanSelectPhysioPatient}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />

@@ -57,4 +57,22 @@ public class PhysiotherapyViewModelTests
         vm.PainTrendPoints.Should().BeEmpty();
         vm.IsPhysioSessionEnabled.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Session_save_locks_inputs_and_preserves_notes_on_failure()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingBoolPostResult = completion.Task };
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1), PhysioNotes = "یادداشت فعلی" };
+        var save = vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        vm.IsPhysioSessionEnabled.Should().BeFalse();
+        vm.CanSelectPhysioPatient.Should().BeFalse();
+        await vm.SearchPhysioPatientCommand.ExecuteAsync(null);
+        vm.PhysioPatient!.Id.Should().Be(1);
+        completion.SetResult(false);
+        await save;
+        vm.IsPhysioSessionEnabled.Should().BeTrue();
+        vm.PhysioNotes.Should().Be("یادداشت فعلی");
+    }
 }

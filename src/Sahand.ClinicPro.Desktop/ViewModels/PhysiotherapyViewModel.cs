@@ -98,8 +98,15 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     private readonly Dictionary<string, int> _defaultTechniqueMinutes = new();
     [ObservableProperty] private bool _isHistoryLoading;
     [ObservableProperty] private bool _isHistoryReady;
+    [ObservableProperty] private bool _isPhysioSaving;
+    public bool CanSelectPhysioPatient => !IsPhysioSaving;
     /// <summary>ثبت جلسه تنها پس از دریافت موفق سابقهٔ بیمار مجاز است.</summary>
-    public bool IsPhysioSessionEnabled => PhysioPatient is not null && IsHistoryReady && !IsHistoryLoading;
+    public bool IsPhysioSessionEnabled => PhysioPatient is not null && IsHistoryReady && !IsHistoryLoading && !IsPhysioSaving;
+    partial void OnIsPhysioSavingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSelectPhysioPatient));
+        OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+    }
     partial void OnIsHistoryLoadingChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
     partial void OnIsHistoryReadyChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
 
@@ -396,6 +403,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SearchPhysioPatientAsync()
     {
+        if (IsPhysioSaving) return;
         PhysioPatient = null;
         var version = ++_patientVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, PhysioPatientSearch);
@@ -520,7 +528,11 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         };
         var progressNote = JsonSerializer.Serialize(details);
 
-        var ok = await _api.PostAsync("physiotherapy/sessions", new
+        IsPhysioSaving = true;
+        try
+        {
+        bool ok;
+        try { ok = await _api.PostAsync("physiotherapy/sessions", new
         {
             patientId = patient.Id,
             therapistId = (long?)null,
@@ -529,7 +541,12 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             duration = TotalDuration > 0 ? TotalDuration : (int?)null,
             painScore = RecordPainScore ? (byte?)Math.Clamp(PainScore, 0, 10) : null,
             progressNote
-        });
+        }); }
+        catch
+        {
+            _snackbar.Error("پاسخ ثبت جلسه دریافت نشد؛ پیش از تلاش مجدد سابقهٔ بیمار را بررسی کنید.");
+            return;
+        }
         if (ok)
         {
             _snackbar.Success("جلسه فیزیوتراپی با نقشهٔ بدن و ارزیابی ساخت‌یافته ثبت شد");
@@ -540,6 +557,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             }
         }
         else _snackbar.Error(_api.LastError ?? "ثبت جلسه ناموفق بود");
+        }
+        finally { IsPhysioSaving = false; }
     }
 }
 

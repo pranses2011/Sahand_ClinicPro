@@ -190,6 +190,11 @@ public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSes
     /// <summary>اجرای ثبت جلسه</summary>
     public async Task<Result<long>> Handle(RecordPhysioSessionCommand request, CancellationToken cancellationToken)
     {
+        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+                .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.SessionNumber < 1 || request.PainScore > 10 || request.Duration is <= 0)
+            return Result<long>.Failure(new Error("INVALID_PHYSIO_SESSION", "شماره جلسه، مدت یا شدت درد معتبر نیست"));
         var session = new PhysiotherapySession
         {
             PatientId = request.PatientId,
