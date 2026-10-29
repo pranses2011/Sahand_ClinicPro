@@ -1,4 +1,11 @@
 using FluentAssertions;
+using System.Text.Json;
+using MediatR;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using Sahand.ClinicPro.API.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.Application.Features.Paraclinical;
 using Sahand.ClinicPro.Domain.Entities.Clinical;
@@ -73,6 +80,29 @@ public class EyeExamPatientSafetyTests
         saved.RightCorrectedVisualAcuity.Should().Be("20/20");
         saved.RightVisualAcuity.Should().BeNull();
         saved.LeftCorrectedVisualAcuity.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task History_returns_corrected_and_uncorrected_vision_separately()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "EYE-HISTORY-VA", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new SaveEyeExamCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var command = Command(patient.Id, null) with { RightVisualAcuity = "20/40", RightCorrectedVisualAcuity = "20/20", LeftCorrectedVisualAcuity = "20/25" };
+        (await handler.Handle(command, default)).IsSuccess.Should().BeTrue();
+        var controller = new ParaclinicalController(Mock.Of<IMediator>(), scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<IWebHostEnvironment>(), Mock.Of<IConfiguration>());
+        var response = (OkObjectResult)await controller.GetEyeExams(patient.Id);
+        var json = JsonSerializer.SerializeToElement(response.Value, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var result = json.GetProperty("data")[0];
+        result.GetProperty("od").GetProperty("acuity").GetString().Should().Be("20/40");
+        result.GetProperty("od").GetProperty("correctedAcuity").GetString().Should().Be("20/20");
+        result.GetProperty("os").GetProperty("acuity").ValueKind.Should().Be(JsonValueKind.Null);
+        result.GetProperty("os").GetProperty("correctedAcuity").GetString().Should().Be("20/25");
     }
 
 }
