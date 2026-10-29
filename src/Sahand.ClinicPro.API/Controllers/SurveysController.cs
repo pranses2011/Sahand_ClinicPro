@@ -218,7 +218,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
 
     // با قالب خوانندهٔ دسکتاپ و اعتبار پاسخ‌ها سازگار است. نظرسنجی‌های
     // قدیمی بدون سؤال ساختاریافته همچنان برای امتیاز و نظر قابل استفاده‌اند.
-    private static bool ValidQuestions(string? questions)
+    internal static bool ValidQuestions(string? questions)
     {
         if (string.IsNullOrWhiteSpace(questions)) return true;
         if (questions.Length > 200_000) return false;
@@ -267,7 +267,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
 
     // عکس سؤال و پاسخ همراه هم ذخیره می‌شود؛ ویرایش بعدی فرم معنای
     // پاسخ تاریخی را عوض نمی‌کند. درخواست‌های قدیمی بدون Answers سازگارند.
-    private static bool TryBuildAnswerSnapshot(string? questions, List<string?> answers, out string? snapshot)
+    internal static bool TryBuildAnswerSnapshot(string? questions, List<string?> answers, out string? snapshot)
     {
         snapshot = null;
         try
@@ -411,7 +411,9 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
         // سرویس عمومی پاسخ‌گویی در این برنامه تعبیه نشده است. ارسال به دامنهٔ
         // حدسی می‌تواند پیامک حاوی لینک نامعتبر به بیماران بفرستد؛ فقط نشانی
         // صریح سرویس بیرونی که مدیر نصب پیکربندی کرده قابل استفاده است.
-        var configuredUrl = string.IsNullOrWhiteSpace(request?.BaseUrl)
+        var builtIn = _configuration.GetValue<bool>("Surveys:EnableBuiltInPublic");
+        // در سرویس داخلی توکن فقط به نشانی پیکربندی‌شده توسط مدیر نصب می‌رود.
+        var configuredUrl = builtIn || string.IsNullOrWhiteSpace(request?.BaseUrl)
             ? _configuration["Surveys:PublicBaseUrl"] : request!.BaseUrl;
         if (!Uri.TryCreate(configuredUrl?.Trim(), UriKind.Absolute, out var publicUri) ||
             publicUri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(publicUri.UserInfo) ||
@@ -443,11 +445,23 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
 
         // درج در صف پیامک — پردازشگر صف به‌صورت پس‌زمینه ارسال می‌کند
         var queueRepo = _unitOfWork.Repository<SmsQueueItem>();
+        var issuedAt = DateTime.UtcNow;
         foreach (var v in visits)
         {
+            var patientLink = link;
+            if (builtIn)
+            {
+                var token = SurveyPublicToken.Create();
+                // توکن در fragment است تا در مسیر درخواست و لاگ عادی وب ثبت نشود.
+                patientLink = $"{publicUri.AbsoluteUri.TrimEnd('/')}/s/#{token}";
+                await _unitOfWork.Repository<SurveyInvitation>().AddAsync(new SurveyInvitation
+                {
+                    SurveyId = id, TokenHash = SurveyPublicToken.Hash(token)!, ExpiresAt = issuedAt.AddDays(7)
+                });
+            }
             var message =
                 $"{v.FirstName} گرامی، از اعتماد شما به درمانگاه سهند سپاسگزاریم. " +
-                $"لطفاً با ثبت نظرتان کیفیت خدمات امروز را به ما کمک کنید: {link}";
+                $"لطفاً با ثبت نظرتان کیفیت خدمات امروز را به ما کمک کنید: {patientLink}";
             await queueRepo.AddAsync(new SmsQueueItem
             {
                 Recipient = v.Mobile.Trim(),
@@ -461,7 +475,7 @@ public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitRespon
         await _unitOfWork.SaveEntitiesAsync();
 
         return Ok(ApiResponse<object>.Success(
-            new { queuedCount = visits.Count, link },
+            new { queuedCount = visits.Count, link = builtIn ? null : link },
             $"{visits.Count} پیامک لینک نظرسنجی در صف ارسال قرار گرفت"));
     }
 
