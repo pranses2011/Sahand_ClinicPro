@@ -256,4 +256,39 @@ public class MoneyFlowViewModelTests
         vm.SummaryCards.Should().NotBeEmpty();
         vm.Rows.Should().HaveCount(1);
     }
+    [Fact]
+    public async Task Payment_unknown_outcome_blocks_resubmission_and_locks_until_checked()
+    {
+        var pending = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingBoolPostResult = pending.Task };
+        api.CannedResponses["invoices/512"] = new { data = new { id = 512, patientId = 77, remainingAmount = 100m } };
+        var vm = new PaymentWindowViewModel(api, 512, 100m) { Amount = 50m };
+        var closed = false;
+        vm.CloseRequested += (_, _) => closed = true;
+        var saving = vm.SaveCommand.ExecuteAsync(null);
+        vm.CanEditPayment.Should().BeFalse();
+        vm.CancelCommand.Execute(null);
+        closed.Should().BeFalse();
+        pending.SetResult(false);
+        await saving;
+        vm.IsPaymentOutcomeUnknown.Should().BeTrue();
+        vm.ErrorMessage.Should().Contain("نامعلوم");
+        await vm.SaveCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Endpoint == "payments").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Payment_is_not_sent_if_invoice_balance_or_identity_changed()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["invoices/512"] = new { data = new { id = 512, patientId = 77, remainingAmount = 80m } };
+        var vm = new PaymentWindowViewModel(api, 512, 100m) { Amount = 50m };
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.ErrorMessage.Should().Contain("مانده فاکتور تغییر");
+        api.Calls.Should().NotContain(c => c.Endpoint == "payments");
+        api.CannedResponses["invoices/512"] = new { data = new { id = 999, patientId = 77, remainingAmount = 100m } };
+        await vm.SaveCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Endpoint == "payments");
+    }
+
 }
