@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -160,19 +159,26 @@ public partial class PhysiotherapyView : UserControl
         { AppDialog.Error("چاپ تمرین خانگی", "ابتدا بیمار و سابقهٔ او را بارگذاری کنید."); return; }
         if (string.IsNullOrWhiteSpace(_vm.HomeProgram))
         { AppDialog.Error("چاپ تمرین خانگی", "ابتدا متن برنامهٔ تمرین خانگی را وارد کنید."); return; }
-        var doc = new FlowDocument
-        {
-            PagePadding = new Thickness(48),
-            FlowDirection = FlowDirection.RightToLeft,
-            FontFamily = new FontFamily("pack://application:,,,/Assets/Fonts/#Vazirmatn")
-        };
-        doc.Blocks.Add(new Paragraph(new Run("برنامهٔ تمرین خانگی فیزیوتراپی"))
-        { FontSize = 20, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center });
-        doc.Blocks.Add(new Paragraph(new Run($"بیمار: {_vm.PhysioPatient?.FullName ?? "—"}    پروتکل: {_vm.ActiveProtocolName ?? "—"}"))
-        { FontSize = 13 });
-        doc.Blocks.Add(new Paragraph(new Run(_vm.HomeProgram ?? string.Empty)) { FontSize = 13 });
-        doc.Blocks.Add(new Paragraph(new Run("لطفاً تمرین‌ها را روزانه طبق برنامه انجام دهید و در صورت تشدید درد با درمانگاه تماس بگیرید."))
-        { FontSize = 11 });
-        PrintFlow.Print(doc, "تمرین خانگی فیزیوتراپی");
+        PrintPhysioDocument(_vm, _vm.HomeProgram, false);
+    }
+
+    private void PrintReferralReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm is null || !_vm.IsPhysioSessionEnabled || _vm.PhysioPatient is null)
+        { AppDialog.Error("چاپ گزارش", "ابتدا بیمار و سابقهٔ او را بارگذاری کنید."); return; }
+        // گزارش بلافاصله از مقادیر فعلی ساخته می‌شود و پس از خطای اعتبار چاپ نمی‌شود.
+        _vm.GenerateReportCommand.Execute(null);
+        if (string.IsNullOrWhiteSpace(_vm.ReferralReport)) return;
+        PrintPhysioDocument(_vm, _vm.ReferralReport, true);
+    }
+
+    private static void PrintPhysioDocument(PhysiotherapyViewModel vm, string? text, bool referral)
+    {
+        if (!PhysioPrintService.TryCreate(vm.PhysioPatient, text, out var data))
+        { AppDialog.Error("چاپ فیزیوتراپی", "مشخصات بیمار یا متن گزارش معتبر نیست."); return; }
+        var key = referral ? "PhysioReferralReport" : "PhysioHomeProgram";
+        var title = referral ? "پیش‌نویس گزارش فیزیوتراپی" : "پیش‌نویس تمرین خانگی فیزیوتراپی";
+        PrintFlow.Print(PhysioPrintService.Build(data!, IranClock.Now, referral), title,
+            PrintJobSettings.PrinterFor(key), jobKey: key);
     }
 }

@@ -359,6 +359,8 @@
                     <StackPanel>
                         <TextBlock Text="📄 گزارش پیشرفت برای پزشک ارجاع‌دهنده" Style="{StaticResource SectionTitle}" />
                         <TextBox Text="{Binding ReferralReport, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Height="110" />
+                        <Button Content="🖨 چاپ پیش‌نویس گزارش ارجاع" Click="PrintReferralReport_Click" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                ToolTip="گزارش هنگام چاپ از مقادیر فعلی ساخته می‌شود و نیاز به تأیید درمانگر دارد" />
                         <TextBlock Text="🎯 اهداف عملکردی (ICF)" FontWeight="Bold" FontSize="13" Margin="2,14,2,6" />
                         <ItemsControl ItemsSource="{Binding IcfGoals}">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>

@@ -28,6 +28,8 @@ public static class PrintJobSettings
         new PrintJobInfo("ReceptionReceipt", "قبض پذیرش و پرداخت", "صفحهٔ پذیرش — پس از ثبت و پرداخت", "🧾", "حرارتی ۸۰", new[] { "Printer.Receipt", "Printer.Ticket", "Printer.TicketPrinter" }),
         new PrintJobInfo("AppointmentTicket", "قبض نوبت", "نوبت‌دهی — برگهٔ راهنمای بیمار", "🎫", "حرارتی ۸۰", new[] { "Printer.Ticket", "Printer.TicketPrinter" }),
         new PrintJobInfo("Invoice", "فاکتور", "مالی — فاکتور خدمات و فروش", "📄", "A5", new[] { "Printer.InvoicePrinter" }),
+        new PrintJobInfo("PhysioHomeProgram", "تمرین خانگی فیزیوتراپی", "فیزیوتراپی — پیش‌نویس برنامهٔ بیمار", "🏠", "A4", new[] { "Printer.DefaultPrinter" }),
+        new PrintJobInfo("PhysioReferralReport", "گزارش ارجاع فیزیوتراپی", "فیزیوتراپی — پیش‌نویس گزارش برای ارجاع‌دهنده", "📄", "A4", new[] { "Printer.DefaultPrinter" }),
         new PrintJobInfo("DentalChart", "چارت دندان", "دندان‌پزشکی — وضعیت ثبت‌شدهٔ دندان‌ها", "🦷", "A4", new[] { "Printer.DefaultPrinter" }),
         new PrintJobInfo("DentalTreatmentPlan", "طرح درمان دندان", "دندان‌پزشکی — پیش‌نویس اقلام طرح", "📋", "A4", new[] { "Printer.DefaultPrinter" }),
         new PrintJobInfo("GlassesPrescription", "پیش‌نویس نسخهٔ عینک", "چشم‌پزشکی — پیش‌نویس نیازمند امضای دستی", "👓", "A5", new[] { "Printer.PrescriptionPrinter" }),
