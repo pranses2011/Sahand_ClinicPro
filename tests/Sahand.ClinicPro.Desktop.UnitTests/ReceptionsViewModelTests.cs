@@ -289,4 +289,21 @@ public class ReceptionsViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
     }
 
+    [Fact]
+    public async Task Explicit_free_insurance_is_sent_as_zero_not_patient_policy_fallback()
+    {
+        var api = MakeApi();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingPostResult = pending.Task;
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", "بیمه", null, null, 5);
+        vm.InsuranceIndex = 0;
+        vm.SelectedDoctor = vm.Doctors.First();
+        var submission = vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        var body = System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("insuranceCompanyId").GetInt64().Should().Be(0);
+        pending.SetResult(null);
+        await submission;
+    }
+
 }

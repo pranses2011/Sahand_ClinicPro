@@ -1700,7 +1700,8 @@ public partial class ReceptionsViewModel : ViewModelBase
             patientId = FoundPatient!.Id,
             doctorId = isServiceMode ? (long?)null : SelectedDoctor!.Id,
             appointmentId = (long?)null,
-            insuranceCompanyId = company?.Id,
+            // صفر «آزاد صریح» است؛ null در سرور به بیمهٔ پرونده برمی‌گردد.
+            insuranceCompanyId = company?.Id ?? 0L,
             referralCode = string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
             notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
             // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
