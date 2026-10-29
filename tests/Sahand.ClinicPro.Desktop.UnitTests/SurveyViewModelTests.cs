@@ -83,4 +83,52 @@ public class SurveyViewModelTests
         api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "surveys/9/responses");
     }
 
+
+    [Fact]
+    public void List_search_status_and_real_summary_are_consistent()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = new[] {
+            new { id = 1, title = "کیفیت پذیرش", description = "برخورد", type = "Service", isActive = true, responseCount = 7, averageRating = 4.0, questions = "[]" },
+            new { id = 2, title = "ارزیابی پزشک", description = "خدمات", type = "Doctor", isActive = false, responseCount = 12, averageRating = 4.0, questions = "[{\"text\":\"پرسش\",\"type\":\"text\"}]" }
+        } };
+        var vm = new SurveyViewModel(api, new FakeSnackbar());
+        vm.SurveyCountText.Should().Be("۲");
+        vm.ActiveSurveyCountText.Should().Be("۱");
+        vm.SurveyResponseCountText.Should().Be("۱۹");
+        vm.VisibleSurveys.Should().HaveCount(2);
+        vm.VisibleSurveys[1].QuestionCountText.Should().Be("۱");
+        vm.SelectedSurvey = vm.VisibleSurveys[0];
+        vm.SurveyStatusIndex = 2;
+        vm.VisibleSurveys.Should().ContainSingle(s => s.Id == 2);
+        vm.SelectedSurvey.Should().BeNull();
+        vm.SurveySearch = "برخورد";
+        vm.VisibleSurveys.Should().BeEmpty();
+        vm.SurveyStatusIndex = 0;
+        vm.VisibleSurveys.Should().ContainSingle(s => s.Id == 1);
+        // فیلتر، دادهٔ اصلی یا آمار کل را تغییر نمی‌دهد.
+        vm.Surveys.Should().HaveCount(2);
+        vm.SurveyResponseCountText.Should().Be("۱۹");
+    }
+
+    [Fact]
+    public async Task Survey_editor_is_locked_while_save_is_pending()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingPutResult = completion.Task };
+        api.CannedResponses["surveys"] = new { data = Array.Empty<object>() };
+        var snackbar = new FakeSnackbar();
+        var vm = new SurveyViewModel(api, snackbar) { SelectedSurvey = Row(4, questions: "[]") };
+        vm.OpenEditFormCommand.Execute(null);
+        vm.FormTitle = "عنوان ویرایش‌شده";
+        var save = vm.SaveFormCommand.ExecuteAsync(null);
+        vm.CanEditSurvey.Should().BeFalse();
+        vm.OpenCreateFormCommand.Execute(null);
+        vm.FormTitle.Should().Be("عنوان ویرایش‌شده");
+        completion.SetResult(false);
+        await save;
+        vm.CanEditSurvey.Should().BeTrue();
+        vm.IsFormOpen.Should().BeTrue();
+        vm.FormTitle.Should().Be("عنوان ویرایش‌شده");
+    }
 }

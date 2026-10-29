@@ -7,10 +7,20 @@ using Sahand.ClinicPro.Desktop.Helpers;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
+internal static class SurveyNumberFormatting
+{
+    public static string Count(long value) => Money.ToPersianDigits(
+        value.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '٬'));
+}
+
 /// <summary>ردیف نظرسنجی — تب ۱ فرم ۳۴</summary>
 public record SurveyListRow(long Id, string Title, string? Description, string TypeText,
     bool IsActive, string ActiveText, int ResponseCount, string AverageText,
-    string? QuestionsJson); // QuestionsJson: متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)
+    string? QuestionsJson)
+{
+    public string QuestionCountText => SurveyQuestionItem.TryParseList(QuestionsJson, out var questions)
+        ? SurveyNumberFormatting.Count(questions.Count) : "—";
+}
 
 /// <summary>یک سوال از سازنده پویا — قابل سریالایز به JSON برای فیلد Questions</summary>
 public partial class SurveyQuestionItem : ObservableObject
@@ -161,6 +171,44 @@ public partial class SurveyViewModel : ViewModelBase
     [ObservableProperty]
     private SurveyListRow? _selectedSurvey;
 
+    /// <summary>نمای پالایش‌شده؛ فهرست اصلی برای انتخاب نتایج دست‌نخورده می‌ماند.</summary>
+    public ObservableCollection<SurveyListRow> VisibleSurveys { get; } = new();
+    public string[] SurveyStatusOptions { get; } = { "همه", "فعال", "غیرفعال" };
+    [ObservableProperty] private string _surveySearch = string.Empty;
+    [ObservableProperty] private int _surveyStatusIndex;
+    [ObservableProperty] private bool _hasSurveyList;
+    public string SurveyCountText => HasSurveyList ? SurveyNumberFormatting.Count(Surveys.Count) : "—";
+    public string ActiveSurveyCountText => HasSurveyList ? SurveyNumberFormatting.Count(Surveys.Count(s => s.IsActive)) : "—";
+    public string SurveyResponseCountText => HasSurveyList ? SurveyNumberFormatting.Count(Surveys.Sum(s => (long)s.ResponseCount)) : "—";
+    partial void OnSurveySearchChanged(string value) => RefreshVisibleSurveys();
+    partial void OnSurveyStatusIndexChanged(int value) => RefreshVisibleSurveys();
+
+    private void RefreshVisibleSurveys(SurveyListRow? preferred = null)
+    {
+        var selected = preferred ?? SelectedSurvey;
+        var search = SurveySearch?.Trim() ?? string.Empty;
+        var rows = Surveys.Where(s =>
+            (SurveyStatusIndex == 0 || (SurveyStatusIndex == 1 && s.IsActive) || (SurveyStatusIndex == 2 && !s.IsActive)) &&
+            (search.Length == 0 || s.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+             (s.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+             s.TypeText.Contains(search, StringComparison.OrdinalIgnoreCase))).ToArray();
+        VisibleSurveys.Clear();
+        foreach (var row in rows) VisibleSurveys.Add(row);
+        SelectedSurvey = selected is not null && rows.Contains(selected) ? selected : null;
+    }
+
+    [RelayCommand]
+    private void ShowSelectedResults()
+    {
+        if (SelectedSurvey is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+        ResultsSurvey = SelectedSurvey;
+        TabIndex = 1;
+    }
+
+    [ObservableProperty] private bool _isSurveySaving;
+    public bool CanEditSurvey => !IsSurveySaving;
+    partial void OnIsSurveySavingChanged(bool value) => OnPropertyChanged(nameof(CanEditSurvey));
+
     /// <summary>آیا فرم ایجاد/ویرایش باز است</summary>
     [ObservableProperty]
     private bool _isFormOpen;
@@ -203,6 +251,7 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     private void OpenResponseForm()
     {
+        if (IsFormOpen || IsResponseFormOpen) { _snackbar.Info("ابتدا فرم باز را ثبت یا لغو کنید"); return; }
         var survey = SelectedSurvey;
         if (survey is null || !survey.IsActive)
         { _snackbar.Error("یک نظرسنجی فعال انتخاب کنید"); return; }
@@ -238,6 +287,7 @@ public partial class SurveyViewModel : ViewModelBase
         if (ResponseAnswers.Count == 0 && ResponseRatingIndex < 0 && string.IsNullOrWhiteSpace(ResponseComment))
         { _snackbar.Error("حداقل یک امتیاز یا نظر وارد کنید"); return; }
         IsBusy = true;
+        IsSurveySaving = true;
         try
         {
             var ok = await _api.PostAsync($"surveys/{survey.Id}/responses", new
@@ -252,7 +302,7 @@ public partial class SurveyViewModel : ViewModelBase
             if (ReferenceEquals(_respondingSurvey, survey)) CancelResponseForm();
             await LoadSurveysAsync();
         }
-        finally { IsBusy = false; }
+        finally { IsSurveySaving = false; IsBusy = false; }
     }
 
     /* ─── تب ۲: نتایج و آمار ─── */
@@ -330,7 +380,11 @@ public partial class SurveyViewModel : ViewModelBase
             var resultsId = ResultsSurvey?.Id;
             Surveys.Clear();
             foreach (var s in response.Data) Surveys.Add(ToRow(s));
-            SelectedSurvey = Surveys.FirstOrDefault(s => s.Id == selectedId);
+            RefreshVisibleSurveys(Surveys.FirstOrDefault(s => s.Id == selectedId));
+            HasSurveyList = true;
+            OnPropertyChanged(nameof(SurveyCountText));
+            OnPropertyChanged(nameof(ActiveSurveyCountText));
+            OnPropertyChanged(nameof(SurveyResponseCountText));
             ResultsSurvey = Surveys.FirstOrDefault(s => s.Id == resultsId) ?? Surveys.FirstOrDefault();
         }
         finally
@@ -343,6 +397,7 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     private void OpenCreateForm()
     {
+        if (IsFormOpen || IsResponseFormOpen) { _snackbar.Info("ابتدا فرم باز را ذخیره یا لغو کنید"); return; }
         IsEditing = false;
         _editingId = 0;
         FormTitle = string.Empty;
@@ -358,6 +413,7 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     private void OpenEditForm()
     {
+        if (IsFormOpen || IsResponseFormOpen) { _snackbar.Info("ابتدا فرم باز را ذخیره یا لغو کنید"); return; }
         if (SelectedSurvey is null)
         {
             _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید");
@@ -426,6 +482,7 @@ public partial class SurveyViewModel : ViewModelBase
         { _snackbar.Error("برای سؤال چندگزینه‌ای حداقل دو گزینه وارد کنید"); return; }
 
         IsBusy = true;
+        IsSurveySaving = true;
         try
         {
             var typeKey = FormType switch
@@ -464,6 +521,7 @@ public partial class SurveyViewModel : ViewModelBase
         }
         finally
         {
+            IsSurveySaving = false;
             IsBusy = false;
         }
     }
@@ -557,11 +615,11 @@ public partial class SurveyViewModel : ViewModelBase
             ResultsMessage = $"نتایج نظرسنجی «{selected.Title}»";
 
             // کارت‌های خلاصه
-            TotalResponsesText = Money.Format(data.Summary.TotalResponses);
+            TotalResponsesText = SurveyNumberFormatting.Count(data.Summary.TotalResponses);
             AverageText = data.Summary.AverageRating > 0
                 ? data.Summary.AverageRating.ToString("0.##") + " از ۵"
                 : "—";
-            Last30Text = Money.Format(data.Summary.ResponsesLast30Days);
+            Last30Text = SurveyNumberFormatting.Count(data.Summary.ResponsesLast30Days);
 
             // توزیع ستاره‌ها — نوار افقی درصدی
             var maxStar = Math.Max(1, data.StarDistribution.Select(s => s.Count).DefaultIfEmpty(0).Max());

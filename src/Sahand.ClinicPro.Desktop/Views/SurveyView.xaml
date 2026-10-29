@@ -37,8 +37,10 @@
 
             <!-- ═══════════ تب ۱: لیست نظرسنجی‌ها ═══════════ -->
             <TabItem Header="📋 لیست نظرسنجی‌ها">
-                <Grid Margin="4,12">
+                <Grid Margin="4,12" IsEnabled="{Binding CanEditSurvey}">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -52,6 +54,8 @@
                         <Button Content="✏️ ویرایش" Command="{Binding OpenEditFormCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="⏯ فعال/غیرفعال" Command="{Binding ToggleActiveCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
+                        <Button Content="📊 نتایج" Command="{Binding ShowSelectedResultsCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="📤 ارسال لینک به ویزیت‌های امروز" Command="{Binding SendLinksCommand}"
                                 ToolTip="نیازمند سرویس عمومی پاسخ‌گویی خارجی و تنظیم Surveys:PublicBaseUrl؛ ابتدا کارکرد لینک را بررسی کنید"
@@ -216,8 +220,26 @@
                         </ScrollViewer>
                     </Border>
 
+                    <!-- آمار واقعی کل فهرست، نه نرخ پاسخ‌گویی تخمینی. -->
+                    <UniformGrid Grid.Row="3" Columns="3" Margin="0,0,0,10">
+                        <controls:StatCard IconKind="ClipboardTextOutline" Value="{Binding SurveyCountText}"
+                                           Label="کل نظرسنجی‌ها" AccentBrush="#1976D2" />
+                        <controls:StatCard IconKind="CheckCircleOutline" Value="{Binding ActiveSurveyCountText}"
+                                           Label="نظرسنجی‌های فعال" AccentBrush="#43A047" />
+                        <controls:StatCard IconKind="CommentMultipleOutline" Value="{Binding SurveyResponseCountText}"
+                                           Label="کل پاسخ‌های ثبت‌شده" AccentBrush="#FB8C00" />
+                    </UniformGrid>
+                    <Border Grid.Row="4" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="9" Padding="8" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /></Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding SurveySearch, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="جستجو در عنوان، توضیح و نوع" Margin="0,0,8,0" />
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding SurveyStatusOptions}"
+                                      SelectedIndex="{Binding SurveyStatusIndex}" materialDesign:HintAssist.Hint="وضعیت" />
+                        </Grid>
+                    </Border>
                     <!-- جدول نظرسنجی‌ها -->
-                    <DataGrid Grid.Row="3" ItemsSource="{Binding Surveys}"
+                    <DataGrid Grid.Row="5" ItemsSource="{Binding VisibleSurveys}"
                               SelectedItem="{Binding SelectedSurvey}"
                               AutoGenerateColumns="False" IsReadOnly="True"
                               Style="{StaticResource App.TableDataGrid}"
@@ -225,6 +247,8 @@
                               FontSize="12.5" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="عنوان" Binding="{Binding Title, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="توضیح" Binding="{Binding Description}" Width="*" ElementStyle="{StaticResource App.TableCellTextBlock}" />
+                            <DataGridTextColumn Header="سؤال‌ها" Binding="{Binding QuestionCountText}" Width="Auto" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <DataGridTextColumn Header="نوع" Binding="{Binding TypeText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <DataGridTextColumn Header="وضعیت" Binding="{Binding ActiveText, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                             <DataGridTextColumn Header="پاسخ‌ها" Binding="{Binding ResponseCount, Converter={StaticResource PersianDigits}}" Width="Auto" MaxWidth="420" ElementStyle="{StaticResource App.TableCellTextBlock}" />
