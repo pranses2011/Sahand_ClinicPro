@@ -141,4 +141,44 @@ public class PhysiotherapyViewModelTests
         JsonSerializer.SerializeToElement(api.LastBody).GetProperty("sessionNumber").GetInt32().Should().Be(101);
     }
 
+    [Fact]
+    public async Task Previous_measurement_is_not_silently_saved_as_current_session()
+    {
+        var api = new FakeApiClient();
+        var note1 = JsonSerializer.Serialize(new { assessments = new[] { new { name = "مقیاس درد (VAS)", @base = (double?)null, now = (double?)8 } } });
+        var note2 = JsonSerializer.Serialize(new { assessments = new[] { new { name = "مقیاس درد (VAS)", @base = (double?)null, now = (double?)5 } } });
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = new[] {
+            new { sessionNumber = 1, dateShamsi = "1405/01/01", progressNote = note1 },
+            new { sessionNumber = 2, dateShamsi = "1405/01/02", progressNote = note2 },
+            new { sessionNumber = 3, dateShamsi = "1405/01/03", progressNote = "{}" } } };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        var row = vm.Assessments[0];
+        row.BaseValue.Should().Be(8);
+        row.LastValue.Should().Be(5);
+        row.LastDate.Should().Be("1405/01/02");
+        row.NowValue.Should().BeNull();
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        using var note = JsonDocument.Parse(JsonSerializer.SerializeToElement(api.LastBody).GetProperty("progressNote").GetString()!);
+        note.RootElement.GetProperty("assessments")[0].GetProperty("now").ValueKind.Should().Be(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Successful_session_does_not_reuse_pain_techniques_or_current_assessments()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        api.CannedResponses["physiotherapy/sessions"] = true;
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.SetZonePainCommand.Execute(7);
+        vm.TechniqueItems[0].IsSelected = true;
+        vm.RedFlags[0].IsChecked = true;
+        vm.Assessments[0].NowValue = 7;
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        vm.RecordPainScore.Should().BeFalse();
+        vm.ZonePain.Should().BeEmpty();
+        vm.TechniqueItems.Should().OnlyContain(x => !x.IsSelected);
+        vm.RedFlags.Should().OnlyContain(x => !x.IsChecked);
+        vm.Assessments.Should().OnlyContain(x => x.NowValue == null);
+    }
+
 }

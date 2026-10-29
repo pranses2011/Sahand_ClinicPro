@@ -236,8 +236,8 @@
                                 <ColumnDefinition Width="*" /><ColumnDefinition Width="210" /><ColumnDefinition Width="70" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="شاخص / تست استاندارد" FontWeight="Bold" FontSize="11.5" />
-                            <TextBlock Grid.Column="1" Text="اولین مقدار موجود" FontWeight="Bold" FontSize="11.5" />
-                            <TextBlock Grid.Column="2" Text="امروز" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="1" Text="مبنا (۲۰ جلسهٔ اخیر)" FontWeight="Bold" FontSize="11.5" />
+                            <TextBlock Grid.Column="2" Text="این جلسه" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="3" Text="مقایسه (خاکستری: مقدار نخست — سبزآبی: امروز)" FontWeight="Bold" FontSize="11.5" />
                             <TextBlock Grid.Column="4" Text="بهبود" FontWeight="Bold" FontSize="11.5" />
                         </Grid>
@@ -251,7 +251,10 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
                                         <TextBox Grid.Column="1" Text="{Binding BaseValue, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" Margin="4,0" HorizontalContentAlignment="Center" />
-                                        <TextBox Grid.Column="2" Text="{Binding NowValue, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" Margin="4,0" HorizontalContentAlignment="Center" />
+                                        <StackPanel Grid.Column="2" Margin="4,0">
+                                            <TextBox Text="{Binding NowValue, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}" HorizontalContentAlignment="Center" />
+                                            <TextBlock Text="{Binding PreviousMeasurementText}" FontSize="9" TextWrapping="Wrap" Opacity="0.7" />
+                                        </StackPanel>
                                         <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="4,0">
                                             <Border Background="#EEF4F2" Height="7" CornerRadius="4">
                                                 <Border HorizontalAlignment="Left" Background="#B0BEC5" CornerRadius="4" Width="{Binding BaseBar}" />

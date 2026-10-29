@@ -39,6 +39,13 @@ public partial class PhysioAssessmentRow : ObservableObject
     [ObservableProperty] private double? _baseValue;
     /// <summary>مقدار امروز</summary>
     [ObservableProperty] private double? _nowValue;
+    /// <summary>آخرین اندازه‌گیری پیشین، فقط برای اطلاع؛ مقدار جلسهٔ جاری نیست.</summary>
+    [ObservableProperty] private double? _lastValue;
+    [ObservableProperty] private string? _lastDate;
+    public string PreviousMeasurementText => LastValue is { } value
+        ? $"آخرین ثبت: {value} ({LastDate ?? "تاریخ نامشخص"})" : "اندازه‌گیری پیشین موجود نیست";
+    partial void OnLastValueChanged(double? value) => OnPropertyChanged(nameof(PreviousMeasurementText));
+    partial void OnLastDateChanged(string? value) => OnPropertyChanged(nameof(PreviousMeasurementText));
 
     /// <summary>درصد بهبود فقط در صورت وجود هر دو مقدار و شروع غیرصفر.</summary>
     public double? Improvement => BaseValue is not { } baseline || baseline == 0 || NowValue is not { } current
@@ -404,7 +411,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             if (_defaultTechniqueMinutes.TryGetValue(item.Name, out var minutes)) item.Minutes = minutes;
         }
         foreach (var item in RedFlags.Concat(IcfGoals).Concat(DischargeCriteria)) item.IsChecked = false;
-        foreach (var row in Assessments) { row.BaseValue = null; row.NowValue = null; }
+        foreach (var row in Assessments) { row.BaseValue = null; row.NowValue = null; row.LastValue = null; row.LastDate = null; }
         IsFemale = value?.Gender == 2;
         OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText)); OnPropertyChanged(nameof(SessionNumber));
         OnPropertyChanged(nameof(CourseProgress)); OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled));
@@ -473,9 +480,10 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             ? $"درد از {measured[0].PainScore} به {measured[^1].PainScore} رسیده است ({measured.Count} اندازه‌گیری موجود)."
             : "برای نمایش روند، حداقل دو اندازه‌گیری درد لازم است.";
 
-        // ارزیابی: شروع از نخستین جلسه، امروز از آخرین جلسه
-        ApplyAssessmentsFrom(sessions[0].ProgressNote, baseSide: true);
-        ApplyAssessmentsFrom(sessions[^1].ProgressNote, baseSide: false);
+        // مبنا از اولین مقدار قابل استفاده در حداکثر ۲۰ جلسهٔ دریافتی؛
+        // آخرین مقدار فقط برای مشاهده است و هرگز به عنوان اندازه‌گیری امروز کپی نمی‌شود.
+        foreach (var row in Assessments) { row.BaseValue = null; row.LastValue = null; row.LastDate = null; }
+        foreach (var session in sessions) ApplyAssessmentsFrom(session.ProgressNote, session.DateShamsi);
         OnPropertyChanged(nameof(SessionNumber));
         OnPropertyChanged(nameof(CourseProgress));
     }
@@ -493,8 +501,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         return null;
     }
 
-    /// <summary>نشاندن ارزیابی‌های ذخیره‌شده روی جدول (سمت شروع یا امروز)</summary>
-    private void ApplyAssessmentsFrom(string? progressNote, bool baseSide)
+    /// <summary>استخراج مبنا و آخرین مقدار پیشین بدون پرکردن اندازه‌گیری جلسهٔ جاری.</summary>
+    private void ApplyAssessmentsFrom(string? progressNote, string? date)
     {
         if (string.IsNullOrWhiteSpace(progressNote)) return;
         try
@@ -506,8 +514,10 @@ public partial class PhysiotherapyViewModel : ViewModelBase
                 if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("name", out var n) || n.ValueKind != JsonValueKind.String) continue;
                 var row = Assessments.FirstOrDefault(a => a.Name == n.GetString());
                 if (row is null) continue;
-                if (baseSide && item.TryGetProperty("base", out var b) && b.ValueKind == JsonValueKind.Number && b.TryGetDouble(out var bv)) row.BaseValue = bv;
-                if (!baseSide && item.TryGetProperty("now", out var w) && w.ValueKind == JsonValueKind.Number && w.TryGetDouble(out var wv)) row.NowValue = wv;
+                double? baseline = item.TryGetProperty("base", out var b) && b.ValueKind == JsonValueKind.Number && b.TryGetDouble(out var bv) && ValidAssessment(bv) ? bv : null;
+                double? measured = item.TryGetProperty("now", out var w) && w.ValueKind == JsonValueKind.Number && w.TryGetDouble(out var wv) && ValidAssessment(wv) ? wv : null;
+                row.BaseValue ??= baseline ?? measured;
+                if (measured is not null) { row.LastValue = measured; row.LastDate = date; }
             }
         }
         catch (JsonException) { /* سازگاری با سابقهٔ قدیمی */ }
@@ -575,7 +585,14 @@ public partial class PhysiotherapyViewModel : ViewModelBase
             _snackbar.Success("جلسه فیزیوتراپی با نقشهٔ بدن و ارزیابی ساخت‌یافته ثبت شد");
             if (version == _patientVersion && PhysioPatient?.Id == patient.Id)
             {
-                PhysioNotes = null;
+                // جلسهٔ بعدی نباید اندازه‌گیری‌ها یا اقدامات جلسهٔ قبل را بی‌صدا تکرار کند.
+                PhysioNotes = PhysioOtherTechnique = ReferralReport = null;
+                ZonePain.Clear(); PainScore = 0; RecordPainScore = false;
+                foreach (var item in TechniqueItems) item.IsSelected = false;
+                foreach (var flag in RedFlags) flag.IsChecked = false;
+                foreach (var row in Assessments) row.NowValue = null;
+                OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText));
+                BodyMapChanged?.Invoke();
                 await LoadHistoryAsync();
             }
         }
