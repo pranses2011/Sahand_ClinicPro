@@ -1705,8 +1705,12 @@ public partial class ReceptionsViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanEditReception))]
     private bool _isSubmitting;
 
-    /// <summary>فرم در طول زنجیرهٔ ثبت و چاپ قابل تغییر نیست.</summary>
-    public bool CanEditReception => !IsSubmitting && !IsCreatingUnidentifiedPatient && !IsRefreshingInsurance;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isReceptionOutcomeUnknown;
+
+    /// <summary>فرم در طول ثبت و تا بررسی نتیجه نامعلوم قابل تغییر نیست.</summary>
+    public bool CanEditReception => !IsSubmitting && !IsReceptionOutcomeUnknown && !IsCreatingUnidentifiedPatient && !IsRefreshingInsurance;
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
@@ -1724,7 +1728,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task ReceptionAndPayAsync()
     {
-        if (IsSubmitting || !ValidateReception()) return;
+        if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;
 
         // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
         // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
@@ -1750,7 +1754,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
     private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment, decimal? confirmedPayable = null)
     {
-        if (IsSubmitting || !ValidateReception()) return;
+        if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;
         IsSubmitting = true;
         var receptionBranch = (_api as ApiClient)?.BranchId;
         try
@@ -1789,8 +1793,16 @@ public partial class ReceptionsViewModel : ViewModelBase
         });
         if (reception?.Data is null)
         {
+            IsReceptionOutcomeUnknown = true;
             IsBusy = false;
             _snackbar.Error((_api.LastError ?? "پاسخ ثبت پذیرش دریافت نشد") + "؛ پیش از تکرار، صف پذیرش را بررسی کنید.");
+            return;
+        }
+
+        if ((_api as ApiClient)?.BranchId != receptionBranch)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ شعبه تغییر کرد و مراحل بعدی ارسال نشدند. ابتدا صف و صندوق را بررسی کنید.");
             return;
         }
 
@@ -1811,12 +1823,20 @@ public partial class ReceptionsViewModel : ViewModelBase
             });
             if (consume?.Data is null)
             {
+                IsReceptionOutcomeUnknown = true;
                 IsBusy = false;
                 _snackbar.Error($"پذیرش با شناسه {reception.Data} ثبت شد؛ پاسخ برداشت لوازم دریافت نشد یا ناموفق بود. پیش از تکرار یا صدور فاکتور، مصرف و موجودی را بررسی کنید.");
                 await LoadAsync();
                 return;
             }
             consumeResult = consume.Data;
+        }
+
+        if ((_api as ApiClient)?.BranchId != receptionBranch)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ شعبه تغییر کرد و فاکتور ارسال نشد. مصرف و صف را بررسی کنید.");
+            return;
         }
 
         // ۲. صدور فاکتور خودکار — قلم ویزیت با کد خدمت K
@@ -1999,6 +2019,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         catch (Exception)
         {
+            IsReceptionOutcomeUnknown = true;
             _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
         }
         finally { IsBusy = false; IsSubmitting = false; }

@@ -204,7 +204,10 @@ public class ReceptionsViewModelTests
         pending.SetResult(null);
         await submission;
         vm.IsSubmitting.Should().BeFalse();
-        vm.CanEditReception.Should().BeTrue();
+        vm.IsReceptionOutcomeUnknown.Should().BeTrue();
+        vm.CanEditReception.Should().BeFalse();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "receptions").Should().Be(1);
         vm.IsBusy.Should().BeFalse();
     }
 
