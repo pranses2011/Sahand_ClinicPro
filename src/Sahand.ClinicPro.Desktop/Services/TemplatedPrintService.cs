@@ -77,7 +77,7 @@ public static class TemplatedPrintService
     {
         var body = string.Join(string.Empty, rows.Select(r =>
             $"<tr><td>{System.Net.WebUtility.HtmlEncode(r.Name)}</td><td>{System.Net.WebUtility.HtmlEncode(r.Quantity)}</td><td>{System.Net.WebUtility.HtmlEncode(r.Amount)}</td></tr>"));
-        return "<table style='width:100%;border-collapse:collapse' border='1' cellspacing='0' cellpadding='5'>"
+        return "<table class='pt' border='1' cellspacing='0' cellpadding='5'>"
             + "<tr><th>شرح</th><th>تعداد</th><th>مبلغ</th></tr>" + body + "</table>";
     }
 }

@@ -92,6 +92,8 @@ public class PrintTemplatesController : ApiBaseController
         if (t.Type == PrintTemplateType.ReceptionReceipt && t.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker)
             return Ok(ApiResponse<object>.Success(new { html = "", useOriginalReceptionReceipt = true }));
 
+        if (PrintTemplateRenderer.HasUnsafeVariablePlacement(t.HtmlBody))
+            return BadRequest(ApiResponse<object>.Failure("متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت."));
         var clinic = await ClinicInfoAsync();
         var sample = PrintTemplateRenderer.SampleData(t.Type.ToString());
         sample.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
@@ -140,6 +142,8 @@ public class PrintTemplatesController : ApiBaseController
                 useOriginalReceptionReceipt = true
             }));
 
+        if (PrintTemplateRenderer.HasUnsafeVariablePlacement(template.HtmlBody))
+            return BadRequest(ApiResponse<object>.Failure("متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت."));
         var clinic = await ClinicInfoAsync();
         var variables = request.Variables ?? new Dictionary<string, object?>();
         variables.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
@@ -351,6 +355,8 @@ public class PrintTemplatesController : ApiBaseController
             return "نام قالب حداقل ۳ نویسه باشد";
         if (string.IsNullOrWhiteSpace(dto.HtmlBody) || dto.HtmlBody.Trim().Length < 10)
             return "بدنه HTML قالب خالی است";
+        if (dto.HtmlBody != BuiltInPrintTemplates.ReceptionReceiptMarker && PrintTemplateRenderer.HasUnsafeVariablePlacement(dto.HtmlBody))
+            return "متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت.";
         // ═══ چرخه سی‌ویکم (گزارش مالک) — قبول پهنای کامل اندازه‌های کاغذ:
         // استانداردهای A3/A4/A5/A6/B5/Letter/Legal + فیش حرارتی ۸۰/۵۸ میلی‌متری
         // + قالب سفارشی «Custom:عرضxارتفاع» (میلی‌متر). پیش‌تر فقط A4/A5/A6

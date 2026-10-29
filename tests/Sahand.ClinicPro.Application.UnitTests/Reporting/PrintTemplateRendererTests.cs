@@ -74,6 +74,59 @@ public class PrintTemplateRendererTests
         html.Should().NotContain("<img");
     }
 
+    [Fact]
+    public void Render_escapes_plain_patient_values_and_does_not_treat_arbitrary_html_keys_as_markup()
+    {
+        var html = PrintTemplateRenderer.Render("<div>{{patient_name}} / {{other_html}}</div>",
+            new Dictionary<string, object?> {
+                ["patient_name"] = "علی <script>alert(1)</script> & شرکا",
+                ["other_html"] = "<img src=x onerror=alert(1)>"
+            });
+        html.Should().Contain("علی &lt;script&gt;alert(1)&lt;/script&gt; &amp; شرکا");
+        html.Should().NotContain("<script>").And.NotContain("<img");
+    }
+
+    [Theory]
+    [InlineData("items_html")]
+    [InlineData("tests_html")]
+    [InlineData("results_html")]
+    public void Render_sanitizes_table_fragments_but_preserves_table_and_text(string key)
+    {
+        var html = PrintTemplateRenderer.Render("{{" + key + "}}", new Dictionary<string, object?>
+        {
+            [key] = "<table class='pt' onclick='evil()'><tr><td style='background:url(https://evil.test)'>خدمت</td></tr></table>" +
+                "<script>alert(1)</script><img src='https://evil.test/a' onerror='evil()'>"
+        });
+        html.Should().Contain("<table").And.Contain("<td").And.Contain("خدمت");
+        html.Should().NotContain("<script").And.NotContain("<img").And.NotContain("onclick")
+            .And.NotContain("onerror").And.NotContain("https://evil.test").And.NotContain("style=");
+    }
+
+    [Theory]
+    [InlineData("<div title='{{patient_name}}'>بیمار</div>")]
+    [InlineData("<div data-x={{patient_name}}>بیمار</div>")]
+    [InlineData("<style>.x { color: {{patient_name}}; }</style>")]
+    [InlineData("<script>var x = '{{patient_name}}';</script>")]
+    [InlineData("<!-- {{patient_name}} --><div>بیمار</div>")]
+    public void Render_rejects_variables_outside_text_nodes(string template)
+    {
+        PrintTemplateRenderer.HasUnsafeVariablePlacement(template).Should().BeTrue();
+        var action = () => PrintTemplateRenderer.Render(template,
+            new Dictionary<string, object?> { ["patient_name"] = "نام" });
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void WrapDocument_encodes_clinic_fields_and_rejects_css_and_logo_injection()
+    {
+        var html = PrintTemplateRenderer.WrapDocument("<div>بدنه</div>",
+            "درمانگاه <img src=x>", "آدرس <script>", "۱ & ۲", "javascript:alert(1)",
+            "red;}</style><script>alert(1)</script>", 13, "Tahoma;}</style><script>alert(2)</script>", true);
+        html.Should().Contain("درمانگاه &lt;img src=x&gt;").And.Contain("آدرس &lt;script&gt;").And.Contain("۱ &amp; ۲");
+        html.Should().NotContain("<script>").And.NotContain("javascript:").And.NotContain("alert(2)");
+        html.Should().Contain("#16355E").And.Contain("Vazirmatn");
+    }
+
     /// <summary>داده نمونه همه انواع — کلیدهای اصلی هر نوع موجود است</summary>
     [Theory]
     [InlineData("Invoice", "invoice_code")]
