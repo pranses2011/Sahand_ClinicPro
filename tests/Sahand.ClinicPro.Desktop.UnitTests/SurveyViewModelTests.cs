@@ -172,4 +172,35 @@ public class SurveyViewModelTests
         JsonSerializer.SerializeToElement(api.LastBody).GetProperty("questions").GetString().Should().Be(original);
     }
 
+    [Fact]
+    public async Task Late_survey_list_response_cannot_replace_newer_data()
+    {
+        var first = new TaskCompletionSource<object?>();
+        var second = new TaskCompletionSource<object?>();
+        var api = new FakeApiClient();
+        api.PendingGetResponses["surveys"] = first.Task;
+        var vm = new SurveyViewModel(api, new FakeSnackbar());
+        api.PendingGetResponses["surveys"] = second.Task;
+        var refresh = vm.LoadSurveysAsync();
+        second.SetResult(new { data = new[] { new { id = 2, title = "فهرست جدید", type = "Service", editVersion = "NEW" } } });
+        await refresh;
+        first.SetResult(new { data = new[] { new { id = 1, title = "فهرست قدیمی", type = "Service", editVersion = "OLD" } } });
+        await Task.Yield();
+        vm.Surveys.Should().ContainSingle().Which.Title.Should().Be("فهرست جدید");
+        vm.SurveyListMessage.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Failed_list_refresh_marks_old_data_as_stale_and_counts_unknown()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["surveys"] = new { data = new[] { new { id = 1, title = "قدیمی", type = "Service" } } };
+        var vm = new SurveyViewModel(api, new FakeSnackbar());
+        api.CannedResponses.Remove("surveys");
+        await vm.LoadSurveysAsync();
+        vm.SurveyCountText.Should().Be("—");
+        vm.SurveyListMessage.Should().Contain("قدیمی");
+        vm.Surveys.Should().ContainSingle();
+    }
+
 }

@@ -65,9 +65,11 @@
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="🔄 بارگذاری مجدد" Command="{Binding LoadSurveysCommand}"
                                 Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,8,4" />
+                        <TextBlock Text="{Binding SurveyListMessage}" Foreground="#8A5500" TextWrapping="Wrap" Margin="8,4,0,4" MaxWidth="340"
+                                   Visibility="{Binding SurveyListMessage, Converter={StaticResource StringToVisibility}}" />
                     </WrapPanel>
 
-                    <!-- فرم ایجاد/ویرایش با سازنده پویا سوالات -->
+                     <!-- فرم ایجاد/ویرایش با سازنده پویا سوالات -->
                     <Border Grid.Row="1" CornerRadius="12" BorderBrush="#90CAF9" BorderThickness="1.2"
                             Background="#F5FAFF" Padding="14" Margin="0,0,0,10"
                             Visibility="{Binding IsFormOpen, Converter={StaticResource BoolToVisibility}}">

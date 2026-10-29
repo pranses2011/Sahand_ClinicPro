@@ -152,6 +152,8 @@ public partial class SurveyViewModel : ViewModelBase
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
     private int _resultsVersion;
+    private int _surveyListVersion;
+    [ObservableProperty] private string _surveyListMessage = "در حال دریافت فهرست نظرسنجی‌ها…";
     private string? _editingVersion;
     private string? _originalQuestionsJson;
     private string? _initialQuestionsRepresentation;
@@ -375,15 +377,22 @@ public partial class SurveyViewModel : ViewModelBase
     [RelayCommand]
     public async Task LoadSurveysAsync()
     {
+        var version = ++_surveyListVersion;
         IsBusy = true;
+        SurveyListMessage = "در حال دریافت فهرست نظرسنجی‌ها…";
         try
         {
             var response = await _api.GetAsync<SurveysResponse>("surveys");
+            if (version != _surveyListVersion) return;
             if (response?.Data is null)
             {
-                _snackbar.Error(_api.LastError ?? "دریافت فهرست نظرسنجی‌ها ناموفق بود");
+                HasSurveyList = false;
+                OnPropertyChanged(nameof(SurveyCountText)); OnPropertyChanged(nameof(ActiveSurveyCountText)); OnPropertyChanged(nameof(SurveyResponseCountText));
+                SurveyListMessage = "دریافت فهرست ناموفق بود؛ موارد قبلی ممکن است قدیمی باشند. دوباره بارگذاری کنید.";
+                _snackbar.Error(_api.LastError ?? SurveyListMessage);
                 return;
             }
+            SurveyListMessage = string.Empty;
             var selectedId = SelectedSurvey?.Id;
             var resultsId = ResultsSurvey?.Id;
             Surveys.Clear();
@@ -395,9 +404,19 @@ public partial class SurveyViewModel : ViewModelBase
             OnPropertyChanged(nameof(SurveyResponseCountText));
             ResultsSurvey = Surveys.FirstOrDefault(s => s.Id == resultsId) ?? Surveys.FirstOrDefault();
         }
+        catch (Exception)
+        {
+            if (version == _surveyListVersion)
+            {
+                HasSurveyList = false;
+                OnPropertyChanged(nameof(SurveyCountText)); OnPropertyChanged(nameof(ActiveSurveyCountText)); OnPropertyChanged(nameof(SurveyResponseCountText));
+                SurveyListMessage = "دریافت فهرست ناموفق بود؛ موارد قبلی ممکن است قدیمی باشند. دوباره بارگذاری کنید.";
+                _snackbar.Error(_api.LastError ?? SurveyListMessage);
+            }
+        }
         finally
         {
-            IsBusy = false;
+            if (version == _surveyListVersion) IsBusy = false;
         }
     }
 
