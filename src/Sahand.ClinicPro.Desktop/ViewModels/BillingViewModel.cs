@@ -309,7 +309,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     public string InvoiceRecoveryInfo => _pendingInvoice is null ? string.Empty :
         $"درخواست بازیابی: {Patient?.FullName} — اقلام: " +
         string.Join("، ", _pendingInvoice.Request.Items.Select(i => $"{i.Description} × {i.Quantity}")) +
-        $"؛ جمع {Money.Format(_pendingInvoice.Quote.SubTotal)}، تخفیف {Money.Format(_pendingInvoice.Quote.DiscountAmount)}، بیمه {Money.Format(_pendingInvoice.Quote.InsuranceShare)}، مالیات {Money.Format(_pendingInvoice.Quote.Tax)}، پرداختی بیمار {Money.Format(_pendingInvoice.Quote.PatientPayable)}. ارسال مجدد ممکن است فاکتور را صادر کند؛ ابتدا سوابق را بررسی کنید.";
+        $"؛ جمع {Money.FormatWithUnit(_pendingInvoice.Quote.SubTotal)}، تخفیف {Money.FormatWithUnit(_pendingInvoice.Quote.DiscountAmount)}، بیمه {Money.FormatWithUnit(_pendingInvoice.Quote.InsuranceShare)}، مالیات {Money.FormatWithUnit(_pendingInvoice.Quote.Tax)}، پرداختی بیمار {Money.FormatWithUnit(_pendingInvoice.Quote.PatientPayable)}. ارسال مجدد ممکن است فاکتور را صادر کند؛ ابتدا سوابق را بررسی کنید.";
     public bool CanRetryInvoice => !IsBusy && _invoiceSubmissionLocked && _pendingInvoiceRequest is not null &&
         ((_api as ApiClient)?.BranchId == _pendingInvoiceBranch) &&
         (_api is not ApiClient activeClient || activeClient.PaymentRecoveryServer == _invoiceRecoveryServer);
@@ -796,7 +796,7 @@ public partial class InvoiceFormViewModel : ObservableObject
         }
         catch (Exception)
         {
-            if (sentInvoice) { _invoiceSubmissionLocked = true; OnPropertyChanged(nameof(CanEditInvoice)); }
+            if (sentInvoice) { _invoiceSubmissionLocked = true; OnPropertyChanged(nameof(CanEditInvoice)); OnPropertyChanged(nameof(InvoiceRecoveryInfo)); }
             ErrorMessage = invoiceId.HasValue
                 ? $"فاکتور #{invoiceId} صادر شده؛ وضعیت پرداخت را پیش از تلاش مجدد در صندوق بررسی کنید."
                 : "نتیجه صدور فاکتور نامعلوم است؛ پیش از تلاش مجدد فهرست فاکتورها را بررسی کنید.";

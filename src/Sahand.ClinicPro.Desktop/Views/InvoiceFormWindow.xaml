@@ -246,8 +246,10 @@
             <StackPanel>
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828" FontSize="12" TextWrapping="Wrap"
                            Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
-                <TextBlock Text="{Binding InvoiceRecoveryInfo}" Foreground="#874C00" FontSize="11" TextWrapping="Wrap"
-                           Visibility="{Binding InvoiceRecoveryInfo, Converter={StaticResource StringToVisibility}}" />
+                <ScrollViewer MaxHeight="100" VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding InvoiceRecoveryInfo, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding InvoiceRecoveryInfo}" Foreground="#874C00" FontSize="11" TextWrapping="Wrap" />
+                </ScrollViewer>
             </StackPanel>
         </DockPanel>
     </Grid>
