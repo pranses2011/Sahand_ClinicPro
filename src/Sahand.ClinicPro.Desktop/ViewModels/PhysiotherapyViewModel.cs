@@ -33,6 +33,10 @@ public partial class PhysioAssessmentRow : ObservableObject
     public string Name { get; init; } = string.Empty;
     /// <summary>بیشینهٔ مقیاس شاخص</summary>
     public double Max { get; init; } = 100;
+    /// <summary>سقف صریح مقیاس استاندارد؛ تهی یعنی صرفاً سقف نمودار است.</summary>
+    public double? ScaleMaximum { get; init; }
+    public bool IsValueValid(double? value) => value is null ||
+        (double.IsFinite(value.Value) && value.Value >= 0 && (ScaleMaximum is null || value.Value <= ScaleMaximum));
     /// <summary>معکوس است؟ (بیشتر = بهتر)</summary>
     public bool Reverse { get; init; }
     /// <summary>مقدار شروع دوره</summary>
@@ -53,7 +57,7 @@ public partial class PhysioAssessmentRow : ObservableObject
         get
         {
             if (BaseValue is not { } baseline || baseline <= 0 || NowValue is not { } current ||
-                !double.IsFinite(baseline) || !double.IsFinite(current) || current < 0) return null;
+                !IsValueValid(baseline) || !IsValueValid(current)) return null;
             var result = Reverse ? (current - baseline) / baseline * 100 : (baseline - current) / baseline * 100;
             return double.IsFinite(result) ? result : null;
         }
@@ -309,12 +313,12 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     /// <summary>ردیف‌های ارزیابی دوره</summary>
     public ObservableCollection<PhysioAssessmentRow> Assessments { get; } = new()
     {
-        new() { Name = "مقیاس درد (VAS)", Max = 10 },
-        new() { Name = "ناتوانی — Oswestry ‏(٪)", Max = 100 },
+        new() { Name = "مقیاس درد (VAS)", Max = 10, ScaleMaximum = 10 },
+        new() { Name = "ناتوانی — Oswestry ‏(٪)", Max = 100, ScaleMaximum = 100 },
         new() { Name = "خم‌شدن کمر (درجه)", Max = 90, Reverse = true },
         new() { Name = "بلندکردن پای صاف SLR (درجه)", Max = 90, Reverse = true },
         new() { Name = "پلانک (ثانیه)", Max = 60, Reverse = true },
-        new() { Name = "تعادل برگ Berg (از ۵۶)", Max = 56, Reverse = true },
+        new() { Name = "تعادل برگ Berg (از ۵۶)", Max = 56, ScaleMaximum = 56, Reverse = true },
     };
     /// <summary>میانگین بهبود همهٔ شاخص‌ها</summary>
     public double? TotalImprovement => Assessments.Any(a => a.Improvement.HasValue)
@@ -360,8 +364,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     private void GenerateReport()
     {
         if (!IsPhysioSessionEnabled) { _snackbar.Error("ابتدا بیمار و سابقهٔ او را بارگذاری کنید"); return; }
-        if (Assessments.Any(a => !ValidAssessment(a.BaseValue) || !ValidAssessment(a.NowValue)))
-        { ReferralReport = null; _snackbar.Error("مقادیر ارزیابی باید عدد متناهی و غیرمنفی باشند"); return; }
+        if (Assessments.Any(a => !a.IsValueValid(a.BaseValue) || !a.IsValueValid(a.NowValue)))
+        { ReferralReport = null; _snackbar.Error("مقادیر ارزیابی باید متناهی و غیرمنفی باشند و از سقف مقیاس‌های VAS، Oswestry و Berg تجاوز نکنند"); return; }
         var name = PhysioPatient!.FullName;
         var pain = Assessments[0];
         var osw = Assessments[1];
@@ -526,16 +530,14 @@ public partial class PhysiotherapyViewModel : ViewModelBase
                 if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("name", out var n) || n.ValueKind != JsonValueKind.String) continue;
                 var row = Assessments.FirstOrDefault(a => a.Name == n.GetString());
                 if (row is null) continue;
-                double? baseline = item.TryGetProperty("base", out var b) && b.ValueKind == JsonValueKind.Number && b.TryGetDouble(out var bv) && ValidAssessment(bv) ? bv : null;
-                double? measured = item.TryGetProperty("now", out var w) && w.ValueKind == JsonValueKind.Number && w.TryGetDouble(out var wv) && ValidAssessment(wv) ? wv : null;
+                double? baseline = item.TryGetProperty("base", out var b) && b.ValueKind == JsonValueKind.Number && b.TryGetDouble(out var bv) && row.IsValueValid(bv) ? bv : null;
+                double? measured = item.TryGetProperty("now", out var w) && w.ValueKind == JsonValueKind.Number && w.TryGetDouble(out var wv) && row.IsValueValid(wv) ? wv : null;
                 row.BaseValue ??= baseline ?? measured;
                 if (measured is not null) { row.LastValue = measured; row.LastDate = date; }
             }
         }
         catch (JsonException) { /* سازگاری با سابقهٔ قدیمی */ }
     }
-
-    private static bool ValidAssessment(double? value) => value is null || (double.IsFinite(value.Value) && value.Value >= 0);
 
     /// <summary>ذخیرهٔ جلسهٔ فیزیوتراپی با همهٔ داده‌های ساخت‌یافته</summary>
     [RelayCommand]
@@ -544,8 +546,8 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         if (!IsPhysioSessionEnabled || PhysioPatient is null) { _snackbar.Error("ابتدا بیمار و سابقهٔ او را بارگذاری کنید"); return; }
         if (TechniqueItems.Any(t => t.IsSelected && (t.Minutes is < 1 or > 1440)) || TotalDuration > 1440)
         { _snackbar.Error("مدت تکنیک‌های انتخاب‌شده باید مثبت و مجموع آن‌ها حداکثر ۱۴۴۰ دقیقه باشد"); return; }
-        if (Assessments.Any(a => !ValidAssessment(a.BaseValue) || !ValidAssessment(a.NowValue)))
-        { _snackbar.Error("مقادیر ارزیابی باید عدد متناهی و غیرمنفی باشند"); return; }
+        if (Assessments.Any(a => !a.IsValueValid(a.BaseValue) || !a.IsValueValid(a.NowValue)))
+        { _snackbar.Error("مقادیر ارزیابی باید متناهی و غیرمنفی باشند و از سقف مقیاس‌های VAS، Oswestry و Berg تجاوز نکنند"); return; }
         if (RecordPainScore && (PainScore is < 0 or > 10))
         { _snackbar.Error("شدت درد باید بین صفر و ده باشد"); return; }
         var patient = PhysioPatient;

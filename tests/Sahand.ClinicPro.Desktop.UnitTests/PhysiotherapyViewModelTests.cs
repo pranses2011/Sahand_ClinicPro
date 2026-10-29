@@ -206,4 +206,22 @@ public class PhysiotherapyViewModelTests
         row.ImprovementText.Should().Be("—");
     }
 
+    [Theory]
+    [InlineData(0, 10.1)]
+    [InlineData(1, 101)]
+    [InlineData(5, 57)]
+    public async Task Standard_assessment_scores_above_their_scale_cannot_be_saved_or_reported(int index, double invalid)
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["physiotherapy/sessions?patientId=1"] = new { data = Array.Empty<object>() };
+        var vm = new PhysiotherapyViewModel(api, new FakeSnackbar()) { PhysioPatient = Patient(1) };
+        vm.Assessments[index].BaseValue = 1;
+        vm.Assessments[index].NowValue = invalid;
+        vm.Assessments[index].Improvement.Should().BeNull();
+        vm.GenerateReportCommand.Execute(null);
+        vm.ReferralReport.Should().BeNull();
+        await vm.SavePhysioSessionCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(x => x.Method == "POST-bool" && x.Endpoint == "physiotherapy/sessions");
+    }
+
 }
