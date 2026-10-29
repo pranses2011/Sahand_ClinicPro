@@ -41,4 +41,24 @@ public class InvoicePreviewSafetyTests
         var invoice = await db.Set<Invoice>().SingleAsync();
         invoice.RemainingAmount.Should().Be(quote.Value.PatientPayable);
     }
+    [Fact]
+    public async Task Changed_service_tariff_blocks_issuance_after_preview()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "QUOTE-02", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000002" };
+        var service = new Service { ServiceName = "خدمت", DefaultPrice = 100, IsActive = true };
+        db.AddRange(patient, service); await db.SaveChangesAsync();
+        var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
+            new() { new InvoiceItemDto(service.Id, "خدمت", 1, 100, 0, null, 0) });
+        var quote = await handler.PreviewAsync(new PreviewInvoiceQuery(dto), default);
+        quote.IsSuccess.Should().BeTrue();
+        service.DefaultPrice = 200;
+        await db.SaveChangesAsync();
+        var result = await handler.Handle(new CreateInvoiceCommand(dto with { ExpectedQuote = quote.Value.QuoteVersion }), default);
+        result.Error.Code.Should().Be("BILLING.TARIFF_CHANGED");
+        (await db.Set<Invoice>().CountAsync()).Should().Be(0);
+    }
 }

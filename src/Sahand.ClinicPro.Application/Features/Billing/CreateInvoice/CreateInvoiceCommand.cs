@@ -272,7 +272,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             var insuredTariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
                 .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == insurance.Id &&
                             t.IsActive && !t.IsDeleted)
-                .OrderByDescending(t => t.Year)
+                .OrderByDescending(t => t.Year).ThenByDescending(t => t.Id)
                 .ToListAsync(cancellationToken);
             insuredTariffShareByService = insuredTariffs
                 .GroupBy(t => t.ServiceId).ToDictionary(g => g.Key, g => g.First().InsuranceShare);
@@ -283,6 +283,28 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             costById = await _unitOfWork.Repository<Service>().QueryableNoTracking
                 .Where(s => serviceIds.Contains(s.Id) && !s.IsDeleted)
                 .ToDictionaryAsync(s => s.Id, s => s.DefaultCost, cancellationToken);
+        }
+
+        // قرارداد نسخه‌دار فاکتور دستی قیمت خدمت را هم با همان اولویت جستجوی
+        // تعرفه تطبیق می‌دهد؛ فرمان‌های قدیمی بدون نسخه رفتار پیشین را دارند.
+        if ((preview || dto.ExpectedQuote is not null) && serviceIds.Count > 0)
+        {
+            var services = await _unitOfWork.Repository<Service>().QueryableNoTracking
+                .Where(x => serviceIds.Contains(x.Id) && x.IsActive && !x.IsDeleted)
+                .ToListAsync(cancellationToken);
+            if (services.Count != serviceIds.Count)
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.SERVICE_INVALID", "خدمت انتخاب‌شده دیگر فعال نیست."));
+            var effectiveId = insurance is not null && billingPolicy.ApplyToMedicalServices ? insurance.Id : (long?)null;
+            var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
+                .Where(t => serviceIds.Contains(t.ServiceId) && t.IsActive && !t.IsDeleted &&
+                    (t.InsuranceCompanyId == effectiveId || (effectiveId != null && t.InsuranceCompanyId == null)))
+                .ToListAsync(cancellationToken);
+            var prices = services.ToDictionary(x => x.Id, x => tariffs.Where(t => t.ServiceId == x.Id)
+                .OrderByDescending(t => effectiveId != null && t.InsuranceCompanyId == effectiveId)
+                .ThenByDescending(t => t.Year).ThenByDescending(t => t.Id)
+                .Select(t => (decimal?)t.Price).FirstOrDefault() ?? x.DefaultPrice);
+            if (dto.Items.Any(i => i.ServiceId.HasValue && prices[i.ServiceId.Value] != i.UnitPrice))
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.TARIFF_CHANGED", "تعرفه خدمت تغییر کرده است؛ خدمت را دوباره انتخاب و فاکتور را محاسبه کنید."));
         }
 
         // بهای تمام‌شدهٔ لوازم مصرفی از تراکنش‌های واقعی برداشت همان پذیرش
