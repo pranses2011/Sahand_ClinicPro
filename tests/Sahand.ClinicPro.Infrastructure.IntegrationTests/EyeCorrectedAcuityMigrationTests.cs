@@ -11,7 +11,7 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests;
 /// <summary>آزمون مهاجرت ستون‌ها روی SQLite؛ جایگزین اجرای واقعی SQL Server نیست.</summary>
 public class EyeCorrectedAcuityMigrationTests
 {
-    private sealed class TestDb(DbContextOptions<TestDb> options) : DbContext(options);
+    private sealed class TestDb(DbContextOptions<TestDb> options) : DbContext(options) { }
 
     [Fact]
     public async Task Migration_keeps_existing_acuity_and_leaves_new_values_unknown()
