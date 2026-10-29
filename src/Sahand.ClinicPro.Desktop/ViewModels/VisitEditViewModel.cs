@@ -27,7 +27,9 @@ public partial class VisitEditViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
-    private readonly long? _visitId;
+    private long? _visitId;
+    private bool _creationResultUnknown;
+    private System.Windows.Threading.DispatcherTimer? _clock;
     private long _patientId;
     private long _doctorId;
     private long? _receptionId;
@@ -374,14 +376,22 @@ public partial class VisitEditViewModel : ObservableObject
         _stopwatch.Start();
 
         // نمایش مدت — هر ثانیه
-        var clock = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        clock.Tick += (_, _) => ElapsedText = _stopwatch.Elapsed.ToString(@"mm\:ss");
-        clock.Start();
+        _clock = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _clock.Tick += (_, _) => ElapsedText = _stopwatch.Elapsed.ToString(@"mm\:ss");
+        _clock.Start();
 
         // AutoSave بی‌صدا هر ۶۰ ثانیه — طبق فرم ۱۱
         _autoSave = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
         _autoSave.Tick += async (_, _) => await SaveCoreAsync(silent: true);
         _autoSave.Start();
+    }
+
+    /// <summary>توقف ذخیره خودکار و ساعت پس از بسته شدن فرم.</summary>
+    public void StopTimers()
+    {
+        _autoSave?.Stop();
+        _clock?.Stop();
+        _stopwatch.Stop();
     }
 
     /* ═══════════ تب ۲: محاسبه کارت‌های حیاتی ═══════════ */
@@ -572,8 +582,7 @@ public partial class VisitEditViewModel : ObservableObject
     [RelayCommand]
     private async Task NextPatientAsync()
     {
-        await SaveCoreAsync(silent: false);
-        CloseRequested?.Invoke(this, EventArgs.Empty);
+        if (await SaveCoreAsync(silent: false)) CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     /* ═════════════════════════════════════════════════════════════════
@@ -796,7 +805,7 @@ public partial class VisitEditViewModel : ObservableObject
         }
 
         // ویزیتِ در جریان ذخیره شود تا نسخه در پرونده به زمینهٔ کامل وصل باشد
-        await SaveCoreAsync(silent: true);
+        if (!await SaveCoreAsync(silent: false)) return;
 
         // پزشکان برای انتخاب صادرکننده — همان الگوی صفحهٔ نسخه‌ها
         var doctors = new ObservableCollection<DoctorOption>();
@@ -818,7 +827,12 @@ public partial class VisitEditViewModel : ObservableObject
     /// <summary>هسته ذخیره — ساخت DTO و POST</summary>
     private async Task<bool> SaveCoreAsync(bool silent, bool complete = false)
     {
-        if (_suppressAutoSave) return true;
+        if (_suppressAutoSave)
+        { if (!silent) _snackbar.Info("ذخیره قبلی هنوز در حال انجام است؛ پس از پایان دوباره تلاش کنید."); return false; }
+        if (_creationResultUnknown)
+        { if (!silent) _snackbar.Error("نتیجه ساخت ویزیت نامعلوم است؛ پیش از تکرار پرونده بیمار را بررسی کنید."); return false; }
+        if (_patientId <= 0 || _doctorId <= 0)
+        { if (!silent) _snackbar.Error("اطلاعات بیمار یا پزشک ویزیت آماده نیست؛ ذخیره انجام نشد."); return false; }
         _suppressAutoSave = true;
         try
         {
@@ -851,20 +865,29 @@ public partial class VisitEditViewModel : ObservableObject
             var response = await _api.PostAsync<SaveVisitResponse>("visits", body);
             if (response?.Data is null or 0)
             {
-                if (!silent)
-                {
-                    ErrorMessage = _api.LastError ?? "ذخیره ویزیت ناموفق بود";
-                    _snackbar.Error(ErrorMessage);
-                }
+                if (_visitId is null) _creationResultUnknown = true;
+                ErrorMessage = (_api.LastError ?? "پاسخ ذخیره ویزیت دریافت نشد") +
+                    (_creationResultUnknown ? "؛ پیش از تکرار، وجود ویزیت را در پرونده بررسی کنید." : "؛ پیش از تکرار وضعیت ویزیت را بررسی کنید.");
+                SaveStateText = "⚠️ نتیجه ذخیره نامعلوم یا ناموفق";
+                _snackbar.Error(ErrorMessage);
                 return false;
             }
 
+            _visitId = response.Data.Value;
             SaveStateText = complete
                 ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}"
                 : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}";
             if (!silent && !complete)
                 _snackbar.Success("ویزیت ذخیره شد");
             return true;
+        }
+        catch (Exception)
+        {
+            if (_visitId is null) _creationResultUnknown = true;
+            ErrorMessage = "پاسخ ذخیره ویزیت دریافت نشد؛ پیش از تکرار پرونده بیمار را بررسی کنید.";
+            SaveStateText = "⚠️ نتیجه ذخیره نامعلوم";
+            _snackbar.Error(ErrorMessage);
+            return false;
         }
         finally
         {
