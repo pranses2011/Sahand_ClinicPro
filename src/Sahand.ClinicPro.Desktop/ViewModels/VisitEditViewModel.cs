@@ -497,33 +497,28 @@ public partial class VisitEditViewModel : ObservableObject
     };
 
     private static int ParseInt(string? text) =>
-        int.TryParse(new string((text ?? "").Where(char.IsDigit).ToArray()), out var v) ? v : 0;
+        TryInt(text, out var value) ? value ?? 0 : 0;
 
-    /// <summary>
-    /// پارس عدد اعشاری ورودی علائم حیاتی — چرخهٔ ۷۹ (گزارش مالک: «وقتی دما را
-    /// می‌نویسم، مانند بقیه علائم وضعیتش در پایین صفحه نمی‌افتد»).
-    /// ریشه: دما «تنها» علامت حیاتی اعشاری است و decimal.TryParse با فرهنگ
-    /// جاری fa-IR اجرا می‌شد که جداکنندهٔ اعشارش «٫» (U+066B) است — «37.5»
-    /// رد می‌شد (نتیجه ۰ ⇒ بدون وضعیت و بدون ذخیره) و «۳۷٫۵» هم بعد از پالایش
-    /// کاراکترها به «۳۷۵» تبدیل می‌شد! اکنون ارقام فارسی/عربی و جداکننده‌های
-    /// «٫» و «،» و «/» همه به قالب خنثی نرمال‌سازی و با InvariantCulture
-    /// پارس می‌شوند — هر دو مسیر «کارت وضعیت زنده» و «ذخیرهٔ ویزیت» سالم‌اند.
-    /// </summary>
-    private static decimal ParseDec(string? text)
+    private static decimal ParseDec(string? text) =>
+        TryDecimal(text, out var value) ? value ?? 0 : 0;
+
+    private static bool TryDecimal(string? text, out decimal? value)
     {
-        // گام ۱: ارقام فارسی/عربی → لاتین (پارس خنثی فقط ارقام ASCII می‌پذیرد)
-        var latin = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToLatinDigits(text ?? string.Empty);
-        // گام ۲: نگه‌داشتن ارقام و همهٔ جداکننده‌های اعشاری رایج + یکسان‌سازی‌شان
-        var cleaned = new string(latin
-            .Where(c => char.IsDigit(c) || c is '.' or '٫' or ',' or '/' or '٬')
-            .ToArray())
-            .Replace('٫', '.').Replace('٬', '.').Replace(',', '.').Replace('/', '.');
-        // گام ۳: فقط نخستین نقطه اعشار می‌ماند — بقیه حذف (ورودی مثل ۳۷.۵.۲)
-        var firstDot = cleaned.IndexOf('.');
-        if (firstDot >= 0)
-            cleaned = cleaned[..(firstDot + 1)] + cleaned[(firstDot + 1)..].Replace(".", "");
-        return decimal.TryParse(cleaned, System.Globalization.NumberStyles.Number,
-            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+        value = null;
+        if (string.IsNullOrWhiteSpace(text)) return true;
+        if (!Sahand.ClinicPro.Desktop.Helpers.PlainNumber.TryParse(text, out var parsed)) return false;
+        value = parsed;
+        return true;
+    }
+
+    private static bool TryInt(string? text, out int? value)
+    {
+        value = null;
+        if (!TryDecimal(text, out var parsed)) return false;
+        if (parsed is null) return true;
+        if (parsed != decimal.Truncate(parsed.Value) || parsed < int.MinValue || parsed > int.MaxValue) return false;
+        value = (int)parsed.Value;
+        return true;
     }
 
     /* ═══════════ تب ۴: جستجوی تشخیص ═══════════ */
@@ -851,6 +846,13 @@ public partial class VisitEditViewModel : ObservableObject
         { if (!silent) _snackbar.Error("ویزیت کامل بارگذاری نشده یا تکمیل‌شده و فقط خواندنی است."); return false; }
         if (_patientId <= 0 || _doctorId <= 0)
         { if (!silent) _snackbar.Error("اطلاعات بیمار یا پزشک ویزیت آماده نیست؛ ذخیره انجام نشد."); return false; }
+        if (!TryBuildVitals(out var vitals))
+        {
+            ErrorMessage = "علائم حیاتی نامعتبر است؛ اعداد و فشار خون را بررسی کنید.";
+            SaveStateText = "⚠️ علائم حیاتی ذخیره نشد";
+            if (!silent) _snackbar.Error(ErrorMessage);
+            return false;
+        }
         _suppressAutoSave = true;
         try
         {
@@ -878,7 +880,7 @@ public partial class VisitEditViewModel : ObservableObject
                 secondaryDiagnoses = _existingVisitLoaded && JsonSerializer.Serialize(SecondaryDiagnoses.ToList()) == _initialSecondaryRepresentation
                     ? _originalSecondaryDiagnoses : JsonSerializer.Serialize(SecondaryDiagnoses.ToList()),
                 followUpInstructions = FollowUpInstructions,
-                vitalSigns = BuildVitals()
+                vitalSigns = vitals
             };
 
             var response = await _api.PostAsync<SaveVisitResponse>("visits", body);
@@ -930,45 +932,24 @@ public partial class VisitEditViewModel : ObservableObject
         return parts.Count == 0 ? null : string.Join("؛ ", parts);
     }
 
-    /// <summary>ساخت DTO علائم حیاتی</summary>
-    private object? BuildVitals()
+    /// <summary>دریافت بدون گردکردن یا حذف خاموش نویسه‌ها.</summary>
+    private bool TryBuildVitals(out Sahand.ClinicPro.Application.DTOs.Visits.VitalSignsInputDto? vitals)
     {
-        var hasAny = !string.IsNullOrWhiteSpace(BpText) || !string.IsNullOrWhiteSpace(HrText) ||
-                     !string.IsNullOrWhiteSpace(TempText) || !string.IsNullOrWhiteSpace(Spo2Text) ||
-                     !string.IsNullOrWhiteSpace(WeightText) || !string.IsNullOrWhiteSpace(HeightText) || !string.IsNullOrWhiteSpace(BsText);
-        if (!hasAny) return null;
-
+        vitals = null;
         int? sys = null, dia = null;
-        if (BpText is not null && BpText.Contains('/'))
+        if (!string.IsNullOrWhiteSpace(BpText))
         {
-            sys = ParseInt(BpText.Split('/')[0]);
-            var d = ParseInt(BpText.Split('/')[1]);
-            dia = d > 0 ? d : null;
-            if (sys == 0) sys = null;
+            var parts = BpText.Split('/');
+            if (parts.Length != 2 || !TryInt(parts[0], out sys) || !TryInt(parts[1], out dia) || sys is null) return false;
         }
-        return new
-        {
-            bloodPressureSystolic = sys,
-            bloodPressureDiastolic = dia,
-            heartRate = ParseNullable(HrText),
-            temperature = ParseNullableDec(TempText),
-            oxygenSaturation = ParseNullable(Spo2Text),
-            weight = ParseNullableDec(WeightText),
-            height = ParseNullableDec(HeightText),
-            bloodSugar = ParseNullable(BsText)
-        };
-    }
-
-    private static int? ParseNullable(string? text)
-    {
-        var v = ParseInt(text);
-        return v == 0 ? null : v;
-    }
-
-    private static decimal? ParseNullableDec(string? text)
-    {
-        var v = ParseDec(text);
-        return v == 0 ? null : v;
+        if (!TryInt(HrText, out var hr) || !TryDecimal(TempText, out var temp) ||
+            !TryInt(Spo2Text, out var spo2) || !TryDecimal(WeightText, out var weight) ||
+            !TryDecimal(HeightText, out var height) || !TryInt(BsText, out var sugar)) return false;
+        if (sys is null && dia is null && hr is null && temp is null && spo2 is null && weight is null && height is null && sugar is null) return true;
+        var result = new Sahand.ClinicPro.Application.DTOs.Visits.VitalSignsInputDto(sys, dia, hr, temp, spo2, weight, height, sugar);
+        if (!Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit.VisitVitalsSafety.IsValid(result)) return false;
+        vitals = result;
+        return true;
     }
 
     /// <summary>پر کردن مجموعه تگ از JSON</summary>

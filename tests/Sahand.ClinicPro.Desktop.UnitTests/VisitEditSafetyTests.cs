@@ -66,4 +66,27 @@ public class VisitEditSafetyTests
         vm.StopTimers();
     }
 
+    [Fact]
+    public async Task Vital_numbers_are_validated_and_persian_digits_are_preserved()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits"] = new { data = 42L };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.BpText = "۱۲۰/۸۰";
+        vm.HrText = "۷۲";
+        vm.TempText = "۳۷٫۵";
+        vm.Spo2Text = "۹۸";
+        vm.HeightText = "۱۷۰";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody).GetProperty("vitalSigns");
+        body.GetProperty("bloodPressureSystolic").GetInt32().Should().Be(120);
+        body.GetProperty("heartRate").GetInt32().Should().Be(72);
+        body.GetProperty("temperature").GetDecimal().Should().Be(37.5m);
+        body.GetProperty("height").GetDecimal().Should().Be(170m);
+        vm.Spo2Text = "۱۰۱";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits").Should().Be(1);
+        vm.StopTimers();
+    }
+
 }

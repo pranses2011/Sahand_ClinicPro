@@ -62,4 +62,13 @@ public class VisitPatientSafetyTests
         visit.Status.Should().Be(VisitStatus.Completed);
         visit.ChiefComplaint.Should().Be("اصلی");
     }
+    [Theory]
+    [InlineData(101)]
+    [InlineData(-1)]
+    public void Invalid_oxygen_saturation_is_not_accepted(int value)
+    {
+        Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit.VisitVitalsSafety
+            .IsValid(new VitalSignsInputDto(OxygenSaturation: value)).Should().BeFalse();
+    }
+
 }

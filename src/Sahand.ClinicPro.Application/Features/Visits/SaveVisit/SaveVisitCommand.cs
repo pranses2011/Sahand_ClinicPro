@@ -56,6 +56,8 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
     public async Task<Result<long>> Handle(SaveVisitCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (!VisitVitalsSafety.IsValid(dto.VitalSigns))
+            return Result<long>.Failure(new Error("VISIT.VITALS_INVALID", "مقادیر علائم حیاتی نامعتبر یا خارج از دقت قابل ذخیره‌اند."));
         var repo = _unitOfWork.Repository<Domain.Entities.Clinical.Visit>();
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
         if (patient is null || patient.IsDeleted)
