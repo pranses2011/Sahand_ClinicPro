@@ -737,6 +737,7 @@ public partial class ImagingViewModel : ViewModelBase
             {
                 using var doc = JsonDocument.Parse(value.ReportDetails);
                 var r = doc.RootElement;
+                if (r.TryGetProperty("clinicalInfo", out var ci)) ReportClinicalInfo = ci.GetString();
                 if (r.TryGetProperty("ctdi", out var c) && c.ValueKind != JsonValueKind.Null) DoseCtdi = c.ToString();
                 if (r.TryGetProperty("dlp", out var d) && d.ValueKind != JsonValueKind.Null) DoseDlp = d.ToString();
                 if (r.TryGetProperty("comparison", out var cmp) && cmp.GetString() is { } cs && ComparisonOptions.Contains(cs)) ReportComparison = cs;
@@ -788,7 +789,7 @@ public partial class ImagingViewModel : ViewModelBase
                         if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String ||
                             (v.GetString() != "نهایی" && !ReportStatusOptions.Contains(v.GetString())))) return false;
                         break;
-                    case "criticalTo":
+                    case "clinicalInfo": case "criticalTo":
                         if (v.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return false;
                         break;
                     case "criticalMethod":
@@ -901,6 +902,7 @@ public partial class ImagingViewModel : ViewModelBase
         {
             ctdi,
             dlp,
+            clinicalInfo = ReportClinicalInfo,
             comparison = ReportComparison,
             status = isFinal ? "نهایی" : "پیش‌نویس",
             critical = CriticalFinding,

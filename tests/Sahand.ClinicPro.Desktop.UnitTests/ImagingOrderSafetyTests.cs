@@ -140,6 +140,7 @@ public class ImagingOrderSafetyTests
         var second = Order(2, "CT");
         vm.SelectedImagingOrder = first;
         vm.ReportFindings = "یافته بیمار اول";
+        vm.ReportClinicalInfo = "شرح حال ثبت‌شده در گزارش";
         vm.DoseCtdi = "۱۲٫۵";
         var save = vm.SaveReportCommand.ExecuteAsync(true);
         vm.CanEditImagingReport.Should().BeFalse();
@@ -155,6 +156,7 @@ public class ImagingOrderSafetyTests
         body.GetProperty("orderId").GetInt64().Should().Be(1);
         using var details = JsonDocument.Parse(body.GetProperty("reportDetails").GetString()!);
         details.RootElement.GetProperty("ctdi").GetDecimal().Should().Be(12.5m);
+        details.RootElement.GetProperty("clinicalInfo").GetString().Should().Be("شرح حال ثبت‌شده در گزارش");
     }
 
     [Fact]
@@ -186,6 +188,17 @@ public class ImagingOrderSafetyTests
         await vm.SaveReportCommand.ExecuteAsync(true);
         api.Calls.Should().NotContain(c => c.Method == "PUT-bool" && c.Endpoint == "imaging/reports");
         order.ReportDetails.Should().Be(details);
+    }
+
+    [Fact]
+    public void Report_clinical_info_restores_from_saved_details_without_modifying_referral()
+    {
+        var vm = new ImagingViewModel(new FakeApiClient(), new FakeSnackbar());
+        var order = Order(1, "MRI");
+        order.ReportDetails = "{\"clinicalInfo\":\"شرح حال گزارش\"}";
+        vm.SelectedImagingOrder = order;
+        vm.ReportClinicalInfo.Should().Be("شرح حال گزارش");
+        vm.HasUnsupportedReportDetails.Should().BeFalse();
     }
 
 }
