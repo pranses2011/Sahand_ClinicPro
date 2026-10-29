@@ -244,6 +244,23 @@ public class SurveyFlowTests
     }
 
     [Fact]
+    public async Task Invalid_or_empty_responses_are_rejected_and_audit_does_not_copy_answers()
+    {
+        var client = await LoginAsync();
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "محرمانگی پاسخ" });
+        var surveyId = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { rating = 6 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { comments = new string('x', 2001) })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { comments = " " })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        const string privateComment = "PRIVATE-SURVEY-COMMENT-83BD";
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { rating = 4, comments = privateComment })).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        (await db.SurveyResponses.AnyAsync(r => r.SurveyId == surveyId && r.Comments == privateComment)).Should().BeTrue();
+        (await db.AuditLogs.AnyAsync(a => a.NewValues != null && a.NewValues.Contains(privateComment))).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Structured_answers_are_validated_and_keep_original_question_text()
     {
         var client = await LoginAsync();

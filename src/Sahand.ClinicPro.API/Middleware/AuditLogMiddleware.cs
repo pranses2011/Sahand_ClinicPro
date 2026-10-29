@@ -51,7 +51,12 @@ public class AuditLogMiddleware
         // خواندن بدنه برای ثبت — سپس بازنشانی برای خواندن بعدی
         string? requestBody = null;
         context.Request.EnableBuffering();
-        if (context.Request.ContentLength is > 0 and < 100_000)
+        // پاسخ نظرسنجی ممکن است ناشناس یا حاوی اطلاعات حساس باشد؛ رونوشت
+        // بدنه در لاگ عملیات (که کاربر و زمان را نگه می‌دارد) ثبت نمی‌شود.
+        var surveyResponse = context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            && System.Text.RegularExpressions.Regex.IsMatch(context.Request.Path.Value ?? "",
+                @"^/api/v1/surveys/[0-9]+/responses/?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        if (!surveyResponse && context.Request.ContentLength is > 0 and < 100_000)
         {
             // ═══ چرخهٔ سی‌امین — قطع اتصال کلاینت هنگام ارسال بدنه ═══
             // «Unexpected end of request content» یعنی کلاینت وسط ارسال

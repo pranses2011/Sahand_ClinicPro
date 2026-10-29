@@ -153,6 +153,12 @@ public class SurveysController : ApiBaseController
     [HasPermission("surveys.view")] // ممیزی چرخه ۱۲ — ثبت پاسخ توسط پرسنل/کیوسک
 public async Task<IActionResult> SubmitResponse(long id, [FromBody] SubmitResponseRequest request)
     {
+        if (request.Rating is not null && request.Rating is not (>= 1 and <= 5))
+            return BadRequest(ApiResponse<object>.Failure("امتیاز باید بین ۱ تا ۵ باشد"));
+        if (request.Comments?.Trim().Length > 2000)
+            return BadRequest(ApiResponse<object>.Failure("نظر آزاد حداکثر ۲۰۰۰ نویسه است"));
+        if (request.Rating is null && string.IsNullOrWhiteSpace(request.Comments) && (request.Answers is null || request.Answers.Count == 0))
+            return BadRequest(ApiResponse<object>.Failure("حداقل یک پاسخ، امتیاز یا نظر وارد کنید"));
         var survey = await _unitOfWork.Repository<Survey>().QueryableNoTracking
             .FirstOrDefaultAsync(s => s.Id == id && s.IsActive && !s.IsDeleted);
         if (survey is null)
