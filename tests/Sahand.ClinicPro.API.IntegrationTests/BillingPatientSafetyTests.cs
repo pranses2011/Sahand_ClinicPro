@@ -187,4 +187,20 @@ public class BillingPatientSafetyTests
         (await controller.RecordIdempotent(dto with { RequestId = Guid.Empty })).Should().BeOfType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>();
         mediator.VerifyNoOtherCalls();
     }
+    [Fact]
+    public async Task Invoice_search_can_find_exact_id_for_payment_recovery()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "SEARCH-INV", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000004" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, InvoiceNumber = "PAY-RECOVERY", TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
+        db.Add(invoice); await db.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQueryHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var page = new Sahand.ClinicPro.Application.Common.Models.PagedRequest { PageNumber = 1, PageSize = 15, Search = invoice.Id.ToString() };
+        var result = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Data.Should().Contain(x => x.Id == invoice.Id);
+    }
 }

@@ -38,9 +38,11 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
         if (!string.IsNullOrWhiteSpace(page.Search))
         {
             var term = page.Search.Trim();
+            var isId = long.TryParse(term, out var searchedId) && searchedId > 0;
             query = query.Where(i =>
-                i.InvoiceNumber != null && i.InvoiceNumber.Contains(term) ||
-                i.Patient != null && i.Patient.LastName.Contains(term));
+                (isId && i.Id == searchedId) ||
+                (i.InvoiceNumber != null && i.InvoiceNumber.Contains(term)) ||
+                (i.Patient != null && i.Patient.LastName.Contains(term)));
         }
 
         var total = await query.CountAsync(cancellationToken);
