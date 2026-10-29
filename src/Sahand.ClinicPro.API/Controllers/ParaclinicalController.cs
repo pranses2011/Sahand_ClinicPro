@@ -275,7 +275,7 @@ public class ParaclinicalController : ApiBaseController
             .Select(e => new
             {
                 e.Id,
-                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(e.CreatedAt),
                 e.VisitId,
                 od = new { sphere = e.RightSphere, cylinder = e.RightCylinder, axis = e.RightAxis,
                            acuity = e.RightVisualAcuity, iop = e.RightIop },
@@ -330,7 +330,7 @@ public class ParaclinicalController : ApiBaseController
             .Select(e => new
             {
                 e.Id,
-                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(e.CreatedAt),
                 e.SessionNumber,
                 e.PainScore,
                 e.Duration,

@@ -48,6 +48,14 @@ public static class PersianDateHelper
     public static DateTime IranNow()
         => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Iran Standard Time");
 
+    /// <summary>تبدیل زمان UTC ذخیره‌شده به وقت ایران؛ datetime2 معمولاً Kind را حفظ نمی‌کند.</summary>
+    public static DateTime IranTimeFromStoredUtc(DateTime storedUtc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc),
+            TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time"));
+
+    /// <summary>تاریخ شمسی به وقت ایران از مهر زمانی UTC ذخیره‌شده.</summary>
+    public static string StoredUtcToIranShamsi(DateTime storedUtc) => ToShamsi(IranTimeFromStoredUtc(storedUtc));
+
     /// <summary>ابتدا و انتهای روز ایران به UTC، برای فیلتر ستون‌های زمان UTC.</summary>
     public static (DateTime Start, DateTime End) IranDayUtcBounds(DateTime utcInstant)
     {

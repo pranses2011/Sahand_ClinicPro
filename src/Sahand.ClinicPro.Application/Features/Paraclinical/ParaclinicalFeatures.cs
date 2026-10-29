@@ -218,7 +218,7 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
         {
             PatientId = request.PatientId,
             DentistId = request.DentistId,
-            CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedDate = DateOnly.FromDateTime(Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranTimeFromStoredUtc(DateTime.UtcNow)),
             TotalCost = request.TotalCost,
             EstimatedSessions = request.EstimatedSessions,
             PlanDetails = request.PlanDetails,

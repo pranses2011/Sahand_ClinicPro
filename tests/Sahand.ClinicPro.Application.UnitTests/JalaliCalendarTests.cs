@@ -147,4 +147,14 @@ public class JalaliCalendarTests
         PersianDateHelper.IranDayUtcBounds(end).Start.Should().Be(end);
     }
 
+    [Fact]
+    public void Stored_utc_dates_use_iran_day_even_when_sql_loses_datetime_kind()
+    {
+        var beforeMidnight = new DateTime(2026, 3, 20, 20, 29, 0, DateTimeKind.Unspecified);
+        var afterMidnight = new DateTime(2026, 3, 20, 20, 30, 0, DateTimeKind.Unspecified);
+        PersianDateHelper.StoredUtcToIranShamsi(beforeMidnight).Should().Be("1404/12/29");
+        PersianDateHelper.StoredUtcToIranShamsi(afterMidnight).Should().Be("1405/01/01");
+        PersianDateHelper.IranTimeFromStoredUtc(afterMidnight).Date.Should().Be(new DateTime(2026, 3, 21));
+    }
+
 }
