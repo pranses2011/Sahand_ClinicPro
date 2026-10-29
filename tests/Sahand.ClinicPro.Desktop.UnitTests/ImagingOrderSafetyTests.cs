@@ -63,4 +63,23 @@ public class ImagingOrderSafetyTests
         await vm.SearchImagingPatientCommand.ExecuteAsync(null);
         vm.ImagingPatient.Should().BeNull();
     }
+    [Fact]
+    public async Task Failed_queue_refresh_preserves_prior_rows_and_reports_stale_data()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["imaging/orders"] = new { data = new[] {
+            new { id = 1, patientId = 4, patientName = "بیمار", modality = "MRI", bodyPart = "زانو", status = 1, priority = 3, createdAt = DateTime.UtcNow }
+        } };
+        var vm = new ImagingViewModel(api, new FakeSnackbar());
+        await vm.LoadImagingOrdersCommand.ExecuteAsync(null);
+        vm.ImagingOrders.Should().ContainSingle();
+        vm.WorkSearch = "مورد ناموجود";
+        vm.QueueEmptyMessage.Should().Contain("فیلتر");
+        api.CannedResponses.Remove("imaging/orders");
+        await vm.LoadImagingOrdersCommand.ExecuteAsync(null);
+        vm.ImagingOrders.Should().ContainSingle();
+        vm.QueueStatus.Should().Contain("ناموفق").And.Contain("قدیمی");
+        vm.QueueEmptyMessage.Should().Contain("ناموفق");
+    }
+
 }

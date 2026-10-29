@@ -283,6 +283,7 @@
                                 <TextBlock Text="📋 صف کار امروز — انتخاب هر ردیف، نمایشگر و فرم گزارش همان مطالعه را بار می‌کند" Style="{StaticResource SectionTitle}" />
                                 <TextBlock Text="هشدار: درخواست‌های ثبت‌شده با نسخه‌های پیشین را پیش از انجام با ارجاع اصلی تطبیق دهید؛ نوع MRI/CT و ناحیهٔ تایپ‌شده ممکن است نادرست ثبت شده باشد. اصلاح جدید سوابق قبلی را خودکار تغییر نمی‌دهد."
                                            Foreground="#8A4B08" Background="#FFF5DE" Padding="8" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                <TextBlock Text="{Binding QueueStatus, Mode=OneWay}" Foreground="#8A4B08" TextWrapping="Wrap" Margin="0,0,0,6" />
                                 <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}"
                                           AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300" MinHeight="110" RowHeight="34"
                                           Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
@@ -311,7 +312,7 @@
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <TextBlock Text="صف امروز خالی است — با فرم بالا نخستین درخواست را ثبت کنید."
+                                <TextBlock Text="{Binding QueueEmptyMessage, Mode=OneWay}"
                                            FontSize="12" Opacity="0.55" HorizontalAlignment="Center" Margin="0,10,0,2">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">

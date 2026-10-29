@@ -90,6 +90,14 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<ImagingOrderRow> _imagingOrders = new();
     /// <summary>درخواست‌های پس از فیلتر/جست‌وجو — صف نمایشی</summary>
     public ObservableCollection<ImagingOrderRow> FilteredOrders { get; } = new();
+    private int _queueRequestVersion;
+    private bool _queueLoaded;
+    [ObservableProperty] private string _queueStatus = "صف هنوز دریافت نشده است.";
+    partial void OnQueueStatusChanged(string value) => OnPropertyChanged(nameof(QueueEmptyMessage));
+    /// <summary>پیام دقیق حالت خالی یا خطای دریافت صف.</summary>
+    public string QueueEmptyMessage => !_queueLoaded || !string.IsNullOrEmpty(QueueStatus)
+        ? QueueStatus : ImagingOrders.Count == 0 ? "صف امروز خالی است." : "درخواستی با فیلترهای انتخاب‌شده پیدا نشد.";
+
     /// <summary>فیلتر آماری فعال: all/wait/rep/stat/done</summary>
     [ObservableProperty] private string _workFilter = "all";
     /// <summary>فیلتر مدالیته (نام فارسی یا all)</summary>
@@ -137,6 +145,7 @@ public partial class ImagingViewModel : ViewModelBase
                 && !(o.PatientName + o.BodyPart + o.ModalityFa).Contains(WorkSearch.Trim())) ok = false;
             if (ok) FilteredOrders.Add(o);
         }
+        OnPropertyChanged(nameof(QueueEmptyMessage));
     }
 
     private void RaiseStats()
@@ -617,30 +626,36 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بارگذاری فهرست درخواست‌های تصویر امروز</summary>
     private async Task LoadImagingOrdersCoreAsync(bool notifyWhenEmpty)
     {
+        var version = ++_queueRequestVersion;
+        QueueStatus = "در حال دریافت صف؛ اطلاعات قبلی ممکن است به‌روز نباشند.";
         try
         {
-            await LoadImagingOrdersCoreInnerAsync(notifyWhenEmpty);
+            var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
+            if (version != _queueRequestVersion) return;
+            if (response?.Data is null)
+            {
+                QueueStatus = "دریافت صف ناموفق بود؛ اطلاعات قبلی ممکن است قدیمی باشند. دوباره تلاش کنید.";
+                _snackbar.Error(_api.LastError ?? "دریافت صف تصویربرداری ناموفق بود");
+                return;
+            }
+            ImagingOrders = new ObservableCollection<ImagingOrderRow>(response.Data
+                .Select(o => new ImagingOrderRow(o.Id, o.PatientId, o.PatientName, o.Modality, o.BodyPart,
+                    o.Status, o.Priority, o.ClinicalInfo, o.Technique, o.Findings, o.Impression,
+                    o.Recommendation, o.ReportDetails, o.CreatedAt, o.PerformedAt, o.ReportedAt,
+                    o.PatientGender, o.PatientBirthShamsi)));
+            _queueLoaded = true;
+            QueueStatus = response.Data.Count >= 100 ? "حداکثر ۱۰۰ درخواست آخر امروز نمایش داده می‌شود؛ آمار مربوط به همین فهرست است." : string.Empty;
+            ApplyWorkFilter();
+            RaiseStats();
+            if (notifyWhenEmpty && ImagingOrders.Count == 0)
+                _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // بارگذاری صف تصویربرداری نباید برنامه را ببندد (گزارش مالک)
-            _snackbar.Error("بارگذاری صف تصویربرداری ناموفق بود: " + ex.Message);
+            if (version != _queueRequestVersion) return;
+            QueueStatus = "دریافت صف ناموفق بود؛ اطلاعات قبلی ممکن است قدیمی باشند. دوباره تلاش کنید.";
+            _snackbar.Error("بارگذاری صف تصویربرداری ناموفق بود؛ اتصال سرور را بررسی کنید.");
         }
-    }
-
-    /// <summary>هستهٔ بارگذاری صف — خطاهایش در پوشش بالا گرفته می‌شود</summary>
-    private async Task LoadImagingOrdersCoreInnerAsync(bool notifyWhenEmpty)
-    {
-        var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
-        ImagingOrders = new ObservableCollection<ImagingOrderRow>((response?.Data ?? new List<ImagingOrderDto>())
-            .Select(o => new ImagingOrderRow(o.Id, o.PatientId, o.PatientName, o.Modality, o.BodyPart,
-                o.Status, o.Priority, o.ClinicalInfo, o.Technique, o.Findings, o.Impression,
-                o.Recommendation, o.ReportDetails, o.CreatedAt, o.PerformedAt, o.ReportedAt,
-                o.PatientGender, o.PatientBirthShamsi)));
-        ApplyWorkFilter();
-        RaiseStats();
-        if (notifyWhenEmpty && ImagingOrders.Count == 0)
-            _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
     }
 
     /// <summary>نوسازی بی‌صدا — فرمان استاندارد پوسته پس از هر ناوبری</summary>
