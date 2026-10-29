@@ -154,6 +154,8 @@ public class ImagingOrderSafetyTests
         first.Status.Should().Be(4);
         var body = JsonSerializer.SerializeToElement(api.LastBody);
         body.GetProperty("orderId").GetInt64().Should().Be(1);
+        body.GetProperty("expectedState").GetProperty("status").GetInt32().Should().Be(3);
+        body.GetProperty("expectedState").GetProperty("findings").ValueKind.Should().Be(JsonValueKind.Null);
         using var details = JsonDocument.Parse(body.GetProperty("reportDetails").GetString()!);
         details.RootElement.GetProperty("ctdi").GetDecimal().Should().Be(12.5m);
         details.RootElement.GetProperty("clinicalInfo").GetString().Should().Be("شرح حال ثبت‌شده در گزارش");
