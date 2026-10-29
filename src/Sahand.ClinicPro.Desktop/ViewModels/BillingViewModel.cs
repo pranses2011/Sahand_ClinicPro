@@ -259,6 +259,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     private int _serviceSearchVersion;
     private int _patientSearchVersion;
     private bool _invoiceSubmissionLocked;
+    [ObservableProperty] private bool _hasInvalidInvoiceInput;
     public bool CanEditInvoice => !IsBusy && !_invoiceSubmissionLocked;
     partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditInvoice));
 
@@ -459,6 +460,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     private void AddService()
     {
         if (!CanEditInvoice) return;
+        if (HasInvalidInvoiceInput) { _snackbar.Error("ورودی عددی نامعتبر است؛ ابتدا آن را اصلاح کنید."); return; }
         if (SelectedService is null || !Services.Contains(SelectedService)) { _snackbar.Error("ابتدا خدمت را از فهرست جاری انتخاب کنید"); return; }
         if (ServiceQuantity <= 0 || ServiceQuantity > 99999999) { _snackbar.Error("تعداد خدمت نامعتبر است."); return; }
         var item = new InvoiceItemVM
@@ -535,6 +537,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     private async Task SaveAndPrintAsync()
     {
         if (!CanEditInvoice) return;
+        if (HasInvalidInvoiceInput) { ErrorMessage = "ورودی عددی نامعتبر است؛ پیش از صدور آن را اصلاح کنید."; return; }
         if (Patient is null || Patient.Id <= 0) { ErrorMessage = "ابتدا بیمار را به‌طور یکتا انتخاب کنید"; return; }
         if (Items.Count == 0 || Items.Any(i => i.Quantity <= 0 || i.ServiceId is not > 0)) { ErrorMessage = "خدمت و تعداد معتبر انتخاب کنید"; return; }
         if (InsuranceCompanies.Count == 0 || InsuranceIndex != 0 || InsuranceCompanies[0].Id != 0 || DiscountAmount != 0 || DiscountPercent != 0 || TaxPercent != 0)
