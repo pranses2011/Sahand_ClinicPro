@@ -84,6 +84,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         if (dto.ReceptionId is long receptionId)
         {
             var receptionRepo = _unitOfWork.Repository<Reception>();
+            var visible = await receptionRepo.QueryableNoTracking.AnyAsync(r => r.Id == receptionId && !r.IsDeleted, cancellationToken);
+            if (!visible) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
             var reception = await receptionRepo.GetByIdAsync(receptionId, cancellationToken);
             if (reception is null || reception.IsDeleted) return Result<long>.Failure(Error.NotFound("پذیرش", receptionId));
             if (reception.PatientId != dto.PatientId)
