@@ -1,0 +1,1 @@
+Offscreen WPF layout, 1568x885 at 96 DPI; not an on-screen screenshot. RTL transforms and rendering can differ.
