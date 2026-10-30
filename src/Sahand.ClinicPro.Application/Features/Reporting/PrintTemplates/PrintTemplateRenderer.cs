@@ -89,6 +89,7 @@ public static class PrintTemplateRenderer
     /// <param name="fontFamily">خانواده فونت</param>
     /// <param name="showLogo">نمایش لوگو</param>
     /// <param name="paper">اندازه کاغذ</param>
+    /// <param name="orientation">جهت صفحه؛ مرورگر و درایور ممکن است آن را نادیده بگیرند.</param>
     public static string WrapDocument(
         string bodyHtml,
         string clinicName,
@@ -99,7 +100,8 @@ public static class PrintTemplateRenderer
         int fontSize,
         string? fontFamily,
         bool showLogo,
-        string paper = "A5")
+        string paper = "A5",
+        string orientation = "Portrait")
     {
         // این مقادیر داخل CSS قرار می‌گیرند و HTML encoding برای آن کافی نیست.
         // مقدار نامعتبر یا قدیمی به تنظیم امن پیش‌فرض برمی‌گردد.
@@ -115,13 +117,16 @@ public static class PrintTemplateRenderer
         // استانداردها (۹۶dpi) + فیش حرارتی ۸۰/۵۸ میلی‌متری + قالب سفارشی
         // «Custom:عرضxارتفاع» (میلی‌متر). مقیاس: ۹۶px ≈ ۲۵.۴mm → ۳.۷۸px بر mm
         // (سازگار با رفتار پیشین: مقادیر مجهول همچنان به A5 می‌روند) ═══
-        var width = ResolvePaperWidthPx(paper);
+        var landscape = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? LandscapePaper(paper) : null;
+        var width = landscape is { } spec ? $"{spec.WidthPx}px" : ResolvePaperWidthPx(paper);
+        var pageRule = landscape is { } page ? $"@page {{ size: {page.CssSize}; }}" : "";
 
         var sb = new StringBuilder(@"<!DOCTYPE html>
 <html lang=""fa"" dir=""rtl"">
 <head>
 <meta charset=""utf-8"" />
 <style>
+").Append(pageRule).Append(@"
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:").Append(font).Append(@"; font-size:").Append(fontSize).Append(@"px; color:#1F2A3D;
          background:#F0F2F5; padding:16px; }
@@ -209,6 +214,25 @@ public static class PrintTemplateRenderer
                 }
                 return "559px"; // نام آشنا → A5 (رفتار سازگار با قبل)
         }
+    }
+
+    /// <summary>مشخصات کاغذ افقی محدود به اندازه‌های شناخته‌شده؛ فیش پیوسته جهت ثابت ندارد.</summary>
+    public static (int WidthPx, string CssSize)? LandscapePaper(string? paper)
+    {
+        var key = paper?.Trim().ToUpperInvariant();
+        var standard = key switch
+        {
+            "A3" => (1587, "A3 landscape"), "A4" => (1123, "A4 landscape"),
+            "A5" => (794, "A5 landscape"), "A6" => (559, "A6 landscape"),
+            "B5" => (979, "B5 landscape"), "LETTER" => (1056, "letter landscape"),
+            "LEGAL" => (1344, "legal landscape"), _ => (0, "")
+        };
+        if (standard.Item1 > 0) return standard;
+        if (key is null) return null;
+        var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]\s*(\d{1,4})\s*(MM)?$", RegexOptions.CultureInvariant);
+        if (!match.Success || !int.TryParse(match.Groups[1].Value, out var w) || !int.TryParse(match.Groups[2].Value, out var h) ||
+            w is < 20 or > 1000 || h is < 20 or > 1000) return null;
+        return ((int)Math.Round(h * 96.0 / 25.4), $"{h}mm {w}mm");
     }
 
     /// <summary>داده نمونه برای پیش‌نمایش زنده هر نوع سند</summary>

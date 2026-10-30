@@ -104,7 +104,7 @@ public class PrintTemplatesController : ApiBaseController
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, t.AccentColor, t.FontSize, t.FontFamily,
-            t.ShowClinicLogo, t.PaperSize).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+            t.ShowClinicLogo, t.PaperSize, t.Orientation).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, paperSize = t.PaperSize, type = t.Type.ToString() }));
     }
@@ -160,7 +160,7 @@ public class PrintTemplatesController : ApiBaseController
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, template.AccentColor, template.FontSize, template.FontFamily,
-            template.ShowClinicLogo, template.PaperSize).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+            template.ShowClinicLogo, template.PaperSize, template.Orientation).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, templateId = template.Id, templateName = template.TemplateName }));
     }
@@ -370,6 +370,11 @@ public class PrintTemplatesController : ApiBaseController
         // «اندازه کاغذ باید A4 یا A5 یا A6 باشد» شکست می‌خورد ═══
         if (!IsValidPaperSize(dto.PaperSize))
             return "اندازه کاغذ معتبر نیست — استاندارد (A3…Legal)، حرارتی (Thermal80/58) یا Custom:عرضxارتفاع";
+        if (!string.Equals(dto.Orientation, "Portrait", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(dto.Orientation, "Landscape", StringComparison.OrdinalIgnoreCase))
+            return "جهت کاغذ معتبر نیست.";
+        if (string.Equals(dto.Orientation, "Landscape", StringComparison.OrdinalIgnoreCase) && PrintTemplateRenderer.LandscapePaper(dto.PaperSize) is null)
+            return "برای کاغذ پیوسته یا اندازه نامعتبر، جهت افقی پشتیبانی نمی‌شود.";
         if (dto.FontSize is < 8 or > 24)
             return "اندازه فونت بین ۸ تا ۲۴ باشد";
         return null;
