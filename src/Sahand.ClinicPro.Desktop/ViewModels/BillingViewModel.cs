@@ -316,6 +316,9 @@ public partial class InvoiceFormViewModel : ObservableObject
         (_api is not ApiClient activeClient || activeClient.PaymentRecoveryServer == _invoiceRecoveryServer);
     private InvoicePreviewDto? _quote;
     private string? _quoteInputs;
+    private long? _quoteBranch;
+    private bool QuoteContextMatches => (_api as ApiClient)?.BranchId == _quoteBranch &&
+        (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
     public string QuoteStatus => _quote is null ? "برای محاسبه قطعی، «محاسبه فاکتور» را بزنید." :
         _quote.AppliedInsuranceId.HasValue ? "محاسبه سرور: بیمه اعمال شده است." : "محاسبه سرور: بیمه اعمال نشده است.";
     public string QuotedDiscountText => _quote is null ? "—" : Money.Format(_quote.DiscountAmount);
@@ -323,6 +326,7 @@ public partial class InvoiceFormViewModel : ObservableObject
     {
         _quote = null;
         _quoteInputs = null;
+        _quoteBranch = null;
         NotifyQuote();
     }
     private void NotifyQuote()
@@ -690,6 +694,9 @@ public partial class InvoiceFormViewModel : ObservableObject
         var dto = BuildInvoiceRequest();
         if (dto is null) return;
         var snapshot = JsonSerializer.Serialize(dto);
+        var quoteBranch = (_api as ApiClient)?.BranchId;
+        if (_api is ApiClient server && server.PaymentRecoveryServer != _invoiceRecoveryServer)
+        { InvalidateQuote(); ErrorMessage = "سرور تغییر کرده است؛ صفحه را در سرور اصلی باز کنید."; return; }
         IsBusy = true;
         try
         {
@@ -697,10 +704,13 @@ public partial class InvoiceFormViewModel : ObservableObject
             if (response?.Data is null || string.IsNullOrWhiteSpace(response.Data.QuoteVersion))
             { InvalidateQuote(); ErrorMessage = _api.LastError ?? "محاسبه فاکتور ناموفق بود."; return; }
             var current = BuildInvoiceRequest();
-            if (current is null || JsonSerializer.Serialize(current) != snapshot)
-            { InvalidateQuote(); ErrorMessage = "اطلاعات فاکتور تغییر کرد؛ دوباره محاسبه کنید."; return; }
+            if (current is null || JsonSerializer.Serialize(current) != snapshot ||
+                (_api as ApiClient)?.BranchId != quoteBranch ||
+                (_api is ApiClient currentServer && currentServer.PaymentRecoveryServer != _invoiceRecoveryServer))
+            { InvalidateQuote(); ErrorMessage = "اطلاعات، سرور یا شعبه فاکتور تغییر کرد؛ دوباره محاسبه کنید."; return; }
             _quote = response.Data;
             _quoteInputs = snapshot;
+            _quoteBranch = quoteBranch;
             NotifyQuote();
         }
         catch (Exception) { InvalidateQuote(); ErrorMessage = "دریافت محاسبه فاکتور ناموفق بود."; }
@@ -715,7 +725,7 @@ public partial class InvoiceFormViewModel : ObservableObject
         if (!CanEditInvoice) return;
         var dto = BuildInvoiceRequest();
         if (dto is null) return;
-        if (_quote is null || _quoteInputs != JsonSerializer.Serialize(dto))
+        if (_quote is null || !QuoteContextMatches || _quoteInputs != JsonSerializer.Serialize(dto))
         { InvalidateQuote(); ErrorMessage = "ابتدا محاسبه فاکتور را دریافت و مبلغ آن را بررسی کنید."; return; }
         if (PaymentMethodIndex is < 0 or > 3 || ReceivedAmount < 0 || ReceivedAmount > _quote.PatientPayable ||
             decimal.Truncate(ReceivedAmount) != ReceivedAmount || (ReceivedAmount > 0 && ReferenceNumber?.Trim().Length > 50))
@@ -833,7 +843,7 @@ public partial class InvoiceFormViewModel : ObservableObject
         if (!CanEditInvoice) return false;
         var dto = BuildInvoiceRequest();
         if (dto is null) return false;
-        if (_quote is null || _quoteInputs != JsonSerializer.Serialize(dto))
+        if (_quote is null || !QuoteContextMatches || _quoteInputs != JsonSerializer.Serialize(dto))
         {
             InvalidateQuote();
             ErrorMessage = "ابتدا محاسبه فاکتور را دریافت و مبلغ آن را بررسی کنید.";
