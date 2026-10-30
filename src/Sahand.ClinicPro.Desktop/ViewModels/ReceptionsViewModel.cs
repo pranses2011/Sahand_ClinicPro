@@ -1741,7 +1741,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         (_api as ApiClient)?.BranchId == _pendingReception.BranchId &&
         (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
     public string ReceptionRecoveryInfo => _pendingReception is null ? string.Empty :
-        $"درخواست ذخیره‌شده: {_pendingReception.PatientName} — {_pendingReception.TargetName}؛ نوبت: {_pendingReception.Request.AppointmentId?.ToString() ?? "بدون نوبت"}. ارسال دوباره ممکن است پذیرش را ثبت کند؛ ابتدا صف، انبار، فاکتور و پرداخت را بررسی کنید. ادامه زنجیره خودکار نیست.";
+        $"درخواست ذخیره‌شده: {_pendingReception.PatientName} (شناسه {_pendingReception.Request.PatientId}) — {_pendingReception.TargetName}؛ نوبت: {_pendingReception.Request.AppointmentId?.ToString() ?? "بدون نوبت"}؛ بیمه: {_pendingReception.InsuranceName}؛ کد ارجاع: {_pendingReception.Request.ReferralCode ?? "ندارد"}. ارسال دوباره ممکن است پذیرش را ثبت کند؛ ابتدا صف، انبار، فاکتور و پرداخت را بررسی کنید. ادامه زنجیره خودکار نیست.";
 
     private void RestorePendingReception(PendingReception pending)
     {
@@ -1883,7 +1883,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             isServiceMode ? SelectedService!.Id : null, isServiceMode ? BuildServiceSummary() : null,
             isServiceMode ? SelectedPerformer?.Id : null, isServiceMode ? SelectedRoom?.Id : null, Guid.NewGuid());
         var pendingReception = new PendingReception(receptionRequest, FoundPatient.FullName,
-            isServiceMode ? BuildServiceSummary() : SelectedDoctor!.Name, _invoiceRecoveryServer, receptionBranch);
+            isServiceMode ? BuildServiceSummary() : SelectedDoctor!.Name, _invoiceRecoveryServer, receptionBranch, company?.Name ?? "آزاد");
         try { _receptionRecoveryStore?.Reserve(pendingReception); }
         catch (Exception)
         {
@@ -1906,7 +1906,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             return;
         }
         var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions/idempotent", receptionRequest);
-        if (reception?.Data is null)
+        if (reception?.Data is null or <= 0)
         {
             IsReceptionOutcomeUnknown = true;
             IsBusy = false;

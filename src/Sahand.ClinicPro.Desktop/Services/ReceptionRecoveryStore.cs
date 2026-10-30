@@ -7,7 +7,7 @@ using Sahand.ClinicPro.Application.DTOs.Receptions;
 namespace Sahand.ClinicPro.Desktop.Services;
 
 /// <summary>درخواست اولیه پذیرش و اطلاعات کافی برای بازبینی کاربر.</summary>
-public sealed record PendingReception(CreateReceptionDto Request, string PatientName, string TargetName, string Server, long? BranchId);
+public sealed record PendingReception(CreateReceptionDto Request, string PatientName, string TargetName, string Server, long? BranchId, string InsuranceName = "نامشخص");
 
 public interface IReceptionRecoveryStore
 {
