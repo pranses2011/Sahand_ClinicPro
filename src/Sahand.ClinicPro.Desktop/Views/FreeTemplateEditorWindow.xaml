@@ -79,7 +79,7 @@
                             </Grid>
                             <WrapPanel Margin="0,8,0,0">
                                 <Button Content="T" Tag="text" Click="Add_Click" ToolTip="افزودن متن" AutomationProperties.Name="افزودن متن" Margin="2" MinWidth="35"/>
-                                <Button Content="{ }" Tag="variable" Click="Add_Click" ToolTip="افزودن اطلاعات سند" AutomationProperties.Name="افزودن اطلاعات سند" Margin="2" MinWidth="35"/>
+                                <Button Content="≡" Tag="variable" Click="Add_Click" ToolTip="افزودن اطلاعات سند" AutomationProperties.Name="افزودن اطلاعات سند" Margin="2" MinWidth="35"/>
                                 <Button Content="□" Tag="rectangle" Click="Add_Click" ToolTip="افزودن کادر" AutomationProperties.Name="افزودن کادر" Margin="2" MinWidth="35"/>
                                 <Button Content="―" Tag="line" Click="Add_Click" ToolTip="افزودن خط" AutomationProperties.Name="افزودن خط" Margin="2" MinWidth="35"/>
                                 <Button Content="▧" Tag="image" Click="Add_Click" ToolTip="افزودن تصویر PNG یا JPEG" AutomationProperties.Name="افزودن تصویر" Margin="2" MinWidth="35"/>
