@@ -204,7 +204,7 @@
                                  کرد؛ اندازه‌های زیاد و حتی سفارشی باشد» — فهرست کامل
                                  اندازه‌ها + حالت سفارشی (قابل تایپ مثل Custom:100x180
                                  میلی‌متر عرض×ارتفاع)؛ ویرایش‌پذیر است. -->
-                            <ComboBox IsEditable="True" StaysOpenOnEdit="True"
+                            <ComboBox IsEditable="True" StaysOpenOnEdit="True" IsTextSearchEnabled="False"
                                       IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                       SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       Text="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"

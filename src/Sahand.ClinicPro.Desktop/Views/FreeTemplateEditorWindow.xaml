@@ -23,7 +23,7 @@
                     <Button Content="＋ خط" Tag="line" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8"/>
                     <Separator Margin="0,8"/>
                     <TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>
-                    <ComboBox x:Name="PaperBox" IsEditable="True" Margin="0,6,0,12"><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
+                    <ComboBox x:Name="PaperBox" IsEditable="True" IsTextSearchEnabled="False" Margin="0,6,0,12"><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
                     <TextBlock Text="جهت کاغذ" FontWeight="SemiBold"/>
                     <ComboBox x:Name="OrientationBox" SelectedIndex="0" Margin="0,6,0,12"><ComboBoxItem Content="عمودی"/><ComboBoxItem Content="افقی"/></ComboBox>
                     <TextBlock Text="عرض و ارتفاع بوم بدنه (پیکسل)" TextWrapping="Wrap" FontSize="11"/>

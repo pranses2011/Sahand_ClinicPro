@@ -661,11 +661,12 @@ public partial class App : System.Windows.Application
                     throw new ArgumentException($"کلید ناشناختهٔ صفحه: {page}. کلیدهای مجاز: {string.Join(", ", ScreenshotPageKeys)}");
             }
 
-            // بوم ثابت ۱۰۳۰×۷۷۴ = دقیقاً همان ابعاد رندر HTML طرحهای تأییدی.
-            // (پیشتر پنجرهٔ بزرگتر به اندازهٔ صفحهٔ رانر محدود میشد و عکس
-            // ۱۰۴۴×۷۸۸ میافتاد با نوار اضافی در لبهها.)
-            winWidth = 1030;
-            winHeight = 774;
+            // به اندازه فضای واقعاً قابل نمایش رانر محدود می‌کنیم؛ اضافه‌کردن
+            // پیکسل سفید بیرون صفحه، دکمه‌های پایین را به‌اشتباه پنهان می‌کرد.
+            // ابعاد خروجی در فایل همراه ثبت می‌شود و الزاماً برابر طرح نیست.
+            var workArea = SystemParameters.WorkArea;
+            winWidth = Math.Max(1, Math.Min(1030, (int)workArea.Width));
+            winHeight = Math.Max(1, Math.Min(774, (int)workArea.Height));
 
             view.Language = XmlLanguage.GetLanguage("fa-IR");
             view.FlowDirection = FlowDirection.RightToLeft;
@@ -691,8 +692,8 @@ public partial class App : System.Windows.Application
                 ResizeMode = ResizeMode.NoResize,
                 BorderThickness = new Thickness(0),
                 ShowInTaskbar = false,
-                Left = 0,
-                Top = 0,
+                Left = workArea.Left,
+                Top = workArea.Top,
                 Title = $"اسکرینشات راستیآزمایی — {page}",
                 FlowDirection = FlowDirection.RightToLeft
             };
@@ -717,12 +718,8 @@ public partial class App : System.Windows.Application
             // (ResizeMode=NoResize) حذف شده باشد تا چیزی از دسکتاپ نماند.
             var left = (int)window.Left;
             var top = (int)window.Top;
-            // رانر ویندوزی ناحیهٔ کاری ۱۰۲۴×۷۶۸ دارد؛ پنجرهای که ۱۰۳۰×۷۷۴
-            // درخواست کرده همانجا بریده میشود و ۶ پیکسل انتهایی راست/پایین
-            // بهجای محتوای برنامه، دسکتاپ سیاه را نشان میداد. تنها همان بخش
-            // قابلرؤیت کپی میشود و ۶ پیکسل باقیمانده با همان رنگ پسزمینهٔ
-            // طرح (#EEF3F8) پر میگردد تا بوم نهایی دقیقاً ۱۰۳۰×۷۷۴ و
-            // بدون نوار سیاه باشد.
+            // فقط ناحیه قابل‌رؤیت رانر گرفته می‌شود. اندازه واقعی در فایل
+            // همراه ذخیره است و با ابعاد طرح تأییدی یکسان فرض نمی‌شود.
             var workW = Math.Max(1, (int)SystemParameters.WorkArea.Width);
             var workH = Math.Max(1, (int)SystemParameters.WorkArea.Height);
             var capW = Math.Min(width, workW);
