@@ -108,7 +108,7 @@
                         </StackPanel>
                     </Border>
                     <ScrollViewer FlowDirection="LeftToRight" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" Padding="18">
-                        <Canvas x:Name="PageCanvas" Background="White" FlowDirection="LeftToRight" AllowDrop="True" Drop="Canvas_Drop" DragOver="Canvas_DragOver" HorizontalAlignment="Center" VerticalAlignment="Top">
+                        <Canvas x:Name="PageCanvas" Background="White" FlowDirection="LeftToRight" AllowDrop="True" Drop="Canvas_Drop" DragOver="Canvas_DragOver" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,22,0,0">
                             <Canvas.LayoutTransform><ScaleTransform ScaleX="{Binding Value, ElementName=ZoomSlider}" ScaleY="{Binding Value, ElementName=ZoomSlider}"/></Canvas.LayoutTransform>
                         </Canvas>
                     </ScrollViewer>
