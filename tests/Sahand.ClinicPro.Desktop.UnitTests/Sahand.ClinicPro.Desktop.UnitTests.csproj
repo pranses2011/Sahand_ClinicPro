@@ -41,6 +41,7 @@
     <!-- هم‌TFM با پروژهٔ دسکتاپ (net8.0-windows) تا ارجاع استاندارد
          ProjectReference به آن معتبر باشد — پیش‌نیاز رفع CS0006 -->
     <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
     <!-- ساخت پروژهٔ ویندوزی (WPF) روی لینوکس/CI نیز ممکن باشد؛
          زمان اجرای تست‌ها به نوع‌های WPF اشاره‌ای نیست -->
