@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ServiceCatalogView"
+﻿<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ServiceCatalogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -149,9 +149,9 @@
                     <TextBlock Text="{Binding ErrorMessage}" Foreground="#C62828"
                                TextWrapping="Wrap" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Command="{Binding SaveServiceCommand}"
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveServiceCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                Content="{Binding SaveButtonText}" Padding="16,7" Margin="4,0" />
+                                Content="{Binding SaveButtonText}" ContentStringFormat="{}{0} (Ctrl+Shift+1)" Padding="16,7" Margin="4,0" />
                         <Button Command="{Binding ResetFormCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Content="انصراف / فرم تازه" Padding="12,7" Margin="4,0"

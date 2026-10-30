@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.LabTestEditWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.LabTestEditWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -270,12 +270,12 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
-                    <Button Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                    <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                             Background="#00695C" BorderBrush="#00695C" Foreground="White"
                             MinHeight="38" MinWidth="130" Cursor="Hand">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                            <TextBlock Text="ذخیرهٔ تغییرات" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                            <TextBlock Text="ذخیرهٔ تغییرات (Ctrl+Shift+1)" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

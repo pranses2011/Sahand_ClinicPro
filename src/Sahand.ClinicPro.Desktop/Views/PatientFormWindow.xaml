@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientFormWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.PatientFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -259,13 +259,13 @@
                     Command="{Binding CancelCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     MinWidth="110" Margin="0,0,10,0" />
-            <Button Content="✅ ذخیره (Ctrl+S)"
+            <Button shortcuts:SaveShortcut.Number="1" Content="✅ ذخیره (Ctrl+S) (Ctrl+Shift+1)"
                     Command="{Binding SaveCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Background="#2E7D32" BorderBrush="#2E7D32"
                     MinWidth="150" Margin="0,0,10,0"
                     IsDefault="True" />
-            <Button Content="💾 ذخیره و نوبت"
+            <Button shortcuts:SaveShortcut.Number="2" Content="💾 ذخیره و نوبت (Ctrl+Shift+2)"
                     Command="{Binding SaveCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     MinWidth="130" />

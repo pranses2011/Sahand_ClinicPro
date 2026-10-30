@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.VisitWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.VisitWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -1037,20 +1037,20 @@
                             <TextBlock Text="بیمار بعدی" Margin="8,0,0,0" />
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding SaveDraftCommand}"
+                    <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveDraftCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" FontSize="12.5"
                             ToolTip="میانبر: Ctrl+S">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
-                            <TextBlock Text="ذخیرهٔ موقت" Margin="8,0,0,0" />
+                            <TextBlock Text="ذخیرهٔ موقت (Ctrl+Shift+1)" Margin="8,0,0,0" />
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding CompleteVisitCommand}"
+                    <Button shortcuts:SaveShortcut.Number="2" Command="{Binding CompleteVisitCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"
                             FontSize="12.5" ToolTip="میانبر: Ctrl+Enter — پایان و ثبت کامل ویزیت (تشخیص اصلی الزامی است)">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" VerticalAlignment="Center" />
-                            <TextBlock Text="پایان ویزیت" Margin="8,0,0,0" />
+                            <TextBlock Text="پایان ویزیت (Ctrl+Shift+2)" Margin="8,0,0,0" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.PhysiotherapyView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.PhysiotherapyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -38,8 +38,8 @@
 
         <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
             <DockPanel>
-                <Button DockPanel.Dock="Left" Command="{Binding SavePhysioSessionCommand}" IsEnabled="{Binding IsPhysioSessionEnabled}"
-                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره جلسه" />
+                <Button shortcuts:SaveShortcut.Number="1" DockPanel.Dock="Left" Command="{Binding SavePhysioSessionCommand}" IsEnabled="{Binding IsPhysioSessionEnabled}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره جلسه (Ctrl+Shift+1)" />
                 <StackPanel Orientation="Horizontal">
                     <Border Width="38" Height="38" CornerRadius="9" Background="#E8F2FD" Margin="0,0,10,0">
                         <materialDesign:PackIcon Kind="DirectionsRun" Width="23" Height="23" Foreground="#176AC2" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -411,11 +411,11 @@
                     </StackPanel>
                 </Border>
 
-                <Button Command="{Binding SavePhysioSessionCommand}" Margin="0,2,0,10" HorizontalAlignment="Left"
+                <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SavePhysioSessionCommand}" Margin="0,2,0,10" HorizontalAlignment="Left"
                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Padding="18,8">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                        <TextBlock Text="💾 ذخیرهٔ جلسه با نقشهٔ بدن و ارزیابی" Margin="8,0,0,0" />
+                        <TextBlock Text="💾 ذخیرهٔ جلسه با نقشهٔ بدن و ارزیابی (Ctrl+Shift+2)" Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
                 </StackPanel>

@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.StocktakingView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.StocktakingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -176,8 +176,8 @@
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="عدد" />
                         <TextBox Text="{Binding CountNote, UpdateSourceTrigger=PropertyChanged}" Width="180" FontSize="12" Margin="8,0,0,0"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="یادداشت (اختیاری)" />
-                        <Button Command="{Binding SaveCountCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="8,0,0,0">
-                            <materialDesign:PackIcon Kind="ContentSaveCheckOutline" Width="15" Height="15"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCountCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal"><materialDesign:PackIcon Kind="ContentSaveCheckOutline" Width="15" Height="15"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/><TextBlock Text=" (Ctrl+Shift+1)" VerticalAlignment="Center" /></StackPanel>
                         </Button>
                     </StackPanel>
                 </Border>

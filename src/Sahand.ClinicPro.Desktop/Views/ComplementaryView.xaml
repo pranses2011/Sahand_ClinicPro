@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -262,8 +262,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <WrapPanel Grid.Row="5" Margin="0,8,0,0">
-                            <Button Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Content="ذخیره قالب" Margin="0,0,8,0" FontSize="12" />
+                            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="ذخیره قالب (Ctrl+Shift+1)" Margin="0,0,8,0" FontSize="12" />
                             <Button Command="{Binding DiscardTemplateChangesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                                     Content="انصراف از تغییرات" FontSize="11" />
                         </WrapPanel>
@@ -434,11 +434,11 @@
                             <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
                                 <Button Content="➕ افزودن سوال" Command="{Binding AddDesignerQuestionCommand}"
                                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1565C0" Margin="0,0,8,4" />
-                                <Button Command="{Binding SaveSurveyDesignerCommand}"
+                                <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SaveSurveyDesignerCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی (Ctrl+Shift+2)" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Content="بستن طراح" Command="{Binding CancelSurveyDesignerCommand}"

@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ImagingView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ImagingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -271,8 +271,8 @@
                                 <TextBox Style="{StaticResource CompactText}" Margin="0,8,0,0" Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="اطلاعات بالینی (علت درخواست، علائم…)" AcceptsReturn="True" TextWrapping="Wrap" Height="38" />
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <CheckBox Content="فوری (STAT)" IsChecked="{Binding ImagingUrgent}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <Button Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0" Height="38" Padding="16,0"
-                                            Style="{StaticResource FlatPrimary}" Content="✅ ثبت درخواست" />
+                                    <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0" Height="38" Padding="16,0"
+                                            Style="{StaticResource FlatPrimary}" Content="✅ ثبت درخواست (Ctrl+Shift+1)" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -608,11 +608,11 @@
                                     </Grid>
 
                                     <WrapPanel Margin="0,14,0,0">
-                                        <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیرهٔ گزارش نهایی"
+                                        <Button shortcuts:SaveShortcut.Number="2" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیرهٔ گزارش نهایی (Ctrl+Shift+2)"
                                                 Command="{Binding SaveReportCommand}">
                                             <Button.CommandParameter><sys:Boolean>True</sys:Boolean></Button.CommandParameter>
                                         </Button>
-                                        <Button Content="ذخیرهٔ پیش‌نویس" Margin="8,0,0,0" Command="{Binding SaveReportCommand}">
+                                        <Button shortcuts:SaveShortcut.Number="3" Content="ذخیرهٔ پیش‌نویس (Ctrl+Shift+3)" Margin="8,0,0,0" Command="{Binding SaveReportCommand}">
                                             <Button.CommandParameter><sys:Boolean>False</sys:Boolean></Button.CommandParameter>
                                         </Button>
                                         <Button Content="🖨 چاپ گزارش" Margin="8,0,0,0" Click="PrintReport_Click" />

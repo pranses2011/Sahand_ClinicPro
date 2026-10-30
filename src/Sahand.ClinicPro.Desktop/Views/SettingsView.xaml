@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SettingsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -438,11 +438,11 @@
                                                          Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
                                             </Grid>
-                                            <Button Grid.Row="3" Grid.ColumnSpan="2"
+                                            <Button shortcuts:SaveShortcut.Number="1" Grid.Row="3" Grid.ColumnSpan="2"
                                                     Command="{Binding DataContext.SaveGovSystemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه" />
+                                                    HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه (Ctrl+Shift+1)" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -540,10 +540,10 @@
                                 </Border>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                    <Button Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                                    <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                            <TextBlock Text="ذخیره" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="ذخیره (Ctrl+Shift+2)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
                                     <Button Command="{Binding TestPrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
@@ -746,9 +746,9 @@
                                                  Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"
                                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                                  Width="200" VerticalAlignment="Center" />
-                                        <Button Command="{Binding SaveThemePresetCommand}"
+                                        <Button shortcuts:SaveShortcut.Number="3" Command="{Binding SaveThemePresetCommand}"
                                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                                Content="💾 ذخیرهٔ پریست" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                Content="💾 ذخیرهٔ پریست (Ctrl+Shift+3)" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <ComboBox ItemsSource="{Binding ThemePresets}"
@@ -767,7 +767,7 @@
 
                             <StackPanel Orientation="Horizontal" Margin="2,2,0,0">
                                 <Button Command="{Binding ApplyThemeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Content="👁️ پیش‌نمایش فوری" />
-                                <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
+                                <Button shortcuts:SaveShortcut.Number="4" Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره (Ctrl+Shift+4)" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
@@ -809,11 +809,11 @@
                                 </StackPanel>
                                 <CheckBox Content="ثبت Audit Log برای همه عملیات" IsChecked="{Binding AuditLogEnabled}" Margin="2,10" />
                                 <CheckBox Content="رمزنگاری داده‌های حساس بیمار" IsChecked="True" IsEnabled="False" Margin="2,8" />
-                                <Button Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                <Button shortcuts:SaveShortcut.Number="5" Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         HorizontalAlignment="Left" Margin="0,14,0,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیره تنظیمات امنیت (Ctrl+Shift+5)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -838,11 +838,11 @@
                                           IsChecked="{Binding ApplyInsuranceToDoctorVisits}" Margin="2,8" />
                                 <CheckBox Content="اعمال سهم بیمه برای خدمات درمانی"
                                           IsChecked="{Binding ApplyInsuranceToMedicalServices}" Margin="2,8" />
-                                <Button Command="{Binding SaveInsuranceSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                <Button shortcuts:SaveShortcut.Number="6" Command="{Binding SaveInsuranceSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         HorizontalAlignment="Left" Margin="0,14,0,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="ذخیره تنظیمات بیمه" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ذخیره تنظیمات بیمه (Ctrl+Shift+6)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SurveyView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.SurveyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -170,7 +170,7 @@
 
                             <!-- ذخیره/لغو -->
                             <WrapPanel Orientation="Horizontal">
-                                <Button Content="💾 ذخیره نظرسنجی" Command="{Binding SaveFormCommand}"
+                                <Button shortcuts:SaveShortcut.Number="1" Content="💾 ذخیره نظرسنجی (Ctrl+Shift+1)" Command="{Binding SaveFormCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
                                 <Button Content="لغو" Command="{Binding CancelFormCommand}"
                                         Style="{StaticResource MaterialDesignOutlinedButton}" />
@@ -215,7 +215,7 @@
                                 <ComboBox ItemsSource="{Binding ResponseRatingOptions}" SelectedIndex="{Binding ResponseRatingIndex}" MaxWidth="220" HorizontalAlignment="Right" />
                                 <TextBox Text="{Binding ResponseComment, UpdateSourceTrigger=PropertyChanged}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48" Margin="0,8,0,8" materialDesign:HintAssist.Hint="نظر آزاد (اختیاری)" />
                                 <WrapPanel>
-                                    <Button Content="ثبت پاسخ" Command="{Binding SubmitSurveyResponseCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
+                                    <Button shortcuts:SaveShortcut.Number="2" Content="ثبت پاسخ (Ctrl+Shift+2)" Command="{Binding SubmitSurveyResponseCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0" />
                                     <Button Content="انصراف" Command="{Binding CancelResponseFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" />
                                 </WrapPanel>
                             </StackPanel>

@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ReceptionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -949,25 +949,25 @@
                                 متن به دو خط می‌شکند و دکمه بلندتر می‌شود؛ دیگر هرگز
                                 بریده/ناقص نمایش داده نمی‌شود -->
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0" HorizontalAlignment="Left">
-                            <Button Command="{Binding ReceptionAndInvoiceCommand}"
+                            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding ReceptionAndInvoiceCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     FontSize="13" Padding="20,12" MinWidth="195" MinHeight="46"
                                     Margin="0,0,10,0"
                                     ToolTip="ثبت پذیرش + صدور فاکتور — بدون ثبت پرداخت">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="FileDocumentOutline" Width="17" Height="17" VerticalAlignment="Center" />
-                                    <TextBlock Text="پذیرش و فاکتور" Margin="8,0,0,0"
+                                    <TextBlock Text="پذیرش و فاکتور (Ctrl+Shift+1)" Margin="8,0,0,0"
                                                TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Button Command="{Binding ReceptionAndPayCommand}"
+                            <Button shortcuts:SaveShortcut.Number="2" Command="{Binding ReceptionAndPayCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     Background="#2E7D32" BorderBrush="#2E7D32"
                                     FontSize="13" Padding="20,12" MinWidth="215" MinHeight="46"
                                     ToolTip="ثبت پذیرش + صدور فاکتور + پنجرهٔ انتخاب روش پرداخت (نقدی/کارتخوان)">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="CashCheck" Width="17" Height="17" VerticalAlignment="Center" />
-                                    <TextBlock Text="پذیرش و پرداخت" Margin="8,0,0,0"
+                                    <TextBlock Text="پذیرش و پرداخت (Ctrl+Shift+2)" Margin="8,0,0,0"
                                                TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>

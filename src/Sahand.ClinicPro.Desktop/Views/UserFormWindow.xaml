@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.UserFormWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.UserFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -115,10 +115,10 @@
                        Margin="2,0,0,8" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}"
                        TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ContentSaveCheck" Width="15" Height="15" VerticalAlignment="Center" />
-                        <TextBlock Text="ذخیره کاربر" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="ذخیره کاربر (Ctrl+Shift+1)" Margin="7,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Command="{Binding CancelCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">

@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.VisualTemplateEditorWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.VisualTemplateEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="طراحی بصری قالب" Width="1050" Height="700" MinWidth="780" MinHeight="520"
@@ -52,7 +52,7 @@
             </Border>
         </Grid>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,14,0,0">
-            <Button Content="اعمال به قالب" Click="OnApply" Padding="18,8" Margin="0,0,8,0" Background="#1565C0" Foreground="White"/>
+            <Button shortcuts:SaveShortcut.Number="1" Content="اعمال به قالب (Ctrl+Shift+1)" Click="OnApply" Padding="18,8" Margin="0,0,8,0" Background="#1565C0" Foreground="White"/>
             <Button Content="انصراف" Click="OnCancel" Padding="18,8"/>
         </StackPanel>
     </Grid>
