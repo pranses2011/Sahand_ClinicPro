@@ -68,6 +68,27 @@ public class PrintTemplateReceiptTests
     }
 
     [Fact]
+    public async Task Paper_validation_and_landscape_preview_follow_stored_orientation()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
+        { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
+        var template = new PrintTemplate { TemplateName = "فاکتور افقی", Type = PrintTemplateType.Invoice,
+            HtmlBody = "<div>{{patient_name}}</div>", PaperSize = "A4", Orientation = "Landscape", IsActive = true };
+        db.PrintTemplates.Add(template);
+        await db.SaveChangesAsync();
+        var preview = (OkObjectResult)await controller.Preview(template.Id);
+        var html = JsonSerializer.SerializeToElement(preview.Value).GetProperty("Data").GetProperty("html").GetString();
+        html.Should().Contain("@page { size: A4 landscape; }").And.Contain(".sheet { width:1123px");
+        var invalidSize = new SavePrintTemplateDto("قالب نامعتبر", "Invoice", null, "<div>بدنه نمونه</div>", "Custom:1x180", "Portrait", 12, null, false, null, true, false);
+        (await controller.Create(invalidSize)).Should().BeOfType<BadRequestObjectResult>();
+        var thermal = new SavePrintTemplateDto("قالب نامعتبر", "Invoice", null, "<div>بدنه نمونه</div>", "Thermal80", "Landscape", 12, null, false, null, true, false);
+        (await controller.Create(thermal)).Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
     public async Task Appointment_template_render_requires_appointment_create_or_settings_permission()
     {
         using var factory = new InMemoryApiFactory();
