@@ -21,6 +21,24 @@ public class InvoiceFormSafetyTests
     }
 
     [Fact]
+    public async Task Draft_preview_requires_current_quote_and_never_claims_payment_or_issuance()
+    {
+        var api = new FakeApiClient();
+        var vm = Create(api);
+        vm.Patient = new QuickPatient(7, "<script>بیمار</script>", "", "", null, null, null);
+        vm.TryCreateDraftPreview(out _).Should().BeFalse();
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
+        vm.TryCreateDraftPreview(out var html).Should().BeTrue();
+        html.Should().Contain("پیش‌نویس").And.Contain("صادر نشده").And.Contain("رسید پرداخت نیست");
+        html.Should().Contain("&lt;script&gt;").And.NotContain("<script>بیمار</script>");
+        html.Should().Contain("۱۰۰ ریال");
+        api.Calls.Should().NotContain(x => x.Endpoint == "invoices/idempotent" || x.Endpoint == "payments/idempotent");
+        vm.Items[0].Quantity = 2;
+        vm.TryCreateDraftPreview(out _).Should().BeFalse();
+        vm.ErrorMessage.Should().Contain("محاسبه");
+    }
+
+    [Fact]
     public async Task Wrong_amount_from_server_blocks_payment_and_repeat_invoice()
     {
         var api = new FakeApiClient();
