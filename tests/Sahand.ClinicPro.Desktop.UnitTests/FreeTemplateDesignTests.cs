@@ -35,6 +35,18 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Draft_preview_is_watermarked_and_rejects_modified_html()
+    {
+        var doc = new FreeTemplateDocument { Elements = new() { new() { Kind = "variable", Key = "patient_name", Text = "نام" } } };
+        var keys = new[] { "patient_name" };
+        var html = FreeTemplateDesign.Build(doc, keys);
+        var preview = FreeTemplatePreview.Create(html, "Invoice", "A4", "#123456", 13, false, keys);
+        preview.Should().Contain("پیش‌نویس").And.Contain("داده نمونه").And.Contain("ذخیره‌نشده");
+        Action modified = () => FreeTemplatePreview.Create(html + "<script></script>", "Invoice", "A4", null, 13, false, keys);
+        modified.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Out_of_bounds_and_injected_style_are_rejected()
     {
         var doc = new FreeTemplateDocument { Width = 500, Height = 600, Elements = new() { new() { X = 490, Width = 100 } } };

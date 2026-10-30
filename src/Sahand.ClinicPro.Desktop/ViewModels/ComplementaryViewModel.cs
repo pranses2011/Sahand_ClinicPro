@@ -853,7 +853,15 @@ public partial class ComplementaryViewModel : ViewModelBase
         PreviewHtml = null;
         if (template.IsDirty || template.Id == 0)
         {
-            _snackbar.Info("برای پیش‌نمایش ابتدا تغییرات قالب را ذخیره کنید");
+            if (!FreeTemplateDesign.HasMarker(template.Body))
+            { _snackbar.Info("برای پیش‌نمایش این نوع قالب ابتدا تغییرات را ذخیره کنید"); return; }
+            try
+            {
+                PreviewHtml = FreeTemplatePreview.Create(template.Body, template.Key, template.PaperSize, template.AccentColor,
+                    template.FontSize, template.ShowLogo, ActiveVariables.Select(v => v.Key).ToArray());
+                _snackbar.Info("پیش‌نمایش محلی با داده نمونه است؛ قالب هنوز ذخیره نشده است.");
+            }
+            catch (ArgumentException ex) { _snackbar.Error("پیش‌نمایش پیش‌نویس ممکن نیست: " + ex.Message); }
             return;
         }
         if (template.IsOriginalReceipt)
