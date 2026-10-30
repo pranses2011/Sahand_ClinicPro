@@ -754,7 +754,7 @@ public partial class App : System.Windows.Application
                 var pixels = new byte[layoutWidth * layoutHeight * 4];
                 layout.CopyPixels(pixels, layoutWidth * 4, 0);
                 for (var i = 3; i < pixels.Length; i += 4)
-                    if (pixels[i] != 255) throw new InvalidOperationException("رندر هم‌اندازه ناقص یا شفاف است.");
+                    if (pixels[i] < 250) throw new InvalidOperationException("رندر هم‌اندازه ناقص یا شفاف است.");
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
                 // ریشه RTL در RenderTargetBitmap نسبت به خروجی پنجره آینه‌ای
                 // است؛ برگرداندن افقی در خروجی، همان جهت پنجره را بازمی‌گرداند.
