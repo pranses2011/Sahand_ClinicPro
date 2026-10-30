@@ -163,6 +163,9 @@ public partial class AppointmentsViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private readonly INavigationService _navigation;
     private System.Windows.Threading.DispatcherTimer? _debounce;
+    private int _patientSearchVersion;
+    private int _slotLoadVersion;
+    private int _calendarLoadVersion;
 
     /// <summary>جلوگیری از تغییر فرم در زمان ثبت نوبت.</summary>
     [ObservableProperty]
@@ -562,6 +565,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>تغییر متن جستجو → راه‌اندازی تایمر Debounce</summary>
     partial void OnPatientSearchTextChanged(string value)
     {
+        _patientSearchVersion++;
         _debounce?.Stop();
         if (value.Length < 2)
         {
@@ -581,8 +585,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>جستجوی بیمار از سرور</summary>
     private async Task SearchPatientAsync()
     {
+        var version = ++_patientSearchVersion;
+        var term = PatientSearchText.Trim();
         var response = await _api.GetAsync<PatientSearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(PatientSearchText.Trim())}");
+            $"patients/search?term={Uri.EscapeDataString(term)}");
+        if (version != _patientSearchVersion) return;
         PatientSearchResults.Clear();
         if (response?.Data is null) return;
         foreach (var p in response.Data.Take(10))
@@ -658,11 +665,16 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// </summary>
     private async Task LoadCalendarAsync()
     {
+        var version = ++_calendarLoadVersion;
         if (SelectedDoctor is null) return;
+        var doctorId = SelectedDoctor.Id;
+        var year = DisplayYear;
+        var month = DisplayMonth;
         try
         {
         var response = await _api.GetAsync<CalendarSummaryResponse>(
-            $"doctors/{SelectedDoctor.Id}/calendar-summary?year={DisplayYear}&month={DisplayMonth}");
+            $"doctors/{doctorId}/calendar-summary?year={year}&month={month}");
+        if (version != _calendarLoadVersion || SelectedDoctor?.Id != doctorId || DisplayYear != year || DisplayMonth != month) return;
         if (response?.Data?.Days is null)
         {
             CalendarStatus = "برنامهٔ پزشک از سرور دریافت نشد — اتصال سرور را بررسی کنید و دوباره تلاش کنید.";
@@ -704,6 +716,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            if (version != _calendarLoadVersion || SelectedDoctor?.Id != doctorId || DisplayYear != year || DisplayMonth != month) return;
             System.Diagnostics.Debug.WriteLine($"LoadCalendar failed: {ex.Message}");
             MarkedDates ??= new Dictionary<DateTime, int>();
             DayStats ??= new Dictionary<DateTime, CalendarDayStat>();
@@ -770,16 +783,21 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>بارگذاری اسلات‌های روز انتخابی</summary>
     private async Task LoadSlotsAsync()
     {
+        var version = ++_slotLoadVersion;
         Slots.Clear();
         SlotGroups.Clear();
         _pinnedSlot = null;
         DetailSlot = null;
         SelectedSlot = null;
         if (SelectedDoctor is null || SelectedDate is null) return;
+        var doctorId = SelectedDoctor.Id;
+        var date = SelectedDate;
+        var shamsi = SelectedDateShamsi;
         try
         {
         var response = await _api.GetAsync<SlotsResponse>(
-            $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
+            $"appointments/doctor/{doctorId}/available-slots?date={Uri.EscapeDataString(shamsi)}");
+        if (version != _slotLoadVersion || SelectedDoctor?.Id != doctorId || SelectedDate != date || SelectedDateShamsi != shamsi) return;
         if (response?.Data is null) return;
         var isToday = SelectedDate?.Date == IranClock.Today;
         var nowTime = TimeOnly.FromDateTime(IranClock.Now);
