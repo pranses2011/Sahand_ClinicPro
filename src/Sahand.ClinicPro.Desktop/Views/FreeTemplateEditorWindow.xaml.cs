@@ -1,9 +1,12 @@
 using System.Globalization;
+using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -46,6 +49,24 @@ public partial class FreeTemplateEditorWindow : Window
         if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 100) return value;
         throw new ArgumentException("حاشیه داخلی باید خالی یا عدد صحیح بین ۰ و ۱۰۰ باشد.");
     }
+    private static BitmapSource DecodeImage(byte[] data)
+    {
+        using var input = new MemoryStream(data, writable: false);
+        var decoder = BitmapDecoder.Create(input, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        if (decoder is not (PngBitmapDecoder or JpegBitmapDecoder) || decoder.Frames.Count != 1)
+            throw new ArgumentException("تصویر PNG یا JPEG تک‌فریم انتخاب کنید.");
+        var frame = decoder.Frames[0];
+        if (frame.PixelWidth < 1 || frame.PixelHeight < 1 || frame.PixelWidth > 2048 || frame.PixelHeight > 2048)
+            throw new ArgumentException("ابعاد تصویر باید حداکثر ۲۰۴۸ در ۲۰۴۸ پیکسل باشد.");
+        frame.Freeze();
+        return frame;
+    }
+    private static UIElement ImagePreview(string? data)
+    {
+        try { return new Image { Source = DecodeImage(Convert.FromBase64String(data ?? "")), Stretch = Stretch.Fill }; }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or NotSupportedException or InvalidOperationException)
+        { return new TextBlock { Text = "تصویر قابل نمایش نیست", Foreground = Brushes.DarkRed, TextWrapping = TextWrapping.Wrap }; }
+    }
     private void RefreshCanvas()
     {
         PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
@@ -58,7 +79,7 @@ public partial class FreeTemplateEditorWindow : Window
             var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
             var content = new Border { BorderBrush = ink,
                 BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
-                Child = new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
+                Child = item.Kind == "image" ? ImagePreview(item.ImageData) : new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
             var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,
                 BorderThickness = new Thickness(ReferenceEquals(item, _selected) ? 1 : 0),
                 BorderBrush = ReferenceEquals(item, _selected) ? Brushes.DodgerBlue : Brushes.Transparent,
@@ -119,12 +140,30 @@ public partial class FreeTemplateEditorWindow : Window
     private void Add_Click(object sender, RoutedEventArgs e) { if (sender is Button { Tag: string kind }) Add(kind, new Point(20, 20)); }
     private void Add(string kind, Point point)
     {
-        if (kind is not ("text" or "variable" or "rectangle" or "line")) return;
+        if (kind is not ("text" or "variable" or "rectangle" or "line" or "image")) return;
         if (!CanDiscardPending()) return;
         if (kind == "variable" && _variables.Count == 0) { AppDialog.Error("طراحی قالب", "برای این سند متغیری در دسترس نیست."); return; }
-        var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : 40;
+        string? imageData = null;
+        if (kind == "image")
+        {
+            if (_document.Elements.Count(x => x.Kind == "image") >= 4) { AppDialog.Error("تصویر", "حداکثر چهار تصویر مجاز است."); return; }
+            var dialog = new OpenFileDialog { Filter = "تصویر PNG یا JPEG|*.png;*.jpg;*.jpeg", CheckFileExists = true, Multiselect = false };
+            if (dialog.ShowDialog(this) != true) return;
+            try
+            {
+                using var file = File.OpenRead(dialog.FileName);
+                if (file.Length is < 8 or > 32768) throw new ArgumentException("حجم تصویر باید حداکثر ۳۲ کیلوبایت باشد.");
+                var bytes = new byte[(int)file.Length]; file.ReadExactly(bytes);
+                imageData = Convert.ToBase64String(bytes);
+                if (FreeTemplateDesign.ImageMimeType(imageData) is null) throw new ArgumentException("فقط فایل PNG یا JPEG مجاز است.");
+                _ = DecodeImage(bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+            { AppDialog.Error("تصویر", "خواندن تصویر ناموفق بود: " + ex.Message); return; }
+        }
+        var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : kind == "image" ? 100 : 40;
         var item = new FreeTemplateElement { Kind = kind, Text = kind == "text" ? "متن جدید" : kind == "variable" ? _variables[0].Label + ":" : "",
-            Key = kind == "variable" ? _variables[0].Key : "", Width = width, Height = height,
+            Key = kind == "variable" ? _variables[0].Key : "", ImageData = imageData, Width = width, Height = height,
             X = Math.Clamp(point.X, 0, _document.Width - width), Y = Math.Clamp(point.Y, 0, _document.Height - height) };
         _document.Elements.Add(item); Select(item); RefreshCanvas();
     }
@@ -138,7 +177,7 @@ public partial class FreeTemplateEditorWindow : Window
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
-                FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim() };
+                FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData };
             var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
             catch { _document.Elements[index] = previous; throw; }

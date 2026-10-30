@@ -19,6 +19,7 @@
                     <Button Content="＋ متن" Tag="text" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8"/>
                     <Button Content="＋ اطلاعات سند / جدول" Tag="variable" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8"/>
                     <Button Content="＋ کادر" Tag="rectangle" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8"/>
+                    <Button Content="＋ تصویر محلی (PNG / JPEG)" Tag="image" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8" ToolTip="حداکثر ۳۲ کیلوبایت؛ تصویر داخل قالب ذخیره می‌شود"/>
                     <Button Content="＋ خط" Tag="line" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="0,0,0,8"/>
                     <Separator Margin="0,8"/>
                     <TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>
