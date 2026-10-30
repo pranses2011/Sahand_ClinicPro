@@ -29,6 +29,17 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Canvas_sample_values_are_text_only_and_never_expand_html_tables()
+    {
+        var sample = PrintTemplateRenderer.SampleData("Invoice");
+        FreeTemplatePreview.TrySampleText(sample, "patient_name", out var patient).Should().BeTrue();
+        patient.Should().NotBeNullOrWhiteSpace();
+        FreeTemplatePreview.TrySampleText(sample, "items_html", out var table).Should().BeFalse();
+        table.Should().BeEmpty();
+        FreeTemplatePreview.TrySampleText(sample, "unknown", out _).Should().BeFalse();
+    }
+
+    [Fact]
     public void Layer_order_is_preserved_in_output_and_stops_at_edges()
     {
         var first = new FreeTemplateElement { Kind = "text", Text = "first" };

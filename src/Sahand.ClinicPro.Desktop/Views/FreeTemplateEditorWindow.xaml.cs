@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
@@ -23,6 +24,7 @@ public partial class FreeTemplateEditorWindow : Window
     private readonly IReadOnlyList<ComplementaryViewModel.TemplateVariable> _variables;
     private readonly string _originalDocument, _originalPaper, _originalOrientation;
     private readonly string _templateType;
+    private readonly IReadOnlyDictionary<string, object?> _sampleData;
     private readonly string? _accent, _fontFamily;
     private readonly int _fontSize;
     private readonly bool _showLogo;
@@ -38,6 +40,7 @@ public partial class FreeTemplateEditorWindow : Window
         string templateType = "Invoice", string? accent = null, int fontSize = 13, bool showLogo = false, string? fontFamily = null)
     {
         _templateType = templateType; _accent = accent; _fontSize = fontSize; _showLogo = showLogo; _fontFamily = fontFamily;
+        _sampleData = PrintTemplateRenderer.SampleData(templateType);
         _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
         _originalDocument = JsonSerializer.Serialize(_document);
         _originalPaper = paper;
@@ -97,15 +100,20 @@ public partial class FreeTemplateEditorWindow : Window
         catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or NotSupportedException or InvalidOperationException)
         { return new TextBlock { Text = "تصویر قابل نمایش نیست", Foreground = Brushes.DarkRed, TextWrapping = TextWrapping.Wrap }; }
     }
-    private void RefreshCanvas()
+    private void RefreshCanvas(bool resetCanvasInputs = true)
     {
         PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
-        CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
-        SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+        if (resetCanvasInputs)
+        {
+            CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+            SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+        }
         PageCanvas.Children.Clear();
         foreach (var item in _document.Elements)
         {
             var label = item.Kind switch { "variable" => item.Text + " «" + (_variables.FirstOrDefault(v => v.Key == item.Key)?.Label ?? item.Key) + "»", "text" => item.Text, "line" => "────────", _ => "" };
+            if (item.Kind == "variable" && SampleValuesBox.IsChecked == true && FreeTemplatePreview.TrySampleText(_sampleData, item.Key, out var sample))
+                label = item.Text + " " + sample;
             var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
             var content = new Border { BorderBrush = ink,
                 BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
@@ -212,6 +220,7 @@ public partial class FreeTemplateEditorWindow : Window
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
     { if (sender is Border border) border.ReleaseMouseCapture(); RefreshCanvas(); e.Handled = true; }
+    private void SampleValues_Click(object sender, RoutedEventArgs e) => RefreshCanvas(resetCanvasInputs: false);
     private void ToolDown(object sender, MouseButtonEventArgs e) => _toolStart = e.GetPosition(this);
     private void ToolMove(object sender, MouseEventArgs e)
     {
