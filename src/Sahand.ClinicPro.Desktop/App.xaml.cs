@@ -614,7 +614,7 @@ public partial class App : System.Windows.Application
                             m.PrintJobs.Add(new PrintJobRow
                             {
                                 Key = key, Title = title, Description = desc, Icon = "🖨",
-                                Printer = string.Empty, Paper = "A5", Copies = 1,
+                                Printer = string.Empty, Paper = "A5", CopiesInput = "1",
                                 Preview = true, AutoPrint = false
                             });
                         }
