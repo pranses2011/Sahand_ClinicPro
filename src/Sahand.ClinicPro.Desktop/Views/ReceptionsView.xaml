@@ -45,9 +45,13 @@
                         <TextBlock Text="پذیرش بیمار" FontSize="19" FontWeight="Bold" Foreground="#173657" />
                         <TextBlock Text="جستجوی بیمار، ثبت خدمات و مدیریت صف پذیرش"
                                    FontSize="11" Foreground="#617992" Margin="0,4,0,0" />
-                        <TextBlock Text="نتیجه پذیرش یا مصرف نامعلوم است؛ پیش از پذیرش دوباره، صف و صندوق را بررسی کنید. پس از بررسی می‌توانید صفحه را دوباره باز کنید."
+                        <TextBlock Text="نتیجه زنجیره کامل تأیید نشد؛ ابتدا صف، مصرف، فاکتور و پرداخت را بررسی کنید."
                                    Visibility="{Binding IsReceptionOutcomeUnknown, Converter={StaticResource BoolToVisibility}}"
                                    TextWrapping="Wrap" Foreground="#B00020" FontWeight="Bold" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding ReceptionRecoveryInfo}" TextWrapping="Wrap" Foreground="#874C00" />
+                        <Button Content="ارسال دوباره همان پذیرش" Command="{Binding RetryReceptionCommand}"
+                                IsEnabled="{Binding CanRetryReception}" HorizontalAlignment="Right" Margin="0,5,0,0"
+                                Visibility="{Binding IsReceptionOutcomeUnknown, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </StackPanel>
             </DockPanel>

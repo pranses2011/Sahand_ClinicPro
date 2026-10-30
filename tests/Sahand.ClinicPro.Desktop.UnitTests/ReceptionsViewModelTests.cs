@@ -161,7 +161,7 @@ public class ReceptionsViewModelTests
         vm.AddServiceCommand.Execute(vm.Services.Single());
         vm.InsuranceIndex = 1;
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
         vm.InsuranceIndex = 2;
         var refresh = vm.RefreshServiceTariffsCommand.ExecuteAsync(null);
         second.SetResult(new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 300m } } });
@@ -186,7 +186,7 @@ public class ReceptionsViewModelTests
         await vm.RefreshServiceTariffsCommand.ExecuteAsync(null);
         vm.SelectedServices.Should().ContainSingle();
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class ReceptionsViewModelTests
         vm.IsReceptionOutcomeUnknown.Should().BeTrue();
         vm.CanEditReception.Should().BeFalse();
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "receptions").Should().Be(1);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent").Should().Be(1);
         vm.IsBusy.Should().BeFalse();
     }
 
@@ -224,7 +224,7 @@ public class ReceptionsViewModelTests
         var inquiry = vm.VerifyInsuranceCommand.ExecuteAsync(null);
         vm.IsInquiring.Should().BeTrue();
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
         vm.FoundPatient = new QuickPatient(8, "بیمار دوم", "", "", "بیمه", null, null, 5);
         pending.SetResult(new { data = new { isEligible = true, coveragePercent = 99m, approvalCode = "old" } });
         await inquiry;
@@ -244,7 +244,7 @@ public class ReceptionsViewModelTests
         vm.Inquiry.Should().NotBeNull();
         vm.CoveragePercent.Should().Be(0m);
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class ReceptionsViewModelTests
         await vm.VerifyInsuranceCommand.ExecuteAsync(null);
         vm.CoveragePercent.Should().Be(90m);
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class ReceptionsViewModelTests
         vm.SelectedDoctor = vm.Doctors.First();
         var submission = vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
         var body = System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody);
-        body.GetProperty("insuranceCompanyId").GetInt64().Should().Be(0);
+        body.GetProperty("InsuranceCompanyId").GetInt64().Should().Be(0);
         pending.SetResult(null);
         await submission;
     }
@@ -327,7 +327,7 @@ public class ReceptionsViewModelTests
         var pending = new TaskCompletionSource<object?>();
         api.PendingPostResult = pending.Task;
         var submission = vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody).GetProperty("appointmentId").GetInt64().Should().Be(77);
+        System.Text.Json.JsonSerializer.SerializeToElement(api.LastBody).GetProperty("AppointmentId").GetInt64().Should().Be(77);
         pending.SetResult(null);
         await submission;
     }
@@ -341,7 +341,7 @@ public class ReceptionsViewModelTests
         vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
         vm.SelectedDoctor = vm.Doctors.First();
         await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions");
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
     }
 
     [Fact]
@@ -352,7 +352,7 @@ public class ReceptionsViewModelTests
         {
             var store = new InvoiceRecoveryStore(directory);
             var api = MakeApi();
-            api.CannedResponses["receptions"] = new { data = 123L };
+            api.CannedResponses["receptions/idempotent"] = new { data = 123L };
             api.CannedResponses["invoices/preview"] = new { data = new { subTotal = 500000m, discountAmount = 0m,
                 insuranceShare = 0m, tax = 0m, patientPayable = 500000m, appliedInsuranceId = (long?)null, quoteVersion = "quote-reception" } };
             var vm = new ReceptionsViewModel(api, new FakeSnackbar(), store);
@@ -366,7 +366,7 @@ public class ReceptionsViewModelTests
             pending.Request.RequestId.Should().NotBeNull();
             pending.Request.ExpectedQuote.Should().Be("quote-reception");
             await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-            api.Calls.Count(x => x.Endpoint == "receptions" && x.Method == "POST").Should().Be(1);
+            api.Calls.Count(x => x.Endpoint == "receptions/idempotent" && x.Method == "POST").Should().Be(1);
             var form = new InvoiceFormViewModel(api, new FakeSnackbar(), store)
             { Patient = new QuickPatient(7, "بیمار", "", "", null, null, null) };
             form.CanRetryInvoice.Should().BeTrue();
@@ -379,7 +379,7 @@ public class ReceptionsViewModelTests
     public async Task Failed_invoice_preview_stops_before_invoice_creation()
     {
         var api = MakeApi();
-        api.CannedResponses["receptions"] = new { data = 123L };
+        api.CannedResponses["receptions/idempotent"] = new { data = 123L };
         var vm = MakeVm(api);
         vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
         vm.SelectedDoctor = vm.Doctors.First();
@@ -406,7 +406,7 @@ public class ReceptionsViewModelTests
             vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
             vm.SelectedDoctor = vm.Doctors.First();
             await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
-            api.Calls.Should().NotContain(x => x.Endpoint == "receptions" && x.Method == "POST");
+            api.Calls.Should().NotContain(x => x.Endpoint == "receptions/idempotent" && x.Method == "POST");
         }
         finally { if (System.IO.Directory.Exists(directory)) System.IO.Directory.Delete(directory, true); }
     }

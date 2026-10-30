@@ -1,4 +1,5 @@
 ﻿using Sahand.ClinicPro.Application.DTOs.Billing;
+using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Domain.Enums;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -115,6 +116,17 @@ public partial class ReceptionsViewModel : ViewModelBase
         InvalidateInquiry();
         if (_selectedAppointmentId is not null && value?.Id != _selectedAppointmentPatientId) ClearSelectedAppointment();
         ApplyPatientInsurance(value);
+        if (value is null || IsReceptionOutcomeUnknown || _receptionRecoveryStore is null) return;
+        try
+        {
+            var pending = _receptionRecoveryStore.Load(_invoiceRecoveryServer, value.Id);
+            if (pending is not null) RestorePendingReception(pending);
+        }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("بازیابی محلی پذیرش قابل خواندن نیست؛ پیش از ثبت جدید سوابق را بررسی و با پشتیبانی تماس بگیرید.");
+        }
     }
 
     /// <summary>
@@ -699,13 +711,17 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /// <summary>سازنده</summary>
     private readonly IInvoiceRecoveryStore? _invoiceRecoveryStore;
+    private readonly IReceptionRecoveryStore? _receptionRecoveryStore;
     private readonly string _invoiceRecoveryServer;
+    private PendingReception? _pendingReception;
 
-    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar, IInvoiceRecoveryStore? invoiceRecoveryStore = null)
+    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar, IInvoiceRecoveryStore? invoiceRecoveryStore = null,
+        IReceptionRecoveryStore? receptionRecoveryStore = null)
     {
         _api = api;
         _snackbar = snackbar;
         _invoiceRecoveryStore = invoiceRecoveryStore ?? (api is ApiClient ? new InvoiceRecoveryStore() : null);
+        _receptionRecoveryStore = receptionRecoveryStore ?? (api is ApiClient ? new ReceptionRecoveryStore() : null);
         _invoiceRecoveryServer = api is ApiClient client ? client.PaymentRecoveryServer : "test-api";
         LoadPanelPrefs();
         _ = InitializeAsync();
@@ -1710,14 +1726,61 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    [NotifyPropertyChangedFor(nameof(CanRetryReception))]
     private bool _isSubmitting;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    [NotifyPropertyChangedFor(nameof(CanRetryReception))]
     private bool _isReceptionOutcomeUnknown;
 
     /// <summary>فرم در طول ثبت و تا بررسی نتیجه نامعلوم قابل تغییر نیست.</summary>
     public bool CanEditReception => !IsSubmitting && !IsReceptionOutcomeUnknown && !IsCreatingUnidentifiedPatient && !IsRefreshingInsurance;
+
+    public bool CanRetryReception => !IsSubmitting && IsReceptionOutcomeUnknown && _pendingReception is not null &&
+        (_api as ApiClient)?.BranchId == _pendingReception.BranchId &&
+        (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
+    public string ReceptionRecoveryInfo => _pendingReception is null ? string.Empty :
+        $"درخواست ذخیره‌شده: {_pendingReception.PatientName} — {_pendingReception.TargetName}؛ نوبت: {_pendingReception.Request.AppointmentId?.ToString() ?? "بدون نوبت"}. ارسال دوباره ممکن است پذیرش را ثبت کند؛ ابتدا صف، انبار، فاکتور و پرداخت را بررسی کنید. ادامه زنجیره خودکار نیست.";
+
+    private void RestorePendingReception(PendingReception pending)
+    {
+        _pendingReception = pending;
+        IsReceptionOutcomeUnknown = true;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        OnPropertyChanged(nameof(CanRetryReception));
+    }
+
+    /// <summary>فقط همان پذیرش بازپخش می‌شود؛ مراحل بعدی به‌صورت خودکار تکرار نمی‌شوند.</summary>
+    [RelayCommand]
+    private async Task RetryReceptionAsync()
+    {
+        if (!CanRetryReception || _pendingReception is null) return;
+        var pending = _pendingReception;
+        IDisposable? lease = null;
+        try
+        {
+            lease = _receptionRecoveryStore?.AcquireWorkflow(_invoiceRecoveryServer, pending.Request.PatientId);
+            IsSubmitting = true;
+            if (!CanRetryContext(pending))
+            { _snackbar.Error("سرور یا شعبه تغییر کرده است؛ درخواست را در محل اصلی بررسی کنید."); return; }
+            var result = await _api.PostAsync<ReceptionCreateResponse>("receptions/idempotent", pending.Request);
+            if (result?.Data is null or <= 0)
+            { _snackbar.Error("نتیجه پذیرش هنوز نامعلوم است؛ صف و سایر مراحل را بررسی کنید. " + _api.LastError); return; }
+            try { _receptionRecoveryStore?.Clear(pending); }
+            catch (Exception)
+            { _snackbar.Error($"پذیرش {result.Data} تأیید شد اما فایل بازیابی پاک نشد؛ با پشتیبانی بررسی کنید."); return; }
+            _pendingReception = null;
+            OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+            OnPropertyChanged(nameof(CanRetryReception));
+            _snackbar.Info($"پذیرش {result.Data} تأیید شد؛ مصرف، فاکتور و پرداخت خودکار انجام نشدند. سوابق را بررسی کنید.");
+        }
+        catch (Exception) { _snackbar.Error("بازیابی پذیرش انجام نشد یا زنجیره هنوز در حال اجراست؛ سوابق را بررسی کنید."); }
+        finally { IsSubmitting = false; lease?.Dispose(); }
+    }
+
+    private bool CanRetryContext(PendingReception pending) => (_api as ApiClient)?.BranchId == pending.BranchId &&
+        (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
@@ -1775,6 +1838,25 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Error("بازیابی فاکتور بیمار قابل بررسی نیست؛ پذیرش ارسال نشد. با پشتیبانی تماس بگیرید.");
             return;
         }
+        IDisposable? workflowLease = null;
+        try
+        {
+            workflowLease = _receptionRecoveryStore?.AcquireWorkflow(_invoiceRecoveryServer, FoundPatient!.Id);
+            var existing = _receptionRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient!.Id);
+            if (existing is not null)
+            {
+                RestorePendingReception(existing);
+                workflowLease?.Dispose();
+                _snackbar.Error("درخواست پذیرش حل‌نشده وجود دارد؛ ابتدا سوابق را بررسی کنید.");
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            workflowLease?.Dispose();
+            _snackbar.Error("قفل یا بازیابی پذیرش در دسترس نیست؛ درخواست جدید ارسال نشد.");
+            return;
+        }
         IsSubmitting = true;
         var receptionBranch = (_api as ApiClient)?.BranchId;
         try
@@ -1793,24 +1875,37 @@ public partial class ReceptionsViewModel : ViewModelBase
         // ═══ چرخه ۲۴ — پذیرش خدمت درمانی یا ویزیت پزشک ═══
         var isServiceMode = ReceptionModeIndex == 1;
 
-        // ۱. ثبت پذیرش
-        var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions", new
+        // ۱. رزرو پایدار پیش از ثبت پذیرش؛ کلید تا پایان زنجیره حفظ می‌شود.
+        var receptionRequest = new CreateReceptionDto(FoundPatient!.Id,
+            isServiceMode ? null : SelectedDoctor!.Id, _selectedAppointmentId, company?.Id ?? 0L,
+            string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
+            string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
+            isServiceMode ? SelectedService!.Id : null, isServiceMode ? BuildServiceSummary() : null,
+            isServiceMode ? SelectedPerformer?.Id : null, isServiceMode ? SelectedRoom?.Id : null, Guid.NewGuid());
+        var pendingReception = new PendingReception(receptionRequest, FoundPatient.FullName,
+            isServiceMode ? BuildServiceSummary() : SelectedDoctor!.Name, _invoiceRecoveryServer, receptionBranch);
+        try { _receptionRecoveryStore?.Reserve(pendingReception); }
+        catch (Exception)
         {
-            patientId = FoundPatient!.Id,
-            doctorId = isServiceMode ? (long?)null : SelectedDoctor!.Id,
-            appointmentId = _selectedAppointmentId,
-            // صفر «آزاد صریح» است؛ null در سرور به بیمهٔ پرونده برمی‌گردد.
-            insuranceCompanyId = company?.Id ?? 0L,
-            referralCode = string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
-            notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
-            // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
-            serviceId = isServiceMode ? SelectedService!.Id : (long?)null,
-            serviceName = isServiceMode ? BuildServiceSummary() : null,
-            performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null,
-            // چرخهٔ ۳۹ — اتاق محل انجام خدمت؛ فقط پذیرش خدمتی (ویزیت پزشک: اتاق از
-            // برنامهٔ کاری خود پزشک می‌آید و ارسال تهی معنای درست دارد)
-            roomId = isServiceMode ? SelectedRoom?.Id : (long?)null
-        });
+            IsReceptionOutcomeUnknown = true;
+            try
+            {
+                var existing = _receptionRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient.Id);
+                if (existing is not null) RestorePendingReception(existing);
+            }
+            catch (Exception) { }
+            _snackbar.Error("رزرو ایمن پذیرش ناموفق بود و درخواست جدید ارسال نشد؛ سوابق را بررسی کنید.");
+            return;
+        }
+        _pendingReception = pendingReception;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        if (!CanRetryContext(pendingReception))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("سرور یا شعبه تغییر کرد؛ پذیرش ارسال نشد و درخواست برای بررسی حفظ شد.");
+            return;
+        }
+        var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions/idempotent", receptionRequest);
         if (reception?.Data is null)
         {
             IsReceptionOutcomeUnknown = true;
@@ -2003,6 +2098,23 @@ public partial class ReceptionsViewModel : ViewModelBase
         else
             _snackbar.Success($"پذیرش موفق — شناسه پذیرش: {queueNo} (فاکتور صادر شد)");
 
+        if (paymentFailed)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Warning("زنجیره کامل تأیید نشد؛ درخواست پذیرش برای بررسی باقی ماند. ابتدا صف، فاکتور و پرداخت را بررسی کنید.");
+            return;
+        }
+        try { _receptionRecoveryStore?.Clear(pendingReception); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} و فاکتور ثبت شدند اما فایل بازیابی پاک نشد؛ در صندوق بررسی کنید.");
+            return;
+        }
+        _pendingReception = null;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        OnPropertyChanged(nameof(CanRetryReception));
+
         // ═══ چرخهٔ ۸۲ (گزارش مالک) — چاپ قبض پذیرش پس از پرداخت ═══
         // «بعد از پذیرش و پرداخت و انتخاب روش پرداخت و تأیید، قبضی چاپ نمیشه؛
         // یک قبض کامل و شیک برای پرینتر حرارتی ۸ سانتی می‌خوام». قبض فقط وقتی
@@ -2070,7 +2182,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             IsReceptionOutcomeUnknown = true;
             _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
         }
-        finally { IsBusy = false; IsSubmitting = false; }
+        finally { IsBusy = false; IsSubmitting = false; workflowLease?.Dispose(); }
     }
 
     /// <summary>
