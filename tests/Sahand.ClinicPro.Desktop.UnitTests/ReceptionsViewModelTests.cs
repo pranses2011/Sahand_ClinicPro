@@ -341,6 +341,45 @@ public class ReceptionsViewModelTests
     }
 
     [Fact]
+    public async Task New_reception_invalidates_inflight_patient_search()
+    {
+        var api = MakeApi();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["patients/search?term=old"] = pending.Task;
+        var vm = MakeVm(api);
+        vm.SmartSearch = "old";
+        var search = vm.SmartSearchCommand.ExecuteAsync(null);
+        vm.NewReceptionCommand.Execute(null);
+        vm.WizardStep.Should().Be(0);
+        vm.SmartSearch.Should().BeEmpty();
+        pending.SetResult(new { data = new[] { new { id = 7, firstName = "بیمار", lastName = "قدیمی", nationalCode = "", mobile = "" } } });
+        await search;
+        vm.FoundPatient.Should().BeNull();
+        vm.PatientResults.Should().BeEmpty();
+        vm.IsSearchingPatient.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task New_reception_invalidates_inflight_insurance_inquiry()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] { new { id = 5, name = "بیمه", isContracted = true, coveragePercent = 60m } } };
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingPostResult = pending.Task;
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار اول", "", "", "بیمه", null, null, 5);
+        var inquiry = vm.VerifyInsuranceCommand.ExecuteAsync(null);
+        vm.IsInquiring.Should().BeTrue();
+        vm.NewReceptionCommand.Execute(null);
+        pending.SetResult(new { data = new { isEligible = true, coveragePercent = 99m, approvalCode = "old" } });
+        await inquiry;
+        vm.FoundPatient.Should().BeNull();
+        vm.Inquiry.Should().BeNull();
+        vm.WizardStep.Should().Be(0);
+        vm.IsInquiring.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Search_result_is_discarded_after_user_changes_search_text()
     {
         var api = MakeApi();
