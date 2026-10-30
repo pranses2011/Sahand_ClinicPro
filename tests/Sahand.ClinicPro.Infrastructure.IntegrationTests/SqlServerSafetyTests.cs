@@ -11,6 +11,7 @@ using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.RecordPayment;
+using Sahand.ClinicPro.Application.Features.Appointments.Waitlist;
 using Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
@@ -22,6 +23,7 @@ using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Infrastructure.Persistence;
 using Sahand.ClinicPro.Infrastructure.Persistence.Migrations;
 using Sahand.ClinicPro.Infrastructure.Persistence.Seeders;
+using Sahand.ClinicPro.Infrastructure.Services.SMS;
 using Xunit;
 
 namespace Sahand.ClinicPro.Infrastructure.IntegrationTests;
@@ -121,6 +123,8 @@ public sealed class SqlServerSafetyTests
             Assert.Equal(0m, stored.RemainingAmount);
             Assert.Equal(1, await verify.JournalEntries.CountAsync(j => j.ReferenceType == JournalReferenceType.Payment && j.ReferenceId == payment.Value));
 
+            await VerifyWaitlistQueueTransactionAsync(connectionString, patient.Id);
+
             // حتی پس از حذف نرم، همان کلید نباید برای رکورد جدید قابل استفاده شود.
             await AssertUniqueIndexesIncludeDeletedRowsAsync(connectionString, patient.Id, service.Id,
                 receptionDto.RequestId!.Value, invoiceDto.RequestId!.Value, paymentDto.RequestId!.Value);
@@ -158,6 +162,60 @@ public sealed class SqlServerSafetyTests
             Assert.Equal(100m, stored.PaidAmount);
             Assert.Equal(0m, stored.RemainingAmount);
         });
+    }
+
+    private static async Task VerifyWaitlistQueueTransactionAsync(string connectionString, long patientId)
+    {
+        var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(2);
+        long appointmentId, doctorId, waitlistId;
+        await using (var seed = CreateContext(connectionString))
+        {
+            var doctor = new Doctor { IsActive = true };
+            seed.Doctors.Add(doctor);
+            await seed.SaveChangesAsync();
+            var appointment = new Appointment { PatientId = patientId, DoctorId = doctor.Id,
+                AppointmentDate = date, AppointmentTime = new TimeOnly(10, 30), Status = AppointmentStatus.Booked };
+            var entry = new WaitlistEntry { PatientId = patientId, DoctorId = doctor.Id, PreferredFrom = date,
+                PreferredTo = date, ContactMobile = "09123456789", Status = WaitlistStatus.Waiting };
+            seed.AddRange(appointment, entry);
+            await seed.SaveChangesAsync();
+            (appointmentId, doctorId, waitlistId) = (appointment.Id, doctor.Id, entry.Id);
+        }
+
+        async Task RunOfferAsync(bool commit)
+        {
+            await using var context = CreateContext(connectionString);
+            var manager = new TransactionManager(context, NullLogger<TransactionManager>.Instance);
+            var uow = new UnitOfWork(context, Mock.Of<IMediator>());
+            var sms = new SmsService(new SmsProviderFactory(Array.Empty<ISmsProvider>()), context, NullLogger<SmsService>.Instance);
+            var handler = new NotifyWaitlistForFreedSlotCommandHandler(uow, sms);
+            var command = new NotifyWaitlistForFreedSlotCommand(appointmentId, doctorId, date, new TimeOnly(10, 30));
+            var inner = new TransactionBehavior<NotifyWaitlistForFreedSlotCommand, Result<long>>(manager,
+                NullLogger<TransactionBehavior<NotifyWaitlistForFreedSlotCommand, Result<long>>>.Instance);
+            await manager.BeginAsync();
+            (await context.Appointments.SingleAsync(a => a.Id == appointmentId)).Status = AppointmentStatus.Cancelled;
+            await uow.SaveEntitiesAsync();
+            var result = await inner.Handle(command, _ => handler.Handle(command, CancellationToken.None), CancellationToken.None);
+            Assert.Equal(waitlistId, result.Value);
+            Assert.Equal(1, await context.SmsQueue.CountAsync());
+            if (commit) await manager.CommitAsync();
+            else await manager.RollbackAsync();
+        }
+
+        await RunOfferAsync(commit: false);
+        await using (var check = CreateContext(connectionString))
+        {
+            Assert.Equal(AppointmentStatus.Booked, (await check.Appointments.SingleAsync(a => a.Id == appointmentId)).Status);
+            Assert.Equal(WaitlistStatus.Waiting, (await check.WaitlistEntries.SingleAsync(w => w.Id == waitlistId)).Status);
+            Assert.Equal(0, await check.SmsQueue.CountAsync());
+        }
+        await RunOfferAsync(commit: true);
+        await using (var check = CreateContext(connectionString))
+        {
+            Assert.Equal(AppointmentStatus.Cancelled, (await check.Appointments.SingleAsync(a => a.Id == appointmentId)).Status);
+            Assert.Equal(WaitlistStatus.Notified, (await check.WaitlistEntries.SingleAsync(w => w.Id == waitlistId)).Status);
+            Assert.Equal(1, await check.SmsQueue.CountAsync());
+        }
     }
 
     private static async Task AssertUniqueIndexesIncludeDeletedRowsAsync(string connectionString, long patientId, long serviceId,

@@ -35,6 +35,7 @@ public class WaitlistTests
 
         var uow = new Mock<IUnitOfWork>();
         uow.Setup(u => u.Repository<WaitlistEntry>()).Returns(Repo<WaitlistEntry>(ctx).Object);
+        uow.Setup(u => u.Repository<Doctor>()).Returns(Repo<Doctor>(ctx).Object);
         uow.Setup(u => u.SaveEntitiesAsync(It.IsAny<CancellationToken>()))
             .Returns<CancellationToken>(async _ => await ctx.SaveChangesAsync(_) > 0);
 
@@ -158,6 +159,45 @@ public class WaitlistTests
         noMobile.Status.Should().Be(WaitlistStatus.Waiting);
         sms.Verify(s => s.EnqueueRawAsync("09140000000", It.IsAny<string>(), null, 3, It.IsAny<CancellationToken>()), Times.Once);
         sms.Verify(s => s.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(20)]
+    public async Task Offer_matches_selected_specialty_or_subspecialty(long selectedSpecialty)
+    {
+        var (handler, ctx) = MakeNotifier();
+        var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2));
+        ctx.Doctors.Add(new Doctor { Id = 5, SpecialtyId = 10, SubSpecialtyId = 20 });
+        var wrongSpecialty = Entry(1, 10, null, date, date, Priority.Emergency);
+        wrongSpecialty.SpecialtyId = 99;
+        var matchingSpecialty = Entry(2, 11, null, date, date, Priority.Normal);
+        matchingSpecialty.SpecialtyId = selectedSpecialty;
+        ctx.WaitlistEntries.AddRange(wrongSpecialty, matchingSpecialty);
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(10, 30)), default);
+        result.Value.Should().Be(2);
+        wrongSpecialty.Status.Should().Be(WaitlistStatus.Waiting);
+    }
+
+    [Fact]
+    public async Task Offer_skips_invalid_numbers_even_beyond_ten_higher_priority_candidates()
+    {
+        var (handler, ctx) = MakeNotifier();
+        var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2));
+        for (var i = 1; i <= 12; i++)
+        {
+            var invalid = Entry(i, i, 5, date, date, Priority.Emergency);
+            invalid.ContactMobile = "09xxxxxxxxx";
+            ctx.WaitlistEntries.Add(invalid);
+        }
+        ctx.WaitlistEntries.Add(Entry(13, 13, 5, date, date));
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(10, 30)), default);
+        result.Value.Should().Be(13);
+        (await ctx.WaitlistEntries.CountAsync(w => w.Status == WaitlistStatus.Notified)).Should().Be(1);
     }
 
     [Fact]

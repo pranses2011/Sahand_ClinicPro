@@ -270,20 +270,37 @@ public class NotifyWaitlistForFreedSlotCommandHandler
     {
         var date = request.AppointmentDate;
 
-        // منتظران واجد شرایط: همان پزشک یا تخصص مرتبط، بازه شامل تاریخ نوبت، وضعیت Waiting
-        var candidates = await _unitOfWork.Repository<WaitlistEntry>().QueryableTracking
+        // «هر پزشک» فقط وقتی واقعاً عمومی است که تخصص هم انتخاب نشده باشد؛
+        // منتظر تخصص دیگر نباید پیشنهاد نوبت نامرتبط دریافت کند.
+        var doctor = await _unitOfWork.Repository<Domain.Entities.People.Doctor>().QueryableNoTracking
+            .Where(d => d.Id == request.DoctorId && !d.IsDeleted)
+            .Select(d => new { d.SpecialtyId, d.SubSpecialtyId })
+            .FirstOrDefaultAsync(cancellationToken);
+        var specialtyId = doctor?.SpecialtyId;
+        var subSpecialtyId = doctor?.SubSpecialtyId;
+        var candidates = _unitOfWork.Repository<WaitlistEntry>().QueryableTracking
             .Where(w => !w.IsDeleted && w.Status == WaitlistStatus.Waiting &&
                         w.PreferredFrom <= date && w.PreferredTo >= date &&
-                        (w.DoctorId == request.DoctorId || w.DoctorId == null))
-            .OrderBy(w => w.Priority) // اورژانس=۱ < فوری=۲ < عادی=۳ — کوچک‌تر اولویت بالاتر
-            .ThenBy(w => w.CreatedAt)
-            .Take(10)
-            .ToListAsync(cancellationToken);
+                        (w.DoctorId == request.DoctorId ||
+                         (w.DoctorId == null && (w.SpecialtyId == null ||
+                          (specialtyId != null && w.SpecialtyId == specialtyId) ||
+                          (subSpecialtyId != null && w.SpecialtyId == subSpecialtyId)))) &&
+                        w.ContactMobile != null && w.ContactMobile.Length == 11 && w.ContactMobile.StartsWith("09"))
+            .OrderBy(w => w.Priority)
+            .ThenBy(w => w.CreatedAt).ThenBy(w => w.Id);
 
-        // ردیف بدون شماره قابل تماس نباید به‌اشتباه «اطلاع‌رسانی‌شده» شود.
-        var winner = candidates.FirstOrDefault(w => !string.IsNullOrWhiteSpace(w.ContactMobile));
-        if (winner is null)
-            return Result<long>.Success(0);
+        // خواندن ترتیبی تا نخستین شماره معتبر: محدودکردن به ده ردیف نخست
+        // می‌توانست پس از چند شماره خراب، منتظران قابل تماس را نادیده بگیرد.
+        WaitlistEntry? winner = null;
+        await foreach (var candidate in candidates.AsAsyncEnumerable().WithCancellation(cancellationToken))
+        {
+            if (candidate.ContactMobile!.All(c => c is >= '0' and <= '9'))
+            {
+                winner = candidate;
+                break;
+            }
+        }
+        if (winner is null) return Result<long>.Success(0);
 
         winner.Status = WaitlistStatus.Notified;
         winner.NotifiedAt = DateTime.UtcNow;
@@ -295,7 +312,7 @@ public class NotifyWaitlistForFreedSlotCommandHandler
         var message =
             $"«درمانگاه سهند» سلام 🌿\n" +
             $"به دلیل لغو نوبت، جای خالی روز {dateText} ساعت {request.AppointmentTime:hh\\:mm} پیش شماست.\n" +
-            $"برای تأیید و رزرو نهایی با شماره ۰۴۱-۳۳۳۳۴۴۴ تماس بگیرید.";
+            "برای تأیید و رزرو نهایی با درمانگاه تماس بگیرید.";
         // صف پیامک از همان DbContext و تراکنش استفاده می‌کند؛ ارسال مستقیم
         // قبل از commit می‌توانست پیامِ جای خالیِ لغونشده را به بیمار برساند.
         // شکست صف‌کردن عمداً بلعیده نمی‌شود تا کل تغییرات عقب برگردند.
