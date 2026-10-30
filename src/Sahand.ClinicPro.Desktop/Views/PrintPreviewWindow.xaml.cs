@@ -20,7 +20,6 @@ public partial class PrintPreviewWindow : Window
     private readonly string? _printerName;
     private readonly double? _pageWidth;
     private readonly double? _pageHeight;
-    private readonly int _copies;
 
     /// <summary>آیا کاربر از این پنجره چاپ کرد؟ (بستن بدون چاپ = false)</summary>
     public bool Printed { get; private set; }
@@ -37,8 +36,9 @@ public partial class PrintPreviewWindow : Window
         _printerName = printerName;
         _pageWidth = pageWidth;
         _pageHeight = pageHeight;
-        _copies = copies;
         InitializeComponent();
+        CopiesBox.SelectedIndex = PrintFlow.NormalizeCopies(copies) - 1;
+        CopiesBox.Visibility = CopiesLabel.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
 
         PrintButton.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
         // دکمه/میانبر داخلی نمایشگر نباید از تنظیمات چاپگر، اندازه و نسخه
@@ -76,7 +76,12 @@ public partial class PrintPreviewWindow : Window
     /// <summary>چاپ به چاپگر مقصد تنظیمات — بدون دیالوگ ویندوز (تجربهٔ یکدست)</summary>
     private void OnPrintClick(object sender, RoutedEventArgs e)
     {
-        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName, _pageWidth, _pageHeight, _copies))
+        if (CopiesBox.SelectedIndex is < 0 or > 8)
+        {
+            AppDialog.Error("تعداد نسخه", "تعداد نسخه را بین ۱ تا ۹ انتخاب کنید.");
+            return;
+        }
+        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName, _pageWidth, _pageHeight, CopiesBox.SelectedIndex + 1))
         {
             Printed = true;
             Close();

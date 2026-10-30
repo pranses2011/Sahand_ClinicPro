@@ -15,6 +15,7 @@
         <DockPanel Grid.Row="0" Margin="12,10">
             <TextBlock x:Name="TitleText" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock Text="تعداد نسخه را در پنجره چاپ انتخاب کنید" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0" />
                 <Button Click="OnPrintClick" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
