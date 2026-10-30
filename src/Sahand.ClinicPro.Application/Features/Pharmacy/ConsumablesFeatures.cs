@@ -193,7 +193,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
         var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
         var resultItems = new List<ConsumeResultItemDto>();
         // ═══ چرخهٔ ۶۷ — جمع بهای تمام‌شدهٔ اقلام مصرفی (قیمت خرید × تعداد) ═══
-        // مبنای سند حسابداری هزینه؛ قیمت فروش (taken) فقط برای نمایش خروجی است.
+        // مبنای سند حسابداری هزینه؛ قیمت فروش واقعی هر بچ در خروجی حفظ می‌شود.
         var totalCost = 0m;
 
         // پیش از تغییر هر بچ همه اقلام و موجودی آنها بررسی شوند؛ شکست قلم
@@ -226,7 +226,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
         foreach (var (item, medication, batches) in plans)
         {
             var remaining = item.Quantity;
-            var taken = 0m; // جمع هزینهٔ واقعی این قلم از بچ‌ها
+            var priceGroups = new Dictionary<decimal, decimal>(); // تعداد واقعی به تفکیک قیمت فروش
 
             foreach (var batch in batches)
             {
@@ -236,7 +236,7 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 var take = Math.Min(batch.Quantity, remaining);
                 batch.Quantity -= take;
                 remaining -= take;
-                taken += take * batch.SellPrice;
+                priceGroups[batch.SellPrice] = priceGroups.GetValueOrDefault(batch.SellPrice) + take;
                 // چرخهٔ ۶۷: بهای تمام‌شده (خرید) — نه قیمت فروش؛ حسابداری هزینه
                 // باید به مبنای خرید باشد تا سود خالص واقعی باشد
                 totalCost += take * batch.PurchasePrice;
@@ -270,12 +270,12 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.STOCK",
                     $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {remaining} عدد کمبود دارد؛ ابتدا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید"));
 
-            resultItems.Add(new ConsumeResultItemDto(
-                medication.Id,
-                medication.GenericNameFa ?? medication.GenericName,
-                item.Quantity,
-                item.Quantity > 0 ? taken / item.Quantity : 0m,
-                taken));
+            // میانگین قیمت بچ‌ها می‌تواند کسری ریال شود و در ستون قیمت فاکتور
+            // قابل ذخیره نباشد. هر قیمت واقعی جدا می‌ماند؛ بچ‌های هم‌قیمت ادغام می‌شوند.
+            foreach (var (price, quantity) in priceGroups)
+                resultItems.Add(new ConsumeResultItemDto(
+                    medication.Id, medication.GenericNameFa ?? medication.GenericName,
+                    quantity, price, quantity * price));
         }
 
         // ═══ چرخهٔ ۶۷ (گزارش مالک: «در تب سود و زیان مبلغ هزینه‌ها صفر است») ═══
