@@ -15,6 +15,13 @@ public class FreeTemplateDesignTests
     public void Width_accounts_for_server_sheet_padding(string paper, double expected)
         => FreeTemplateDesign.AvailableBodyWidth(paper).Should().Be(expected);
 
+    [Theory]
+    [InlineData("A4", 1071)]
+    [InlineData("Custom:100x180", 628)]
+    [InlineData("Thermal80", 0)]
+    public void Landscape_width_accounts_for_orientation(string paper, double expected)
+        => FreeTemplateDesign.AvailableBodyWidth(paper, "Landscape").Should().Be(expected);
+
     [Fact]
     public void Canvas_roundtrips_and_renders_only_valid_variable_in_text_context()
     {

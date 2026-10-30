@@ -64,6 +64,25 @@ public class PrintTemplateRendererTests
         html.Should().Contain("بدنه");
     }
 
+    [Theory]
+    [InlineData("A4", "1123px", "A4 landscape")]
+    [InlineData("Custom:100x180", "680px", "180mm 100mm")]
+    public void WrapDocument_landscape_uses_height_as_width_and_safe_page_size(string paper, string width, string cssSize)
+    {
+        var html = PrintTemplateRenderer.WrapDocument("body", "clinic", null, null, null, null, 13, null, false, paper, "Landscape");
+        html.Should().Contain(".sheet { width:" + width).And.Contain("@page { size: " + cssSize + "; }");
+    }
+
+    [Fact]
+    public void Landscape_rejects_thermal_and_malicious_sizes()
+    {
+        PrintTemplateRenderer.LandscapePaper("Thermal80").Should().BeNull();
+        PrintTemplateRenderer.LandscapePaper("Custom:100x180; color:red").Should().BeNull();
+        PrintTemplateRenderer.LandscapePaper("Custom:1x180").Should().BeNull();
+        var html = PrintTemplateRenderer.WrapDocument("body", "clinic", null, null, null, null, 13, null, false, "A4;evil", "Landscape");
+        html.Should().NotContain("@page").And.NotContain("evil");
+    }
+
     /// <summary>لوگوی خاموش — بدون تگ تصویر</summary>
     [Fact]
     public void WrapDocument_WithoutLogo_HasNoImageTag()
