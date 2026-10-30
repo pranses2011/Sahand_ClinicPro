@@ -803,7 +803,10 @@ public partial class SettingsViewModel : ViewModelBase
             // همهٔ چاپ‌های عمومی (قبض/رسید/کارت/فیش/آزمایش) از PrintFlow
             // می‌گذرند و بی‌درنگ (بدون درخواست شبکه) این مقدار را می‌خوانند.
             LocalSettingsStore.Set("Printer.ShowPreview", ShowPreview ? "true" : "false");
-            LocalSettingsStore.Set(PrintFlow.ClosePreviewSettingKey, ClosePreviewAfterPrint ? "true" : "false");
+            var closeValue = ClosePreviewAfterPrint ? "true" : "false";
+            LocalSettingsStore.Set(PrintFlow.ClosePreviewSettingKey, closeValue);
+            if (LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey) != closeValue)
+                throw new InvalidOperationException("ذخیره محلی رفتار پیش‌نمایش تأیید نشد.");
 
             // مرکز چاپ — چاپگر/کاغذ/نسخه/پیش‌نمایش/خودکار اختصاصی هر سند
             foreach (var row in PrintJobs)
@@ -856,7 +859,16 @@ public partial class SettingsViewModel : ViewModelBase
         TicketPrinter = Value(map, "TicketPrinter");
         InvoicePaperSize = string.IsNullOrWhiteSpace(Value(map, "InvoicePaperSize")) ? "A5" : Value(map, "InvoicePaperSize");
         ShowPreview = Value(map, "ShowPreview") != "false";
-        ClosePreviewAfterPrint = PrintFlow.ResolveClosePreview(LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey) ?? Value(map, "ClosePreviewAfterPrint"));
+        var localClose = LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey);
+        var serverClose = Value(map, "ClosePreviewAfterPrint");
+        if (string.IsNullOrEmpty(localClose) && !string.IsNullOrEmpty(serverClose))
+        {
+            LocalSettingsStore.Set(PrintFlow.ClosePreviewSettingKey, serverClose);
+            localClose = LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey);
+            if (localClose != serverClose)
+                _snackbar.Warning("تنظیم پیش‌نمایش از سرور دریافت شد اما ذخیره محلی آن تأیید نشد؛ مقدار واقعی دستگاه نمایش داده می‌شود.");
+        }
+        ClosePreviewAfterPrint = PrintFlow.ResolveClosePreview(localClose);
         AutoPrintInvoice = Value(map, "AutoPrintInvoice") == "true";
         AutoPrintTicket = Value(map, "AutoPrintTicket") == "true";
         var copies = Value(map, "PrintCopies");
