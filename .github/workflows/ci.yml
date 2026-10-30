@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: دریافت سورس
         uses: actions/checkout@v5
@@ -225,7 +225,7 @@ jobs:
   # ═══ چرخه دوازدهم (C2 — بند ۴-۹): E2E سرور لایسنس PHP ═══
   # ═══ چرخهٔ ۶۶ (G-08 «بستن حلقه PHP»): +۱۴ تست بکاپ خودکار/چرخش کلید RSA ═══
   license-e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       mysql:
         image: mysql:8.0
