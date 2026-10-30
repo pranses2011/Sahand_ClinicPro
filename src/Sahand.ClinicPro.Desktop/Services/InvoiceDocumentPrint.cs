@@ -30,7 +30,7 @@ public static class InvoiceDocumentPrint
         {
             ["invoice_code"] = data.InvoiceNumber ?? data.Id.ToString(CultureInfo.InvariantCulture),
             ["invoice_date"] = data.DateShamsi, ["patient_name"] = data.PatientName,
-            ["insurance_name"] = data.InsuranceCompanyId is null ? "بدون بیمه اعمال‌شده" :
+            ["insurance_name"] = data.InsuranceCompanyId is null ? "بیمه ثبت‌شده موجود نیست یا در پاسخ مشخص نشده" :
                 string.IsNullOrWhiteSpace(data.InsuranceName) ? $"شناسه بیمه {data.InsuranceCompanyId} (نام ناموجود)" : data.InsuranceName,
             ["items_html"] = TemplatedPrintService.ItemsTableHtml(data.Items.Select(i =>
                 (i.Description ?? "", Number(i.Quantity), Amount(i.TotalPrice)))),
@@ -64,7 +64,7 @@ public static class InvoiceDocumentPrint
     {
         var v = TemplateVariables(data);
         return "<!doctype html><html lang='fa' dir='rtl'><head><meta charset='utf-8'></head><body style='font-family:Tahoma'>" +
-            Header(data) + "<h2>جزئیات فاکتور</h2><p>تاریخ: " + Escape(data.DateShamsi) + "</p>" + v["items_html"] +
+            Header(data) + "<h2>جزئیات فاکتور</h2><p>تاریخ: " + Escape(data.DateShamsi) + " — بیمه: " + Escape(v["insurance_name"]?.ToString()) + "</p>" + v["items_html"] +
             "<p>جمع: " + v["subtotal"] + " — تخفیف: " + v["discount"] + " — بیمه: " + v["insurance_share"] +
             " — مالیات: " + v["tax"] + "</p></body></html>";
     }
