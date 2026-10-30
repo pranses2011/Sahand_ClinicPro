@@ -29,14 +29,27 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
     /// <summary>نام دیتابیس درون‌حافظه‌ای — در کلاس‌های مشتق قابل‌بازنویسی</summary>
     protected virtual string DatabaseName => "InMemoryApiTestsDb";
 
-    /// <summary>
-    /// ریشهٔ مشترک فروشگاه InMemory — چرخهٔ ۷۰ (تست سرتاسری گزارش‌ها).
-    /// بدون ریشهٔ مشترک، کانتکست گزارش و کانتکست اصلی دو InternalServiceProvider
-    /// جدا می‌گیرند و دو فروشگاهِ هم‌نام اما جدا می‌سازند؛ نتیجه: گزارش‌ها
-    /// همیشه ردیف تهی/جمع صفر برمی‌گردانند با اینکه دادهٔ اصلی نوشته شده —
-    /// بازتولیدِ همان «همه چیز صفر» مالک در محیط تست.
-    /// </summary>
-    private readonly Microsoft.EntityFrameworkCore.Storage.InMemoryDatabaseRoot _root = new();
+    // Root مشترک باعث بازاستفادهٔ EF از provider داخلی می‌شود. ریشهٔ جدا در
+    // هر factory پس از بیست نمونه اخطار ManyServiceProvidersCreated را به
+    // استثنا تبدیل می‌کرد. نام GUIDدار هر factory همچنان داده‌ها را جدا نگه
+    // می‌دارد و هر دو کانتکست همان factory یک فروشگاه مشترک می‌بینند.
+    private static readonly Microsoft.EntityFrameworkCore.Storage.InMemoryDatabaseRoot Root = new();
+    private readonly string _storeId = Guid.NewGuid().ToString("N");
+    private int _cleaned;
+    private string StoreName => $"{DatabaseName}-{_storeId}";
+
+    /// <summary>پس از توقف میزبان، داده‌های فروشگاه اختصاصی این تست پاک می‌شوند.</summary>
+    public override async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _cleaned, 1) != 0) return;
+        // Dispose() خود WebApplicationFactory این متد را همگام انتظار می‌کشد؛
+        // بازگشت به SynchronizationContext تست نباید به بن‌بست منجر شود.
+        await base.DisposeAsync().ConfigureAwait(false);
+        var options = new DbContextOptionsBuilder<ClinicProDbContext>()
+            .UseInMemoryDatabase(StoreName, Root).Options;
+        await using var context = new ClinicProDbContext(options);
+        await context.Database.EnsureDeletedAsync().ConfigureAwait(false);
+    }
 
     /// <summary>پیکربندی میزبان تست — دیتابیس درون‌حافظه‌ای</summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -68,7 +81,7 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
 
             services.AddDbContext<ClinicProDbContext>((sp, options) =>
-                options.UseInMemoryDatabase(DatabaseName, _root)
+                options.UseInMemoryDatabase(StoreName, Root)
                     // تراکنش‌های رفتار MediatR روی InMemory پشتیبانی نمی‌شوند — نادیده
                     .ConfigureWarnings(w =>
                         w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
@@ -88,7 +101,7 @@ public class InMemoryApiFactory : WebApplicationFactory<Program>
             // دادهٔ نوشته‌شده از کانتکست اصلی برای گزارش‌ها دیده می‌شود
             // (همان رابطهٔ واقعی: هر دو کانتکست به یک دیتابیس وصل‌اند).
             services.AddDbContext<Sahand.ClinicPro.Infrastructure.Persistence.ReportingDbContext>(options =>
-                options.UseInMemoryDatabase(DatabaseName, _root)
+                options.UseInMemoryDatabase(StoreName, Root)
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
         });
     }

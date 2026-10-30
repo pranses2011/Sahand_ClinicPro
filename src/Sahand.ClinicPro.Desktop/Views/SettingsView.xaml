@@ -522,7 +522,7 @@
                                                             <ComboBoxItem Content="برچسب ۴۰×۳۰" />
                                                         </ComboBox.Items>
                                                     </ComboBox>
-                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsFlowOptions}" ToolTip="برای مسیر داخلی این سند؛ تعداد نسخه باید توسط درایور چاپگر پشتیبانی شود"
+                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsCopies}" ToolTip="برای مسیر داخلی؛ در نسخه پزشک مقدار اولیه دیالوگ چاپ است و پشتیبانی درایور لازم است"
                                                              Text="{Binding CopiesInput, UpdateSourceTrigger=PropertyChanged}"
                                                              materialDesign:HintAssist.Hint="نسخه" FontSize="11" />
                                                     <CheckBox Grid.Column="4" Content="پیش‌نمایش" IsChecked="{Binding Preview}" IsThreeState="True"

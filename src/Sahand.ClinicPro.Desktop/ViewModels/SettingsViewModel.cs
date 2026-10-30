@@ -798,11 +798,10 @@ public partial class SettingsViewModel : ViewModelBase
         foreach (var row in PrintJobs)
         {
             if (row.SupportsPrinter) local[PrintJobSettings.StorageKey(row.Key, "Printer")] = row.Printer ?? string.Empty;
-            if (row.SupportsFlowOptions)
-            {
+            if (row.SupportsCopies)
                 local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.TryGetCopies(out var copies) ? copies.ToString(System.Globalization.CultureInfo.InvariantCulture) : row.CopiesInput;
+            if (row.SupportsFlowOptions)
                 local[PrintJobSettings.StorageKey(row.Key, "Preview")] = row.Preview is null ? "inherit" : row.Preview.Value ? "true" : "false";
-            }
         }
         return local;
     }
@@ -813,7 +812,7 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
-        if (PrintJobs.Any(row => row.SupportsFlowOptions && !row.TryGetCopies(out _)))
+        if (PrintJobs.Any(row => row.SupportsCopies && !row.TryGetCopies(out _)))
         { _snackbar.Error("تعداد نسخه هر سند باید بین ۱ تا ۹ باشد."); return; }
         // مقادیر سرور و محلی باید از یک لحظه ثبت شوند، حتی اگر کاربر در حین انتظار ویرایش کند.
         var server = PrinterServerSnapshot();
@@ -1535,10 +1534,13 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
         or "LabResult" or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report"
         or "PhysioHomeProgram" or "PhysioReferralReport" or "DentalChart" or "DentalTreatmentPlan" or "GlassesPrescription" or "ImagingReport";
 
-    /// <summary>سندهایی که از دروازهٔ FlowDocument و تنظیمات اختصاصی استفاده می‌کنند.</summary>
+    /// <summary>سندهایی که از دروازهٔ FlowDocument و تنظیم پیش‌نمایش اختصاصی استفاده می‌کنند.</summary>
     public bool SupportsFlowOptions => Key is "ReceptionReceipt" or "AppointmentTicket" or "LabResult"
         or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report"
         or "PhysioHomeProgram" or "PhysioReferralReport" or "DentalChart" or "DentalTreatmentPlan" or "GlassesPrescription" or "ImagingReport";
+
+    /// <summary>نسخه پزشک هم تعداد نسخه را به دیالوگ چاپ تخصصی می‌دهد، اما پیش‌نمایش آن اجباری است.</summary>
+    public bool SupportsCopies => SupportsFlowOptions || Key == "Prescription";
 
     /// <summary>عنوان سند</summary>
     public string Title { get; set; } = string.Empty;

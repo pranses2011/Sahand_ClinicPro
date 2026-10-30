@@ -47,6 +47,14 @@ public class PrintSettingsPolicyTests
         result.Should().Be(expected);
     }
 
+    [Theory]
+    [InlineData("Prescription", true)]
+    [InlineData("ReceptionReceipt", true)]
+    [InlineData("Invoice", false)]
+    [InlineData("Payslip", false)]
+    public void Copy_setting_is_enabled_only_for_paths_that_apply_it(string key, bool expected)
+        => new PrintJobRow { Key = key }.SupportsCopies.Should().Be(expected);
+
     [Fact]
     public void Printer_override_and_inheritance_remain_distinct()
     {
@@ -60,6 +68,7 @@ public class PrintSettingsPolicyTests
     [InlineData("ReceptionReceipt", true, true)]
     [InlineData("AppointmentTicket", true, true)]
     [InlineData("PatientCard", true, true)]
+    [InlineData("Prescription", true, false)]
     [InlineData("Invoice", false, false)]
     [InlineData("ImagingReport", true, true)]
     [InlineData("PhysioHomeProgram", true, true)]
