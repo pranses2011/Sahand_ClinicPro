@@ -60,7 +60,10 @@ jobs:
             $out = Join-Path $PWD "shots/$page.png"
             $p = Start-Process -FilePath $exe.FullName -ArgumentList '--screenshot', $page, $out -PassThru -Wait
             Write-Host "exit=$($p.ExitCode)"
-            if (Test-Path "$out.error.txt") { Get-Content "$out.error.txt" | Write-Host }
+            if (Test-Path "$out.error.txt") {
+              $detail = (Get-Content "$out.error.txt" -Raw) -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
+              Write-Host "::error::$detail"
+            }
             if ($p.ExitCode -ne 0) { throw "screenshot failed for $page (exit $($p.ExitCode))" }
             if (-not (Test-Path $out)) { throw "screenshot missing for $page" }
             if ($page -eq 'print-designer' -and -not (Test-Path (Join-Path $PWD 'shots/print-designer-layout.png'))) { throw 'designer reference-size layout missing' }
