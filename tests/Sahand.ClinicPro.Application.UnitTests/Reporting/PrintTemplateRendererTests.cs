@@ -148,6 +148,9 @@ public class PrintTemplateRendererTests
         var map = PrintTemplateRenderer.VariablesOf();
         map.Keys.Should().HaveCount(9);
         map["Invoice"].Should().NotBeEmpty();
+        map["Invoice"].Should().Contain(new[] { "tax", "paid", "remaining", "payment_status" });
+        var sample = PrintTemplateRenderer.SampleData("Invoice");
+        foreach (var key in new[] { "tax", "paid", "remaining", "payment_status" }) sample.Should().ContainKey(key);
         map["PayrollSlip"].Should().NotBeEmpty();
     }
 }
