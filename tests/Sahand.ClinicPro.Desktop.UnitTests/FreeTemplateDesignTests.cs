@@ -98,6 +98,15 @@ public class FreeTemplateDesignTests
             (result.X + result.Width).Should().BeLessThanOrEqualTo(doc.Width);
             (result.Y + result.Height).Should().BeLessThanOrEqualTo(doc.Height);
         }
+        var fractionalDoc = new FreeTemplateDocument { Width = 600.001, Height = 800.001 };
+        var fractionalItem = new FreeTemplateElement { X = 100.004, Y = 200.004, Width = 200.001, Height = 100.001 };
+        foreach (var handle in Enum.GetValues<FreeTemplateResizeHandle>())
+        foreach (var delta in new[] { -1000d, 1000d })
+        {
+            var result = FreeTemplateDesign.ResizeFromHandle(fractionalDoc, fractionalItem, handle, delta, delta);
+            (result.X + result.Width).Should().BeLessThanOrEqualTo(fractionalDoc.Width);
+            (result.Y + result.Height).Should().BeLessThanOrEqualTo(fractionalDoc.Height);
+        }
         Action invalid = () => FreeTemplateDesign.ResizeFromHandle(doc, item, (FreeTemplateResizeHandle)999, 0, 0);
         invalid.Should().Throw<ArgumentException>();
     }

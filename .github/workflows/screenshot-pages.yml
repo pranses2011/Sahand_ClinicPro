@@ -66,7 +66,23 @@ jobs:
             }
             if ($p.ExitCode -ne 0) { throw "screenshot failed for $page (exit $($p.ExitCode))" }
             if (-not (Test-Path $out)) { throw "screenshot missing for $page" }
-            if ($page -eq 'print-designer' -and -not (Test-Path (Join-Path $PWD 'shots/print-designer-layout.png'))) { throw 'designer reference-size layout missing' }
+            if ($page -eq 'print-designer') {
+              $layoutPath = Join-Path $PWD 'shots/print-designer-layout.png'
+              if (-not (Test-Path $layoutPath)) { throw 'designer reference-size layout missing' }
+              $referencePath = Join-Path $PWD 'docs/design/print-template-new-proposal.png'
+              $reference = [System.Drawing.Image]::FromFile($referencePath)
+              $layout = $null
+              try {
+                $layout = [System.Drawing.Image]::FromFile($layoutPath)
+                if ($layout.Width -ne $reference.Width -or $layout.Height -ne $reference.Height) {
+                  throw "designer layout size $($layout.Width)x$($layout.Height) differs from reference $($reference.Width)x$($reference.Height)"
+                }
+                Write-Host "reference and offscreen layout: $($layout.Width)x$($layout.Height) pixels"
+              } finally {
+                if ($null -ne $layout) { $layout.Dispose() }
+                $reference.Dispose()
+              }
+            }
             Write-Host "::endgroup::"
           }
           Get-ChildItem shots | Format-Table Name, Length
