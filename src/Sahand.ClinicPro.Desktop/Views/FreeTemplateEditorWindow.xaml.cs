@@ -37,8 +37,10 @@ public partial class FreeTemplateEditorWindow : Window
         _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         VariableBox.ItemsSource = _variables;
-        PaperBox.Text = paper;
+        var preset = PaperBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => string.Equals(x.Content as string, paper, StringComparison.OrdinalIgnoreCase));
+        if (preset is not null) PaperBox.SelectedItem = preset; else PaperBox.Text = paper;
         OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        if (_document.Elements.Count > 0) Select(_document.Elements[0]);
         RefreshCanvas();
     }
     private static string Number(double n) => n.ToString("0.##", CultureInfo.InvariantCulture);
