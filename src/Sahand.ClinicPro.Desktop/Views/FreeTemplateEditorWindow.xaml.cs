@@ -65,9 +65,24 @@ public partial class FreeTemplateEditorWindow : Window
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
         FontBox.Text = item.FontSize.ToString(CultureInfo.InvariantCulture); ColorBox.Text = item.Color;
     }
+    private bool CanDiscardPending()
+    {
+        var dirty = false;
+        try
+        {
+            dirty = ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height;
+            if (_selected is { } item)
+                dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
+                    ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
+                    !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color;
+        }
+        catch (ArgumentException) { dirty = true; }
+        return !dirty || AppDialog.Confirm("تغییرات اعمال‌نشده", "تغییرات ویژگی یا ابعاد هنوز اعمال نشده‌اند و با این کار کنار گذاشته می‌شوند. ادامه می‌دهید؟", AppDialogIcon.Warning) == true;
+    }
     private void ItemDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Border { Tag: FreeTemplateElement item } border) return;
+        if (!CanDiscardPending()) { e.Handled = true; return; }
         Select(item); _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; border.CaptureMouse(); e.Handled = true;
     }
     private void ItemMove(object sender, MouseEventArgs e)
@@ -95,6 +110,7 @@ public partial class FreeTemplateEditorWindow : Window
     private void Add(string kind, Point point)
     {
         if (kind is not ("text" or "variable" or "rectangle" or "line")) return;
+        if (!CanDiscardPending()) return;
         if (kind == "variable" && _variables.Count == 0) { AppDialog.Error("طراحی قالب", "برای این سند متغیری در دسترس نیست."); return; }
         var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : 40;
         var item = new FreeTemplateElement { Kind = kind, Text = kind == "text" ? "متن جدید" : kind == "variable" ? _variables[0].Label + ":" : "",
@@ -131,7 +147,7 @@ public partial class FreeTemplateEditorWindow : Window
         }
         catch (ArgumentException ex) { AppDialog.Error("اندازه بوم", ex.Message); }
     }
-    private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null) { _document.Elements.Remove(_selected); _selected = null; RefreshCanvas(); } }
+    private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); _selected = null; RefreshCanvas(); } }
     private void Apply_Click(object sender, RoutedEventArgs e)
     {
         try
