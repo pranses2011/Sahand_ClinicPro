@@ -43,6 +43,15 @@ public class FixedCanvasBrowserIntegrationTests
             var longHtml = Page(template, new string('A', 800));
             Navigate(browser, longHtml);
             FixedCanvasPrintGuard.InspectBrowserDocument(browser.Document).Should().Be(FixedCanvasPrintGuard.Result.Overflow);
+
+            var tableDoc = new FreeTemplateDocument { Width = 500, Height = 250, Elements = new() {
+                new() { Kind = "variable", Key = "items_html", X = 10, Y = 10, Width = 220, Height = 45 }
+            } };
+            var tableTemplate = FreeTemplateDesign.Build(tableDoc, new[] { "items_html" });
+            var rows = string.Concat(Enumerable.Repeat("<tr><td>Test item</td><td>123</td></tr>", 20));
+            var tableHtml = PrintTemplateRenderer.Render(tableTemplate, new Dictionary<string, object?> { ["items_html"] = "<table>" + rows + "</table>" });
+            Navigate(browser, PrintTemplateRenderer.WrapDocument(tableHtml, "Clinic", null, null, null, null, 13, null, false, "A4"));
+            FixedCanvasPrintGuard.InspectBrowserDocument(browser.Document).Should().Be(FixedCanvasPrintGuard.Result.Overflow);
         }
         finally { window.Close(); browser.Dispose(); Dispatcher.CurrentDispatcher.InvokeShutdown(); }
     }
