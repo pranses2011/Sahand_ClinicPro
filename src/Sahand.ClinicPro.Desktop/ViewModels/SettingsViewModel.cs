@@ -160,6 +160,7 @@ public partial class SettingsViewModel : ViewModelBase
                 Printer = PrintJobSettings.PrinterOverrideFor(job.Key),
                 Paper = PrintJobSettings.PaperFor(job.Key),
                 Copies = PrintJobSettings.CopiesFor(job.Key),
+                CopiesInput = PrintJobSettings.CopiesFor(job.Key).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 Preview = PrintJobSettings.PreviewFor(job.Key),
                 AutoPrint = PrintJobSettings.AutoFor(job.Key)
             });
@@ -800,7 +801,7 @@ public partial class SettingsViewModel : ViewModelBase
             if (row.SupportsPrinter) local[PrintJobSettings.StorageKey(row.Key, "Printer")] = row.Printer ?? string.Empty;
             if (row.SupportsFlowOptions)
             {
-                local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.Copies.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.TryGetCopies(out var copies) ? copies.ToString(System.Globalization.CultureInfo.InvariantCulture) : row.CopiesInput;
                 local[PrintJobSettings.StorageKey(row.Key, "Preview")] = row.Preview is null ? "inherit" : row.Preview.Value ? "true" : "false";
             }
         }
@@ -813,7 +814,7 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
-        if (PrintJobs.Any(row => row.SupportsFlowOptions && row.Copies is < 1 or > 9))
+        if (PrintJobs.Any(row => row.SupportsFlowOptions && !row.TryGetCopies(out _)))
         { _snackbar.Error("تعداد نسخه هر سند باید بین ۱ تا ۹ باشد."); return; }
         // مقادیر سرور و محلی باید از یک لحظه ثبت شوند، حتی اگر کاربر در حین انتظار ویرایش کند.
         var server = PrinterServerSnapshot();
@@ -1560,6 +1561,15 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
     /// <summary>تعداد نسخه</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
     private int _copies = 1;
+
+    /// <summary>متن واقعی ورودی؛ مقدار نامعتبر هنگام ذخیره پنهان نمی‌شود.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private string _copiesInput = "1";
+
+    /// <summary>تعداد نسخه در محدوده مجاز و با عدد صحیح خوانده می‌شود.</summary>
+    public bool TryGetCopies(out int copies)
+        => int.TryParse(CopiesInput, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out copies)
+            && copies is >= 1 and <= 9;
 
     /// <summary>پیش‌نمایش قبل از چاپ این سند</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]

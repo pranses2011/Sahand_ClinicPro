@@ -31,6 +31,20 @@ public class PrintSettingsPolicyTests
     public void Copy_count_is_limited_to_supported_range(int count, int expected)
         => PrintFlow.NormalizeCopies(count).Should().Be(expected);
 
+    [Theory]
+    [InlineData("1", true, 1)]
+    [InlineData("9", true, 9)]
+    [InlineData("0", false, 0)]
+    [InlineData("10", false, 10)]
+    [InlineData("abc", false, 0)]
+    [InlineData("", false, 0)]
+    public void Copies_use_actual_text_instead_of_previous_valid_binding(string text, bool valid, int expected)
+    {
+        var row = new PrintJobRow { Copies = 3, CopiesInput = text };
+        row.TryGetCopies(out var result).Should().Be(valid);
+        result.Should().Be(expected);
+    }
+
     [Fact]
     public void Printer_override_and_inheritance_remain_distinct()
     {
