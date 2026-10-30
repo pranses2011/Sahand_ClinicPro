@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -127,7 +127,9 @@ public class PrintTemplatesController : ApiBaseController
             (await authorization.AuthorizeAsync(User, "PERMISSION:appointments.create")).Succeeded;
         var canPrintLabResult = tType == PrintTemplateType.LabResult &&
             (await authorization.AuthorizeAsync(User, "PERMISSION:lab.view")).Succeeded;
-        if (!canViewSettings && !canPrintReceipt && !canPrintAppointment && !canPrintLabResult) return Forbid();
+        var canPrintInvoice = tType == PrintTemplateType.Invoice &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:invoices.view")).Succeeded;
+        if (!canViewSettings && !canPrintReceipt && !canPrintAppointment && !canPrintLabResult && !canPrintInvoice) return Forbid();
 
         var template = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
             .Where(t => !t.IsDeleted && t.IsActive && t.Type == tType)
