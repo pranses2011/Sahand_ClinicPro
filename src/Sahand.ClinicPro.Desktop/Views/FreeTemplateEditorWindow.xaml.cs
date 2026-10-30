@@ -103,7 +103,7 @@ public partial class FreeTemplateEditorWindow : Window
     private static UIElement SampleTable(string[][] rows, FreeTemplateElement item, Brush ink)
     {
         var panel = new StackPanel { FlowDirection = FlowDirection.RightToLeft, ToolTip = "نمایش تقریبی جدول نمونه؛ خروجی واقعی را در پیش‌نمایش بررسی کنید" };
-        if (!string.IsNullOrWhiteSpace(item.Text)) panel.Children.Add(new TextBlock { Text = item.Text, FontSize = item.FontSize, Foreground = ink, TextWrapping = TextWrapping.Wrap });
+        if (!string.IsNullOrWhiteSpace(item.Text)) panel.Children.Add(new TextBlock { Text = item.Text, FontSize = item.FontSize, FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null, Foreground = ink, TextWrapping = TextWrapping.Wrap });
         var grid = new Grid();
         var columns = rows.Max(x => x.Length);
         for (var i = 0; i < columns; i++) grid.ColumnDefinitions.Add(new ColumnDefinition());
@@ -114,7 +114,7 @@ public partial class FreeTemplateEditorWindow : Window
             {
                 var cell = new Border { Padding = new Thickness(3, 2, 3, 2), BorderBrush = Brushes.LightGray, BorderThickness = new Thickness(0, 0, 0, 0.5),
                     Background = row == 0 ? new SolidColorBrush(Color.FromRgb(0xE8, 0xEF, 0xF9)) : Brushes.White,
-                    Child = new TextBlock { Text = rows[row][col], FontSize = Math.Min(item.FontSize, 12), Foreground = ink, TextWrapping = TextWrapping.Wrap, FontWeight = row == 0 ? FontWeights.Bold : FontWeights.Normal } };
+                    Child = new TextBlock { Text = rows[row][col], FontSize = Math.Min(item.FontSize, 12), Foreground = ink, TextWrapping = TextWrapping.Wrap, FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null, FontWeight = row == 0 ? FontWeights.Bold : FontWeights.Normal } };
                 Grid.SetRow(cell, row); Grid.SetColumn(cell, col); grid.Children.Add(cell);
             }
         }
@@ -152,6 +152,7 @@ public partial class FreeTemplateEditorWindow : Window
                 Child = item.Kind == "image" ? ImagePreview(item.ImageData) :
                     item.Kind == "variable" && SampleValuesBox.IsChecked == true && FreeTemplatePreview.TrySampleTable(_sampleData, item.Key, out var rows) ? SampleTable(rows, item, ink) :
                     new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, FontWeight = item.Bold ? FontWeights.Bold : FontWeights.Normal,
+                    FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null,
                     TextAlignment = item.Alignment == "center" ? TextAlignment.Center : item.Alignment == "left" ? TextAlignment.Left : TextAlignment.Right,
                     Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
             var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,
@@ -218,14 +219,14 @@ public partial class FreeTemplateEditorWindow : Window
         VariableBox.IsEnabled = item.Kind == "variable";
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
         FontBox.Text = item.FontSize.ToString(CultureInfo.InvariantCulture); ColorBox.Text = item.Color;
-        BoldBox.IsChecked = item.Bold; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
+        BoldBox.IsChecked = item.Bold; ItalicBox.IsChecked = item.Italic; UnderlineBox.IsChecked = item.Underline; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
     }
     private void ClearSelection()
     {
         _selected = null;
         TextBoxValue.Clear(); VariableBox.SelectedIndex = -1;
         XBox.Clear(); YBox.Clear(); WidthBox.Clear(); HeightBox.Clear(); FontBox.Clear(); ColorBox.Clear();
-        BoldBox.IsChecked = false; AlignmentBox.SelectedIndex = 0;
+        BoldBox.IsChecked = false; ItalicBox.IsChecked = false; UnderlineBox.IsChecked = false; AlignmentBox.SelectedIndex = 0;
         PropertiesActions.IsEnabled = false; PropertiesScroll.IsEnabled = false;
     }
     private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
@@ -238,7 +239,7 @@ public partial class FreeTemplateEditorWindow : Window
             if (_selected is { } item)
                 dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                     ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
-                    !FreeTemplateInput.TryInteger(FontBox.Text, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment;
+                    !FreeTemplateInput.TryInteger(FontBox.Text, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || (ItalicBox.IsChecked == true) != item.Italic || (UnderlineBox.IsChecked == true) != item.Underline || ReadAlignment() != item.Alignment;
         }
         catch (ArgumentException) { dirty = true; }
         return dirty;
@@ -352,7 +353,7 @@ public partial class FreeTemplateEditorWindow : Window
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
-                FontSize = ReadFontSize(), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Alignment = ReadAlignment() };
+                FontSize = ReadFontSize(), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Italic = ItalicBox.IsChecked == true, Underline = UnderlineBox.IsChecked == true, Alignment = ReadAlignment() };
             var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
             catch { _document.Elements[index] = previous; throw; }

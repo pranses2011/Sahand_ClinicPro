@@ -127,7 +127,11 @@
                     <TextBlock Text="مکان X / Y و اندازه عرض / ارتفاع (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
                     <UniformGrid Columns="2" Margin="0,4,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="XBox" ToolTip="X"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="YBox" ToolTip="Y"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="WidthBox" ToolTip="عرض"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="HeightBox" ToolTip="ارتفاع"/></UniformGrid>
                     <TextBlock Text="اندازه فونت و رنگ #RRGGBB" FontSize="11"/><UniformGrid Columns="2" Margin="0,4,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="FontBox"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="ColorBox"/></UniformGrid>
-                    <CheckBox x:Name="BoldBox" Content="متن ضخیم" Margin="0,4,0,6"/>
+                    <WrapPanel Margin="0,4,0,6">
+                        <CheckBox x:Name="BoldBox" Content="ضخیم" Margin="0,0,8,0"/>
+                        <CheckBox x:Name="ItalicBox" Content="مورب" Margin="0,0,8,0"/>
+                        <CheckBox x:Name="UnderlineBox" Content="زیرخط"/>
+                    </WrapPanel>
                     <TextBlock Text="چیدمان متن"/><ComboBox Style="{StaticResource DesignerComboBox}" x:Name="AlignmentBox" SelectedIndex="0" Margin="0,4,0,8"><ComboBoxItem Content="راست (پیش‌فرض)"/><ComboBoxItem Content="وسط"/><ComboBoxItem Content="چپ"/></ComboBox>
                     <TextBlock Text="برای جابه‌جایی عنصر و برای تغییر اندازه، دستگیره‌های آن را بکشید." TextWrapping="Wrap" Foreground="#64768A" FontSize="11" Margin="0,12,0,0"/>
                 </StackPanel></ScrollViewer></DockPanel>

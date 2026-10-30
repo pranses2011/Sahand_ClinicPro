@@ -22,6 +22,12 @@ public sealed class FreeTemplateElement
     /// <summary>متن ضخیم؛ مقدار پیش‌فرض در قالب قدیمی اضافه نمی‌شود.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Bold { get; set; }
+    /// <summary>متن مورب؛ در داده قالب قدیمی پیش‌فرض خاموش می‌ماند.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Italic { get; set; }
+    /// <summary>خط زیر متن؛ در داده قالب قدیمی پیش‌فرض خاموش می‌ماند.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Underline { get; set; }
     /// <summary>چیدمان متن؛ null همان راست‌چین پیش‌فرض است.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Alignment { get; set; }
@@ -188,6 +194,8 @@ public static class FreeTemplateDesign
                 .Append("px;height:").Append(Num(item.Height)).Append("px;font-size:").Append(item.FontSize)
                 .Append("px;color:").Append(item.Color);
             if (item.Bold) body.Append(";font-weight:bold");
+            if (item.Italic) body.Append(";font-style:italic");
+            if (item.Underline) body.Append(";text-decoration:underline");
             if (item.Alignment is not null) body.Append(";text-align:").Append(item.Alignment);
             if (item.Kind == "rectangle") body.Append(";border:1px solid ").Append(item.Color);
             if (item.Kind == "line") body.Append(";border-top:1px solid ").Append(item.Color);

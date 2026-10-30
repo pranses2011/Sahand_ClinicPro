@@ -170,6 +170,21 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Italic_and_underline_roundtrip_without_changing_legacy_defaults()
+    {
+        var element = new FreeTemplateElement { Kind = "text", Text = "test", Italic = true, Underline = true };
+        var document = new FreeTemplateDocument { Elements = new() { element } };
+        var html = FreeTemplateDesign.Build(document, Array.Empty<string>());
+        html.Should().Contain("font-style:italic").And.Contain("text-decoration:underline");
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
+        loaded!.Elements[0].Italic.Should().BeTrue(); loaded.Elements[0].Underline.Should().BeTrue();
+        element.Italic = false; element.Underline = false;
+        var legacy = FreeTemplateDesign.Build(document, Array.Empty<string>());
+        legacy.Should().NotContain("font-style:italic").And.NotContain("text-decoration:underline");
+        FreeTemplateDesign.TryRead(legacy, Array.Empty<string>(), out _).Should().BeTrue();
+    }
+
+    [Fact]
     public void Embedded_image_roundtrips_and_never_accepts_remote_or_unlimited_content()
     {
         const string png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/aXQAAAAASUVORK5CYII=";
