@@ -456,6 +456,13 @@ public partial class App : System.Windows.Application
     /// نشاندن همان پنج عدد نمونهای طرح تأییدی روی کارتهای آماری صفحه،
     /// تا اسکرینشات WPF و رندر HTML طرح دقیقاً یکسان دیده شوند.
     /// </summary>
+    private static void DisableScreenshotTooltips(DependencyObject node)
+    {
+        ToolTipService.SetIsEnabled(node, false);
+        var count = VisualTreeHelper.GetChildrenCount(node);
+        for (var i = 0; i < count; i++) DisableScreenshotTooltips(VisualTreeHelper.GetChild(node, i));
+    }
+
     private static void SetDesignKpis(ViewModels.DesignKpis k,
         string v1, string v2, string v3, string v4, string v5)
     {
@@ -678,6 +685,7 @@ public partial class App : System.Windows.Application
             // تولتیپها هنگام CopyFromScreen ممکن است زیر نشانگر ماوس باز بمانند
             // و یک کادر تیرهٔ اضافی وسط عکس بیندازند؛ مالک طرح را بدون آنها میبیند.
             ToolTipService.SetIsEnabled(view, false);
+            ToolTipService.AddToolTipOpeningHandler(view, (_, args) => args.Handled = true);
 
             var window = new Window
             {
@@ -699,6 +707,9 @@ public partial class App : System.Windows.Application
             };
             window.Show();
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            // خاصیت IsEnabled سرویس tooltip به فرزندان ارث نمی‌رسد؛
+            // پس پس از ساخته شدن قالب‌ها، آن را روی تمام درخت بصری می‌بندیم.
+            DisableScreenshotTooltips(view);
             // فرصت به بارگذاریهای آغازین (که در نبود سرور شکست میخورند) تا
             // نشانگر «در حال بارگذاری» فروبنشیند و فرم روی وضعیت پایدار رندر شود.
             await Task.Delay(1400);
