@@ -356,6 +356,47 @@ public partial class AppointmentsViewModel : ViewModelBase
     [ObservableProperty]
     private int _wizardStep;
 
+    /// <summary>پاک‌سازی فرم نوبت ناتمام؛ در زمان ارسال ثبت مجاز نیست.</summary>
+    [RelayCommand]
+    private void NewAppointment()
+    {
+        if (IsBooking) { _snackbar.Warning("تا پایان ثبت نوبت صبر کنید."); return; }
+        _patientSearchVersion++;
+        _slotLoadVersion++;
+        _calendarLoadVersion++;
+        _debounce?.Stop();
+        _calendarReloadDebounce?.Stop();
+        PatientSearchText = string.Empty;
+        PatientSearchResults.Clear();
+        SelectedPatient = null;
+        SelectedDoctor = null;
+        SelectedDate = IranClock.Today;
+        SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
+        var today = PersianDateHelper.ToJalali(IranClock.Today);
+        DisplayYear = today.Year;
+        DisplayMonth = today.Month;
+        _calendarReloadDebounce?.Stop();
+        MarkedDates = null;
+        DisabledDates = null;
+        DayStats = null;
+        MonthStats = null;
+        _monthStatsKey = string.Empty;
+        CalendarInfo = string.Empty;
+        CalendarStatus = string.Empty;
+        _pinnedSlot = null;
+        DetailSlot = null;
+        SelectedSlot = null;
+        Slots.Clear();
+        SlotGroups.Clear();
+        RefreshSlotStats();
+        SelectedRoom = null;
+        EstimatedFee = 0;
+        SelectedTypeIndex = 0;
+        SelectedPriorityIndex = 0;
+        Notes = string.Empty;
+        WizardStep = 0;
+    }
+
     /// <summary>
     /// رفتن به گام بعد — اعتبارسنجی گام جاری با پیام راهنمای فارسی؛
     /// در گام آخر مخفی است و کار با دکمهٔ «تایید و ثبت نوبت» ادامه می‌یابد

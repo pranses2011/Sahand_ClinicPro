@@ -135,11 +135,16 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
+                        <Button Grid.Row="0" Content="＋ نوبت جدید" Command="{Binding NewAppointmentCommand}"
+                                IsEnabled="{Binding CanEditBooking}" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Padding="12,6" Panel.ZIndex="2"
+                                ToolTip="پاک‌کردن فرم ناتمام و بازگشت به گام نخست؛ نوبت ثبت‌شده حذف نمی‌شود." />
+
                         <!-- ═══ چرخهٔ ۷۶ — نوار گام‌های ویزارد نوبت‌دهی ═══
                              گزارش مالک چرخهٔ ۷۴: «ورود اطلاعات و ثبت به‌صورت مرحله‌ای (Wizard)».
                              سه گام با دایرهٔ شماره و برچسب؛ وضعیت از WizardStep:
                              جاری = فیروزه‌ای برند، انجام‌شده = سبز، آینده = کم‌رنگ -->
-                        <Grid Grid.Row="0" Margin="0,2,0,12">
+                        <Grid Grid.Row="0" Margin="0,45,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="46" />

@@ -2183,6 +2183,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         _patientSearchVersion++;
         InvalidateInquiry();
+        ClearSelectedAppointment();
         SmartSearch = string.Empty;
         FoundPatient = null;
         FoundAppointmentInfo = null;
