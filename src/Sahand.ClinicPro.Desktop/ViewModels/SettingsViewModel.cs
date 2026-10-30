@@ -159,7 +159,6 @@ public partial class SettingsViewModel : ViewModelBase
                 Icon = job.Icon,
                 Printer = PrintJobSettings.PrinterOverrideFor(job.Key),
                 Paper = PrintJobSettings.PaperFor(job.Key),
-                Copies = PrintJobSettings.CopiesFor(job.Key),
                 CopiesInput = PrintJobSettings.CopiesFor(job.Key).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 Preview = PrintJobSettings.PreviewFor(job.Key),
                 AutoPrint = PrintJobSettings.AutoFor(job.Key)
@@ -1557,10 +1556,6 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
     /// <summary>اندازهٔ کاغذ</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
     private string _paper = "A4";
-
-    /// <summary>تعداد نسخه</summary>
-    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
-    private int _copies = 1;
 
     /// <summary>متن واقعی ورودی؛ مقدار نامعتبر هنگام ذخیره پنهان نمی‌شود.</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]

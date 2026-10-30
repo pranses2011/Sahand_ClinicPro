@@ -40,7 +40,7 @@ public class PrintSettingsPolicyTests
     [InlineData("", false, 0)]
     public void Copies_use_actual_text_instead_of_previous_valid_binding(string text, bool valid, int expected)
     {
-        var row = new PrintJobRow { Copies = 3, CopiesInput = text };
+        var row = new PrintJobRow { CopiesInput = text };
         row.TryGetCopies(out var result).Should().Be(valid);
         result.Should().Be(expected);
     }
