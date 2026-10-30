@@ -739,7 +739,10 @@ public partial class App : System.Windows.Application
                 // رندر چیدمان در ابعاد مرجع، مستقل از محدوده تصویر مانیتور.
                 // این تصویر جایگزین اسکرین‌شات روی صفحه نیست: تبدیل RTL و
                 // جزئیات رندر می‌توانند با خروجی مانیتور متفاوت باشند.
-                const int layoutWidth = 1568, layoutHeight = 885;
+                const int pixelWidth = 2720, pixelHeight = 1536;
+                const double layoutWidth = 1568;
+                var scale = pixelWidth / layoutWidth;
+                var layoutHeight = pixelHeight / scale;
                 // چیدمان را مستقیماً و بدون اجرای دوباره layout والد انجام
                 // می‌دهیم؛ بازچینی پنجره کوچک می‌تواند رندر را برش دهد.
                 view.Width = layoutWidth; view.Height = layoutHeight;
@@ -749,10 +752,10 @@ public partial class App : System.Windows.Application
                 view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
                 if (Math.Abs(view.RenderSize.Width - layoutWidth) > 0.1 || Math.Abs(view.RenderSize.Height - layoutHeight) > 0.1)
                     throw new InvalidOperationException("رندر طراح به ابعاد مرجع نرسید.");
-                var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
+                var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(pixelWidth, pixelHeight, 96 * scale, 96 * scale, PixelFormats.Pbgra32);
                 layout.Render(view);
-                var pixels = new byte[layoutWidth * layoutHeight * 4];
-                layout.CopyPixels(pixels, layoutWidth * 4, 0);
+                var pixels = new byte[pixelWidth * pixelHeight * 4];
+                layout.CopyPixels(pixels, pixelWidth * 4, 0);
                 for (var i = 3; i < pixels.Length; i += 4)
                     if (pixels[i] < 250) throw new InvalidOperationException("رندر هم‌اندازه ناقص یا شفاف است.");
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
@@ -762,7 +765,7 @@ public partial class App : System.Windows.Application
                 encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(oriented));
                 var layoutPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "print-designer-layout.png");
                 using (var stream = File.Create(layoutPath)) encoder.Save(stream);
-                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout, 1568x885 at 96 DPI; horizontally corrected for RTL. Not an on-screen screenshot; rendering can differ.");
+                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout 1568 x approximately 885.46 DIP, rendered at 2720x1536 pixels to match the reference image size; horizontally corrected for RTL. Not an on-screen screenshot; DPI and rendering can differ.");
             }
             window.Close();
             Shutdown(0);
