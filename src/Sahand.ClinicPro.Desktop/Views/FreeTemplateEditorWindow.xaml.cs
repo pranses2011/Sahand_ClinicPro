@@ -61,15 +61,19 @@ public partial class FreeTemplateEditorWindow : Window
     private static string Number(double n) => n.ToString("0.##", CultureInfo.InvariantCulture);
     private static double ReadNumber(TextBox box)
     {
-        var text = box.Text.Trim();
-        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && double.IsFinite(value)) return value;
-        throw new ArgumentException("عدد معتبر وارد کنید (برای اعشار از نقطه استفاده کنید).");
+        if (FreeTemplateInput.TryNumber(box.Text, out var value)) return value;
+        throw new ArgumentException("عدد معتبر وارد کنید (برای اعشار از نقطه یا ممیز فارسی استفاده کنید).");
+    }
+    private int ReadFontSize()
+    {
+        if (FreeTemplateInput.TryInteger(FontBox.Text, out var value)) return value;
+        throw new ArgumentException("اندازه فونت باید عدد صحیح معتبر باشد.");
     }
     private int? ReadPadding()
     {
         var text = SheetPaddingBox.Text.Trim();
         if (text.Length == 0) return null;
-        if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 100) return value;
+        if (FreeTemplateInput.TryInteger(text, out var value) && value is >= 0 and <= 100) return value;
         throw new ArgumentException("حاشیه داخلی باید خالی یا عدد صحیح بین ۰ و ۱۰۰ باشد.");
     }
     private static BitmapSource DecodeImage(byte[] data)
@@ -165,7 +169,7 @@ public partial class FreeTemplateEditorWindow : Window
             if (_selected is { } item)
                 dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                     ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
-                    !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment;
+                    !FreeTemplateInput.TryInteger(FontBox.Text, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment;
         }
         catch (ArgumentException) { dirty = true; }
         return dirty;
@@ -247,7 +251,7 @@ public partial class FreeTemplateEditorWindow : Window
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
-                FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Alignment = ReadAlignment() };
+                FontSize = ReadFontSize(), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Alignment = ReadAlignment() };
             var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
             catch { _document.Elements[index] = previous; throw; }

@@ -7,6 +7,27 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 
 public class FreeTemplateDesignTests
 {
+    [Theory]
+    [InlineData("۱۲۳٫۵", 123.5)]
+    [InlineData("١٢٣.٥", 123.5)]
+    [InlineData("123.5", 123.5)]
+    public void Canvas_numbers_accept_local_digits(string text, double expected)
+    {
+        FreeTemplateInput.TryNumber(text, out var actual).Should().BeTrue();
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Canvas_numbers_reject_ambiguous_and_non_finite_values()
+    {
+        FreeTemplateInput.TryNumber("1,200", out _).Should().BeFalse();
+        FreeTemplateInput.TryNumber("NaN", out _).Should().BeFalse();
+        FreeTemplateInput.TryNumber("1e999", out _).Should().BeFalse();
+        FreeTemplateInput.TryInteger("۱۲", out var font).Should().BeTrue();
+        font.Should().Be(12);
+        FreeTemplateInput.TryInteger("۱۲٫۵", out _).Should().BeFalse();
+    }
+
     [Fact]
     public void Resize_stays_inside_canvas_and_preserves_minimum_size()
     {
