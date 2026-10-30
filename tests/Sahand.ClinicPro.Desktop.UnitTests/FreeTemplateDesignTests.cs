@@ -7,6 +7,14 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 
 public class FreeTemplateDesignTests
 {
+    [Theory]
+    [InlineData("A5", 507)]
+    [InlineData("Thermal80", 250)]
+    [InlineData("Custom:100x180", 326)]
+    [InlineData("invalid", 0)]
+    public void Width_accounts_for_server_sheet_padding(string paper, double expected)
+        => FreeTemplateDesign.AvailableBodyWidth(paper).Should().Be(expected);
+
     [Fact]
     public void Canvas_roundtrips_and_renders_only_valid_variable_in_text_context()
     {

@@ -36,6 +36,22 @@ public static class FreeTemplateDesign
     private static string Safe(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
+    /// <summary>عرض تقریبی قابل استفاده بدنه با کسر حاشیه ثابت قالب سرور؛ تضمین چاپگر نیست.</summary>
+    public static double AvailableBodyWidth(string paper)
+    {
+        if (!VisualTemplateDesign.IsValidPaperSize(paper)) return 0;
+        var key = paper.Trim().ToUpperInvariant();
+        var width = key switch { "A3" => 1123, "A4" => 794, "A5" => 559, "A6" => 397, "B5" => 691,
+            "LETTER" => 816, "LEGAL" => 1056, "THERMAL80" => 302, "THERMAL58" => 219, _ => 0 };
+        if (width == 0)
+        {
+            var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]", RegexOptions.CultureInvariant);
+            if (!match.Success || !int.TryParse(match.Groups[1].Value, out var mm)) return 0;
+            width = (int)Math.Round(mm * 96.0 / 25.4);
+        }
+        return Math.Max(0, width - 52);
+    }
+
     public static string Build(FreeTemplateDocument document, IReadOnlyCollection<string> allowed)
     {
         if (document is null || !double.IsFinite(document.Width) || !double.IsFinite(document.Height) ||

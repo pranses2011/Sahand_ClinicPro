@@ -141,6 +141,8 @@ public partial class FreeTemplateEditorWindow : Window
                 throw new ArgumentException("ابتدا دکمه اعمال ویژگی‌ها را بزنید.");
             var paper = PaperBox.Text.Trim();
             if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
+            if (_document.Width > FreeTemplateDesign.AvailableBodyWidth(paper))
+                throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
             ResultHtml = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); ResultPaperSize = paper; DialogResult = true;
         }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }

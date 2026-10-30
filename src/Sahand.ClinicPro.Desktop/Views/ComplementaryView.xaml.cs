@@ -49,7 +49,9 @@ public partial class ComplementaryView : UserControl
         if (!FreeTemplateDesign.TryRead(before, keys, out var document))
         {
             if (AppDialog.Confirm("شروع طراح آزاد", "این قالب با طراح آزاد ساخته نشده یا تغییر دستی داشته است. اعمال طرح جدید بدنه فعلی را جایگزین می‌کند؛ تا زمان ذخیره نسخه سرور تغییر نمی‌کند. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
-            document = new FreeTemplateDocument { Elements = new() { new FreeTemplateElement { Kind = "text", Text = "عنوان سند", X = 20, Y = 20 } } };
+            var width = Math.Min(600, FreeTemplateDesign.AvailableBodyWidth(beforePaper));
+            if (width < 100) { AppDialog.Error("طراحی قالب", "کاغذ برای بوم آزاد بیش از حد باریک است؛ ابتدا اندازه کاغذ را تغییر دهید."); return; }
+            document = new FreeTemplateDocument { Width = width, Elements = new() { new FreeTemplateElement { Kind = "text", Text = "عنوان سند", X = 0, Y = 20, Width = Math.Min(200, width) } } };
         }
         var window = new FreeTemplateEditorWindow(document!, variables, beforePaper) { Owner = Window.GetWindow(this) };
         if (window.ShowDialog() != true || window.ResultHtml is null || window.ResultPaperSize is null) return;
