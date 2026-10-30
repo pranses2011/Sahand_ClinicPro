@@ -28,7 +28,7 @@ public partial class FreeTemplateEditorWindow : Window
     private readonly string? _accent, _fontFamily;
     private readonly int _fontSize;
     private readonly bool _showLogo, _screenshotMode;
-    private bool _applied;
+    private bool _applied, _moveCommitted;
     private FreeTemplateElement? _selected;
     private Point _toolStart, _dragStart;
     private double _startX, _startY;
@@ -267,7 +267,7 @@ public partial class FreeTemplateEditorWindow : Window
         }
         foreach (var handle in PageCanvas.Children.OfType<Thumb>())
             handle.Visibility = handle.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item) ? Visibility.Visible : Visibility.Collapsed;
-        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y;
+        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; _moveCommitted = false;
         if (!border.CaptureMouse()) RefreshCanvas();
         e.Handled = true;
     }
@@ -284,13 +284,32 @@ public partial class FreeTemplateEditorWindow : Window
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Border { IsMouseCaptured: true } border) border.ReleaseMouseCapture();
+        if (sender is Border { IsMouseCaptured: true } border)
+        {
+            _moveCommitted = true;
+            border.ReleaseMouseCapture();
+        }
         else RefreshCanvas();
         e.Handled = true;
     }
     private void ItemCaptureLost(object sender, MouseEventArgs e)
     {
-        if (ReferenceEquals(sender, e.OriginalSource)) RefreshCanvas();
+        if (!ReferenceEquals(sender, e.OriginalSource)) return;
+        if (!_moveCommitted && sender is Border { Tag: FreeTemplateElement item })
+        {
+            item.X = _startX; item.Y = _startY;
+            Select(item);
+        }
+        _moveCommitted = false;
+        RefreshCanvas();
+    }
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || Mouse.Captured is not Border { Tag: FreeTemplateElement } border ||
+            !PageCanvas.Children.Contains(border)) return;
+        // از دست رفتن capture بدون تأیید، مکان اولیه را بازمی‌گرداند.
+        border.ReleaseMouseCapture();
+        e.Handled = true;
     }
     private void SampleValues_Click(object sender, RoutedEventArgs e) => RefreshCanvas(resetCanvasInputs: false);
     private void ToolDown(object sender, MouseButtonEventArgs e) => _toolStart = e.GetPosition(this);
@@ -316,6 +335,7 @@ public partial class FreeTemplateEditorWindow : Window
     {
         if (kind is not ("text" or "variable" or "rectangle" or "line" or "image")) return;
         if (!CanDiscardPending()) return;
+        if (_document.Elements.Count >= 200) { AppDialog.Error("طراحی قالب", "حداکثر ۲۰۰ عنصر در بوم مجاز است."); return; }
         if (kind == "variable" && _variables.Count == 0) { AppDialog.Error("طراحی قالب", "برای این سند متغیری در دسترس نیست."); return; }
         var variable = kind == "variable" ? (variableKey is null ? _variables.FirstOrDefault() : _variables.FirstOrDefault(x => x.Key == variableKey)) : null;
         if (kind == "variable" && variable is null) { AppDialog.Error("طراحی قالب", "متغیر انتخاب‌شده برای این سند معتبر نیست."); return; }

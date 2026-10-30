@@ -1,7 +1,7 @@
 <Window x:Class="Sahand.ClinicPro.Desktop.Views.FreeTemplateEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="طراح آزاد قالب چاپ" Width="1568" Height="885" MinWidth="950" MinHeight="620"
-        WindowStartupLocation="CenterOwner" Closing="Window_Closing" FlowDirection="RightToLeft" Background="#EEF1F6">
+        WindowStartupLocation="CenterOwner" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" FlowDirection="RightToLeft" Background="#EEF1F6">
     <Window.Resources>
         <Style x:Key="DesignerButton" TargetType="Button">
             <Setter Property="Background" Value="#F7F9FC"/><Setter Property="Foreground" Value="#1A3050"/>
