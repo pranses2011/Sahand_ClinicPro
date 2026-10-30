@@ -157,7 +157,7 @@ public partial class SettingsViewModel : ViewModelBase
                 Title = job.Title,
                 Description = job.Description,
                 Icon = job.Icon,
-                Printer = PrintJobSettings.PrinterFor(job.Key) ?? string.Empty,
+                Printer = PrintJobSettings.PrinterOverrideFor(job.Key),
                 Paper = PrintJobSettings.PaperFor(job.Key),
                 Copies = PrintJobSettings.CopiesFor(job.Key),
                 Preview = PrintJobSettings.PreviewFor(job.Key),
@@ -884,7 +884,7 @@ public partial class SettingsViewModel : ViewModelBase
     private void TestPrintJob(PrintJobRow? row)
     {
         if (row is null) return;
-        var printer = string.IsNullOrWhiteSpace(row.Printer) ? null : row.Printer;
+        var printer = string.IsNullOrWhiteSpace(row.Printer) ? PrintJobSettings.FallbackPrinterFor(row.Key) : row.Printer;
         var doc = new System.Windows.Documents.FlowDocument
         {
             FlowDirection = System.Windows.FlowDirection.RightToLeft,

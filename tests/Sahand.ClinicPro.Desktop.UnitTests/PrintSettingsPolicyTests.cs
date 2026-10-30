@@ -31,6 +31,15 @@ public class PrintSettingsPolicyTests
     public void Copy_count_is_limited_to_supported_range(int count, int expected)
         => PrintFlow.NormalizeCopies(count).Should().Be(expected);
 
+    [Fact]
+    public void Printer_override_and_inheritance_remain_distinct()
+    {
+        var legacy = new[] { "", "چاپگر قدیمی", "چاپگر بعدی" };
+        PrintJobSettings.ResolvePrinter("چاپگر اختصاصی", legacy).Should().Be("چاپگر اختصاصی");
+        PrintJobSettings.ResolvePrinter("", legacy).Should().Be("چاپگر قدیمی");
+        PrintJobSettings.ResolvePrinter(null, Array.Empty<string>()).Should().BeNull();
+    }
+
     [Theory]
     [InlineData("ReceptionReceipt", true, true)]
     [InlineData("AppointmentTicket", true, true)]

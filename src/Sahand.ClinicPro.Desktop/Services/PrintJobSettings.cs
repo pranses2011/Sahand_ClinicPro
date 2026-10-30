@@ -55,18 +55,20 @@ public static class PrintJobSettings
     /// همان خانواده، و در پایان تهی یعنی «پیش‌فرض ویندوز».
     /// </summary>
     public static string? PrinterFor(string jobKey)
-    {
-        var own = LocalSettingsStore.Get(StorageKey(jobKey, "Printer"));
-        if (!string.IsNullOrWhiteSpace(own)) return own;
-        var job = Find(jobKey);
-        if (job is not null)
-            foreach (var legacy in job.LegacyKeys)
-            {
-                var value = LocalSettingsStore.Get(legacy);
-                if (!string.IsNullOrWhiteSpace(value)) return value;
-            }
-        return null;
-    }
+        => ResolvePrinter(PrinterOverrideFor(jobKey), LegacyPrintersFor(jobKey));
+
+    /// <summary>فقط انتخاب اختصاصی؛ خالی به معنای ارث از تنظیمات قدیمی است.</summary>
+    public static string PrinterOverrideFor(string jobKey) => LocalSettingsStore.Get(StorageKey(jobKey, "Printer"));
+
+    /// <summary>چاپگر ارثی، بدون لحاظ انتخاب اختصاصی ذخیره‌شده.</summary>
+    public static string? FallbackPrinterFor(string jobKey) => ResolvePrinter(null, LegacyPrintersFor(jobKey));
+
+    private static IEnumerable<string> LegacyPrintersFor(string jobKey)
+        => (Find(jobKey)?.LegacyKeys ?? Array.Empty<string>()).Select(LocalSettingsStore.Get);
+
+    /// <summary>انتخاب اختصاصی مقدم است؛ در نبود آن اولین مقدار قدیمی و سپس پیش‌فرض ویندوز.</summary>
+    public static string? ResolvePrinter(string? own, IEnumerable<string?> legacy)
+        => !string.IsNullOrWhiteSpace(own) ? own : legacy.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
     /// <summary>ذخیرهٔ چاپگر اختصاصی سند</summary>
     public static void SetPrinter(string jobKey, string? printer)
