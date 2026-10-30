@@ -31,12 +31,14 @@ public partial class HtmlPrintWindow : Window
             dynamic? document = Browser.Document;
             if (document is null || !string.Equals((string?)document.readyState, "complete", StringComparison.OrdinalIgnoreCase))
                 return FixedCanvasPrintGuard.Result.Unavailable;
-            dynamic elements = document.getElementsByTagName("div");
+            // document.all از رابط قدیمی مرورگر داخلی IE نیز در دسترس است.
+            dynamic elements = document.all;
             var count = Convert.ToInt32(elements.length);
             var measurements = new List<FixedCanvasPrintGuard.Measurement>();
             for (var i = 0; i < count; i++)
             {
                 dynamic element = elements.item(i);
+                if (!string.Equals((string?)element.tagName, "DIV", StringComparison.OrdinalIgnoreCase)) continue;
                 dynamic style = element.style;
                 if (!string.Equals((string?)style.position, "absolute", StringComparison.OrdinalIgnoreCase) ||
                     !string.Equals((string?)style.overflow, "hidden", StringComparison.OrdinalIgnoreCase)) continue;
