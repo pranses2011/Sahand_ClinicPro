@@ -123,6 +123,8 @@ public partial class FreeTemplateEditorWindow : Window
         if (_selected is null) return;
         try
         {
+            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height)
+                throw new ArgumentException("ابتدا ابعاد بوم را اعمال کنید تا تغییرات آن کنار گذاشته نشود.");
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
