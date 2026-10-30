@@ -23,7 +23,15 @@ public static class SaveShortcut
         var number = (int)e.Key - (int)Key.D1 + 1;
         var candidates = new List<Button>();
         Collect((DependencyObject)sender, number, candidates);
-        // دو دکمهٔ فعال هم‌زمان یا چند ردیف جدول: هرگز بین عملیات انتخاب حدسی نکن.
+        // برای دکمه‌های تکراری جدول فقط ردیفی که واقعاً فوکوس دارد مجاز است.
+        if (candidates.Count > 1 && Keyboard.FocusedElement is DependencyObject focused)
+        {
+            var current = focused;
+            while (current != null && current is not DataGridRow)
+                current = current is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(current) : LogicalTreeHelper.GetParent(current);
+            if (current is DataGridRow row) candidates = candidates.Where(row.IsAncestorOf).ToList();
+        }
+        // دو دکمهٔ فعال هم‌زمان: هرگز بین عملیات انتخاب حدسی نکن.
         if (candidates.Count != 1) return;
         var button = candidates[0];
         if (UIElementAutomationPeer.CreatePeerForElement(button) is ButtonAutomationPeer peer && peer.GetPattern(PatternInterface.Invoke) is IInvokeProvider invoke)

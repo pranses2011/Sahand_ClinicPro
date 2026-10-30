@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.RoomsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.RoomsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -167,13 +167,13 @@
                                 <TextBlock Text="افزودن اتاق" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding UpdateCommand}"
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding UpdateCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 MinWidth="105" MinHeight="40" Padding="14,8" Margin="0,0,8,0"
                                 ToolTip="ذخیرهٔ تغییرات روی اتاق انتخاب‌شدهٔ جدول">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="ذخیرهٔ ویرایش" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ذخیرهٔ ویرایش (Ctrl+Shift+1)" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding DeactivateCommand}"

@@ -484,11 +484,11 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Text="{Binding NewAbsenceReason, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="دلیل غیبت (اختیاری)" Margin="0,0,8,0" />
-                                <Button Grid.Column="1" Command="{Binding AddAbsenceCommand}"
+                                <Button shortcuts:SaveShortcut.Number="3" Grid.Column="1" Command="{Binding AddAbsenceCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت غیبت" Margin="7,0,0,0" />
+                                        <TextBlock Text="ثبت غیبت (Ctrl+Shift+3)" Margin="7,0,0,0" />
                                     </StackPanel>
                                 </Button>
                             </Grid>

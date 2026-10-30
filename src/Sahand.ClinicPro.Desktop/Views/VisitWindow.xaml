@@ -978,12 +978,12 @@
                                     <TextBlock Text="شرح ارجاع — شکایت، تشخیص یا هدف درمان (الزامی)" Style="{StaticResource FieldLabel}" Margin="2,12,0,5" />
                                     <TextBox Text="{Binding PhysioReferralNote, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditPhysioReferral}" MaxLength="2000" AcceptsReturn="True"
                                              TextWrapping="Wrap" Height="86" VerticalScrollBarVisibility="Auto" />
-                                    <Button Command="{Binding SendToPhysioCommand}" Margin="2,16,0,0" HorizontalAlignment="Left"
+                                    <Button shortcuts:SaveShortcut.Number="3" Command="{Binding SendToPhysioCommand}" Margin="2,16,0,0" HorizontalAlignment="Left"
                                             Style="{StaticResource MaterialDesignRaisedButton}" MinWidth="230" Background="#5E35B1" BorderBrush="#5E35B1"
                                             ToolTip="ارجاع مستقل ثبت می‌شود؛ جلسه درمانی ایجاد نمی‌شود">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="Send" Width="15" Height="15" VerticalAlignment="Center" />
-                                            <TextBlock Text="ثبت ارجاع فیزیوتراپی" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="ثبت ارجاع فیزیوتراپی (Ctrl+Shift+3)" Margin="8,0,0,0" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>

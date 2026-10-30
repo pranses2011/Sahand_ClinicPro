@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BillingView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.BillingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -34,11 +34,11 @@
                         <TextBlock Text="صدور فاکتور" Margin="7,0,0,0" />
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding RecordPaymentCommand}"
+                <Button shortcuts:SaveShortcut.Number="1" Command="{Binding RecordPaymentCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="CashPlus" Width="15" Height="15" VerticalAlignment="Center" />
-                        <TextBlock Text="ثبت پرداخت" Margin="7,0,0,0" />
+                        <TextBlock Text="ثبت پرداخت (Ctrl+Shift+1)" Margin="7,0,0,0" />
                     </StackPanel>
                 </Button>
                 <Button Command="{Binding PrintInvoiceCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"

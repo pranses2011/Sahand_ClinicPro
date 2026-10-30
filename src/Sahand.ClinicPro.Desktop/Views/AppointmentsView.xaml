@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AppointmentsView"
+﻿<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.AppointmentsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -996,13 +996,13 @@
                                 </Grid>
 
                                 <!-- دکمه ثبت -->
-                                <Button Grid.Row="2" Command="{Binding BookCommand}"
+                                <Button shortcuts:SaveShortcut.Number="1" Grid.Row="2" Command="{Binding BookCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         Background="#2E7D32" BorderBrush="#2E7D32"
                                         Height="42" Margin="0,10,0,0">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="CheckCircle" Width="18" Height="18" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                        <TextBlock Text="تایید و ثبت نوبت" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="تایید و ثبت نوبت (Ctrl+Shift+1)" Margin="10,0,0,0" FontSize="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -1333,11 +1333,11 @@
                                     <ComboBoxItem Content="بالا" />
                                     <ComboBoxItem Content="اورژانس" />
                                 </ComboBox>
-                                <Button Command="{Binding AddToWaitlistCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AddToWaitlistCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         FontSize="11.5" Margin="0,0,8,6" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                        <TextBlock Text="ثبت در لیست" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="ثبت در لیست (Ctrl+Shift+2)" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Command="{Binding LoadWaitlistCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"

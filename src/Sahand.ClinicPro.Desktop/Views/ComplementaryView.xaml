@@ -317,10 +317,10 @@
                         <TextBox materialDesign:HintAssist.Hint="توضیح (اختیاری)"
                                  Text="{Binding NewSurveyDescription, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="240" Margin="0,0,8,6" />
-                        <Button Command="{Binding AddSurveyCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                        <Button shortcuts:SaveShortcut.Number="3" Command="{Binding AddSurveyCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="ثبت نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ثبت نظرسنجی (Ctrl+Shift+3)" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding LoadSurveysCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">

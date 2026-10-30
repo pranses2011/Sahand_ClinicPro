@@ -414,12 +414,12 @@
                         <ToggleButton Content="پنجشنبه" IsChecked="{Binding WeekThu}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
                         <ToggleButton Content="جمعه" IsChecked="{Binding WeekFri}" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
                     </StackPanel>
-                    <Button Command="{Binding AssignShiftCommand}"
+                    <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AssignShiftCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}"
                             MinHeight="40">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="LinkPlus" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="ثبت تخصیص" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="ثبت تخصیص (Ctrl+Shift+2)" Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

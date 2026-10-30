@@ -303,7 +303,7 @@
                                         <DataGridTemplateColumn Header="اقدام">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="✓ ثبت انجام" Style="{StaticResource FlatPrimary}" FontSize="11.5" Height="27" Padding="12,0"
+                                                    <Button shortcuts:SaveShortcut.Number="4" Content="✓ ثبت انجام (Ctrl+Shift+4)" Style="{StaticResource FlatPrimary}" FontSize="11.5" Height="27" Padding="12,0"
                                                             IsEnabled="{Binding CanMarkPerformed}" ToolTip="پس از انجام واقعی تصویربرداری، وضعیت را انجام‌شده ثبت می‌کند"
                                                             Command="{Binding DataContext.StartStudyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}" />

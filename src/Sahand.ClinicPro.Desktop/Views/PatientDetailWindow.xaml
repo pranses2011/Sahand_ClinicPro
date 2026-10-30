@@ -303,9 +303,9 @@
                                      Visibility="{Binding IsSavingNote, Converter={StaticResource BoolToVisibility}}" />
                     </DockPanel>
                     <DockPanel Margin="0,6,0,0">
-                        <Button Command="{Binding AddQuickNoteCommand}" DockPanel.Dock="Left"
+                        <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AddQuickNoteCommand}" DockPanel.Dock="Left"
                                 Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11"
-                                Padding="10,4" Content="ثبت" Margin="6,0,0,0" />
+                                Padding="10,4" Content="ثبت (Ctrl+Shift+2)" Margin="6,0,0,0" />
                         <TextBox Text="{Binding QuickNoteText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="11.5" Padding="6,5"
                                  materialDesign:HintAssist.Hint="مثال: تماس تلفنی — قند ناشتا بهتر شد، پیگیری هفتهٔ بعد" />

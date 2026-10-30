@@ -61,7 +61,7 @@
                                 ToolTip="نیازمند سرویس عمومی پاسخ‌گویی خارجی و تنظیم Surveys:PublicBaseUrl؛ ابتدا کارکرد لینک را بررسی کنید"
                                 Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4"
                                 Background="#FB8C00" BorderBrush="#FB8C00" />
-                        <Button Content="ثبت پاسخ ناشناس" Command="{Binding OpenResponseFormCommand}"
+                        <Button shortcuts:SaveShortcut.Number="3" Content="ثبت پاسخ ناشناس (Ctrl+Shift+3)" Command="{Binding OpenResponseFormCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,4" />
                         <Button Content="🔄 بارگذاری مجدد" Command="{Binding LoadSurveysCommand}"
                                 Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,8,4" />
