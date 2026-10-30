@@ -16,6 +16,14 @@ public class PrintSettingsPolicyTests
         => PrintFlow.ResolvePreview(specific, global).Should().Be(expected);
 
     [Theory]
+    [InlineData(null, true)]
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    [InlineData("FALSE", false)]
+    public void Close_preview_defaults_to_previous_behavior_and_can_be_disabled(string? value, bool expected)
+        => PrintFlow.ResolveClosePreview(value).Should().Be(expected);
+
+    [Theory]
     [InlineData(-1, 1)]
     [InlineData(1, 1)]
     [InlineData(4, 4)]

@@ -534,6 +534,8 @@
                                     <StackPanel>
                                         <TextBlock Text="⚙️ رفتار عمومی چاپ (همهٔ سندها)" FontSize="12" FontWeight="Bold" Margin="0,0,0,4" />
                                         <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ (پیش‌فرض عمومی)" IsChecked="{Binding ShowPreview}" Margin="2,3" FontSize="11.5" />
+                                        <CheckBox Content="بستن پیش‌نمایش داخلی پس از ارسال موفق به چاپگر" IsChecked="{Binding ClosePreviewAfterPrint}" Margin="2,3" FontSize="11.5" />
+                                        <TextBlock Text="در چاپ HTML مرورگر نتیجهٔ چاپ یا انصراف را اعلام نمی‌کند؛ پیش‌نمایش آن برای جلوگیری از بستن ناخواسته باز می‌ماند." TextWrapping="Wrap" FontSize="10.5" Opacity="0.7" Margin="22,1,0,4" />
                                         <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور (هنوز متصل نیست)" IsChecked="{Binding AutoPrintInvoice}" IsEnabled="False" Margin="2,3" FontSize="11.5" />
                                         <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" FontSize="11.5" />
                                     </StackPanel>

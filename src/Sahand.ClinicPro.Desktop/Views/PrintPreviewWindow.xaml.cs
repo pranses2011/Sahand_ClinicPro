@@ -84,7 +84,7 @@ public partial class PrintPreviewWindow : Window
         if (PrintFlow.PrintDirect(_document, _printTitle, _printerName, _pageWidth, _pageHeight, CopiesBox.SelectedIndex + 1))
         {
             Printed = true;
-            Close();
+            if (PrintFlow.ClosePreviewAfterPrint) Close();
         }
         // شکست چاپ: پیام فارسی درون PrintDirect نشان داده شد؛ پنجره باز می‌ماند
         // تا کاربر بتواند چاپگر را وصل کند و دوباره امتحان کند

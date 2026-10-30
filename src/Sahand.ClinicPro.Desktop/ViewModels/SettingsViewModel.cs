@@ -126,6 +126,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showPreview = true;
 
+    /// <summary>پس از ارسال موفق چاپ داخلی، پیش‌نمایش بسته شود.</summary>
+    [ObservableProperty]
+    private bool _closePreviewAfterPrint = true;
+
     /// <summary>چاپ خودکار بعد ثبت فاکتور</summary>
     [ObservableProperty]
     private bool _autoPrintInvoice;
@@ -780,6 +784,7 @@ public partial class SettingsViewModel : ViewModelBase
             ["TicketPrinter"] = TicketPrinter,
             ["InvoicePaperSize"] = InvoicePaperSize,
             ["ShowPreview"] = ShowPreview ? "true" : "false",
+            ["ClosePreviewAfterPrint"] = ClosePreviewAfterPrint ? "true" : "false",
             ["AutoPrintInvoice"] = AutoPrintInvoice ? "true" : "false",
             ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
             ["PrintCopies"] = PrintCopies.ToString()
@@ -795,6 +800,7 @@ public partial class SettingsViewModel : ViewModelBase
             // همهٔ چاپ‌های عمومی (قبض/رسید/کارت/فیش/آزمایش) از PrintFlow
             // می‌گذرند و بی‌درنگ (بدون درخواست شبکه) این مقدار را می‌خوانند.
             LocalSettingsStore.Set("Printer.ShowPreview", ShowPreview ? "true" : "false");
+            LocalSettingsStore.Set(PrintFlow.ClosePreviewSettingKey, ClosePreviewAfterPrint ? "true" : "false");
 
             // مرکز چاپ — چاپگر/کاغذ/نسخه/پیش‌نمایش/خودکار اختصاصی هر سند
             foreach (var row in PrintJobs)
@@ -846,6 +852,7 @@ public partial class SettingsViewModel : ViewModelBase
         TicketPrinter = Value(map, "TicketPrinter");
         InvoicePaperSize = string.IsNullOrWhiteSpace(Value(map, "InvoicePaperSize")) ? "A5" : Value(map, "InvoicePaperSize");
         ShowPreview = Value(map, "ShowPreview") != "false";
+        ClosePreviewAfterPrint = PrintFlow.ResolveClosePreview(Value(map, "ClosePreviewAfterPrint") ?? LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey));
         AutoPrintInvoice = Value(map, "AutoPrintInvoice") == "true";
         AutoPrintTicket = Value(map, "AutoPrintTicket") == "true";
         var copies = Value(map, "PrintCopies");

@@ -37,6 +37,10 @@ public static class PrintFlow
 {
     /// <summary>کلید ذخیرهٔ محلی پرچم پیش‌نمایش — آینهٔ تنظیم سرورِ Printer.ShowPreview</summary>
     public const string PreviewSettingKey = "Printer.ShowPreview";
+    /// <summary>رفتار بستن پیش‌نمایش داخلی پس از ارسال موفق به چاپگر.</summary>
+    public const string ClosePreviewSettingKey = "Printer.ClosePreviewAfterPrint";
+    public static bool ClosePreviewAfterPrint => ResolveClosePreview(LocalSettingsStore.Get(ClosePreviewSettingKey));
+    public static bool ResolveClosePreview(string? value) => !string.Equals(value, "false", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// پرچم «پیش‌نمایش قبل از چاپ» — خوانده‌شده از ذخیرهٔ محلی؛
