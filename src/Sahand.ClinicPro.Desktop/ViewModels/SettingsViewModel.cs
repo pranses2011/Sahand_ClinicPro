@@ -772,48 +772,52 @@ public partial class SettingsViewModel : ViewModelBase
     /// چرخه ۲۴: مقادیر کلیدی (چاپگر نوبت/پرچم خودکار/نام درمانگاه) علاوه بر سرور
     /// در ذخیره‌گاه محلی هم آینه می‌شوند تا لحظهٔ ثبت نوبت بدون درخواست شبکه
     /// در دسترس باشند.</summary>
+    private Dictionary<string, string?> PrinterServerSnapshot() => new()
+    {
+        ["DefaultPrinter"] = DefaultPrinter, ["InvoicePrinter"] = InvoicePrinter,
+        ["PrescriptionPrinter"] = PrescriptionPrinter, ["TicketPrinter"] = TicketPrinter,
+        ["InvoicePaperSize"] = InvoicePaperSize, ["ShowPreview"] = ShowPreview ? "true" : "false",
+        ["ClosePreviewAfterPrint"] = ClosePreviewAfterPrint ? "true" : "false",
+        ["AutoPrintInvoice"] = AutoPrintInvoice ? "true" : "false", ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
+        ["PrintCopies"] = PrintCopies.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    };
+
+    private Dictionary<string, string> PrinterLocalSnapshot()
+    {
+        var local = new Dictionary<string, string>
+        {
+            ["Printer.TicketPrinter"] = TicketPrinter ?? string.Empty,
+            ["Printer.AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
+            ["Printer.ClinicName"] = ClinicName ?? string.Empty,
+            ["Printer.ShowPreview"] = ShowPreview ? "true" : "false",
+            [PrintFlow.ClosePreviewSettingKey] = ClosePreviewAfterPrint ? "true" : "false"
+        };
+        foreach (var row in PrintJobs)
+        {
+            if (row.SupportsPrinter) local[PrintJobSettings.StorageKey(row.Key, "Printer")] = row.Printer ?? string.Empty;
+            if (row.SupportsFlowOptions)
+            {
+                local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.Copies.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                local[PrintJobSettings.StorageKey(row.Key, "Preview")] = row.Preview is null ? "inherit" : row.Preview.Value ? "true" : "false";
+            }
+        }
+        return local;
+    }
+
+    private static bool SameSnapshot<T>(IReadOnlyDictionary<string, T> left, IReadOnlyDictionary<string, T> right)
+        => left.Count == right.Count && left.All(pair => right.TryGetValue(pair.Key, out var value) && EqualityComparer<T>.Default.Equals(pair.Value, value));
+
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
         if (PrintJobs.Any(row => row.SupportsFlowOptions && row.Copies is < 1 or > 9))
         { _snackbar.Error("تعداد نسخه هر سند باید بین ۱ تا ۹ باشد."); return; }
-        var saved = await SaveSettingsBatchAsync("Printer", new Dictionary<string, string?>
-        {
-            ["DefaultPrinter"] = DefaultPrinter,
-            ["InvoicePrinter"] = InvoicePrinter,
-            ["PrescriptionPrinter"] = PrescriptionPrinter,
-            ["TicketPrinter"] = TicketPrinter,
-            ["InvoicePaperSize"] = InvoicePaperSize,
-            ["ShowPreview"] = ShowPreview ? "true" : "false",
-            ["ClosePreviewAfterPrint"] = ClosePreviewAfterPrint ? "true" : "false",
-            ["AutoPrintInvoice"] = AutoPrintInvoice ? "true" : "false",
-            ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
-            ["PrintCopies"] = PrintCopies.ToString()
-        }, announceSuccess: false);
-
-        // ذخیره ممکن است بخشی در سرور اعمال شده باشد؛ در شکست، آینه را تغییر نده.
-        if (!saved) return;
-
-        // آینهٔ محلی — دسترسی بی‌درنگ هنگام ثبت نوبت (بدون رفت‌وبرگشت شبکه)
+        // مقادیر سرور و محلی باید از یک لحظه ثبت شوند، حتی اگر کاربر در حین انتظار ویرایش کند.
+        var server = PrinterServerSnapshot();
+        var local = PrinterLocalSnapshot();
+        if (!await SaveSettingsBatchAsync("Printer", server, announceSuccess: false)) return;
         try
         {
-            var local = new Dictionary<string, string>
-            {
-                ["Printer.TicketPrinter"] = TicketPrinter ?? string.Empty,
-                ["Printer.AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
-                ["Printer.ClinicName"] = ClinicName ?? string.Empty,
-                ["Printer.ShowPreview"] = ShowPreview ? "true" : "false",
-                [PrintFlow.ClosePreviewSettingKey] = ClosePreviewAfterPrint ? "true" : "false"
-            };
-            foreach (var row in PrintJobs)
-            {
-                if (row.SupportsPrinter) local[PrintJobSettings.StorageKey(row.Key, "Printer")] = row.Printer ?? string.Empty;
-                if (row.SupportsFlowOptions)
-                {
-                    local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.Copies.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    local[PrintJobSettings.StorageKey(row.Key, "Preview")] = row.Preview is null ? "inherit" : row.Preview.Value ? "true" : "false";
-                }
-            }
             // مسیرهای غیرفعال کاغذ و چاپ خودکار دست‌نخورده باقی می‌مانند.
             LocalSettingsStore.SetManyRequired(local);
         }
@@ -822,7 +826,11 @@ public partial class SettingsViewModel : ViewModelBase
             _snackbar.Error("تنظیمات سرور ذخیره شد، اما تنظیمات محلی چاپگر ذخیره نشد؛ دسترسی به تنظیمات محلی را بررسی کنید.");
             return;
         }
-
+        if (!SameSnapshot(server, PrinterServerSnapshot()) || !SameSnapshot(local, PrinterLocalSnapshot()))
+        {
+            _snackbar.Warning("نسخه قبلی تنظیمات چاپگر ذخیره شد؛ تغییرات جدید هنوز ذخیره نشده‌اند.");
+            return;
+        }
         _snackbar.Success("تنظیمات چاپگر ذخیره شد");
     }
 
