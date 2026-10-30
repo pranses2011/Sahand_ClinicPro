@@ -33,6 +33,17 @@ class AnnotationTests(unittest.TestCase):
             self.assertIn("Case 31", lines[-1])
             self.assertIn("%0A", lines[0])
 
+    def test_large_assertion_keeps_the_final_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            message = "large markup " * 200 + "EXPECTED_MARKER"
+            (root / "results.trx").write_text(
+                '<TestRun><UnitTestResult testName="html" outcome="Failed"><Output><ErrorInfo><Message>'
+                + message + '</Message></ErrorInfo></Output></UnitTestResult></TestRun>', encoding="utf-8")
+            failure = annotations.trx_failures(root)[0]
+            self.assertIn("EXPECTED_MARKER", failure)
+            self.assertIn("[truncated]", failure)
+
     def test_missing_trx_falls_back_to_test_log(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

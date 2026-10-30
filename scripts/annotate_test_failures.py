@@ -23,7 +23,12 @@ def trx_failures(directory: Path) -> list[str]:
             message = next((element.text or "" for element in result.iter()
                             if element.tag.rsplit("}", 1)[-1] == "Message"), "")
             name = result.get("testName", "Unnamed test")
-            failures.append(f"{name}: {' '.join(message.split())[:800]}")
+            compact = " ".join(message.split())
+            # FluentAssertions may print a large HTML/JSON value before the
+            # actual mismatch, which is usually at the end of the message.
+            if len(compact) > 1200:
+                compact = compact[:400] + " … [truncated] … " + compact[-800:]
+            failures.append(f"{name}: {compact}")
     return list(dict.fromkeys(failures))
 
 

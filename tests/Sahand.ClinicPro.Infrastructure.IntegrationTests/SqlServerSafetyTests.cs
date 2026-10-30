@@ -1,11 +1,17 @@
+using System.Security.Cryptography;
+using System.Text;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Moq;
+using Sahand.ClinicPro.API.Controllers;
 using Sahand.ClinicPro.Application.Common.Behaviors;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
@@ -17,6 +23,7 @@ using Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Billing;
+using Sahand.ClinicPro.Domain.Entities.Communication;
 using Sahand.ClinicPro.Domain.Entities.Infrastructure;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
@@ -162,6 +169,51 @@ public sealed class SqlServerSafetyTests
             var stored = await verify.Invoices.SingleAsync(i => i.Id == invoice.Id);
             Assert.Equal(100m, stored.PaidAmount);
             Assert.Equal(0m, stored.RemainingAmount);
+        });
+    }
+
+    [SqlServerFact]
+    public async Task Public_survey_invitation_is_consumed_once_under_competing_submissions()
+    {
+        await WithTemporaryDatabaseAsync(async (db, connectionString) =>
+        {
+            await db.Database.MigrateAsync();
+            var survey = new Survey { Title = "آزمون", Questions = "[]", IsActive = true };
+            db.Surveys.Add(survey);
+            await db.SaveChangesAsync();
+            var token = new string('A', 43); // دادهٔ ساختگی؛ توکن واقعی تصادفی است.
+            db.SurveyInvitations.Add(new SurveyInvitation { SurveyId = survey.Id,
+                TokenHash = Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(token))),
+                ExpiresAt = DateTime.UtcNow.AddHours(1) });
+            await db.SaveChangesAsync();
+
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Surveys:EnableBuiltInPublic"] = "true"
+            }).Build();
+            var gate = new SaveGate();
+            await using var first = CreateContext(connectionString, gate);
+            await using var second = CreateContext(connectionString, gate);
+            static PublicSurveyController Controller(ClinicProDbContext context, IConfiguration configuration) => new(context, configuration)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
+            var request = new PublicSurveyController.PublicAnswerRequest(token, "[]", new List<string?>(), 5, "نظر آزمایشی");
+            var results = await Task.WhenAll(Controller(first, config).Submit(request, default),
+                Controller(second, config).Submit(request, default));
+            Assert.Single(results.OfType<OkObjectResult>());
+            Assert.Single(results.OfType<ObjectResult>().Where(r => r.StatusCode == 410));
+
+            await using var verify = CreateContext(connectionString);
+            var response = Assert.Single(await verify.SurveyResponses.AsNoTracking().ToListAsync());
+            Assert.Equal((byte)5, response.Rating);
+            Assert.Null(response.PatientId);
+            Assert.Null(response.DoctorId);
+            Assert.Null(response.VisitId);
+            Assert.NotNull((await verify.SurveyInvitations.AsNoTracking().SingleAsync()).UsedAt);
+            var replay = await Controller(verify, config).Submit(request, default);
+            Assert.Equal(410, Assert.IsType<ObjectResult>(replay).StatusCode);
+            Assert.Equal(1, await verify.SurveyResponses.CountAsync());
         });
     }
 

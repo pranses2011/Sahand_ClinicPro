@@ -21,8 +21,28 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 /// </summary>
 public class SurveyApiFactory : InMemoryApiFactory
 {
+    private readonly Lazy<Task<string>> _adminToken;
+
+    /// <summary>یک نشست واقعی برای مجموعهٔ تست، مانند استفادهٔ معمول کلاینت.</summary>
+    public SurveyApiFactory() => _adminToken = new Lazy<Task<string>>(AuthenticateAsync);
+
     /// <summary>نام دیتابیس درون‌حافظه‌ای</summary>
     protected override string DatabaseName => "SurveyFlowDb";
+
+    /// <summary>توکن ورود مشترک؛ سیاست محدودسازی واقعی API تغییر نمی‌کند.</summary>
+    public Task<string> AdminTokenAsync() => _adminToken.Value;
+
+    private async Task<string> AuthenticateAsync()
+    {
+        using var client = CreateClient();
+        using var login = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { usernameOrEmail = "admin", password = "Admin@123" });
+        login.StatusCode.Should().Be(HttpStatusCode.OK,
+            because: $"بذر ادمین باید امکان ورود دهد — بدنه: {await login.Content.ReadAsStringAsync()}");
+        using var packet = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        return packet.RootElement.GetProperty("data").GetProperty("accessToken").GetString()
+            ?? throw new InvalidOperationException("توکن ادمین در پاسخ ورود وجود ندارد");
+    }
 }
 
 /// <summary>مجموعه تست جریان نظرسنجی</summary>
@@ -40,6 +60,7 @@ public class SurveyCollectionFixture : ICollectionFixture<SurveyApiFactory>
 public class SurveyFlowTests
 {
     private readonly SurveyApiFactory _factory;
+    private static int _seedSequence;
     private static readonly JsonSerializerOptions Json = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -410,13 +431,9 @@ public class SurveyFlowTests
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>
     private async Task<HttpClient> LoginAsync()
     {
+        var token = await _factory.AdminTokenAsync();
         var client = _factory.CreateClient();
-        var login = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { usernameOrEmail = "admin", password = "Admin@123" });
-        login.StatusCode.Should().Be(HttpStatusCode.OK, because: $"بذر ادمین پیش‌فرض فعال است — بدنه: {await login.Content.ReadAsStringAsync()}");
-        var packet = await ReadAsync<LoginPacket>(login);
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", packet.Data.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }
 
@@ -427,8 +444,9 @@ public class SurveyFlowTests
         var client = await LoginAsync();
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var sequence = Interlocked.Increment(ref _seedSequence);
 
-        // دو پزشک مستقل با پرسنل مجزا
+        // دو پزشک مستقل با پرسنل مجزا و شناسه‌های غیرتکراری در کارخانه مشترک
         var ids = new long[2];
         for (var i = 0; i < 2; i++)
         {
@@ -436,7 +454,7 @@ public class SurveyFlowTests
             {
                 FirstName = "پزشک",
                 LastName = $"تست‌{i + 1}",
-                NationalCode = $"00999000{i:00}1",
+                NationalCode = $"7{sequence * 2 + i:000000000}",
                 Mobile = "09120000001",
                 IsActive = true
             };
@@ -451,8 +469,8 @@ public class SurveyFlowTests
         // بیمار موبایل‌دار — شماره یکتا برای ادعای صف پیامک
         var patient = new Patient
         {
-            MedicalRecordNo = "MRN-SURVEY-01",
-            NationalCode = "0055500011",
+            MedicalRecordNo = $"MRN-SURVEY-{sequence:000000}",
+            NationalCode = $"8{sequence:000000000}",
             FirstName = "سارا",
             LastName = "آزمایشی",
             Mobile = "09129990001",
@@ -573,10 +591,6 @@ public class SurveyFlowTests
     }
 
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);
-
-    private sealed record LoginPacket(bool IsSuccess, LoginData Data);
-
-    private sealed record LoginData(string AccessToken);
 
     private sealed record ListPacket<T>(bool IsSuccess, List<T> Data);
 

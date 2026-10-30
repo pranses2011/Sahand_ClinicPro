@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sahand.ClinicPro.API.Controllers;
 using Sahand.ClinicPro.Domain.Entities.Reporting;
@@ -22,11 +23,13 @@ public class PrintTemplateReceiptTests
         using var factory = new InMemoryApiFactory();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        var original = new PrintTemplate { TemplateName = "قبض اصلی", Type = PrintTemplateType.ReceptionReceipt,
-            HtmlBody = BuiltInPrintTemplates.ReceptionReceiptMarker, IsActive = true, IsDefault = true };
+        // راه‌اندازی کارخانه، قبض اصلی را واقعاً بذر می‌کند؛ یک پیش‌فرض
+        // تکراری نسازید، چون InMemory برخلاف SQL Server ایندکس یکتا ندارد.
+        var original = await db.PrintTemplates.SingleAsync(t => t.Type == PrintTemplateType.ReceptionReceipt
+            && t.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker);
         var html = new PrintTemplate { TemplateName = "قبض سفارشی", Type = PrintTemplateType.ReceptionReceipt,
             HtmlBody = "<div>بیمار {{patient_name}}</div>{{items_html}}", IsActive = true, IsDefault = false };
-        db.PrintTemplates.AddRange(original, html);
+        db.PrintTemplates.Add(html);
         await db.SaveChangesAsync();
         var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
         {
@@ -46,7 +49,7 @@ public class PrintTemplateReceiptTests
         previewData.GetProperty("html").GetString().Should().BeEmpty();
         var first = (OkObjectResult)await controller.Render("ReceptionReceipt", request, auth);
         JsonSerializer.SerializeToElement(first.Value).GetProperty("Data").GetProperty("useOriginalReceptionReceipt").GetBoolean().Should().BeTrue();
-        await controller.SetDefault(html.Id);
+        (await controller.SetDefault(html.Id)).Should().BeOfType<OkObjectResult>();
         var customPreview = (OkObjectResult)await controller.Preview(html.Id);
         var customPreviewHtml = JsonSerializer.SerializeToElement(customPreview.Value).GetProperty("Data").GetProperty("html").GetString();
         customPreviewHtml.Should().NotContain("__PRINT_DATE__");
@@ -94,13 +97,15 @@ public class PrintTemplateReceiptTests
         using var factory = new InMemoryApiFactory();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "نوبت", Type = PrintTemplateType.AppointmentTicket,
-            HtmlBody = "<div>{{patient_name}} {{tracking_code}} {{queue_number}}</div>", IsActive = true, IsDefault = true });
+        var template = new PrintTemplate { TemplateName = "نوبت", Type = PrintTemplateType.AppointmentTicket,
+            HtmlBody = "<div>{{patient_name}} {{tracking_code}} {{queue_number}}</div>", IsActive = true, IsDefault = false };
+        db.PrintTemplates.Add(template);
         await db.SaveChangesAsync();
         var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
+        (await controller.SetDefault(template.Id)).Should().BeOfType<OkObjectResult>();
         var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
         var request = new RenderRequest(new Dictionary<string, object?> {
             ["patient_name"] = "بیمار <script>", ["tracking_code"] = "APT-12", ["queue_number"] = "7" });
@@ -109,7 +114,9 @@ public class PrintTemplateReceiptTests
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.create") }, "test"));
         (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
         var result = (OkObjectResult)await controller.Render("AppointmentTicket", request, auth);
-        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        var data = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data");
+        data.GetProperty("templateId").GetInt64().Should().Be(template.Id);
+        var html = data.GetProperty("html").GetString();
         html.Should().Contain("APT-12").And.Contain("7").And.Contain("&lt;script&gt;").And.NotContain("<script>");
     }
 
@@ -119,20 +126,24 @@ public class PrintTemplateReceiptTests
         using var factory = new InMemoryApiFactory();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "جواب", Type = PrintTemplateType.LabResult,
-            HtmlBody = "<div>{{patient_name}}</div>{{results_html}}", IsActive = true, IsDefault = true });
+        var template = new PrintTemplate { TemplateName = "جواب", Type = PrintTemplateType.LabResult,
+            HtmlBody = "<div>{{patient_name}}</div>{{results_html}}", IsActive = true, IsDefault = false };
+        db.PrintTemplates.Add(template);
         await db.SaveChangesAsync();
         var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
         var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        (await controller.SetDefault(template.Id)).Should().BeOfType<OkObjectResult>();
         var request = new RenderRequest(new Dictionary<string, object?> {
             ["patient_name"] = "بیمار <script>", ["results_html"] = "<table><tr><td>12.55</td></tr></table><img src=x onerror=alert(1)>" });
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "lab.view") }, "test"));
         (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
         var result = (OkObjectResult)await controller.Render("LabResult", request, auth);
-        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        var data = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data");
+        data.GetProperty("templateId").GetInt64().Should().Be(template.Id);
+        var html = data.GetProperty("html").GetString();
         html.Should().Contain("12.55").And.Contain("&lt;script&gt;").And.NotContain("<img").And.NotContain("<script>");
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
         (await controller.Render("LabResult", request, auth)).Should().BeOfType<ForbidResult>();
@@ -143,18 +154,22 @@ public class PrintTemplateReceiptTests
         using var factory = new InMemoryApiFactory();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "فاکتور", Type = PrintTemplateType.Invoice,
-            HtmlBody = "<p>{{patient_name}} {{paid}} {{remaining}}</p>{{items_html}}", IsActive = true, IsDefault = true });
+        var template = new PrintTemplate { TemplateName = "فاکتور", Type = PrintTemplateType.Invoice,
+            HtmlBody = "<p>{{patient_name}} {{paid}} {{remaining}}</p>{{items_html}}", IsActive = true, IsDefault = false };
+        db.PrintTemplates.Add(template);
         await db.SaveChangesAsync();
         var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
         { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
         var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        (await controller.SetDefault(template.Id)).Should().BeOfType<OkObjectResult>();
         var request = new RenderRequest(new Dictionary<string, object?> { ["patient_name"] = "<script>bad</script>",
             ["paid"] = "20", ["remaining"] = "55", ["items_html"] = "<table><tr><td>خدمت</td></tr></table><img src=x>" });
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "invoices.view") }, "test"));
         (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
         var result = (OkObjectResult)await controller.Render("Invoice", request, auth);
-        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        var data = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data");
+        data.GetProperty("templateId").GetInt64().Should().Be(template.Id);
+        var html = data.GetProperty("html").GetString();
         html.Should().Contain("&lt;script&gt;").And.Contain("20").And.Contain("55").And.NotContain("<script>").And.NotContain("<img");
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
         (await controller.Render("Invoice", request, auth)).Should().BeOfType<ForbidResult>();
