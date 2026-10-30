@@ -744,7 +744,7 @@ public partial class App : System.Windows.Application
                 // می‌دهیم؛ بازچینی پنجره کوچک می‌تواند رندر را برش دهد.
                 view.Width = layoutWidth; view.Height = layoutHeight;
                 if (viewModel is FreeTemplateEditorWindow editor && editor.FindName("DesignerWorkspace") is FrameworkElement workspace)
-                    workspace.Margin = new Thickness(63, 12, 78, 12);
+                    workspace.Margin = new Thickness(78, 12, 63, 12);
                 view.Measure(new Size(layoutWidth, layoutHeight));
                 view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
                 if (Math.Abs(view.RenderSize.Width - layoutWidth) > 0.1 || Math.Abs(view.RenderSize.Height - layoutHeight) > 0.1)
