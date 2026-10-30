@@ -49,6 +49,17 @@ public static class FreeTemplateDesign
     private static string Safe(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
+    /// <summary>محاسبه اندازه عنصر در کشیدن گوشه، محدود به محدوده بوم.</summary>
+    public static (double Width, double Height) ResizeWithinCanvas(FreeTemplateDocument document, FreeTemplateElement element, double width, double height)
+    {
+        if (!double.IsFinite(width) || !double.IsFinite(height) || !double.IsFinite(element.X) || !double.IsFinite(element.Y) ||
+            !double.IsFinite(document.Width) || !double.IsFinite(document.Height) || element.X < 0 || element.Y < 0 ||
+            document.Width - element.X < 5 || document.Height - element.Y < 5)
+            throw new ArgumentException("محدوده تغییر اندازه معتبر نیست.");
+        return (Math.Round(Math.Clamp(width, 5, document.Width - element.X), 2),
+                Math.Round(Math.Clamp(height, 5, document.Height - element.Y), 2));
+    }
+
     /// <summary>عرض تقریبی قابل استفاده بدنه با کسر حاشیه ثابت قالب سرور؛ تضمین چاپگر نیست.</summary>
     public static double AvailableBodyWidth(string paper, string orientation = "Portrait", int? sheetPadding = null)
     {

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -97,6 +98,34 @@ public partial class FreeTemplateEditorWindow : Window
             Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
             border.MouseLeftButtonDown += ItemDown; border.MouseMove += ItemMove; border.MouseLeftButtonUp += ItemUp;
             PageCanvas.Children.Add(border);
+            if (ReferenceEquals(item, _selected))
+            {
+                var handle = new Thumb { Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
+                    BorderThickness = new Thickness(1), Cursor = Cursors.SizeNWSE, ToolTip = "برای تغییر اندازه گوشه را بکشید" };
+                var allowed = false;
+                Point start = default;
+                double initialWidth = 0, initialHeight = 0;
+                void PlaceHandle() { Canvas.SetLeft(handle, item.X + item.Width - handle.Width); Canvas.SetTop(handle, item.Y + item.Height - handle.Height); }
+                handle.DragStarted += (_, _) =>
+                {
+                    allowed = CanDiscardPending();
+                    if (!allowed) return;
+                    Select(item);
+                    CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+                    SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+                    start = Mouse.GetPosition(PageCanvas); initialWidth = item.Width; initialHeight = item.Height;
+                };
+                handle.DragDelta += (_, _) =>
+                {
+                    if (!allowed) return;
+                    var point = Mouse.GetPosition(PageCanvas);
+                    var size = FreeTemplateDesign.ResizeWithinCanvas(_document, item, initialWidth + point.X - start.X, initialHeight + point.Y - start.Y);
+                    item.Width = size.Width; item.Height = size.Height; border.Width = size.Width; border.Height = size.Height;
+                    WidthBox.Text = Number(size.Width); HeightBox.Text = Number(size.Height); PlaceHandle();
+                };
+                handle.DragCompleted += (_, _) => { if (allowed) RefreshCanvas(); };
+                PlaceHandle(); PageCanvas.Children.Add(handle);
+            }
         }
     }
     private void Select(FreeTemplateElement item)

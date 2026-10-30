@@ -7,6 +7,18 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 
 public class FreeTemplateDesignTests
 {
+    [Fact]
+    public void Resize_stays_inside_canvas_and_preserves_minimum_size()
+    {
+        var doc = new FreeTemplateDocument { Width = 600, Height = 800 };
+        var item = new FreeTemplateElement { X = 100, Y = 200 };
+        FreeTemplateDesign.ResizeWithinCanvas(doc, item, 700, 900).Should().Be((500, 600));
+        FreeTemplateDesign.ResizeWithinCanvas(doc, item, -20, 0).Should().Be((5, 5));
+        FreeTemplateDesign.ResizeWithinCanvas(doc, item, 120.126, 43.124).Should().Be((120.13, 43.12));
+        Action invalid = () => FreeTemplateDesign.ResizeWithinCanvas(doc, item, double.NaN, 20);
+        invalid.Should().Throw<ArgumentException>();
+    }
+
     [Theory]
     [InlineData("A5", 507)]
     [InlineData("Legal", 764)]

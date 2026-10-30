@@ -93,7 +93,7 @@
                     <TextBlock Text="اندازه فونت و رنگ #RRGGBB" FontSize="11"/><UniformGrid Columns="2" Margin="0,4,0,8"><TextBox x:Name="FontBox"/><TextBox x:Name="ColorBox"/></UniformGrid>
                     <CheckBox x:Name="BoldBox" Content="متن ضخیم" Margin="0,4,0,6"/>
                     <TextBlock Text="چیدمان متن"/><ComboBox x:Name="AlignmentBox" SelectedIndex="0" Margin="0,4,0,8"><ComboBoxItem Content="راست (پیش‌فرض)"/><ComboBoxItem Content="وسط"/><ComboBoxItem Content="چپ"/></ComboBox>
-                    <TextBlock Text="برای جابه‌جایی، عنصر را با ماوس بکشید. اندازه را از ویژگی‌ها تنظیم کنید." TextWrapping="Wrap" Foreground="#64768A" FontSize="11" Margin="0,12,0,0"/>
+                    <TextBlock Text="برای جابه‌جایی، عنصر و برای تغییر اندازه، گوشه آن را بکشید." TextWrapping="Wrap" Foreground="#64768A" FontSize="11" Margin="0,12,0,0"/>
                 </StackPanel></ScrollViewer></DockPanel>
             </Border>
         </Grid>
