@@ -17,6 +17,7 @@ public partial class HtmlPrintWindow : Window
     {
         InitializeComponent();
         _html = html;
+        CanvasWarning.Visibility = html.Contains("<!--clinicpro-canvas-v1:", StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
         Title = title;
         TitleText.Text = title;
         Browser.NavigateToString(html);
