@@ -42,6 +42,20 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Text_style_roundtrips_and_rejects_arbitrary_css()
+    {
+        var doc = new FreeTemplateDocument { Elements = new() { new() { Kind = "text", Text = "عنوان", Bold = true, Alignment = "center" } } };
+        var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        html.Should().Contain("font-weight:bold").And.Contain("text-align:center");
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
+        loaded!.Elements[0].Bold.Should().BeTrue();
+        loaded.Elements[0].Alignment.Should().Be("center");
+        doc.Elements[0].Alignment = "left;background:url(https://example.com)";
+        Action invalid = () => FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        invalid.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Embedded_image_roundtrips_and_never_accepts_remote_or_unlimited_content()
     {
         const string png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/aXQAAAAASUVORK5CYII=";
@@ -79,7 +93,7 @@ public class FreeTemplateDesignTests
         var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
         var metadata = html["<!--clinicpro-canvas-v1:".Length..html.IndexOf("-->", StringComparison.Ordinal)];
         var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(metadata));
-        json.Should().NotContain("SheetPadding").And.NotContain("ImageData");
+        json.Should().NotContain("SheetPadding").And.NotContain("ImageData").And.NotContain("Bold").And.NotContain("Alignment");
         html.Should().NotContain(".sheet{padding:");
         FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out _).Should().BeTrue();
     }
