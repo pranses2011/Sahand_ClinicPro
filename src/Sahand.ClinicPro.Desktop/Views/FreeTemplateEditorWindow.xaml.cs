@@ -27,7 +27,7 @@ public partial class FreeTemplateEditorWindow : Window
     private readonly IReadOnlyDictionary<string, object?> _sampleData;
     private readonly string? _accent, _fontFamily;
     private readonly int _fontSize;
-    private readonly bool _showLogo;
+    private readonly bool _showLogo, _screenshotMode;
     private bool _applied;
     private FreeTemplateElement? _selected;
     private Point _toolStart, _dragStart;
@@ -37,9 +37,9 @@ public partial class FreeTemplateEditorWindow : Window
     public string? ResultOrientation { get; private set; }
 
     public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation,
-        string templateType = "Invoice", string? accent = null, int fontSize = 13, bool showLogo = false, string? fontFamily = null)
+        string templateType = "Invoice", string? accent = null, int fontSize = 13, bool showLogo = false, string? fontFamily = null, bool screenshotMode = false)
     {
-        _templateType = templateType; _accent = accent; _fontSize = fontSize; _showLogo = showLogo; _fontFamily = fontFamily;
+        _templateType = templateType; _accent = accent; _fontSize = fontSize; _showLogo = showLogo; _fontFamily = fontFamily; _screenshotMode = screenshotMode;
         _sampleData = PrintTemplateRenderer.SampleData(templateType);
         _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
         _originalDocument = JsonSerializer.Serialize(_document);
@@ -100,9 +100,9 @@ public partial class FreeTemplateEditorWindow : Window
         catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or NotSupportedException or InvalidOperationException)
         { return new TextBlock { Text = "تصویر قابل نمایش نیست", Foreground = Brushes.DarkRed, TextWrapping = TextWrapping.Wrap }; }
     }
-    private static UIElement SampleTable(string[][] rows, FreeTemplateElement item, Brush ink)
+    private UIElement SampleTable(string[][] rows, FreeTemplateElement item, Brush ink)
     {
-        var panel = new StackPanel { FlowDirection = FlowDirection.RightToLeft, ToolTip = "نمایش تقریبی جدول نمونه؛ خروجی واقعی را در پیش‌نمایش بررسی کنید" };
+        var panel = new StackPanel { FlowDirection = FlowDirection.RightToLeft, ToolTip = _screenshotMode ? null : "نمایش تقریبی جدول نمونه؛ خروجی واقعی را در پیش‌نمایش بررسی کنید" };
         if (!string.IsNullOrWhiteSpace(item.Text)) panel.Children.Add(new TextBlock { Text = item.Text, FontSize = item.FontSize, FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null, Foreground = ink, TextWrapping = TextWrapping.Wrap });
         var grid = new Grid();
         var columns = rows.Max(x => x.Length);

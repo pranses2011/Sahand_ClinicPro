@@ -610,7 +610,7 @@ public partial class App : System.Windows.Application
                         new() { Kind = "variable", Key = "invoice_code", Text = "شماره:", X = 40, Y = 130, Width = 230, Height = 40 },
                         new() { Kind = "variable", Key = "items_html", Text = "اقلام:", X = 30, Y = 210, Width = 540, Height = 350 }
                     } };
-                    var designer = new FreeTemplateEditorWindow(sample, vars, "A4", "Portrait");
+                    var designer = new FreeTemplateEditorWindow(sample, vars, "A4", "Portrait", screenshotMode: true);
                     var content = designer.Content;
                     designer.Content = null;
                     view = new UserControl { Content = content };
