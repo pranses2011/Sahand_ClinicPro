@@ -56,8 +56,12 @@ public static class FreeTemplateDesign
             !double.IsFinite(document.Width) || !double.IsFinite(document.Height) || element.X < 0 || element.Y < 0 ||
             document.Width - element.X < 5 || document.Height - element.Y < 5)
             throw new ArgumentException("محدوده تغییر اندازه معتبر نیست.");
-        return (Math.Round(Math.Clamp(width, 5, document.Width - element.X), 2),
-                Math.Round(Math.Clamp(height, 5, document.Height - element.Y), 2));
+        // گرد کردن پس از Clamp می‌تواند در ابعاد اعشاری، لبه را چند
+        // هزارم پیکسل از بوم خارج کند. سقف را به سمت داخل گرد می‌کنیم.
+        var maxWidth = Math.Floor((document.Width - element.X) * 100) / 100;
+        var maxHeight = Math.Floor((document.Height - element.Y) * 100) / 100;
+        return (Math.Clamp(Math.Round(width, 2), 5, maxWidth),
+                Math.Clamp(Math.Round(height, 2), 5, maxHeight));
     }
 
     /// <summary>عرض تقریبی قابل استفاده بدنه با کسر حاشیه ثابت قالب سرور؛ تضمین چاپگر نیست.</summary>

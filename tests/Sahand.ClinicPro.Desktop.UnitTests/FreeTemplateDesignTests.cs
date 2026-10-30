@@ -15,6 +15,12 @@ public class FreeTemplateDesignTests
         FreeTemplateDesign.ResizeWithinCanvas(doc, item, 700, 900).Should().Be((500, 600));
         FreeTemplateDesign.ResizeWithinCanvas(doc, item, -20, 0).Should().Be((5, 5));
         FreeTemplateDesign.ResizeWithinCanvas(doc, item, 120.126, 43.124).Should().Be((120.13, 43.12));
+        doc.Width = 600.001; doc.Height = 800.001;
+        item.X = 100.004; item.Y = 200.004;
+        var bounded = FreeTemplateDesign.ResizeWithinCanvas(doc, item, 900, 900);
+        bounded.Should().Be((499.99, 599.99));
+        (item.X + bounded.Width).Should().BeLessThanOrEqualTo(doc.Width);
+        (item.Y + bounded.Height).Should().BeLessThanOrEqualTo(doc.Height);
         Action invalid = () => FreeTemplateDesign.ResizeWithinCanvas(doc, item, double.NaN, 20);
         invalid.Should().Throw<ArgumentException>();
     }
