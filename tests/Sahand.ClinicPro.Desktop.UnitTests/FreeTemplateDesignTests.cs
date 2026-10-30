@@ -42,6 +42,32 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Optional_sheet_padding_roundtrips_and_changes_available_width()
+    {
+        var doc = new FreeTemplateDocument { Width = 500, Height = 600, SheetPadding = 12, Elements = new() { new() { Kind = "text", Text = "نمونه" } } };
+        var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        html.Should().Contain(".sheet{padding:12px !important;}");
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
+        loaded!.SheetPadding.Should().Be(12);
+        FreeTemplateDesign.AvailableBodyWidth("A5", "Portrait", 12).Should().Be(535);
+        doc.SheetPadding = 101;
+        Action invalid = () => FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        invalid.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Default_padding_does_not_change_legacy_canvas_metadata()
+    {
+        var doc = new FreeTemplateDocument { Elements = new() { new() { Kind = "text" } } };
+        var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        var metadata = html["<!--clinicpro-canvas-v1:".Length..html.IndexOf("-->", StringComparison.Ordinal)];
+        var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(metadata));
+        json.Should().NotContain("SheetPadding");
+        html.Should().NotContain(".sheet{padding:");
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out _).Should().BeTrue();
+    }
+
+    [Fact]
     public void Draft_preview_is_watermarked_and_rejects_modified_html()
     {
         var doc = new FreeTemplateDocument { Elements = new() { new() { Kind = "variable", Key = "patient_name", Text = "نام" } } };
