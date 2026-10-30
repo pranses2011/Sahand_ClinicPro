@@ -197,4 +197,42 @@ public class Cycle46ConsumablesFlowTests
         context.PharmacyTransactions.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Invalid_or_short_later_item_leaves_no_pending_inventory_or_transactions()
+    {
+        var (uow, db) = CreateUnitOfWork();
+        var first = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+            { GenericName = "first", ItemKind = MedicationItemKind.Consumable, IsActive = true };
+        var drug = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+            { GenericName = "drug", ItemKind = MedicationItemKind.Drug, IsActive = true };
+        var inactive = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+            { GenericName = "inactive", ItemKind = MedicationItemKind.Consumable, IsActive = false };
+        var shortage = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+            { GenericName = "shortage", ItemKind = MedicationItemKind.Consumable, IsActive = true };
+        var reception = new Reception { PatientId = 1, ReceptionNumber = "SAFE", Status = ReceptionStatus.Admitted };
+        db.AddRange(first, drug, inactive, shortage, reception); await db.SaveChangesAsync();
+        var stock = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = first.Id, Quantity = 5, SellPrice = 100 };
+        var shortStock = new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = shortage.Id, Quantity = 1, SellPrice = 100 };
+        db.AddRange(stock, shortStock); await db.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler>.Instance);
+        foreach (var secondId in new[] { drug.Id, inactive.Id, shortage.Id })
+        {
+            var failure = await handler.Handle(new(reception.Id, new() { new(first.Id, 2), new(secondId, 2) }), default);
+            failure.IsFailure.Should().BeTrue();
+            stock.Quantity.Should().Be(5);
+            db.ChangeTracker.Entries<Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyTransaction>().Should().BeEmpty();
+            await db.SaveChangesAsync();
+            stock.Quantity.Should().Be(5);
+        }
+        foreach (var qty in new[] { 0.001m, 100000000m, 0m })
+        {
+            var failure = await handler.Handle(new(reception.Id, new() { new(first.Id, qty) }), default);
+            failure.Error.Code.Should().Be("PHARMACY.CONSUME.QTY");
+        }
+        var valid = await handler.Handle(new(reception.Id, new() { new(first.Id, 1.25m) }), default);
+        valid.IsSuccess.Should().BeTrue();
+        stock.Quantity.Should().Be(3.75m);
+    }
+
 }
