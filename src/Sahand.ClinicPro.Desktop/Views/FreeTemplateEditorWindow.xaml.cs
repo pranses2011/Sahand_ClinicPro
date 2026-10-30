@@ -178,7 +178,10 @@ public partial class FreeTemplateEditorWindow : Window
             if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
             if (_document.Width > availableWidth)
                 throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
-            ResultHtml = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); ResultPaperSize = paper; ResultOrientation = orientation; DialogResult = true;
+            var html = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray());
+            if (_document.Elements.Any(x => x.Kind == "variable") && AppDialog.Confirm("بررسی محتوای چاپ",
+                "کادرهای بوم اندازه ثابت دارند و اطلاعات طولانی یا ردیف‌های جدول ممکن است بریده شوند. پیش از استفاده، تمام داده‌ها و صفحه‌ها را با داده واقعی و چاپ آزمایشی بررسی کنید. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
+            ResultHtml = html; ResultPaperSize = paper; ResultOrientation = orientation; DialogResult = true;
         }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
     }

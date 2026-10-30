@@ -31,6 +31,7 @@
                     <TextBlock Text="حاشیه داخلی یکسان برگه (پیکسل؛ خالی = پیش‌فرض)" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0"/>
                     <TextBox x:Name="SheetPaddingBox" Margin="0,4,0,5" ToolTip="۰ تا ۱۰۰ پیکسل؛ مستقل از حاشیه چاپگر"/>
                     <Button Content="اعمال ابعاد و حاشیه" Click="ResizeCanvas_Click"/>
+                    <TextBlock Text="هشدار: متن یا جدول طولانی ممکن است در کادر ثابت بریده شود. داده واقعی و تمام صفحات باید پیش از استفاده بررسی شوند." TextWrapping="Wrap" FontWeight="Bold" Foreground="#B3261E" Margin="0,12,0,0"/>
                     <TextBlock Text="حاشیه داخلی با حاشیه فیزیکی چاپگر متفاوت است. اندازه، سربرگ، داده‌های بلند و صفحه‌بندی را در پیش‌نمایش و چاپ آزمایشی بررسی کنید." TextWrapping="Wrap" FontSize="11" Foreground="#536C82" Margin="0,14,0,0"/>
                 </StackPanel></ScrollViewer>
             </Border>
