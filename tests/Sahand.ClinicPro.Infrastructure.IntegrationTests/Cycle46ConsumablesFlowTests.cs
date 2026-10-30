@@ -235,4 +235,25 @@ public class Cycle46ConsumablesFlowTests
         stock.Quantity.Should().Be(3.75m);
     }
 
+    [Fact]
+    public async Task Different_batch_prices_return_real_whole_unit_prices_without_weighted_fraction()
+    {
+        var (uow, db) = CreateUnitOfWork();
+        var item = new Sahand.ClinicPro.Domain.Entities.Clinical.Medication
+            { GenericName = "prices", ItemKind = MedicationItemKind.Consumable, IsActive = true };
+        var reception = new Reception { PatientId = 1, ReceptionNumber = "PRICES", Status = ReceptionStatus.Admitted };
+        db.AddRange(item, reception); await db.SaveChangesAsync();
+        db.AddRange(new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = item.Id, Quantity = 1, SellPrice = 10 },
+                    new Sahand.ClinicPro.Domain.Entities.Pharmacy.PharmacyInventory { MedicationId = item.Id, Quantity = 2, SellPrice = 11 });
+        await db.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler(uow,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Sahand.ClinicPro.Application.Features.Pharmacy.ConsumeStockCommandHandler>.Instance);
+        var result = await handler.Handle(new(reception.Id, new() { new(item.Id, 3) }), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.Items.Should().Contain(x => x.MedicationId == item.Id && x.Quantity == 1 && x.UnitPrice == 10 && x.TotalPrice == 10);
+        result.Value.Items.Should().Contain(x => x.MedicationId == item.Id && x.Quantity == 2 && x.UnitPrice == 11 && x.TotalPrice == 22);
+        result.Value.TotalCost.Should().Be(32);
+    }
+
 }
