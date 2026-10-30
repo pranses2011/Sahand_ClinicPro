@@ -119,7 +119,8 @@ public static class PrintTemplateRenderer
         // (سازگار با رفتار پیشین: مقادیر مجهول همچنان به A5 می‌روند) ═══
         var landscape = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? LandscapePaper(paper) : null;
         var width = landscape is { } spec ? $"{spec.WidthPx}px" : ResolvePaperWidthPx(paper);
-        var pageRule = landscape is { } page ? $"@page {{ size: {page.CssSize}; }}" : "";
+        var pageSize = landscape is { } page ? page.CssSize : string.Equals(orientation, "Portrait", StringComparison.OrdinalIgnoreCase) ? PortraitPageSize(paper) : null;
+        var pageRule = pageSize is not null ? $"@page {{ size: {pageSize}; }}" : "";
 
         var sb = new StringBuilder(@"<!DOCTYPE html>
 <html lang=""fa"" dir=""rtl"">
@@ -214,6 +215,23 @@ public static class PrintTemplateRenderer
                 }
                 return "559px"; // نام آشنا → A5 (رفتار سازگار با قبل)
         }
+    }
+
+    /// <summary>درخواست اندازه صفحه عمودی برای مرورگر؛ کاغذ پیوسته را درایور تعیین می‌کند.</summary>
+    public static string? PortraitPageSize(string? paper)
+    {
+        var key = paper?.Trim().ToUpperInvariant();
+        var standard = key switch
+        {
+            "A3" => "A3 portrait", "A4" => "A4 portrait", "A5" => "A5 portrait", "A6" => "A6 portrait",
+            "B5" => "B5 portrait", "LETTER" => "letter portrait", "LEGAL" => "legal portrait", _ => null
+        };
+        if (standard is not null) return standard;
+        if (key is null) return null;
+        var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]\s*(\d{1,4})\s*(MM)?$", RegexOptions.CultureInvariant);
+        if (!match.Success || !int.TryParse(match.Groups[1].Value, out var w) || !int.TryParse(match.Groups[2].Value, out var h) ||
+            w is < 20 or > 1000 || h is < 20 or > 1000) return null;
+        return $"{w}mm {h}mm";
     }
 
     /// <summary>مشخصات کاغذ افقی محدود به اندازه‌های شناخته‌شده؛ فیش پیوسته جهت ثابت ندارد.</summary>

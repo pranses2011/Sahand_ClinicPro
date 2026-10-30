@@ -64,6 +64,17 @@ public class PrintTemplateRendererTests
         html.Should().Contain("بدنه");
     }
 
+    [Theory]
+    [InlineData("A5", "A5 portrait")]
+    [InlineData("Custom:100x180", "100mm 180mm")]
+    public void Portrait_requests_safe_page_size(string paper, string size)
+    {
+        var html = PrintTemplateRenderer.WrapDocument("body", "clinic", null, null, null, null, 13, null, false, paper);
+        html.Should().Contain("@page { size: " + size + "; }");
+        PrintTemplateRenderer.PortraitPageSize("Thermal80").Should().BeNull();
+        PrintTemplateRenderer.PortraitPageSize("Custom:1x180").Should().BeNull();
+    }
+
     [Fact]
     public void Legal_portrait_has_eight_and_half_inch_width()
     {
