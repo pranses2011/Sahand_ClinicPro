@@ -76,6 +76,27 @@ public class AppointmentBookingSafetyTests
     }
 
     [Fact]
+    public async Task Pending_waitlist_submission_locks_form_and_reports_captured_patient()
+    {
+        var completion = new TaskCompletionSource<bool>();
+        var api = new FakeApiClient { PendingBoolPostResult = completion.Task };
+        var snackbar = new FakeSnackbar();
+        var vm = new AppointmentsViewModel(api, snackbar, new Navigation());
+        var patient = new QuickPatient(1, "بیمار اول", "123", "0912", null, null, null);
+        vm.SelectWaitlistPatientCommand.Execute(patient);
+        var post = vm.AddToWaitlistCommand.ExecuteAsync(null);
+        vm.IsAddingToWaitlist.Should().BeTrue();
+        vm.CanEditWaitlist.Should().BeFalse();
+        vm.WaitlistPatientSearch = "بیمار دوم"; // تغییر برنامه‌ای؛ ورودی واقعی در UI قفل است
+        completion.SetResult(true);
+        await post;
+        vm.CanEditWaitlist.Should().BeTrue();
+        vm.WaitlistPatientSearch.Should().Be("بیمار دوم");
+        snackbar.Messages.Should().Contain(m => m.Message.Contains("بیمار اول") && m.Message.Contains("ثبت شد"));
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "appointments/waitlist").Should().Be(1);
+    }
+
+    [Fact]
     public async Task Pending_booking_locks_form_and_connection_failure_preserves_inputs()
     {
         var completion = new TaskCompletionSource<object?>();

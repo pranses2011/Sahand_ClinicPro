@@ -1465,7 +1465,8 @@ public partial class AppointmentsViewModel : ViewModelBase
                 WaitlistPatientResults.Clear();
                 WaitlistNotes = null;
             }
-            await LoadWaitlistAsync();
+            try { await LoadWaitlistAsync(); }
+            catch (Exception) { _snackbar.Warning("ثبت لیست انتظار انجام شد، اما تازه‌سازی فهرست ناموفق بود؛ دوباره ثبت نکنید."); }
         }
         else _snackbar.Error((_api.LastError ?? "پاسخ ثبت در لیست انتظار دریافت نشد") + "؛ پیش از تلاش مجدد فهرست انتظار را بررسی کنید.");
         }
