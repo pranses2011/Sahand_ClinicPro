@@ -56,6 +56,26 @@ public class AppointmentBookingSafetyTests
     }
 
     [Fact]
+    public async Task Waitlist_search_change_clears_patient_and_rejects_late_results()
+    {
+        var api = new FakeApiClient();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["patients/search?term=old"] = pending.Task;
+        var vm = new AppointmentsViewModel(api, new FakeSnackbar(), new Navigation());
+        vm.SelectWaitlistPatientCommand.Execute(new QuickPatient(1, "بیمار اول", "123", "0912", null, null, null));
+        vm.WaitlistPatient.Should().NotBeNull();
+        vm.WaitlistPatientSearch = "old";
+        vm.WaitlistPatient.Should().BeNull();
+        var search = vm.WaitlistPatientSearchCommand.ExecuteAsync(null);
+        vm.WaitlistPatientSearch = "new";
+        pending.SetResult(new { data = new[] { new { id = 1, firstName = "نام", lastName = "قبلی", nationalCode = "", mobile = "" } } });
+        await search;
+        vm.WaitlistPatientResults.Should().BeEmpty();
+        await vm.AddToWaitlistCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "appointments/waitlist");
+    }
+
+    [Fact]
     public async Task Pending_booking_locks_form_and_connection_failure_preserves_inputs()
     {
         var completion = new TaskCompletionSource<object?>();

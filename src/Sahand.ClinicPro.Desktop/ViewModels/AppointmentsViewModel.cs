@@ -190,6 +190,14 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>متن جستجوی بیمار لیست انتظار</summary>
     [ObservableProperty]
     private string _waitlistPatientSearch = string.Empty;
+    private int _waitlistSearchVersion;
+
+    partial void OnWaitlistPatientSearchChanged(string value)
+    {
+        _waitlistSearchVersion++;
+        WaitlistPatient = null;
+        WaitlistPatientResults.Clear();
+    }
 
     /// <summary>نتایج جستجوی بیمار لیست انتظار</summary>
     [ObservableProperty]
@@ -1398,8 +1406,11 @@ public partial class AppointmentsViewModel : ViewModelBase
             WaitlistPatientResults.Clear();
             return;
         }
+        var version = ++_waitlistSearchVersion;
+        var term = WaitlistPatientSearch.Trim();
         var response = await _api.GetAsync<PatientSearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(WaitlistPatientSearch.Trim())}");
+            $"patients/search?term={Uri.EscapeDataString(term)}");
+        if (version != _waitlistSearchVersion) return;
         WaitlistPatientResults.Clear();
         if (response?.Data is null) return;
         foreach (var p in response.Data.Take(10))
@@ -1463,9 +1474,10 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         if (param is QuickPatient patient)
         {
-            WaitlistPatient = patient;
-            WaitlistPatientResults.Clear();
             WaitlistPatientSearch = patient.FullName;
+            _waitlistSearchVersion++;
+            WaitlistPatientResults.Clear();
+            WaitlistPatient = patient;
         }
     }
 
