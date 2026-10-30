@@ -123,8 +123,13 @@ public partial class FreeTemplateEditorWindow : Window
                     item.Width = size.Width; item.Height = size.Height; border.Width = size.Width; border.Height = size.Height;
                     WidthBox.Text = Number(size.Width); HeightBox.Text = Number(size.Height); PlaceHandle();
                 };
-                handle.DragCompleted += (_, _) => { if (allowed) RefreshCanvas(); };
-                PlaceHandle(); PageCanvas.Children.Add(handle);
+                handle.DragCompleted += (_, e) =>
+                {
+                    if (!allowed) return;
+                    if (e.Canceled) { item.Width = initialWidth; item.Height = initialHeight; }
+                    RefreshCanvas();
+                };
+                Panel.SetZIndex(handle, 1); PlaceHandle(); PageCanvas.Children.Add(handle);
             }
         }
     }
