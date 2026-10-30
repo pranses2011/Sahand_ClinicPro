@@ -35,7 +35,7 @@ public class FreeTemplateWindowIntegrationTests
 
     private static void CheckInSta()
     {
-        var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        var app = new System.Windows.Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         // فقط استایل‌های پایه لازم برای پنجره؛ وابسته به تم نصب‌شده کاربر نیست.
         app.Resources.Add(typeof(TextBox), new Style(typeof(TextBox)));
         app.Resources.Add(typeof(ComboBox), new Style(typeof(ComboBox)));
