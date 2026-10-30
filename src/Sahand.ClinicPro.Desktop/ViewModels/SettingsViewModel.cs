@@ -1371,14 +1371,21 @@ public partial class SettingsViewModel : ViewModelBase
     {
         IsBusy = true;
         var allOk = true;
-        foreach (var (key, value) in entries)
+        try
         {
-            var ok = await _api.PutAsync("settings", new { key, value, category });
-            if (!ok) allOk = false;
+            foreach (var (key, value) in entries)
+            {
+                var ok = await _api.PutAsync("settings", new { key, value, category });
+                if (!ok) allOk = false;
+            }
         }
-        IsBusy = false;
+        catch (Exception)
+        {
+            allOk = false;
+        }
+        finally { IsBusy = false; }
         if (allOk && announceSuccess) _snackbar.Success("تنظیمات ذخیره شد");
-        else if (!allOk) _snackbar.Error(_api.LastError ?? "ذخیره برخی تنظیمات ناموفق بود");
+        else if (!allOk) _snackbar.Error("ذخیره کامل نشد و ممکن است بخشی از تنظیمات در سرور تغییر کرده باشد؛ پس از بررسی دوباره تلاش کنید.");
         return allOk;
     }
 
