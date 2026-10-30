@@ -116,4 +116,27 @@ public class PrintTemplateReceiptTests
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
         (await controller.Render("LabResult", request, auth)).Should().BeOfType<ForbidResult>();
     }
+    [Fact]
+    public async Task Invoice_view_permission_renders_invoice_only_and_escapes_variables()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        db.PrintTemplates.Add(new PrintTemplate { TemplateName = "فاکتور", Type = PrintTemplateType.Invoice,
+            HtmlBody = "<p>{{patient_name}} {{paid}} {{remaining}}</p>{{items_html}}", IsActive = true, IsDefault = true });
+        await db.SaveChangesAsync();
+        var controller = new PrintTemplatesController(scope.ServiceProvider.GetRequiredService<IUnitOfWork>())
+        { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
+        var auth = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var request = new RenderRequest(new Dictionary<string, object?> { ["patient_name"] = "<script>bad</script>",
+            ["paid"] = "20", ["remaining"] = "55", ["items_html"] = "<table><tr><td>خدمت</td></tr></table><img src=x>" });
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "invoices.view") }, "test"));
+        (await controller.Render("ReceptionReceipt", request, auth)).Should().BeOfType<ForbidResult>();
+        var result = (OkObjectResult)await controller.Render("Invoice", request, auth);
+        var html = JsonSerializer.SerializeToElement(result.Value).GetProperty("Data").GetProperty("html").GetString();
+        html.Should().Contain("&lt;script&gt;").And.Contain("20").And.Contain("55").And.NotContain("<script>").And.NotContain("<img");
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("permission", "appointments.view") }, "test"));
+        (await controller.Render("Invoice", request, auth)).Should().BeOfType<ForbidResult>();
+    }
+
 }
