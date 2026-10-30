@@ -57,7 +57,8 @@ public partial class ComplementaryView : UserControl
             if (width < 100) { AppDialog.Error("طراحی قالب", "کاغذ برای بوم آزاد بیش از حد باریک است؛ ابتدا اندازه کاغذ را تغییر دهید."); return; }
             document = new FreeTemplateDocument { Width = width, Elements = new() { new FreeTemplateElement { Kind = "text", Text = "عنوان سند", X = 0, Y = 20, Width = Math.Min(200, width) } } };
         }
-        var window = new FreeTemplateEditorWindow(document!, variables, beforePaper, beforeOrientation) { Owner = Window.GetWindow(this) };
+        var window = new FreeTemplateEditorWindow(document!, variables, beforePaper, beforeOrientation,
+            template.Key, template.AccentColor, template.FontSize, template.ShowLogo, template.FontFamily) { Owner = Window.GetWindow(this) };
         if (window.ShowDialog() != true || window.ResultHtml is null || window.ResultPaperSize is null || window.ResultOrientation is null) return;
         if (!ReferenceEquals(vm.SelectedTemplate, template) || template.Body != before || template.PaperSize != beforePaper || template.Orientation != beforeOrientation || !vm.IsTemplateReady)
         { AppDialog.Error("طراحی قالب", "قالب هنگام ویرایش تغییر کرد؛ طرح اعمال نشد."); return; }

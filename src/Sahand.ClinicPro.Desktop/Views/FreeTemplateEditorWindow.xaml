@@ -29,7 +29,8 @@
         <Border DockPanel.Dock="Top" Background="#17223D" Padding="20,12" MinHeight="66">
             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="اعمال به قالب" Click="Apply_Click" Background="#F5F7FC" BorderBrush="#F5F7FC" FontWeight="Bold" Margin="0,0,8,0"/>
+                    <Button Content="پیش‌نمایش نمونه" Click="Preview_Click" Background="#F5F7FC" BorderBrush="#F5F7FC" FontWeight="Bold" Margin="0,0,8,0"/>
+                    <Button Content="اعمال به قالب" Click="Apply_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C" FontWeight="Bold" Margin="0,0,8,0"/>
                     <Button Content="انصراف" Click="Cancel_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C"/>
                 </StackPanel>
                 <TextBlock Grid.Column="1" Text="طراح آزاد قالب چاپ  ›" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>

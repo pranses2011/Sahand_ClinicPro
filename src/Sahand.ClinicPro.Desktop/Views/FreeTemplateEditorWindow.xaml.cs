@@ -21,6 +21,10 @@ public partial class FreeTemplateEditorWindow : Window
     private readonly FreeTemplateDocument _document;
     private readonly IReadOnlyList<ComplementaryViewModel.TemplateVariable> _variables;
     private readonly string _originalDocument, _originalPaper, _originalOrientation;
+    private readonly string _templateType;
+    private readonly string? _accent, _fontFamily;
+    private readonly int _fontSize;
+    private readonly bool _showLogo;
     private bool _applied;
     private FreeTemplateElement? _selected;
     private Point _toolStart, _dragStart;
@@ -29,8 +33,10 @@ public partial class FreeTemplateEditorWindow : Window
     public string? ResultPaperSize { get; private set; }
     public string? ResultOrientation { get; private set; }
 
-    public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation)
+    public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation,
+        string templateType = "Invoice", string? accent = null, int fontSize = 13, bool showLogo = false, string? fontFamily = null)
     {
+        _templateType = templateType; _accent = accent; _fontSize = fontSize; _showLogo = showLogo; _fontFamily = fontFamily;
         _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
         _originalDocument = JsonSerializer.Serialize(_document);
         _originalPaper = paper;
@@ -264,27 +270,38 @@ public partial class FreeTemplateEditorWindow : Window
         catch (ArgumentException ex) { AppDialog.Error("اندازه بوم", ex.Message); }
     }
     private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); _selected = null; RefreshCanvas(); } }
+    private (string Html, string Paper, string Orientation) BuildCurrentDesign()
+    {
+        if (HasPending()) throw new ArgumentException("ابتدا تغییرات ویژگی‌ها و ابعاد را با دکمه مربوط اعمال کنید.");
+        var paper = PaperBox.Text.Trim();
+        if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
+        var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
+        var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation, _document.SheetPadding);
+        if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
+        if (_document.Width > availableWidth)
+            throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
+        return (FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()), paper, orientation);
+    }
+    private void Preview_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var design = BuildCurrentDesign();
+            var html = FreeTemplatePreview.Create(design.Html, _templateType, design.Paper, _accent, _fontSize, _showLogo,
+                _variables.Select(v => v.Key).ToArray(), design.Orientation, _fontFamily);
+            var preview = new FreeTemplateSampleWindow(html) { Owner = this };
+            preview.ShowDialog();
+        }
+        catch (ArgumentException ex) { AppDialog.Error("پیش‌نمایش نمونه", ex.Message); }
+    }
     private void Apply_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding)
-                throw new ArgumentException("ابتدا دکمه اعمال ابعاد بوم را بزنید.");
-            if (_selected is { } item && (TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
-                ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
-                !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment))
-                throw new ArgumentException("ابتدا دکمه اعمال ویژگی‌ها را بزنید.");
-            var paper = PaperBox.Text.Trim();
-            if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
-            var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
-            var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation, _document.SheetPadding);
-            if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
-            if (_document.Width > availableWidth)
-                throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
-            var html = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray());
+            var design = BuildCurrentDesign();
             if (_document.Elements.Any(x => x.Kind == "variable") && AppDialog.Confirm("بررسی محتوای چاپ",
                 "کادرهای بوم اندازه ثابت دارند و اطلاعات طولانی یا ردیف‌های جدول ممکن است بریده شوند. پیش از استفاده، تمام داده‌ها و صفحه‌ها را با داده واقعی و چاپ آزمایشی بررسی کنید. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
-            ResultHtml = html; ResultPaperSize = paper; ResultOrientation = orientation; _applied = true; DialogResult = true;
+            ResultHtml = design.Html; ResultPaperSize = design.Paper; ResultOrientation = design.Orientation; _applied = true; DialogResult = true;
         }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
     }
