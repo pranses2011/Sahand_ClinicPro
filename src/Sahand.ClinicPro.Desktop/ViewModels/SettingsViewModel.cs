@@ -1517,11 +1517,13 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
 
     /// <summary>آیا مسیر فعلی چاپگر اختصاصی این سند را می‌خواند؟</summary>
     public bool SupportsPrinter => Key is "ReceptionReceipt" or "AppointmentTicket" or "Prescription"
-        or "LabResult" or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report";
+        or "LabResult" or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report"
+        or "PhysioHomeProgram" or "PhysioReferralReport" or "DentalChart" or "DentalTreatmentPlan" or "GlassesPrescription" or "ImagingReport";
 
     /// <summary>سندهایی که از دروازهٔ FlowDocument و تنظیمات اختصاصی استفاده می‌کنند.</summary>
     public bool SupportsFlowOptions => Key is "ReceptionReceipt" or "AppointmentTicket" or "LabResult"
-        or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report";
+        or "SpecimenLabel" or "ShiftReceipt" or "PatientCard" or "Report"
+        or "PhysioHomeProgram" or "PhysioReferralReport" or "DentalChart" or "DentalTreatmentPlan" or "GlassesPrescription" or "ImagingReport";
 
     /// <summary>عنوان سند</summary>
     public string Title { get; set; } = string.Empty;

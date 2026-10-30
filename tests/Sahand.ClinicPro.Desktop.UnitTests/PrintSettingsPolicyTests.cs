@@ -36,7 +36,12 @@ public class PrintSettingsPolicyTests
     [InlineData("AppointmentTicket", true, true)]
     [InlineData("PatientCard", true, true)]
     [InlineData("Invoice", false, false)]
-    [InlineData("ImagingReport", false, false)]
+    [InlineData("ImagingReport", true, true)]
+    [InlineData("PhysioHomeProgram", true, true)]
+    [InlineData("PhysioReferralReport", true, true)]
+    [InlineData("DentalChart", true, true)]
+    [InlineData("DentalTreatmentPlan", true, true)]
+    [InlineData("GlassesPrescription", true, true)]
     [InlineData("Payslip", false, false)]
     public void Settings_only_enable_options_connected_to_printing(string key, bool printer, bool receiptOptions)
     {
