@@ -68,6 +68,8 @@ public class ReceptionIdempotencyTests
         (await validator.ValidateAsync(new CreateReceptionCommand(dto))).IsValid.Should().BeTrue();
         (await handler.Handle(new CreateReceptionCommand(dto with { DoctorId = doctor.Id }), default)).Error.Code.Should().Be("RECEPTION.TARGET");
         (await handler.Handle(new CreateReceptionCommand(dto with { InsuranceCompanyId = -1 }), default)).Error.Code.Should().Be("RECEPTION.INSURANCE_INVALID");
+        (await handler.Handle(new CreateReceptionCommand(dto with { ReferralCode = new string('x', 51) }), default)).Error.Code.Should().Be("RECEPTION.TEXT_TOO_LONG");
+        (await handler.Handle(new CreateReceptionCommand(dto with { ServiceName = new string('x', 201) }), default)).Error.Code.Should().Be("RECEPTION.TEXT_TOO_LONG");
         service.IsActive = false; await db.SaveChangesAsync();
         (await handler.Handle(new CreateReceptionCommand(dto), default)).IsFailure.Should().BeTrue();
         service.IsActive = true; employee.IsActive = false; await db.SaveChangesAsync();

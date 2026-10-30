@@ -190,6 +190,25 @@ public class ReceptionsViewModelTests
     }
 
     [Fact]
+    public async Task Long_service_summary_and_referral_are_rejected_before_reservation()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/services?search=&insuranceCompanyId="] =
+            new { data = new[] { new { serviceId = 11, serviceName = new string('x', 201), price = 100m } } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.ReceptionModeIndex = 1;
+        vm.AddServiceCommand.Execute(vm.Services.Single());
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        vm.ReceptionModeIndex = 0;
+        vm.SelectedDoctor = vm.Doctors.First();
+        vm.ReferralCode = new string('x', 51);
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
+        vm.IsReceptionOutcomeUnknown.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Invalid_consumable_quantity_blocks_reception_before_it_is_sent()
     {
         var api = MakeApi();
