@@ -233,6 +233,19 @@ public class ReceptionsViewModelTests
     }
 
     [Fact]
+    public async Task Noncontracted_insurance_requires_explicit_free_selection_before_reception()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/insurance-companies"] = new { data = new[] { new { id = 5, name = "بیمه", isContracted = false } } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", "بیمه", null, null, 5);
+        vm.SelectedDoctor = vm.Doctors.First();
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
+        vm.IsReceptionOutcomeUnknown.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Failed_inquiry_blocks_insured_reception_instead_of_assuming_a_free_invoice()
     {
         var api = MakeApi();

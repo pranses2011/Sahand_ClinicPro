@@ -1702,6 +1702,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
         if (_isInitializing || !_insuranceListLoaded || !_insurancePolicyLoaded || IsRefreshingInsurance || InsuranceIndex < 0 || InsuranceIndex >= InsuranceCompanies.Count)
         { _snackbar.Error("اطلاعات بیمه آماده نیست؛ تنظیمات و فهرست بیمه را تازه‌سازی و انتخاب کنید."); return false; }
+        if (InsuranceCompanies[InsuranceIndex] is { Id: > 0, IsContracted: false })
+        { _snackbar.Error("بیمه انتخاب‌شده طرف قرارداد نیست؛ برای پذیرش آزاد، گزینه آزاد را صریحاً انتخاب کنید."); return false; }
         if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
         if (_selectedAppointmentId is not null && (ReceptionModeIndex != 0 || FoundPatient.Id != _selectedAppointmentPatientId || SelectedDoctor?.Id != _selectedAppointmentDoctorId))
         { _snackbar.Error("بیمار یا پزشک پذیرش با نوبت انتخاب‌شده مطابقت ندارد؛ نوبت را بررسی یا جستجو را پاک کنید."); return false; }
