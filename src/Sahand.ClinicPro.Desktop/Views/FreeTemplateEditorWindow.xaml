@@ -37,9 +37,18 @@
                 </StackPanel></ScrollViewer>
             </Border>
             <Border Grid.Column="1" Background="#DAE4ED" CornerRadius="10" Padding="12" Margin="0,0,10,0">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    <Canvas x:Name="PageCanvas" Background="White" FlowDirection="LeftToRight" AllowDrop="True" Drop="Canvas_Drop" DragOver="Canvas_DragOver"/>
-                </ScrollViewer>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8" ToolTip="بزرگ‌نمایی فقط نمایش بوم را تغییر می‌دهد و بر اندازه چاپ اثر ندارد">
+                        <TextBlock Text="بزرگ‌نمایی بوم" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Slider x:Name="ZoomSlider" Width="125" Minimum="0.5" Maximum="1.5" Value="0.75" TickFrequency="0.25" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Value, ElementName=ZoomSlider, StringFormat={}{0:P0}}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ScrollViewer FlowDirection="LeftToRight" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Canvas x:Name="PageCanvas" Background="White" FlowDirection="LeftToRight" AllowDrop="True" Drop="Canvas_Drop" DragOver="Canvas_DragOver">
+                            <Canvas.LayoutTransform><ScaleTransform ScaleX="{Binding Value, ElementName=ZoomSlider}" ScaleY="{Binding Value, ElementName=ZoomSlider}"/></Canvas.LayoutTransform>
+                        </Canvas>
+                    </ScrollViewer>
+                </DockPanel>
             </Border>
             <Border Grid.Column="2" Background="White" BorderBrush="#D8E5EF" BorderThickness="1" CornerRadius="10" Padding="12">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
