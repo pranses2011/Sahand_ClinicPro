@@ -190,6 +190,30 @@ public class ReceptionsViewModelTests
     }
 
     [Fact]
+    public async Task Invalid_consumable_quantity_blocks_reception_before_it_is_sent()
+    {
+        var api = MakeApi();
+        api.CannedResponses["lookups/services?search=&insuranceCompanyId="] =
+            new { data = new[] { new { serviceId = 11, serviceName = "خدمت", price = 100m } } };
+        var vm = MakeVm(api);
+        vm.FoundPatient = new QuickPatient(7, "بیمار", "", "", null, null, null);
+        vm.ReceptionModeIndex = 1;
+        vm.AddServiceCommand.Execute(vm.Services.Single());
+        var option = new ReceptionsViewModel.ConsumableOption(1, "سرنگ", null, 10, 100);
+        vm.SelectedConsumable = option;
+        vm.ConsumableQty = 0.001m;
+        vm.AddConsumableCommand.Execute(null);
+        vm.Consumables.Should().BeEmpty();
+        vm.ConsumableQty = 1;
+        vm.AddConsumableCommand.Execute(null);
+        vm.Consumables.Should().ContainSingle();
+        vm.Consumables.Single().Quantity = 0.001m;
+        await vm.ReceptionAndInvoiceCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "receptions/idempotent");
+        vm.IsReceptionOutcomeUnknown.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Reception_form_is_locked_until_pending_submission_completes()
     {
         var api = MakeApi();
