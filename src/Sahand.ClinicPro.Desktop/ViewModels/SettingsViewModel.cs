@@ -788,7 +788,7 @@ public partial class SettingsViewModel : ViewModelBase
             ["AutoPrintInvoice"] = AutoPrintInvoice ? "true" : "false",
             ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
             ["PrintCopies"] = PrintCopies.ToString()
-        });
+        }, announceSuccess: false);
 
         // ذخیره ممکن است بخشی در سرور اعمال شده باشد؛ در شکست، آینه را تغییر نده.
         if (!saved) return;
@@ -1363,7 +1363,7 @@ public partial class SettingsViewModel : ViewModelBase
         => settings.FirstOrDefault(s => s.Key == key)?.Value;
 
     /// <summary>ذخیره دسته تنظیمات با یک کلید دسته</summary>
-    private async Task<bool> SaveSettingsBatchAsync(string category, Dictionary<string, string?> entries)
+    private async Task<bool> SaveSettingsBatchAsync(string category, Dictionary<string, string?> entries, bool announceSuccess = true)
     {
         IsBusy = true;
         var allOk = true;
@@ -1373,8 +1373,8 @@ public partial class SettingsViewModel : ViewModelBase
             if (!ok) allOk = false;
         }
         IsBusy = false;
-        if (allOk) _snackbar.Success("تنظیمات ذخیره شد");
-        else _snackbar.Error(_api.LastError ?? "ذخیره برخی تنظیمات ناموفق بود");
+        if (allOk && announceSuccess) _snackbar.Success("تنظیمات ذخیره شد");
+        else if (!allOk) _snackbar.Error(_api.LastError ?? "ذخیره برخی تنظیمات ناموفق بود");
         return allOk;
     }
 
