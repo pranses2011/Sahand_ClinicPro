@@ -108,6 +108,15 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         var patient = calculation.Value.Patient;
         if (dto.ExpectedQuote is not null && dto.ExpectedQuote != QuoteVersion(dto, invoice))
             return Result<long>.Failure(new Error("BILLING.QUOTE_CHANGED", "مبلغ یا تنظیمات فاکتور تغییر کرده است؛ پیش‌نمایش را دوباره دریافت کنید."));
+        // صدور بدون سند دوبل موفقیت محسوب نمی‌شود؛ کنترل پیش از درج انجام
+        // می‌شود و بازپخش فاکتور ثبت‌شده همچنان پیش از این مرحله است.
+        var receivable = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        var income = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == MedicalIncomeCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        if (receivable is null || income is null)
+            return Result<long>.Failure(new Error("BILLING.ACCOUNTS_UNAVAILABLE",
+                "حساب مطالبات بیمار یا درآمد خدمات فعال و قابل ثبت سند نیست؛ کدینگ حسابداری را بررسی کنید."));
         invoice.RequestId = dto.RequestId;
         invoice.RequestFingerprint = fingerprint;
         await _unitOfWork.Repository<Invoice>().AddAsync(invoice, cancellationToken);
@@ -127,7 +136,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             invoice.Id, dto.PatientId, invoice.TotalAmount));
 
         // ── سند حسابداری خودکار — قانون طلایی دوبل (اکنون با شمارهٔ واقعی) ──
-        await GenerateJournalEntryAsync(invoice, patient, cancellationToken);
+        await GenerateJournalEntryAsync(invoice, patient, receivable, income, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         _logger.LogInformation(
@@ -451,20 +460,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 
     /// <summary>تولید سند حسابداری متوازن برای فاکتور — بدهکار بیمار، بستانکار درآمد</summary>
     private async Task GenerateJournalEntryAsync(Invoice invoice, Patient patient,
-        CancellationToken ct)
+        AccountingAccount receivable, AccountingAccount income, CancellationToken ct)
     {
-        var receivable = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode, ct);
-        var income = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == MedicalIncomeCode, ct);
-
-        // اگر کدینگ هنوز تنظیم نشده سند تولید نمی‌شود — فاکتور مستقل کار می‌کند
-        if (receivable is null || income is null)
-        {
-            _logger.LogWarning("کدینگ حسابداری آماده نیست — سند خودکار فاکتور {Id} تولید نشد", invoice.Id);
-            return;
-        }
-
         var entry = new JournalEntry
         {
             EntryDate = DateOnly.FromDateTime(DateTime.UtcNow),

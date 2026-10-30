@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
 using Sahand.ClinicPro.Domain.Entities.Billing;
+using Sahand.ClinicPro.Domain.Entities.Accounting;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -15,6 +16,10 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 
 public class InvoicePreviewSafetyTests
 {
+    private static void AddInvoiceAccounts(ClinicProDbContext db) => db.AddRange(
+        new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true },
+        new AccountingAccount { AccountCode = "4101", AccountName = "درآمد", IsDetail = true });
+
     [Fact]
     public async Task Preview_is_read_only_and_changed_input_cannot_be_issued()
     {
@@ -22,6 +27,7 @@ public class InvoicePreviewSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "QUOTE-01", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
+        AddInvoiceAccounts(db);
         db.Add(patient); await db.SaveChangesAsync();
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var item = new InvoiceItemDto(null, "خدمت", 1, 101, 10, null, 0);
@@ -69,6 +75,7 @@ public class InvoicePreviewSafetyTests
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "QUOTE-REPLAY", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000002" };
         var service = new Service { ServiceName = "خدمت", DefaultPrice = 100, IsActive = true };
+        AddInvoiceAccounts(db);
         db.AddRange(patient, service); await db.SaveChangesAsync();
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
@@ -78,13 +85,40 @@ public class InvoicePreviewSafetyTests
         var request = dto with { ExpectedQuote = quote.Value.QuoteVersion, RequestId = Guid.NewGuid() };
         var first = await handler.Handle(new CreateInvoiceCommand(request), default);
         first.IsSuccess.Should().BeTrue();
-        service.DefaultPrice = 200; await db.SaveChangesAsync();
+        service.DefaultPrice = 200;
+        (await db.Set<AccountingAccount>().SingleAsync(a => a.AccountCode == "4101")).IsActive = false;
+        await db.SaveChangesAsync();
         var repeat = await handler.Handle(new CreateInvoiceCommand(request), default);
         repeat.IsSuccess.Should().BeTrue(); repeat.Value.Should().Be(first.Value);
         var conflict = await handler.Handle(new CreateInvoiceCommand(request with { Description = "تغییر" }), default);
         conflict.Error.Code.Should().Be("BILLING.REQUEST_CONFLICT");
         (await db.Set<Invoice>().CountAsync()).Should().Be(1);
         (await handler.Handle(new CreateInvoiceCommand(request with { RequestId = Guid.Empty }), default)).IsFailure.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("inactive")]
+    [InlineData("not-detail")]
+    public async Task Invoice_requires_usable_accounts_before_any_financial_write(string accountState)
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "ACCOUNTS-INV", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
+        db.AddRange(patient, new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
+        if (accountState != "missing")
+            db.Add(new AccountingAccount { AccountCode = "4101", AccountName = "درآمد",
+                IsActive = accountState != "inactive", IsDetail = accountState != "not-detail" });
+        await db.SaveChangesAsync();
+        var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
+        var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
+            new() { new InvoiceItemDto(null, "خدمت", 1, 100, 0, null, 0) });
+        (await handler.PreviewAsync(new PreviewInvoiceQuery(dto), default)).IsSuccess.Should().BeTrue();
+        var result = await handler.Handle(new CreateInvoiceCommand(dto), default);
+        result.Error.Code.Should().Be("BILLING.ACCOUNTS_UNAVAILABLE");
+        (await db.Set<Invoice>().CountAsync()).Should().Be(0);
+        (await db.Set<JournalEntry>().CountAsync()).Should().Be(0);
     }
 
     [Fact]

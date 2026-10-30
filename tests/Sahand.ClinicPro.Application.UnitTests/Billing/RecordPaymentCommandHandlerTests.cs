@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Sahand.ClinicPro.Application.DTOs.Billing;
@@ -20,7 +21,7 @@ namespace Sahand.ClinicPro.Application.UnitTests.Billing;
 /// RecordPayment پرریسک‌ترین عملیات مالی روزانهٔ درمانگاه است (صندوق)؛
 /// این‌جا پنج گارد کسب‌وکار (وجود بیمار/فاکتور، ممنوعیت پرداخت اضافه،
 /// تشخیص PartiallyPaid/Paid)، رویداد InvoicePaid، سند حسابداری متوازن،
-/// و رفتار نرم «نبود کدینگ» پوشش داده می‌شود — با Mock خالص، بدون دیتابیس.
+/// و رد امن «نبود کدینگ» پوشش داده می‌شود — با Mock، بدون دیتابیس.
 /// </summary>
 public class RecordPaymentCommandHandlerTests
 {
@@ -34,8 +35,8 @@ public class RecordPaymentCommandHandlerTests
     /// <summary>هندلر آماده با فاکتور ۱٬۰۰۰٬۰۰۰ ریال که ۴۰۰٬۰۰۰ آن پرداخت شده</summary>
     public RecordPaymentCommandHandlerTests()
     {
-        _accounts.Add(new AccountingAccount { Id = 101, AccountCode = "1101", AccountName = "صندوق" });
-        _accounts.Add(new AccountingAccount { Id = 102, AccountCode = "1103", AccountName = "مطالبات بیماران" });
+        _accounts.Add(new AccountingAccount { Id = 101, AccountCode = "1101", AccountName = "صندوق", IsDetail = true });
+        _accounts.Add(new AccountingAccount { Id = 102, AccountCode = "1103", AccountName = "مطالبات بیماران", IsDetail = true });
         _invoice = new Invoice
         {
             Id = 55,
@@ -48,10 +49,14 @@ public class RecordPaymentCommandHandlerTests
         };
 
         var patients = new Mock<IRepository<Patient>>();
-        patients.Setup(r => r.GetByIdAsync(PatientId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Patient { Id = PatientId, FirstName = "سارا", LastName = "محمدی" });
+        var patient = new Patient { Id = PatientId, FirstName = "سارا", LastName = "محمدی" };
+        // هندلر برای جلوگیری از عبور از فیلتر شعبه ابتدا AnyAsync می‌زند؛
+        // ماک باید IQueryable ناهمگام، نه فقط GetByIdAsync، فراهم کند.
+        patients.Setup(r => r.QueryableNoTracking).Returns(new AsyncEnumerable<Patient>(new[] { patient }));
+        patients.Setup(r => r.GetByIdAsync(PatientId, It.IsAny<CancellationToken>())).ReturnsAsync(patient);
 
         var invoices = new Mock<IRepository<Invoice>>();
+        invoices.Setup(r => r.QueryableNoTracking).Returns(new AsyncEnumerable<Invoice>(new[] { _invoice }));
         invoices.Setup(r => r.GetByIdAsync(55L, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_invoice);
         invoices.Setup(r => r.GetByIdAsync(It.Is<long>(id => id != 55), It.IsAny<CancellationToken>()))
@@ -184,15 +189,32 @@ public class RecordPaymentCommandHandlerTests
     }
 
     [Fact]
-    public async Task Missing_Accounting_Coding_Should_Skip_Journal_Gracefully()
+    public async Task Missing_Accounting_Coding_Must_Not_Record_A_Payment()
     {
-        _accounts.Clear(); // درمانگاه بدون کدینگ — سند تعلق نمی‌گیرد
+        _accounts.Clear();
 
         var result = await MakeHandler().Handle(Pay(600_000m), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(because: "پرداخت بدون کدینگ هم معتبر است — سند نرم رد می‌شود");
+        result.Error.Code.Should().Be("PAYMENT.ACCOUNTS_UNAVAILABLE");
         _addedJournals.Should().BeEmpty();
-        _addedPayments.Should().HaveCount(1);
+        _addedPayments.Should().BeEmpty();
+        _invoice.PaidAmount.Should().Be(400_000m);
+        _invoice.RemainingAmount.Should().Be(600_000m);
+        _uow.Verify(u => u.SaveEntitiesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task Inactive_Or_NonDetail_Account_Must_Not_Record_A_Payment(bool active, bool detail)
+    {
+        _accounts[0].IsActive = active;
+        _accounts[0].IsDetail = detail;
+        var result = await MakeHandler().Handle(Pay(200_000m), CancellationToken.None);
+        result.Error.Code.Should().Be("PAYMENT.ACCOUNTS_UNAVAILABLE");
+        _addedPayments.Should().BeEmpty();
+        _addedJournals.Should().BeEmpty();
+        _invoice.RemainingAmount.Should().Be(600_000m);
     }
 
     [Fact]
@@ -243,5 +265,39 @@ public class RecordPaymentCommandHandlerTests
                 Amount: 100m, Method: PaymentMethod.Cash)));
 
         result.IsValid.Should().BeFalse(because: "پرداخت بدون فاکتور مقصد معنا ندارد");
+    }
+
+    private sealed class AsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    {
+        public AsyncEnumerable(IEnumerable<T> enumerable) : base(enumerable) { }
+        public AsyncEnumerable(Expression expression) : base(expression) { }
+        IQueryProvider IQueryable.Provider => new AsyncProvider<T>(this);
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+            new AsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+    }
+
+    private sealed class AsyncEnumerator<T>(IEnumerator<T> inner) : IAsyncEnumerator<T>
+    {
+        public T Current => inner.Current;
+        public ValueTask<bool> MoveNextAsync() => ValueTask.FromResult(inner.MoveNext());
+        public ValueTask DisposeAsync() { inner.Dispose(); return ValueTask.CompletedTask; }
+    }
+
+    private sealed class AsyncProvider<T>(IQueryProvider inner) : IAsyncQueryProvider
+    {
+        public IQueryable CreateQuery(Expression expression) => new AsyncEnumerable<T>(expression);
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression) => new AsyncEnumerable<TElement>(expression);
+        public object? Execute(Expression expression) => inner.Execute(expression);
+        public TResult Execute<TResult>(Expression expression) => inner.Execute<TResult>(expression);
+        public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
+        {
+            var resultType = typeof(TResult).GetGenericArguments().Single();
+            var execute = typeof(IQueryProvider).GetMethods()
+                .Single(m => m.Name == nameof(IQueryProvider.Execute) && m.IsGenericMethod)
+                .MakeGenericMethod(resultType);
+            var value = execute.Invoke(inner, new object[] { expression });
+            return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))!
+                .MakeGenericMethod(resultType).Invoke(null, new[] { value })!;
+        }
     }
 }

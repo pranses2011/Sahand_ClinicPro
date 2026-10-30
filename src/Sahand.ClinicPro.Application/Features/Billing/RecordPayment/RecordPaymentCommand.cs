@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -106,6 +106,17 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
             return Result<long>.Failure(new Error("OVERPAYMENT",
                 $"مبلغ پرداخت بیش از مانده فاکتور است — مانده {invoice.RemainingAmount:N0} ریال"));
 
+        // موفقیت مالی بدون سند دوبل گمراه‌کننده است. پیش از درج پرداخت،
+        // هر دو حساب موجود، فعال و قابل سند شدن باشند. بازپخش موفق قبلی
+        // همچنان بالاتر از این کنترل انجام می‌شود.
+        var cash = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == CashAccountCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        var receivable = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        if (cash is null || receivable is null)
+            return Result<long>.Failure(new Error("PAYMENT.ACCOUNTS_UNAVAILABLE",
+                "حساب صندوق یا مطالبات بیمار فعال و قابل ثبت سند نیست؛ کدینگ حسابداری را بررسی کنید."));
+
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
@@ -137,7 +148,7 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         // پیش از ایجاد سند حسابداری در دسترس باشد.
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         // ── سند حسابداری دریافتی — بدهکار صندوق، بستانکار مطالبات بیمار ──
-        await GenerateReceiptJournalAsync(payment, invoice, cancellationToken);
+        await GenerateReceiptJournalAsync(payment, invoice, cash, receivable, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         _logger.LogInformation("پرداخت {Amount} ریال برای فاکتور {Number} ثبت شد",
@@ -147,19 +158,9 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
     }
 
     /// <summary>سند حسابداری دریافت وجه</summary>
-    private async Task GenerateReceiptJournalAsync(Payment payment, Invoice invoice, CancellationToken ct)
+    private async Task GenerateReceiptJournalAsync(Payment payment, Invoice invoice,
+        AccountingAccount cash, AccountingAccount receivable, CancellationToken ct)
     {
-        var cash = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == CashAccountCode, ct);
-        var receivable = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode, ct);
-
-        if (cash is null || receivable is null)
-        {
-            _logger.LogWarning("کدینگ حسابداری آماده نیست — سند پرداخت {Id} تولید نشد", payment.Id);
-            return;
-        }
-
         var entry = new JournalEntry
         {
             EntryDate = DateOnly.FromDateTime(DateTime.UtcNow),

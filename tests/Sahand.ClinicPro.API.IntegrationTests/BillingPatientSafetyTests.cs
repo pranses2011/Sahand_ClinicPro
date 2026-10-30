@@ -81,8 +81,8 @@ public class BillingPatientSafetyTests
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "PAY-JOURNAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000004" };
         db.Add(patient);
-        db.AddRange(new AccountingAccount { AccountCode = "1101", AccountName = "صندوق" },
-            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات" });
+        db.AddRange(new AccountingAccount { AccountCode = "1101", AccountName = "صندوق", IsDetail = true },
+            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
         await db.SaveChangesAsync();
         var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
         db.Add(invoice);
@@ -160,7 +160,10 @@ public class BillingPatientSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "PAY-IDEMPOTENT", FirstName = "اول", LastName = "بیمار", Mobile = "09120000001" };
-        db.Add(patient); await db.SaveChangesAsync();
+        db.AddRange(patient,
+            new AccountingAccount { AccountCode = "1101", AccountName = "صندوق", IsDetail = true },
+            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
+        await db.SaveChangesAsync();
         var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
         db.Add(invoice); await db.SaveChangesAsync();
         var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
@@ -168,6 +171,8 @@ public class BillingPatientSafetyTests
         var dto = new RecordPaymentDto(invoice.Id, patient.Id, 100, PaymentMethod.Cash, RequestId: Guid.NewGuid());
         var first = await handler.Handle(new RecordPaymentCommand(dto), default);
         first.IsSuccess.Should().BeTrue();
+        (await db.Set<AccountingAccount>().SingleAsync(a => a.AccountCode == "1101")).IsActive = false;
+        await db.SaveChangesAsync();
         var replay = await handler.Handle(new RecordPaymentCommand(dto), default);
         replay.IsSuccess.Should().BeTrue(); replay.Value.Should().Be(first.Value);
         var conflict = await handler.Handle(new RecordPaymentCommand(dto with { Amount = 50 }), default);

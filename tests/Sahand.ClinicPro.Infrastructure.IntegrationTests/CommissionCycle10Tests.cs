@@ -39,6 +39,10 @@ public class CommissionCycle10Tests
             .UseInMemoryDatabase($"C10Db_{Guid.NewGuid():N}")
             .Options;
         var context = new ClinicProDbContext(options);
+        context.AccountingAccounts.AddRange(
+            new Sahand.ClinicPro.Domain.Entities.Accounting.AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true },
+            new Sahand.ClinicPro.Domain.Entities.Accounting.AccountingAccount { AccountCode = "4101", AccountName = "درآمد", IsDetail = true });
+        context.SaveChanges();
         var mediator = new Mock<MediatR.IMediator>().Object;
         return (new UnitOfWork(context, mediator), context);
     }

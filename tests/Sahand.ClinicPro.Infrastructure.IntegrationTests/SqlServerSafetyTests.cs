@@ -67,7 +67,7 @@ public sealed class SqlServerSafetyTests
             Assert.Empty(await db.Database.GetPendingMigrationsAsync());
             Assert.Equal("preserved", (await db.SystemSettings.SingleAsync(x => x.Key == "sql-upgrade-sentinel")).Value);
 
-            await AccountingAccountSeeder.SeedAsync(db);
+            await new AccountingAccountSeeder(db).SeedAsync();
             var patient = new Patient { FirstName = "Test", LastName = "Patient", Mobile = "09123456789" };
             var service = new Service { ServiceCode = "SQL-TEST", ServiceName = "Test service", DefaultPrice = 100m };
             db.AddRange(patient, service);
@@ -103,7 +103,7 @@ public sealed class SqlServerSafetyTests
             var stored = await verify.Invoices.SingleAsync(i => i.Id == invoice.Value);
             Assert.Equal(100m, stored.PaidAmount);
             Assert.Equal(0m, stored.RemainingAmount);
-            Assert.Equal(1, await verify.JournalEntries.CountAsync(j => j.SourceType == "Payment" && j.SourceId == payment.Value));
+            Assert.Equal(1, await verify.JournalEntries.CountAsync(j => j.ReferenceType == JournalReferenceType.Payment && j.ReferenceId == payment.Value));
         });
     }
 
@@ -113,7 +113,7 @@ public sealed class SqlServerSafetyTests
         await WithTemporaryDatabaseAsync(async (db, connectionString) =>
         {
             await db.Database.MigrateAsync();
-            await AccountingAccountSeeder.SeedAsync(db);
+            await new AccountingAccountSeeder(db).SeedAsync();
             var patient = new Patient { FirstName = "Test", LastName = "Concurrency", Mobile = "09123456789" };
             db.Patients.Add(patient);
             await db.SaveChangesAsync();
