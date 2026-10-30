@@ -1,4 +1,4 @@
-using Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit;
+﻿using Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit;
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -100,7 +100,7 @@ public class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery, Resul
             v.Patient is null ? null : new PatientContextDto(
                 v.Patient.FirstName + " " + v.Patient.LastName,
                 v.Patient.MedicalRecordNo ?? "",
-                v.Patient.NationalCode,
+                v.Patient.NationalCode ?? "",
                 v.Patient.BirthDate.HasValue
                     ? DateTime.UtcNow.Year - v.Patient.BirthDate.Value.Year -
                       (DateTime.UtcNow.DayOfYear < v.Patient.BirthDate.Value.DayOfYear ? 1 : 0)

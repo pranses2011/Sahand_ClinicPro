@@ -1,4 +1,4 @@
-using Sahand.ClinicPro.Application.Common.Mappings;
+﻿using Sahand.ClinicPro.Application.Common.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.DTOs.Patients;
@@ -48,7 +48,7 @@ public class SearchPatientsQueryHandler : IRequestHandler<SearchPatientsQuery, R
             .Include(p => p.InsuranceCompany)
             .Where(p => p.FirstName.Contains(term)
                         || p.LastName.Contains(term)
-                        || p.NationalCode.Contains(term)
+                        || (p.NationalCode != null && p.NationalCode.Contains(term))
                         || p.Mobile.Contains(term)
                         || (p.TemporaryCode != null && p.TemporaryCode.Contains(term))
                         || p.MedicalRecordNo.Contains(term)
