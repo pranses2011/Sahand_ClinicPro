@@ -71,7 +71,9 @@ public record InvoiceDetailDto(
     decimal RemainingAmount,
     PaymentStatus PaymentStatus,
     InvoiceStatus Status,
-    List<InvoiceItemDetailDto> Items);
+    List<InvoiceItemDetailDto> Items,
+    long? InsuranceCompanyId = null,
+    string? InsuranceName = null);
 
 /// <summary>درخواست ثبت پرداخت</summary>
 public record RecordPaymentDto(

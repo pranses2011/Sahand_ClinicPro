@@ -30,7 +30,8 @@ public static class InvoiceDocumentPrint
         {
             ["invoice_code"] = data.InvoiceNumber ?? data.Id.ToString(CultureInfo.InvariantCulture),
             ["invoice_date"] = data.DateShamsi, ["patient_name"] = data.PatientName,
-            ["insurance_name"] = "نام بیمه در جزئیات موجود نیست",
+            ["insurance_name"] = data.InsuranceCompanyId is null ? "بدون بیمه اعمال‌شده" :
+                string.IsNullOrWhiteSpace(data.InsuranceName) ? $"شناسه بیمه {data.InsuranceCompanyId} (نام ناموجود)" : data.InsuranceName,
             ["items_html"] = TemplatedPrintService.ItemsTableHtml(data.Items.Select(i =>
                 (i.Description ?? "", Number(i.Quantity), Amount(i.TotalPrice)))),
             ["subtotal"] = Amount(data.SubTotal), ["discount"] = Amount(data.DiscountAmount),

@@ -92,6 +92,7 @@ public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, R
         var i = await _unitOfWork.Repository<Invoice>()
             .QueryableNoTracking
             .Include(x => x.Patient)
+            .Include(x => x.InsuranceCompany)
             .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
@@ -107,7 +108,8 @@ public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, R
             i.PaymentStatus, i.Status,
             i.Items.Select(it => new InvoiceItemDetailDto(
                 it.ServiceId, it.Description, it.Quantity, it.UnitPrice,
-                it.DiscountAmount, it.PatientShare, it.InsuranceShare, it.TotalPrice)).ToList());
+                it.DiscountAmount, it.PatientShare, it.InsuranceShare, it.TotalPrice)).ToList(),
+            i.InsuranceCompanyId, i.InsuranceCompany?.Name);
 
         return Result<InvoiceDetailDto>.Success(dto);
     }
