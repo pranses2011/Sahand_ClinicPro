@@ -231,6 +231,58 @@ public partial class BillingViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
+    [ObservableProperty] private bool _isPrintingInvoice;
+
+    /// <summary>فقط جزئیات تازه همان فاکتور و همان شعبه برای چاپ پذیرفته می‌شود.</summary>
+    public async Task<InvoiceDetailDto?> LoadInvoiceForPrintAsync(long invoiceId, long? branch, string? server)
+    {
+        var response = await _api.GetAsync<InvoicePrintEnvelope>($"invoices/{invoiceId}");
+        if (SelectedInvoice?.Id != invoiceId || (_api as ApiClient)?.BranchId != branch ||
+            (_api is ApiClient client && client.PaymentRecoveryServer != server)) return null;
+        return InvoiceDocumentPrint.Printable(response?.Data, invoiceId) ? response!.Data : null;
+    }
+
+    public sealed class InvoicePrintEnvelope { public InvoiceDetailDto? Data { get; set; } }
+
+    /// <summary>بازبینی و چاپ فاکتور ثبت‌شده؛ این سند رسید پرداخت نیست.</summary>
+    [RelayCommand]
+    private async Task PrintInvoiceAsync()
+    {
+        if (IsPrintingInvoice) return;
+        var selected = SelectedInvoice;
+        if (selected is null) { _snackbar.Error("ابتدا یک فاکتور انتخاب کنید."); return; }
+        var branch = (_api as ApiClient)?.BranchId;
+        var server = (_api as ApiClient)?.PaymentRecoveryServer;
+        IsPrintingInvoice = true;
+        try
+        {
+            var detail = await LoadInvoiceForPrintAsync(selected.Id, branch, server);
+            if (detail is null)
+            { _snackbar.Error("جزئیات فاکتور قابل چاپ دریافت نشد یا انتخاب و شعبه تغییر کرده است؛ فاکتور ابطال‌شده یا پیش‌نویس چاپ نمی‌شود."); return; }
+            TemplatedPrintService.RenderEnvelope? rendered = null;
+            try { rendered = await _api.PostAsync<TemplatedPrintService.RenderEnvelope>("print-templates/render/Invoice",
+                new { variables = InvoiceDocumentPrint.TemplateVariables(detail) }); }
+            catch (Exception) { }
+            if (SelectedInvoice?.Id != selected.Id || (_api as ApiClient)?.BranchId != branch ||
+                (_api is ApiClient current && current.PaymentRecoveryServer != server))
+            { _snackbar.Error("انتخاب فاکتور، سرور یا شعبه تغییر کرد؛ چاپ متوقف شد."); return; }
+            var html = InvoiceDocumentPrint.WithRequiredHeader(rendered?.Data?.Html, detail);
+            if (html is null)
+            {
+                html = InvoiceDocumentPrint.Fallback(detail);
+                _snackbar.Info("قالب فاکتور در دسترس نبود؛ نسخه جایگزین نمایش داده می‌شود.");
+            }
+            var window = new HtmlPrintWindow(html, "فاکتور ثبت‌شده — رسید پرداخت نیست")
+            {
+                Owner = System.Windows.Application.Current?.Windows.Cast<System.Windows.Window>().FirstOrDefault(w => w.IsActive)
+                    ?? System.Windows.Application.Current?.MainWindow
+            };
+            window.ShowDialog();
+        }
+        catch (Exception) { _snackbar.Error("آماده‌سازی فاکتور برای چاپ ناموفق بود."); }
+        finally { IsPrintingInvoice = false; }
+    }
+
     /* ─── پاسخ‌های API ─── */
 
     public sealed class SummaryResponse

@@ -41,6 +41,13 @@
                         <TextBlock Text="ثبت پرداخت" Margin="7,0,0,0" />
                     </StackPanel>
                 </Button>
+                <Button Command="{Binding PrintInvoiceCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Margin="0,0,8,0" ToolTip="نمایش فاکتور انتخاب‌شده؛ رسید پرداخت نیست">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
+                        <TextBlock Text="چاپ فاکتور" Margin="7,0,0,0" />
+                    </StackPanel>
+                </Button>
                 <!-- بستن شیفت — چرخه ۱۳ (درخواست ۲-۲) -->
                 <Button Command="{Binding CloseShiftCommand}"
                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0"
