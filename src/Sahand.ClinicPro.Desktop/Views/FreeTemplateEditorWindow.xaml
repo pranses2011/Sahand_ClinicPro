@@ -29,9 +29,9 @@
         <Border DockPanel.Dock="Top" Background="#17223D" Padding="20,12" MinHeight="66">
             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="پیش‌نمایش نمونه" Click="Preview_Click" Background="#F5F7FC" BorderBrush="#F5F7FC" FontWeight="Bold" Margin="0,0,8,0"/>
-                    <Button Content="اعمال به قالب" Click="Apply_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C" FontWeight="Bold" Margin="0,0,8,0"/>
-                    <Button Content="انصراف" Click="Cancel_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="پیش‌نمایش نمونه" Click="Preview_Click" Background="#F5F7FC" BorderBrush="#F5F7FC" FontWeight="Bold" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="اعمال به قالب" Click="Apply_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C" FontWeight="Bold" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="انصراف" Click="Cancel_Click" Background="#36425C" Foreground="White" BorderBrush="#36425C"/>
                 </StackPanel>
                 <TextBlock Grid.Column="1" Text="طراح آزاد قالب چاپ  ›" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
             </Grid>
@@ -40,7 +40,7 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MinWidth="200"/><ColumnDefinition Width="4.7*" MinWidth="300"/><ColumnDefinition Width="2.2*" MinWidth="210"/></Grid.ColumnDefinitions>
             <!-- RTL: ابزارها در راست، بوم در وسط و ویژگی‌ها در چپ. -->
             <Border Background="White" BorderBrush="#E1E7EF" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,10,0">
-                <DockPanel><Button DockPanel.Dock="Bottom" Content="اعمال ابعاد و حاشیه" Click="ResizeCanvas_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,8,0,0"/>
+                <DockPanel><Button Style="{StaticResource DesignerButton}" DockPanel.Dock="Bottom" Content="اعمال ابعاد و حاشیه" Click="ResizeCanvas_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,8,0,0"/>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
                     <TextBlock Text="اجزای سند" FontWeight="Bold" FontSize="16" Foreground="#172640" Margin="0,0,0,4"/>
                     <TextBlock Text="برای افزودن کلیک کنید یا ابزار را به بوم بکشید." Foreground="#64768A" TextWrapping="Wrap" FontSize="11" Margin="0,0,0,12"/>
@@ -78,12 +78,12 @@
                                 <TextBlock Grid.Column="1" Text="بوم سند" FontWeight="Bold" Foreground="#172640" VerticalAlignment="Center"/>
                             </Grid>
                             <WrapPanel Margin="0,8,0,0">
-                                <Button Content="T" Tag="text" Click="Add_Click" ToolTip="افزودن متن" AutomationProperties.Name="افزودن متن" Margin="2" MinWidth="35"/>
-                                <Button Content="≡" Tag="variable" Click="Add_Click" ToolTip="افزودن اطلاعات سند" AutomationProperties.Name="افزودن اطلاعات سند" Margin="2" MinWidth="35"/>
-                                <Button Content="□" Tag="rectangle" Click="Add_Click" ToolTip="افزودن کادر" AutomationProperties.Name="افزودن کادر" Margin="2" MinWidth="35"/>
-                                <Button Content="―" Tag="line" Click="Add_Click" ToolTip="افزودن خط" AutomationProperties.Name="افزودن خط" Margin="2" MinWidth="35"/>
-                                <Button Content="▧" Tag="image" Click="Add_Click" ToolTip="افزودن تصویر PNG یا JPEG" AutomationProperties.Name="افزودن تصویر" Margin="2" MinWidth="35"/>
-                                <Button Content="×" Click="Remove_Click" ToolTip="حذف عنصر انتخاب‌شده" AutomationProperties.Name="حذف عنصر انتخاب‌شده" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="T" Tag="text" Click="Add_Click" ToolTip="افزودن متن" AutomationProperties.Name="افزودن متن" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="≡" Tag="variable" Click="Add_Click" ToolTip="افزودن اطلاعات سند" AutomationProperties.Name="افزودن اطلاعات سند" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="□" Tag="rectangle" Click="Add_Click" ToolTip="افزودن کادر" AutomationProperties.Name="افزودن کادر" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="―" Tag="line" Click="Add_Click" ToolTip="افزودن خط" AutomationProperties.Name="افزودن خط" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="▧" Tag="image" Click="Add_Click" ToolTip="افزودن تصویر PNG یا JPEG" AutomationProperties.Name="افزودن تصویر" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="×" Click="Remove_Click" ToolTip="حذف عنصر انتخاب‌شده" AutomationProperties.Name="حذف عنصر انتخاب‌شده" Margin="2" MinWidth="35"/>
                             </WrapPanel>
                         </StackPanel>
                     </Border>
@@ -96,8 +96,8 @@
             </Border>
             <Border Grid.Column="2" Background="White" BorderBrush="#E1E7EF" BorderThickness="1" CornerRadius="12" Padding="12">
                 <DockPanel><StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="اعمال ویژگی‌ها" Click="Update_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,0,6,0"/>
-                    <Button Content="حذف" Click="Remove_Click"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="اعمال ویژگی‌ها" Click="Update_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,0,6,0"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="حذف" Click="Remove_Click"/>
                 </StackPanel>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
                     <TextBlock Text="ویژگی‌های عنصر" FontWeight="Bold" FontSize="16" Foreground="#172640" Margin="0,0,0,3"/>
