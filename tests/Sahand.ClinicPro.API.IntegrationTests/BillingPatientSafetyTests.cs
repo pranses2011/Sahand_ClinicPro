@@ -258,4 +258,24 @@ public class BillingPatientSafetyTests
         var result = await handler.Handle(new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoicesQuery(page), default);
         result.Value.Data!.First().Id.Should().Be(target.Id);
     }
+    [Fact]
+    public async Task Invoice_details_identify_insurance_recorded_on_invoice_not_current_patient_policy()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var oldInsurance = new InsuranceCompany { Name = "بیمه فاکتور" };
+        var currentInsurance = new InsuranceCompany { Name = "بیمه فعلی بیمار" };
+        db.AddRange(oldInsurance, currentInsurance); await db.SaveChangesAsync();
+        var patient = new Patient { MedicalRecordNo = "PRINT-INSURANCE", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000008", InsuranceCompanyId = currentInsurance.Id };
+        db.Add(patient); await db.SaveChangesAsync();
+        var invoice = new Invoice { PatientId = patient.Id, InsuranceCompanyId = oldInsurance.Id };
+        db.Add(invoice); await db.SaveChangesAsync();
+        var handler = new Sahand.ClinicPro.Application.Features.Billing.Queries.GetInvoiceByIdQueryHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var result = await handler.Handle(new(invoice.Id), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.InsuranceCompanyId.Should().Be(oldInsurance.Id);
+        result.Value.InsuranceName.Should().Be("بیمه فاکتور");
+    }
+
 }

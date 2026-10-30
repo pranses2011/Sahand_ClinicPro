@@ -25,6 +25,9 @@ public class InvoiceDocumentPrintTests
         vars["total"].Should().Be("۹۵ ریال");
         vars["patient_share"].Should().Be("۷۵ ریال");
         vars["remaining"].Should().Be("۵۵ ریال");
+        vars["insurance_name"].Should().Be("بیمه ثبت‌شده موجود نیست یا در پاسخ مشخص نشده");
+        InvoiceDocumentPrint.TemplateVariables(detail with { InsuranceCompanyId = 8, InsuranceName = "بیمه واقعی" })["insurance_name"].Should().Be("بیمه واقعی");
+        InvoiceDocumentPrint.TemplateVariables(detail with { InsuranceCompanyId = 8, InsuranceName = null })["insurance_name"]!.ToString().Should().Contain("نام ناموجود");
         vars["items_html"]!.ToString().Should().Contain("&lt;img").And.NotContain("<img");
         var html = InvoiceDocumentPrint.Fallback(detail);
         html.Should().Contain("رسید پرداخت نیست").And.Contain("پرداخت جزئی").And.Contain("۵۵ ریال");
