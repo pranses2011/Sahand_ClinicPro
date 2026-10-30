@@ -610,9 +610,10 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         _patientSearchVersion++;
         _debounce?.Stop();
+        SelectedPatient = null;
+        PatientSearchResults.Clear();
         if (value.Length < 2)
         {
-            PatientSearchResults.Clear();
             return;
         }
         _debounce = new System.Windows.Threading.DispatcherTimer
@@ -647,9 +648,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         if (param is QuickPatient patient)
         {
-            SelectedPatient = patient;
             PatientSearchText = patient.FullName;
+            _debounce?.Stop();
+            _patientSearchVersion++;
             PatientSearchResults.Clear();
+            SelectedPatient = patient;
         }
     }
 

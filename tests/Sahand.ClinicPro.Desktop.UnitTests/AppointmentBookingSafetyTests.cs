@@ -41,6 +41,21 @@ public class AppointmentBookingSafetyTests
     }
 
     [Fact]
+    public void Editing_search_text_discards_old_patient_before_booking()
+    {
+        var api = new FakeApiClient();
+        var vm = new AppointmentsViewModel(api, new FakeSnackbar(), new Navigation());
+        var patient = new QuickPatient(1, "بیمار اول", "123", "0912", null, null, null);
+        vm.SelectPatientCommand.Execute(patient);
+        vm.SelectedPatient.Should().BeSameAs(patient);
+        vm.PatientSearchText = "بیمار دوم";
+        vm.SelectedPatient.Should().BeNull();
+        vm.PatientSearchResults.Should().BeEmpty();
+        vm.BookCommand.Execute(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "appointments");
+    }
+
+    [Fact]
     public async Task Pending_booking_locks_form_and_connection_failure_preserves_inputs()
     {
         var completion = new TaskCompletionSource<object?>();
