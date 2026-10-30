@@ -71,7 +71,7 @@
                     <Separator Margin="0,12"/>
                     <TextBlock Text="تنظیمات سند" FontWeight="Bold" FontSize="15" Foreground="#172640" Margin="0,0,0,8"/>
                     <TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>
-                    <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="PaperBox" IsEditable="True" IsTextSearchEnabled="False" Margin="0,5,0,9"><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
+                    <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="PaperBox" IsEditable="True" IsTextSearchEnabled="False" Margin="0,5,0,9"><ComboBoxItem Content="A3"/><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="B5"/><ComboBoxItem Content="Letter"/><ComboBoxItem Content="Legal"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
                     <TextBlock Text="جهت کاغذ" FontWeight="SemiBold"/>
                     <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="OrientationBox" SelectedIndex="0" Margin="0,5,0,9"><ComboBoxItem Content="عمودی"/><ComboBoxItem Content="افقی"/></ComboBox>
                     <TextBlock Text="عرض و ارتفاع بوم بدنه (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
@@ -127,6 +127,13 @@
                     <TextBlock Text="مکان X / Y و اندازه عرض / ارتفاع (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
                     <UniformGrid Columns="2" Margin="0,4,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="XBox" ToolTip="X"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="YBox" ToolTip="Y"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="WidthBox" ToolTip="عرض"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="HeightBox" ToolTip="ارتفاع"/></UniformGrid>
                     <TextBlock Text="اندازه فونت و رنگ #RRGGBB" FontSize="11"/><UniformGrid Columns="2" Margin="0,4,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="FontBox"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="ColorBox"/></UniformGrid>
+                    <WrapPanel Margin="0,0,0,8" ToolTip="انتخاب رنگ؛ برای ثبت، اعمال ویژگی‌ها را بزنید">
+                        <Button Style="{StaticResource DesignerButton}" Background="#173657" BorderBrush="#173657" Tag="#173657" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ سرمه‌ای"/>
+                        <Button Style="{StaticResource DesignerButton}" Background="#F4D36B" BorderBrush="#DEC76C" Tag="#F4D36B" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ طلایی"/>
+                        <Button Style="{StaticResource DesignerButton}" Background="White" BorderBrush="#AAB6C6" Tag="#FFFFFF" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ سفید"/>
+                        <Button Style="{StaticResource DesignerButton}" Background="#EB4C53" BorderBrush="#EB4C53" Tag="#EB4C53" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ قرمز"/>
+                        <Button Style="{StaticResource DesignerButton}" Background="#16AD9B" BorderBrush="#16AD9B" Tag="#16AD9B" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" AutomationProperties.Name="رنگ سبزآبی"/>
+                    </WrapPanel>
                     <WrapPanel Margin="0,4,0,6">
                         <CheckBox x:Name="BoldBox" Content="ضخیم" Margin="0,0,8,0"/>
                         <CheckBox x:Name="ItalicBox" Content="مورب" Margin="0,0,8,0"/>

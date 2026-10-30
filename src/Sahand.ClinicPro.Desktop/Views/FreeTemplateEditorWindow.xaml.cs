@@ -363,6 +363,10 @@ public partial class FreeTemplateEditorWindow : Window
             X = Math.Clamp(point.X, 0, _document.Width - width), Y = Math.Clamp(point.Y, 0, _document.Height - height) };
         _document.Elements.Add(item); Select(item); RefreshCanvas();
     }
+    private void ColorPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is not null && sender is Button { Tag: string color }) ColorBox.Text = color;
+    }
     private void Update_Click(object sender, RoutedEventArgs e)
     {
         if (_selected is null) return;
