@@ -114,7 +114,7 @@
             </Border>
             <Border Grid.Column="2" Background="White" BorderBrush="#E1E7EF" BorderThickness="1" CornerRadius="12" Padding="12">
                 <DockPanel><StackPanel x:Name="PropertiesActions" DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Style="{StaticResource DesignerButton}" Content="اعمال ویژگی‌ها" Click="Update_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,0,6,0"/>
+                    <Button x:Name="ApplyPropertiesButton" Style="{StaticResource DesignerButton}" Content="اعمال ویژگی‌ها" Click="Update_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,0,6,0"/>
                     <Button Style="{StaticResource DesignerButton}" Content="حذف" Click="Remove_Click"/>
                 </StackPanel>
                 <ScrollViewer x:Name="PropertiesScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
@@ -146,7 +146,7 @@
                         <Button Style="{StaticResource DesignerButton}" Background="#173657" BorderBrush="#173657" Tag="#173657" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ سرمه‌ای"/>
                         <Button Style="{StaticResource DesignerButton}" Background="#F4D36B" BorderBrush="#DEC76C" Tag="#F4D36B" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ طلایی"/>
                         <Button Style="{StaticResource DesignerButton}" Background="White" BorderBrush="#AAB6C6" Tag="#FFFFFF" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ سفید"/>
-                        <Button Style="{StaticResource DesignerButton}" Background="#EB4C53" BorderBrush="#EB4C53" Tag="#EB4C53" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ قرمز"/>
+                        <Button x:Name="RedPresetButton" Style="{StaticResource DesignerButton}" Background="#EB4C53" BorderBrush="#EB4C53" Tag="#EB4C53" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" Margin="0,0,5,0" AutomationProperties.Name="رنگ قرمز"/>
                         <Button Style="{StaticResource DesignerButton}" Background="#16AD9B" BorderBrush="#16AD9B" Tag="#16AD9B" Click="ColorPreset_Click" Width="23" Height="23" Padding="0" AutomationProperties.Name="رنگ سبزآبی"/>
                     </WrapPanel>
                     <WrapPanel Margin="0,4,0,6">
