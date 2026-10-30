@@ -39,10 +39,18 @@ public partial class FreeTemplateEditorWindow : Window
         if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && double.IsFinite(value)) return value;
         throw new ArgumentException("عدد معتبر وارد کنید (برای اعشار از نقطه استفاده کنید).");
     }
+    private int? ReadPadding()
+    {
+        var text = SheetPaddingBox.Text.Trim();
+        if (text.Length == 0) return null;
+        if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 100) return value;
+        throw new ArgumentException("حاشیه داخلی باید خالی یا عدد صحیح بین ۰ و ۱۰۰ باشد.");
+    }
     private void RefreshCanvas()
     {
         PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
         CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+        SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
         PageCanvas.Children.Clear();
         foreach (var item in _document.Elements)
         {
@@ -72,7 +80,7 @@ public partial class FreeTemplateEditorWindow : Window
         var dirty = false;
         try
         {
-            dirty = ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height;
+            dirty = ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding;
             if (_selected is { } item)
                 dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                     ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
@@ -125,7 +133,7 @@ public partial class FreeTemplateEditorWindow : Window
         if (_selected is null) return;
         try
         {
-            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height)
+            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding)
                 throw new ArgumentException("ابتدا ابعاد بوم را اعمال کنید تا تغییرات آن کنار گذاشته نشود.");
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
@@ -143,10 +151,11 @@ public partial class FreeTemplateEditorWindow : Window
         try
         {
             var width = ReadNumber(CanvasWidthBox); var height = ReadNumber(CanvasHeightBox);
-            var oldW = _document.Width; var oldH = _document.Height;
-            _document.Width = width; _document.Height = height;
+            var padding = ReadPadding();
+            var oldW = _document.Width; var oldH = _document.Height; var oldPadding = _document.SheetPadding;
+            _document.Width = width; _document.Height = height; _document.SheetPadding = padding;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
-            catch { _document.Width = oldW; _document.Height = oldH; throw; }
+            catch { _document.Width = oldW; _document.Height = oldH; _document.SheetPadding = oldPadding; throw; }
             RefreshCanvas();
         }
         catch (ArgumentException ex) { AppDialog.Error("اندازه بوم", ex.Message); }
@@ -156,7 +165,7 @@ public partial class FreeTemplateEditorWindow : Window
     {
         try
         {
-            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height)
+            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding)
                 throw new ArgumentException("ابتدا دکمه اعمال ابعاد بوم را بزنید.");
             if (_selected is { } item && (TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                 ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
@@ -165,7 +174,7 @@ public partial class FreeTemplateEditorWindow : Window
             var paper = PaperBox.Text.Trim();
             if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
             var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
-            var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation);
+            var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation, _document.SheetPadding);
             if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
             if (_document.Width > availableWidth)
                 throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");

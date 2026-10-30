@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Sahand.ClinicPro.Desktop.Services;
@@ -25,6 +26,9 @@ public sealed class FreeTemplateDocument
 {
     public double Width { get; set; } = 600;
     public double Height { get; set; } = 800;
+    /// <summary>حاشیه داخلی یکسان؛ null به معنی حاشیه پیش‌فرض سرور است.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? SheetPadding { get; set; }
     public List<FreeTemplateElement> Elements { get; set; } = new();
 }
 
@@ -37,11 +41,12 @@ public static class FreeTemplateDesign
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
     /// <summary>عرض تقریبی قابل استفاده بدنه با کسر حاشیه ثابت قالب سرور؛ تضمین چاپگر نیست.</summary>
-    public static double AvailableBodyWidth(string paper, string orientation = "Portrait")
+    public static double AvailableBodyWidth(string paper, string orientation = "Portrait", int? sheetPadding = null)
     {
-        if (!VisualTemplateDesign.IsValidPaperSize(paper)) return 0;
+        if (!VisualTemplateDesign.IsValidPaperSize(paper) || sheetPadding is < 0 or > 100) return 0;
+        var padding = 2 * (sheetPadding ?? 26);
         if (string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase))
-            return Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates.PrintTemplateRenderer.LandscapePaper(paper) is { } page ? Math.Max(0, page.WidthPx - 52) : 0;
+            return Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates.PrintTemplateRenderer.LandscapePaper(paper) is { } page ? Math.Max(0, page.WidthPx - padding) : 0;
         if (!string.Equals(orientation, "Portrait", StringComparison.OrdinalIgnoreCase)) return 0;
         var key = paper.Trim().ToUpperInvariant();
         var width = key switch { "A3" => 1123, "A4" => 794, "A5" => 559, "A6" => 397, "B5" => 691,
@@ -52,15 +57,17 @@ public static class FreeTemplateDesign
             if (!match.Success || !int.TryParse(match.Groups[1].Value, out var mm)) return 0;
             width = (int)Math.Round(mm * 96.0 / 25.4);
         }
-        return Math.Max(0, width - 52);
+        return Math.Max(0, width - padding);
     }
 
     public static string Build(FreeTemplateDocument document, IReadOnlyCollection<string> allowed)
     {
         if (document is null || !double.IsFinite(document.Width) || !double.IsFinite(document.Height) ||
-            document.Width is < 100 or > 2500 || document.Height is < 100 or > 4000 || document.Elements is null || document.Elements.Count is < 1 or > 200)
+            document.Width is < 100 or > 2500 || document.Height is < 100 or > 4000 || document.SheetPadding is < 0 or > 100 || document.Elements is null || document.Elements.Count is < 1 or > 200)
             throw new ArgumentException("اندازه بوم یا تعداد عناصر معتبر نیست.");
-        var body = new StringBuilder().Append("<div style='position:relative;direction:ltr;width:").Append(Num(document.Width))
+        var body = new StringBuilder();
+        if (document.SheetPadding is { } padding) body.Append("<style>.sheet{padding:").Append(padding).Append("px !important;}</style>");
+        body.Append("<div style='position:relative;direction:ltr;width:").Append(Num(document.Width))
             .Append("px;height:").Append(Num(document.Height)).Append("px'>");
         foreach (var item in document.Elements)
         {
