@@ -158,7 +158,7 @@ public partial class FreeTemplateEditorWindow : Window
                 if (FreeTemplateDesign.ImageMimeType(imageData) is null) throw new ArgumentException("فقط فایل PNG یا JPEG مجاز است.");
                 _ = DecodeImage(bytes);
             }
-            catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+            catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
             { AppDialog.Error("تصویر", "خواندن تصویر ناموفق بود: " + ex.Message); return; }
         }
         var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : kind == "image" ? 100 : 40;

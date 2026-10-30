@@ -42,6 +42,23 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Embedded_image_roundtrips_and_never_accepts_remote_or_unlimited_content()
+    {
+        const string png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/aXQAAAAASUVORK5CYII=";
+        var doc = new FreeTemplateDocument { Elements = new() { new() { Kind = "image", ImageData = png } } };
+        var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        html.Should().Contain("src='data:image/png;base64," + png + "'");
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
+        loaded!.Elements[0].ImageData.Should().Be(png);
+        PrintTemplateRenderer.HasUnsafeVariablePlacement(html).Should().BeFalse();
+        FreeTemplateDesign.ImageMimeType("https://example.com/picture.png").Should().BeNull();
+        FreeTemplateDesign.ImageMimeType(Convert.ToBase64String(new byte[32769])).Should().BeNull();
+        doc.Elements.AddRange(Enumerable.Range(0, 4).Select(_ => new FreeTemplateElement { Kind = "image", ImageData = png }));
+        Action tooMany = () => FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        tooMany.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Optional_sheet_padding_roundtrips_and_changes_available_width()
     {
         var doc = new FreeTemplateDocument { Width = 500, Height = 600, SheetPadding = 12, Elements = new() { new() { Kind = "text", Text = "نمونه" } } };
@@ -62,7 +79,7 @@ public class FreeTemplateDesignTests
         var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
         var metadata = html["<!--clinicpro-canvas-v1:".Length..html.IndexOf("-->", StringComparison.Ordinal)];
         var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(metadata));
-        json.Should().NotContain("SheetPadding");
+        json.Should().NotContain("SheetPadding").And.NotContain("ImageData");
         html.Should().NotContain(".sheet{padding:");
         FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out _).Should().BeTrue();
     }
