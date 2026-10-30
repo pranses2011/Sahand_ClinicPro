@@ -19,6 +19,9 @@ public sealed class FreeTemplateElement
     public double Height { get; set; } = 40;
     public int FontSize { get; set; } = 14;
     public string Color { get; set; } = "#173657";
+    /// <summary>تصویر محلی محدود؛ قالب قدیمی بدون این فیلد حفظ می‌شود.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ImageData { get; set; }
 }
 
 /// <summary>مدل نسخه‌دار بوم که فقط پس از بازخوانی دقیق HTML دوباره ویرایش می‌شود.</summary>
@@ -60,11 +63,27 @@ public static class FreeTemplateDesign
         return Math.Max(0, width - padding);
     }
 
+    /// <summary>تنها داده تصویری داخلی PNG یا JPEG، بدون URL یا SVG؛ هر تصویر حداکثر ۳۲ کیلوبایت.</summary>
+    public static string? ImageMimeType(string? data)
+    {
+        if (string.IsNullOrEmpty(data) || data.Length > 43692) return null;
+        try
+        {
+            var bytes = Convert.FromBase64String(data);
+            if (bytes.Length is < 8 or > 32768 || Convert.ToBase64String(bytes) != data) return null;
+            if (bytes.AsSpan(0, 8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 })) return "image/png";
+            if (bytes[0] == 255 && bytes[1] == 216 && bytes[2] == 255) return "image/jpeg";
+            return null;
+        }
+        catch (FormatException) { return null; }
+    }
+
     public static string Build(FreeTemplateDocument document, IReadOnlyCollection<string> allowed)
     {
         if (document is null || !double.IsFinite(document.Width) || !double.IsFinite(document.Height) ||
             document.Width is < 100 or > 2500 || document.Height is < 100 or > 4000 || document.SheetPadding is < 0 or > 100 || document.Elements is null || document.Elements.Count is < 1 or > 200)
             throw new ArgumentException("اندازه بوم یا تعداد عناصر معتبر نیست.");
+        if (document.Elements.Count(x => x?.Kind == "image") > 4) throw new ArgumentException("حداکثر چهار تصویر در بوم مجاز است.");
         var body = new StringBuilder();
         if (document.SheetPadding is { } padding) body.Append("<style>.sheet{padding:").Append(padding).Append("px !important;}</style>");
         body.Append("<div style='position:relative;direction:ltr;width:").Append(Num(document.Width))
@@ -76,8 +95,11 @@ public static class FreeTemplateDesign
                 item.X + item.Width > document.Width || item.Y + item.Height > document.Height || item.FontSize is < 8 or > 72 ||
                 item.Color is null || !Regex.IsMatch(item.Color, @"^#[0-9a-fA-F]{6}$"))
                 throw new ArgumentException("مکان، اندازه یا رنگ عنصر معتبر نیست یا از بوم بیرون است.");
-            if (item.Kind != "text" && item.Kind != "variable" && item.Kind != "rectangle" && item.Kind != "line")
+            if (item.Kind != "text" && item.Kind != "variable" && item.Kind != "rectangle" && item.Kind != "line" && item.Kind != "image")
                 throw new ArgumentException("نوع عنصر معتبر نیست.");
+            var imageType = item.Kind == "image" ? ImageMimeType(item.ImageData) : null;
+            if (item.Kind == "image" && imageType is null) throw new ArgumentException("تصویر باید PNG یا JPEG داخلی و حداکثر ۳۲ کیلوبایت باشد.");
+            if (item.Kind != "image" && item.ImageData is not null) throw new ArgumentException("داده تصویر برای این عنصر مجاز نیست.");
             if (item.Kind == "variable" && (string.IsNullOrEmpty(item.Key) || !allowed.Contains(item.Key) || !Regex.IsMatch(item.Key, "^[a-z0-9_]+$")))
                 throw new ArgumentException("متغیر این سند معتبر نیست.");
             body.Append("<div style='position:absolute;box-sizing:border-box;overflow:hidden;direction:rtl;white-space:pre-wrap;left:")
@@ -89,6 +111,7 @@ public static class FreeTemplateDesign
             body.Append("'>");
             if (item.Kind is "text" or "variable") body.Append(Safe(item.Text));
             if (item.Kind == "variable") body.Append(" {{").Append(item.Key).Append("}}");
+            if (item.Kind == "image") body.Append("<img alt='' style='width:100%;height:100%' src='data:").Append(imageType).Append(";base64,").Append(item.ImageData).Append("'>");
             body.Append("</div>");
         }
         body.Append("</div>");
