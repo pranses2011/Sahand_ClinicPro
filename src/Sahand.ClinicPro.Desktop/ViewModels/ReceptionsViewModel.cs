@@ -1375,16 +1375,16 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Error("ابتدا قلم مصرفی را انتخاب کنید");
             return;
         }
-        if (ConsumableQty <= 0)
+        if (!ValidConsumableQuantity(ConsumableQty))
         {
-            _snackbar.Error("تعداد باید بیشتر از صفر باشد");
+            _snackbar.Error("تعداد باید مثبت، حداکثر دو رقم اعشار و در محدوده مجاز باشد");
             return;
         }
 
         // ادغام با ردیف موجود همان قلم
         var existing = Consumables.FirstOrDefault(c => c.Option.Id == SelectedConsumable.Id);
         var newQuantity = (existing?.Quantity ?? 0) + ConsumableQty;
-        if (newQuantity > SelectedConsumable.Available)
+        if (!ValidConsumableQuantity(newQuantity) || newQuantity > SelectedConsumable.Available)
         {
             _snackbar.Error($"موجودی انبار «{SelectedConsumable.Name}» فقط {SelectedConsumable.Available:0.#} است");
             return;
@@ -1696,6 +1696,9 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /* ═══════════ ثبت پذیرش ═══════════ */
 
+    private static bool ValidConsumableQuantity(decimal value) =>
+        value > 0 && value <= 99999999.99m && decimal.Round(value, 2) == value;
+
     /// <summary>اعتبارسنجی مشترک — چرخه ۲۴: در حالت خدمت درمانی به‌جای پزشک، خدمت الزامی است</summary>
     private bool ValidateReception()
     {
@@ -1716,6 +1719,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         if (ReceptionModeIndex == 1)
         {
             if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }
+            if (Consumables.Any(c => !ValidConsumableQuantity(c.Quantity) || c.Quantity > c.Option.Available))
+            { _snackbar.Error("تعداد لوازم مصرفی نامعتبر یا بیش از موجودی نمایش‌داده‌شده است؛ اقلام را اصلاح کنید."); return false; }
             if (!_serviceTariffsLoaded || SelectedServices.Any(line => !Services.Any(s => s.Id == line.Service.Id)))
             { _snackbar.Error("تعرفهٔ معتبر بیمهٔ فعلی آماده نیست یا خدمتی در فهرست جدید وجود ندارد؛ تعرفه را تازه‌سازی و خدمات را بررسی کنید."); return false; }
         }
