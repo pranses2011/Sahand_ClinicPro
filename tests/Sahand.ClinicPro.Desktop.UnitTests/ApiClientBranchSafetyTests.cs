@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Desktop.ViewModels;
 using Xunit;
 
 namespace Sahand.ClinicPro.Desktop.UnitTests;
@@ -69,5 +70,42 @@ public class ApiClientBranchSafetyTests
         await api.GetAsync<Envelope>("private/test");
         Assert.Null(auth[0]); Assert.Null(auth[1]); Assert.Equal("Bearer old-token", auth[2]);
     }
+    private sealed class EmptyInvoiceStore : IInvoiceRecoveryStore
+    {
+        public PendingInvoice? Load(string server, long patientId) => null;
+        public void Reserve(PendingInvoice pending) { }
+        public void Clear(PendingInvoice pending) { }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Invoice_quote_cannot_be_used_after_branch_changes(bool changeDuringQuote)
+    {
+        ApiClient? api = null;
+        var invoicePosts = 0;
+        var handler = new Handler(request =>
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (path.EndsWith("invoices/preview"))
+            {
+                if (changeDuringQuote) api!.BranchId = 22;
+                return Json(HttpStatusCode.OK, "{\"data\":{\"subTotal\":100,\"discountAmount\":0,\"insuranceShare\":0,\"tax\":0,\"patientPayable\":100,\"quoteVersion\":\"test\"}}");
+            }
+            if (path.EndsWith("invoices/idempotent")) invoicePosts++;
+            return Json(HttpStatusCode.OK, "{\"data\":[]}");
+        });
+        api = Create(handler);
+        api.BranchId = 11;
+        var vm = new InvoiceFormViewModel(api, new FakeSnackbar(), new EmptyInvoiceStore())
+        { Patient = new QuickPatient(7, "بیمار", "", "", null, null, null) };
+        vm.Items.Add(new InvoiceItemVM { ServiceId = 1, Name = "خدمت", UnitPrice = 100, Quantity = 1 });
+        await vm.CalculateQuoteCommand.ExecuteAsync(null);
+        if (!changeDuringQuote) api.BranchId = 22;
+        Assert.False(vm.TryCreateDraftPreview(out _));
+        await vm.SaveAndPrintCommand.ExecuteAsync(null);
+        Assert.Equal(0, invoicePosts);
+    }
+
     public sealed class Envelope { public int Data { get; set; } }
 }
