@@ -58,6 +58,16 @@
                         <Button Style="{StaticResource ToolButton}" Content="＋ تصویر" Tag="image" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="3" ToolTip="حداکثر ۳۲ کیلوبایت؛ تصویر داخل قالب ذخیره می‌شود"/>
                         <Button Style="{StaticResource ToolButton}" Content="＋ خط" Tag="line" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="3"/>
                     </UniformGrid>
+                    <TextBlock Text="متغیرهای این سند" FontWeight="SemiBold" Foreground="#172640" Margin="3,12,3,2"/>
+                    <TextBlock Text="برای افزودن یک متغیر کلیک کنید یا آن را به بوم بکشید." Foreground="#64768A" TextWrapping="Wrap" FontSize="11" Margin="3,0,3,6"/>
+                    <ItemsControl x:Name="VariablePalette">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate><DataTemplate>
+                            <Button Style="{StaticResource ToolButton}" Tag="variable" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="3" MaxWidth="165" ToolTip="افزودن یا کشیدن متغیر به بوم">
+                                <TextBlock Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center"/>
+                            </Button>
+                        </DataTemplate></ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     <Separator Margin="0,12"/>
                     <TextBlock Text="تنظیمات سند" FontWeight="Bold" FontSize="15" Foreground="#172640" Margin="0,0,0,8"/>
                     <TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>

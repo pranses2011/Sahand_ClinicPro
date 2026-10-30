@@ -18,6 +18,7 @@ namespace Sahand.ClinicPro.Desktop.Views;
 public partial class FreeTemplateEditorWindow : Window
 {
     private const string DragFormat = "SahandClinicPro.FreeTemplate.Kind";
+    private const string DragVariableFormat = "SahandClinicPro.FreeTemplate.VariableKey";
     private readonly FreeTemplateDocument _document;
     private readonly IReadOnlyList<ComplementaryViewModel.TemplateVariable> _variables;
     private readonly string _originalDocument, _originalPaper, _originalOrientation;
@@ -44,6 +45,7 @@ public partial class FreeTemplateEditorWindow : Window
         _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         VariableBox.ItemsSource = _variables;
+        VariablePalette.ItemsSource = _variables;
         var preset = PaperBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => string.Equals(x.Content as string, paper, StringComparison.OrdinalIgnoreCase));
         if (preset is not null) PaperBox.SelectedItem = preset; else PaperBox.Text = paper;
         OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
@@ -216,17 +218,26 @@ public partial class FreeTemplateEditorWindow : Window
         if (e.LeftButton != MouseButtonState.Pressed || sender is not Button { Tag: string kind } button) return;
         var p = e.GetPosition(this);
         if (Math.Abs(p.X - _toolStart.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(p.Y - _toolStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
-        var data = new DataObject(); data.SetData(DragFormat, kind); DragDrop.DoDragDrop(button, data, DragDropEffects.Copy); e.Handled = true;
+        var data = new DataObject(); data.SetData(DragFormat, kind);
+        if (kind == "variable" && button.DataContext is ComplementaryViewModel.TemplateVariable variable)
+            data.SetData(DragVariableFormat, variable.Key);
+        DragDrop.DoDragDrop(button, data, DragDropEffects.Copy); e.Handled = true;
     }
     private void Canvas_DragOver(object sender, DragEventArgs e) { e.Effects = e.Data.GetDataPresent(DragFormat) ? DragDropEffects.Copy : DragDropEffects.None; e.Handled = true; }
     private void Canvas_Drop(object sender, DragEventArgs e)
-    { if (e.Data.GetData(DragFormat) is string kind) { Add(kind, e.GetPosition(PageCanvas)); e.Handled = true; } }
-    private void Add_Click(object sender, RoutedEventArgs e) { if (sender is Button { Tag: string kind }) Add(kind, new Point(20, 20)); }
-    private void Add(string kind, Point point)
+    { if (e.Data.GetData(DragFormat) is string kind) { Add(kind, e.GetPosition(PageCanvas), e.Data.GetData(DragVariableFormat) as string); e.Handled = true; } }
+    private void Add_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string kind } button)
+            Add(kind, new Point(20, 20), (button.DataContext as ComplementaryViewModel.TemplateVariable)?.Key);
+    }
+    private void Add(string kind, Point point, string? variableKey = null)
     {
         if (kind is not ("text" or "variable" or "rectangle" or "line" or "image")) return;
         if (!CanDiscardPending()) return;
         if (kind == "variable" && _variables.Count == 0) { AppDialog.Error("طراحی قالب", "برای این سند متغیری در دسترس نیست."); return; }
+        var variable = kind == "variable" ? (variableKey is null ? _variables.FirstOrDefault() : _variables.FirstOrDefault(x => x.Key == variableKey)) : null;
+        if (kind == "variable" && variable is null) { AppDialog.Error("طراحی قالب", "متغیر انتخاب‌شده برای این سند معتبر نیست."); return; }
         string? imageData = null;
         if (kind == "image")
         {
@@ -246,8 +257,8 @@ public partial class FreeTemplateEditorWindow : Window
             { AppDialog.Error("تصویر", "خواندن تصویر ناموفق بود: " + ex.Message); return; }
         }
         var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : kind == "image" ? 100 : 40;
-        var item = new FreeTemplateElement { Kind = kind, Text = kind == "text" ? "متن جدید" : kind == "variable" ? _variables[0].Label + ":" : "",
-            Key = kind == "variable" ? _variables[0].Key : "", ImageData = imageData, Width = width, Height = height,
+        var item = new FreeTemplateElement { Kind = kind, Text = kind == "text" ? "متن جدید" : kind == "variable" ? variable!.Label + ":" : "",
+            Key = kind == "variable" ? variable!.Key : "", ImageData = imageData, Width = width, Height = height,
             X = Math.Clamp(point.X, 0, _document.Width - width), Y = Math.Clamp(point.Y, 0, _document.Height - height) };
         _document.Elements.Add(item); Select(item); RefreshCanvas();
     }
