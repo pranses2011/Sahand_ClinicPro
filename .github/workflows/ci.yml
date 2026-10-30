@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -160,14 +160,14 @@ jobs:
           exit 0
 
       - name: بارگذاری سند OpenAPI
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: openapi-spec
           path: docs/api/openapi.json
           retention-days: 30
 
       - name: بارگذاری نتایج تست
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: test-results
@@ -182,10 +182,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -214,7 +214,7 @@ jobs:
           }
 
       - name: بارگذاری نتایج تست دسکتاپ
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: desktop-test-results
@@ -241,7 +241,7 @@ jobs:
           --health-retries=10
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب PHP 8.2 + افزونه‌ها
         uses: shivammathur/setup-php@v2
@@ -277,7 +277,7 @@ jobs:
 
       - name: شکست در صورت خطای تست
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: licsrv-e2e-logs
           path: |
