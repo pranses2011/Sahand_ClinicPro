@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text.Json;
 using FluentValidation;
 using MediatR;
@@ -9,6 +9,7 @@ using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -82,14 +83,14 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         // می‌شود؟» — پذیرش دوگونه است: ویزیت پزشک (DoctorId) یا خدمت درمانی
         // (ServiceId — از تعرفه‌ها: تزریقات/پانسمان/آزمایش/تصویربرداری و…).
         // دقیقاً یکی از دو مسیر الزامی است؛ انجام‌دهندهٔ خدمت پرسنل است.
-        if (dto.DoctorId is null && dto.ServiceId is null)
+        if ((dto.DoctorId is null) == (dto.ServiceId is null))
             return Result<long>.Failure(new Domain.Common.Error(
-                "RECEPTION.TARGET", "پذیرش نیازمند پزشک یا خدمت درمانی است — یکی را انتخاب کنید"));
+                "RECEPTION.TARGET", "برای پذیرش دقیقاً یکی از پزشک یا خدمت درمانی را انتخاب کنید"));
 
         if (dto.DoctorId is not null)
         {
             var doctor = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
-                .FirstOrDefaultAsync(d => d.Id == dto.DoctorId.Value && !d.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(d => d.Id == dto.DoctorId.Value && !d.IsDeleted && d.IsActive, cancellationToken);
             if (doctor is null)
                 return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId.Value));
         }
@@ -98,10 +99,21 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         if (dto.ServiceId is not null)
         {
             service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>().QueryableNoTracking
-                .FirstOrDefaultAsync(s => s.Id == dto.ServiceId.Value && !s.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(s => s.Id == dto.ServiceId.Value && !s.IsDeleted && s.IsActive, cancellationToken);
             if (service is null)
                 return Result<long>.Failure(Error.NotFound("خدمت", dto.ServiceId.Value));
         }
+
+        // انتخاب صریح قدیمی یا غیرفعال نباید قبل از رسیدن به محاسبه فاکتور
+        // باعث ثبت پذیرش ناقص شود؛ null بیمه برای سازگاری کلاینت قدیمی است.
+        if (dto.InsuranceCompanyId is < 0)
+            return Result<long>.Failure(new Error("RECEPTION.INSURANCE_INVALID", "بیمه انتخاب‌شده معتبر نیست."));
+        if (dto.InsuranceCompanyId is > 0 && !await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+            .AnyAsync(i => i.Id == dto.InsuranceCompanyId && !i.IsDeleted && i.IsActive && i.IsContracted, cancellationToken))
+            return Result<long>.Failure(new Error("RECEPTION.INSURANCE_INVALID", "بیمه انتخاب‌شده فعال یا طرف قرارداد نیست؛ بیمه را دوباره انتخاب کنید."));
+        if (dto.PerformedByEmployeeId is long performerId && !await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .AnyAsync(e => e.Id == performerId && !e.IsDeleted && e.IsActive, cancellationToken))
+            return Result<long>.Failure(new Error("RECEPTION.PERFORMER_INVALID", "پرسنل انجام‌دهنده معتبر یا فعال نیست."));
 
         // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت پذیرش خدمتی ═══
         // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
