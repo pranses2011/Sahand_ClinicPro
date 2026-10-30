@@ -34,6 +34,8 @@ public class PrintSettingsPolicyTests
     [Theory]
     [InlineData("1", true, 1)]
     [InlineData("9", true, 9)]
+    [InlineData("۳", true, 3)]
+    [InlineData("٤", true, 4)]
     [InlineData("0", false, 0)]
     [InlineData("10", false, 10)]
     [InlineData("abc", false, 0)]

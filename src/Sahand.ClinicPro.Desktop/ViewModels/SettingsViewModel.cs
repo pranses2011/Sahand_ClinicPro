@@ -1563,8 +1563,16 @@ public partial class PrintJobRow : CommunityToolkit.Mvvm.ComponentModel.Observab
 
     /// <summary>تعداد نسخه در محدوده مجاز و با عدد صحیح خوانده می‌شود.</summary>
     public bool TryGetCopies(out int copies)
-        => int.TryParse(CopiesInput, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out copies)
+    {
+        var normalized = new string((CopiesInput ?? string.Empty).Select(c => c switch
+        {
+            >= '۰' and <= '۹' => (char)('0' + c - '۰'),
+            >= '٠' and <= '٩' => (char)('0' + c - '٠'),
+            _ => c
+        }).ToArray());
+        return int.TryParse(normalized, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out copies)
             && copies is >= 1 and <= 9;
+    }
 
     /// <summary>پیش‌نمایش قبل از چاپ این سند</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
