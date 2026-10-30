@@ -449,7 +449,7 @@ public partial class App : System.Windows.Application
     internal static readonly string[] ScreenshotPageKeys =
     {
         "dentistry", "ophthalmology", "physiotherapy", "survey", "survey-results",
-        "print-template", "print-settings", "imaging"
+        "print-template", "print-settings", "print-designer", "imaging"
     };
 
     /// <summary>
@@ -587,6 +587,27 @@ public partial class App : System.Windows.Application
                     viewModel = m;
                     view = new ComplementaryView { DataContext = m };
                     winWidth = 1240;
+                    break;
+                }
+                case "print-designer":
+                {
+                    var vars = new[] {
+                        new ComplementaryViewModel.TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                        new ComplementaryViewModel.TemplateVariable("سند", "📄", "شماره فاکتور", "invoice_code"),
+                        new ComplementaryViewModel.TemplateVariable("مالی", "🧾", "اقلام (جدول)", "items_html")
+                    };
+                    var sample = new FreeTemplateDocument { Width = 600, Height = 780, Elements = new() {
+                        new() { Kind = "text", Text = "فاکتور نمونه — فاقد اعتبار", X = 80, Y = 35, Width = 440, Height = 45, FontSize = 20, Bold = true, Alignment = "center" },
+                        new() { Kind = "line", X = 30, Y = 100, Width = 540, Height = 8 },
+                        new() { Kind = "variable", Key = "patient_name", Text = "نام بیمار:", X = 300, Y = 130, Width = 250, Height = 40 },
+                        new() { Kind = "variable", Key = "invoice_code", Text = "شماره:", X = 40, Y = 130, Width = 230, Height = 40 },
+                        new() { Kind = "variable", Key = "items_html", Text = "اقلام:", X = 30, Y = 210, Width = 540, Height = 350 }
+                    } };
+                    var designer = new FreeTemplateEditorWindow(sample, vars, "A4", "Portrait");
+                    var content = designer.Content;
+                    designer.Content = null;
+                    view = new UserControl { Content = content };
+                    viewModel = designer;
                     break;
                 }
                 case "print-settings":

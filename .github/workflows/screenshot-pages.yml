@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       pages:
-        description: 'کلیدهای صفحات (جدا شده با کاما) — dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+        description: 'کلیدهای صفحات (جدا شده با کاما) — dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
         required: false
-        default: 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+        default: 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
 
 permissions:
   contents: write
@@ -50,7 +50,7 @@ jobs:
           New-Item -ItemType Directory -Force shots | Out-Null
           $pagesRaw = '${{ inputs.pages }}'
           if ([string]::IsNullOrWhiteSpace($pagesRaw)) {
-            $pagesRaw = 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,imaging'
+            $pagesRaw = 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
           }
           $pages = $pagesRaw -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
           foreach ($page in $pages) {
