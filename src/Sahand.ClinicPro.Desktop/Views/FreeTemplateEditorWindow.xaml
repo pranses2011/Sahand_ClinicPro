@@ -83,6 +83,8 @@
                                 <Button Style="{StaticResource DesignerButton}" Content="□" Tag="rectangle" Click="Add_Click" ToolTip="افزودن کادر" AutomationProperties.Name="افزودن کادر" Margin="2" MinWidth="35"/>
                                 <Button Style="{StaticResource DesignerButton}" Content="―" Tag="line" Click="Add_Click" ToolTip="افزودن خط" AutomationProperties.Name="افزودن خط" Margin="2" MinWidth="35"/>
                                 <Button Style="{StaticResource DesignerButton}" Content="▧" Tag="image" Click="Add_Click" ToolTip="افزودن تصویر PNG یا JPEG" AutomationProperties.Name="افزودن تصویر" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="↑" Tag="1" Click="Layer_Click" ToolTip="یک لایه جلوتر" AutomationProperties.Name="یک لایه جلوتر" Margin="2" MinWidth="35"/>
+                                <Button Style="{StaticResource DesignerButton}" Content="↓" Tag="-1" Click="Layer_Click" ToolTip="یک لایه عقب‌تر" AutomationProperties.Name="یک لایه عقب‌تر" Margin="2" MinWidth="35"/>
                                 <Button Style="{StaticResource DesignerButton}" Content="×" Click="Remove_Click" ToolTip="حذف عنصر انتخاب‌شده" AutomationProperties.Name="حذف عنصر انتخاب‌شده" Margin="2" MinWidth="35"/>
                             </WrapPanel>
                         </StackPanel>

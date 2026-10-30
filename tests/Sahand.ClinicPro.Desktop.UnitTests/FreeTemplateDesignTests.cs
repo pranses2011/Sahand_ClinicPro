@@ -29,6 +29,22 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Layer_order_is_preserved_in_output_and_stops_at_edges()
+    {
+        var first = new FreeTemplateElement { Kind = "text", Text = "نخست" };
+        var second = new FreeTemplateElement { Kind = "text", Text = "دوم" };
+        var doc = new FreeTemplateDocument { Elements = new() { first, second } };
+        FreeTemplateDesign.MoveLayer(doc, first, -1).Should().BeFalse();
+        FreeTemplateDesign.MoveLayer(doc, first, 1).Should().BeTrue();
+        doc.Elements.Should().Equal(second, first);
+        var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        html.IndexOf("دوم", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("نخست", StringComparison.Ordinal));
+        FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
+        loaded!.Elements.Select(x => x.Text).Should().Equal("دوم", "نخست");
+        FreeTemplateDesign.MoveLayer(doc, first, 1).Should().BeFalse();
+    }
+
+    [Fact]
     public void Drag_stays_inside_fractional_canvas_after_rounding()
     {
         var doc = new FreeTemplateDocument { Width = 600.001, Height = 800.001 };

@@ -273,6 +273,14 @@ public partial class FreeTemplateEditorWindow : Window
         }
         catch (ArgumentException ex) { AppDialog.Error("اندازه بوم", ex.Message); }
     }
+    private void Layer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is not { } item || sender is not Button { Tag: string tag } || tag is not ("1" or "-1")) return;
+        if (!CanDiscardPending()) return;
+        Select(item);
+        FreeTemplateDesign.MoveLayer(_document, item, tag == "1" ? 1 : -1);
+        RefreshCanvas();
+    }
     private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); _selected = null; RefreshCanvas(); } }
     private (string Html, string Paper, string Orientation) BuildCurrentDesign()
     {

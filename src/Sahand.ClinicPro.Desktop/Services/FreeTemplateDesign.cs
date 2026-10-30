@@ -49,6 +49,17 @@ public static class FreeTemplateDesign
     private static string Safe(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
+    /// <summary>تغییر ترتیب یک لایه به اندازه یک پله؛ انتهای فهرست روی سایر عناصر رندر می‌شود.</summary>
+    public static bool MoveLayer(FreeTemplateDocument document, FreeTemplateElement element, int direction)
+    {
+        if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
+        var index = document.Elements.IndexOf(element);
+        var next = index + direction;
+        if (index < 0 || next < 0 || next >= document.Elements.Count) return false;
+        (document.Elements[index], document.Elements[next]) = (document.Elements[next], document.Elements[index]);
+        return true;
+    }
+
     /// <summary>محاسبه مکان عنصر بدون خروج از بوم، حتی با ابعاد اعشاری.</summary>
     public static (double X, double Y) MoveWithinCanvas(FreeTemplateDocument document, FreeTemplateElement element, double x, double y)
     {
