@@ -50,7 +50,9 @@ jobs:
           New-Item -ItemType Directory -Force shots | Out-Null
           $pagesRaw = '${{ inputs.pages }}'
           if ([string]::IsNullOrWhiteSpace($pagesRaw)) {
-            $pagesRaw = 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
+            # اجرای نشانگر روی شاخه فقط صفحات چاپ را بازبینی می‌کند؛
+            # اجرای دستی می‌تواند فهرست کامل یا انتخاب دلخواه بدهد.
+            $pagesRaw = 'print-template,print-settings,print-designer'
           }
           $pages = $pagesRaw -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
           foreach ($page in $pages) {
