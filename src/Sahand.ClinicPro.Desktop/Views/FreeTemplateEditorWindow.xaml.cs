@@ -45,11 +45,14 @@ public partial class FreeTemplateEditorWindow : Window
         foreach (var item in _document.Elements)
         {
             var label = item.Kind switch { "variable" => item.Text + " «" + (_variables.FirstOrDefault(v => v.Key == item.Key)?.Label ?? item.Key) + "»", "text" => item.Text, "line" => "────────", _ => "" };
+            var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
+            var content = new Border { BorderBrush = ink,
+                BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
+                Child = new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
             var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,
-                BorderThickness = new Thickness(ReferenceEquals(item, _selected) ? 2 : 1),
-                BorderBrush = ReferenceEquals(item, _selected) ? Brushes.DodgerBlue : item.Kind is "rectangle" or "line" ? Brushes.SlateGray : Brushes.Transparent,
-                Background = Brushes.Transparent, ClipToBounds = true,
-                Child = new TextBlock { Text = label, FontSize = item.FontSize, Foreground = Brushes.DarkSlateGray, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
+                BorderThickness = new Thickness(ReferenceEquals(item, _selected) ? 1 : 0),
+                BorderBrush = ReferenceEquals(item, _selected) ? Brushes.DodgerBlue : Brushes.Transparent,
+                Background = Brushes.Transparent, ClipToBounds = true, Child = content };
             Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
             border.MouseLeftButtonDown += ItemDown; border.MouseMove += ItemMove; border.MouseLeftButtonUp += ItemUp;
             PageCanvas.Children.Add(border);
