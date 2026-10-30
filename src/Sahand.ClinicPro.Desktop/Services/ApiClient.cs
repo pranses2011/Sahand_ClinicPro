@@ -221,10 +221,12 @@ public class ApiClient : IApiClient
                 request.Content = new StringContent(
                     JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json");
             if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
+            {
                 if (BranchId is { } bid)
                     request.Headers.Add("X-Branch-Id", bid.ToString());
                 request.Headers.Authorization =
                     new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+            }
 
             using var response = await _http.SendAsync(request, ct);
             var json = await response.Content.ReadAsStringAsync(ct);
@@ -361,6 +363,7 @@ public class ApiClient : IApiClient
     private async Task<T?> SendInternalAsync<T>(string endpoint, object? body,
         bool attachToken, CancellationToken ct, HttpMethod? method = null)
     {
+        var branchId = BranchId;
         try
         {
             using var request = new HttpRequestMessage(method ?? HttpMethod.Post, endpoint);
@@ -373,10 +376,12 @@ public class ApiClient : IApiClient
             }
 
             if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
-                if (BranchId is { } bid)
+            {
+                if (branchId is { } bid)
                     request.Headers.Add("X-Branch-Id", bid.ToString());
                 request.Headers.Authorization =
                     new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
+            }
 
             using var response = await _http.SendAsync(request, ct);
 
@@ -388,7 +393,7 @@ public class ApiClient : IApiClient
                 if (refreshed)
                 {
                     // تکرار همان درخواست با توکن جدید
-                    using var retry = await SendRawAsync(endpoint, body, attachToken: true, method ?? HttpMethod.Post, ct);
+                    using var retry = await SendRawAsync(endpoint, body, attachToken: true, method ?? HttpMethod.Post, ct, branchId, useCapturedBranch: true);
                     return await ReadResponseAsync<T>(retry, ct);
                 }
 
@@ -413,7 +418,7 @@ public class ApiClient : IApiClient
 
     /// <summary>ارسال خام بدون تفسیر پاسخ</summary>
     private async Task<HttpResponseMessage> SendRawAsync(string endpoint, object? body,
-        bool attachToken, HttpMethod method, CancellationToken ct)
+        bool attachToken, HttpMethod method, CancellationToken ct, long? capturedBranch = null, bool useCapturedBranch = false)
     {
         using var request = new HttpRequestMessage(method, endpoint);
         if (body is not null)
@@ -422,7 +427,7 @@ public class ApiClient : IApiClient
         if (attachToken && !string.IsNullOrEmpty(_tokens.AccessToken))
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
-        if (BranchId is { } bid)
+        if ((useCapturedBranch ? capturedBranch : BranchId) is { } bid)
             request.Headers.Add("X-Branch-Id", bid.ToString());
         return await _http.SendAsync(request, ct);
     }
