@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Sahand.ClinicPro.Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
@@ -64,6 +65,16 @@ public class ReceptionsController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>ثبت یا بازپخش پذیرش با شناسه پایدار الزامی.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("receptions.create")]
+    public async Task<IActionResult> CreateIdempotent([FromBody] CreateReceptionDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه درخواست پذیرش الزامی است.", 400));
+        return await Create(dto);
+    }
+
     /// <summary>ثبت پذیرش بیمار</summary>
     /// <param name="dto">داده پذیرش</param>
     [HttpPost]
@@ -71,6 +82,8 @@ public class ReceptionsController : ApiBaseController
     public async Task<IActionResult> Create([FromBody] CreateReceptionDto dto)
     {
         var result = await _mediator.Send(new CreateReceptionCommand(dto, _currentUser.UserId));
+        if (result.IsFailure && result.Error.Code == "RECEPTION.REQUEST_CONFLICT")
+            return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
         if (result.IsSuccess)
             return CreatedResponse(result, nameof(GetToday), new { }, "پذیرش با موفقیت ثبت شد");
         return ToResponse(result);

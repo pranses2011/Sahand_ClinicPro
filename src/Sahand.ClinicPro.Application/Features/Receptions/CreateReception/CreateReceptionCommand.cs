@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +55,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.RequestId == Guid.Empty)
+            return Result<long>.Failure(new Error("RECEPTION.REQUEST_INVALID", "شناسه درخواست پذیرش معتبر نیست."));
 
         // کوئری ردیابی‌شونده همچنان فیلتر شعبه/حذف را اعمال می‌کند؛ FindAsync
         // می‌تواند موجودیت موجود در حافظه از شعبه دیگر را بازگرداند.
@@ -60,6 +64,18 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
             .FirstOrDefaultAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken);
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+
+        string? fingerprint = null;
+        if (dto.RequestId.HasValue)
+        {
+            fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(dto with { RequestId = null })));
+            var prior = await _unitOfWork.Repository<Reception>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.PatientId == dto.PatientId && prior.RequestFingerprint == fingerprint
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("RECEPTION.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای پذیرش دیگری استفاده شده است."));
+        }
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — پذیرش خدمت درمانی ═══
         // «قسمت پذیرش فقط پزشک دارد — بیمارِ آمپول/سرم/پانسمان/آزمایش/عکس چه
@@ -150,6 +166,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         }
         var reception = new Reception
         {
+            RequestId = dto.RequestId,
+            RequestFingerprint = fingerprint,
             PatientId = dto.PatientId,
             DoctorId = dto.DoctorId,
             // چرخه ۲۴ — پذیرش خدمت درمانی (بدون پزشک)

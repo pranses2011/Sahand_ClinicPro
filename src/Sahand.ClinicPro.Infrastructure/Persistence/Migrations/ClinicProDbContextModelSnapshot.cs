@@ -9585,6 +9585,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasComment("اتاق انجام خدمت — پذیرش خدمتی چرخهٔ ۳۹ (ویزیت پزشک: اتاق از برنامهٔ کاری خود پزشک)");
 
+                    b.Property<string>("RequestFingerprint")
+                        .IsUnicode(false)
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -9628,6 +9636,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_Reception_PatientId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Reception_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("ReceptionNumber")
                         .IsUnique()
