@@ -182,7 +182,7 @@ public static class PrintTemplateRenderer
 
     /// <summary>
     /// تبدیل اندازهٔ کاغذ به عرض پیکسلی برگه در رزولوشن ۹۶dpi — چرخه سی‌ویکم.
-    /// استانداردها: A3=1123 / A4=794 / A5=559 / A6=397 / B5=691 / Letter=816 / Legal=1056
+    /// استانداردها: A3=1123 / A4=794 / A5=559 / A6=397 / B5=691 / Letter=816 / Legal=816
     /// فیش حرارتی: Thermal80=302 / Thermal58=219 (عرض مفید کاغذ ۸۰ و ۵۸ میلی‌متری)
     /// سفارشی: «Custom:عرضxارتفاع» بر حسب میلی‌متر با مقیاس ۹۶/۲۵.۴ ≈ ۳.۷۸ پیکسل بر میلی‌متر
     /// </summary>
@@ -200,7 +200,7 @@ public static class PrintTemplateRenderer
             case "A6": return "397px";
             case "B5": return "691px";
             case "LETTER": return "816px";
-            case "LEGAL": return "1056px";
+            case "LEGAL": return "816px";
             case "THERMAL80": return "302px"; // ۸۰mm × ۳.۷۸ ≈ ۳۰۲px — پرینترهای کاسه‌ای متداول
             case "THERMAL58": return "219px"; // ۵۸mm × ۳.۷۸ ≈ ۲۱۹px — فیش‌خوان‌های کوچک
             default:

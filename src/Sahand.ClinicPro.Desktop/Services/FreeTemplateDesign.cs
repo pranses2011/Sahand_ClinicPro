@@ -59,7 +59,7 @@ public static class FreeTemplateDesign
         if (!string.Equals(orientation, "Portrait", StringComparison.OrdinalIgnoreCase)) return 0;
         var key = paper.Trim().ToUpperInvariant();
         var width = key switch { "A3" => 1123, "A4" => 794, "A5" => 559, "A6" => 397, "B5" => 691,
-            "LETTER" => 816, "LEGAL" => 1056, "THERMAL80" => 302, "THERMAL58" => 219, _ => 0 };
+            "LETTER" => 816, "LEGAL" => 816, "THERMAL80" => 302, "THERMAL58" => 219, _ => 0 };
         if (width == 0)
         {
             var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]", RegexOptions.CultureInvariant);

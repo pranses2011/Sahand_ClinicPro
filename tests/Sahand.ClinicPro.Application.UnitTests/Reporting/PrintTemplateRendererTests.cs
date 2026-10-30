@@ -64,6 +64,13 @@ public class PrintTemplateRendererTests
         html.Should().Contain("بدنه");
     }
 
+    [Fact]
+    public void Legal_portrait_has_eight_and_half_inch_width()
+    {
+        var html = PrintTemplateRenderer.WrapDocument("body", "clinic", null, null, null, null, 13, null, false, "Legal");
+        html.Should().Contain(".sheet { width:816px");
+    }
+
     [Theory]
     [InlineData("A4", "1123px", "A4 landscape")]
     [InlineData("Custom:100x180", "680px", "180mm 100mm")]

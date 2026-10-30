@@ -9,6 +9,7 @@ public class FreeTemplateDesignTests
 {
     [Theory]
     [InlineData("A5", 507)]
+    [InlineData("Legal", 764)]
     [InlineData("Thermal80", 250)]
     [InlineData("Custom:100x180", 326)]
     [InlineData("invalid", 0)]
