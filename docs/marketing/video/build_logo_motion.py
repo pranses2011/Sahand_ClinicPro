@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-لوگوموشن (Logo Motion) سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro
+لوگوموشن «مونتاژ المان‌به‌المان» سامانه جامع مدیریت درمانگاه سهند — Sahand ClinicPro
+
+هر جزء لوگو (نوار سبز، هلال سبز، خانهٔ آبی، صلیب، لوله‌های گوشی و صفحهٔ گوشی)
+جدا می‌شود و با انیمیشن مخصوص خودش می‌آید تا در پایان لوگوی کامل ساخته شود.
 
 خروجی‌ها:
     logo-motion-square.mp4     1080×1080 · 60fps · با صدا (فید/اینستاگرام)
     logo-motion-vertical.mp4   1080×1920 · 60fps · با صدا (ریلز/استوری)
-    logo-motion-alpha.mov      1080×1080 · 30fps · QuickTime با کانال آلفا (تدوین)
-    logo-motion-alpha.webm     1080×1080 · 30fps · VP9 با آلفا (وب/OBS)
+    logo-motion-alpha.mov      1080×1080 · 30fps · ProRes 4444 با کانال آلفا (تدوین)
 
 اجرا:
     python3 build_logo_motion.py
     python3 build_logo_motion.py --only square
-    python3 build_logo_motion.py --stills 0.6,1.2,2.0,3.0,4.5
+    python3 build_logo_motion.py --preview        # تصویر المان‌های جدا‌شده
+    python3 build_logo_motion.py --stills 0.7,1.2,1.8,2.4,4
 
 پیش‌نیازها: pillow, numpy, arabic-reshaper, python-bidi, imageio-ffmpeg
 """
@@ -24,6 +27,7 @@ import math
 import subprocess
 import sys
 import tempfile
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -33,45 +37,51 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_promo as bp  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-WORK = Path(tempfile.gettempdir()) / "sahand_logo"
+WORK = Path(tempfile.gettempdir()) / "sahand_logobuild"
 FFMPEG = bp.FFMPEG
 FPS = 60
 ALPHA_FPS = 30
-ALPHA_FORMAT = "webm"
 SR = 48000
-T_TOTAL = 6.8
 C = bp.C
+ALPHA_FORMAT = "mov"   # VP9/WebM در این نسخهٔ ffmpeg آلفا را دور می‌ریزد؛ ProRes 4444 مطمئن است
 
-# ───────────────────────────── تایم‌لاین ─────────────────────────────
-T_BG_IN = 0.50
-T_SPARK = (0.30, 0.80)
-T_STREAK = (0.34, 1.02)
-T_BADGE = 0.68
-T_BADGE_LEN = 1.10
-T_RINGS = (1.02, 1.26, 1.52)
-T_RING_LEN = 1.45
-T_SHINE = (1.45, 2.30)
-T_TITLE = (2.10, 2.95)
-T_LATIN = (2.50, 3.25)
-T_DIVIDER = (2.80, 3.30)
-T_SUBTITLE = (3.00, 3.65)
-T_FADE_OUT = 6.20
-T_LAND = 0.92         # لحظهٔ فرود لوگو (هماهنگ با صدا)
+# ───────────────────────────── زمان‌بندی (ثانیه) ─────────────────────────────
+T_TOTAL = 7.0
+T_FADE_OUT = 6.42
+
+# (شروع، مدت) ورود هر المان — ترتیب: نوار، هلال، خانه، گوشی، صفحه، صلیب
+T_BAR = (0.30, 0.48)
+T_ARC = (0.52, 0.56)
+T_HOUSE = (0.80, 0.55)
+T_TUBES = (1.24, 0.48)
+T_CHEST = (1.52, 0.42)
+T_CROSS = (1.84, 0.42)
+T_SHINE = (2.06, 0.85)
+T_TITLE = (2.58, 0.80)
+T_LATIN = (2.90, 0.70)
+T_DIVIDER = (3.16, 0.45)
+T_SUBTITLE = (3.34, 0.60)
+
+LAND_BAR, LAND_ARC, LAND_HOUSE = 0.71, 1.04, 1.33
+LAND_TUBES, LAND_CHEST, LAND_CROSS = 1.66, 1.90, 2.22
 
 LAYOUTS = {
-    "square": dict(W=1080, H=1080, badge=0.34, badge_cy=0.355, title_size=0.088, title_cy=0.600,
-                   latin_size=0.026, latin_cy=0.676, div_y=0.714, sub_size=0.034, sub_cy=0.757),
-    "vertical": dict(W=1080, H=1920, badge=0.40, badge_cy=0.368, title_size=0.090, title_cy=0.590,
-                     latin_size=0.026, latin_cy=0.652, div_y=0.683, sub_size=0.034, sub_cy=0.718),
+    "square": dict(W=1080, H=1080, logo=0.470, logo_cy=0.394, title_size=0.086, title_cy=0.647,
+                   latin_size=0.025, latin_cy=0.713, div_y=0.749, sub_size=0.035, sub_cy=0.789),
+    "vertical": dict(W=1080, H=1920, logo=0.520, logo_cy=0.425, title_size=0.088, title_cy=0.610,
+                     latin_size=0.026, latin_cy=0.670, div_y=0.702, sub_size=0.035, sub_cy=0.738),
 }
 
+LOGO_SRC = bp.LOGO
 
-# ───────────────────────────── ابزار ─────────────────────────────
+
+# ───────────────────────────── ابزار ریاضی ─────────────────────────────
 def clamp01(v):
     return 0.0 if v < 0 else (1.0 if v > 1 else v)
 
 
-def seg(t, a, b):
+def seg(t, ab):
+    a, b = ab
     return clamp01((t - a) / max(1e-6, b - a))
 
 
@@ -85,17 +95,20 @@ def ease_in_out(t):
     return t * t * (3 - 2 * t)
 
 
-def spring(t):
-    """فنر میرا: از ۰ آغاز و با فراگذشت ملایم به ۱ می‌رسد."""
+def ease_out_back(t, k=2.2):
+    t = clamp01(t) - 1.0
+    return 1 + t * t * ((k + 1) * t + k)
+
+
+def spring(t, damp=6.4, freq=9.6):
     if t <= 0:
         return 0.0
     if t >= 1:
         return 1.0
-    return 1 - math.exp(-6.2 * t) * math.cos(9.4 * t)
+    return 1 - math.exp(-damp * t) * math.cos(freq * t)
 
 
 def blend(dst: Image.Image, src: Image.Image, x, y, op=1.0):
-    """ترکیب یک لایهٔ RGBA روی تصویر مقصد با شفافیت."""
     if op <= 0.004:
         return
     x, y = int(round(x)), int(round(y))
@@ -111,76 +124,154 @@ def blend(dst: Image.Image, src: Image.Image, x, y, op=1.0):
     dst.alpha_composite(src, (x0, y0))
 
 
-def gaussian_band(w, h, center, width, angle_deg=0.0, color=(255, 255, 255)):
-    yy = np.arange(h, dtype=np.float32)[:, None]
-    xx = np.arange(w, dtype=np.float32)[None, :]
-    a = math.radians(angle_deg)
-    proj = xx * math.cos(a) + yy * math.sin(a)
-    alpha = np.exp(-0.5 * ((proj - center) / max(width, 1e-3)) ** 2)
-    rgb = np.empty((h, w, 3), np.float32)
-    rgb[..., 0], rgb[..., 1], rgb[..., 2] = color
-    return Image.fromarray(np.dstack([rgb, alpha * 255.0]).astype(np.uint8), "RGBA")
+# ───────────────────────────── جداسازی المان‌های لوگو ─────────────────────────────
+def _label(mask: np.ndarray):
+    H, W = mask.shape
+    lab = np.zeros((H, W), np.int32)
+    cur = 0
+    for y in range(H):
+        row = mask[y]
+        for x in range(W):
+            if row[x] and lab[y, x] == 0:
+                cur += 1
+                q = deque([(y, x)])
+                lab[y, x] = cur
+                while q:
+                    cy, cx = q.popleft()
+                    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        ny, nx = cy + dy, cx + dx
+                        if 0 <= ny < H and 0 <= nx < W and mask[ny, nx] and lab[ny, nx] == 0:
+                            lab[ny, nx] = cur
+                            q.append((ny, nx))
+    return lab, cur
 
 
-def ellipse_layer(box, radius, alpha, width, col, pad=10):
-    """حلقهٔ نازک روی بوم کوچک (سریع) و برگرداندن تصویر + موقعیت."""
-    side = int(2 * (radius + pad))
-    img = Image.new("RGBA", (side, side), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    c = side / 2
-    d.ellipse((c - radius, c - radius, c + radius, c + radius),
-              outline=tuple(col) + (int(alpha),), width=max(1, width))
-    return img
+def _dilate(mask: np.ndarray, r: int = 2) -> np.ndarray:
+    out = mask.copy()
+    for _ in range(r):
+        out = out | np.roll(out, 1, 0) | np.roll(out, -1, 0) | np.roll(out, 1, 1) | np.roll(out, -1, 1)
+    return out
 
 
-# ───────────────────────────── اجزا ─────────────────────────────
-def plate(size: int, radius_ratio=0.235) -> Image.Image:
-    r = int(size * radius_ratio)
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    grad = bp.vertical_gradient((size, size), (247, 252, 255), (176, 219, 249)).convert("RGBA")
-    grad.putalpha(bp.rounded_mask((size, size), r))
-    img.alpha_composite(grad)
-
-    logo = Image.open(bp.LOGO).convert("RGBA")
-    inner = int(size * 0.86)
-    img.alpha_composite(logo.resize((inner, inner), Image.LANCZOS),
-                        ((size - inner) // 2, int(size * 0.075)))
-
-    gloss = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    ImageDraw.Draw(gloss).rounded_rectangle((0, 0, size - 1, int(size * 0.50)), r,
-                                            fill=(255, 255, 255, 46))
-    img.alpha_composite(gloss.filter(ImageFilter.GaussianBlur(max(2, size // 24))))
-    ImageDraw.Draw(img).rounded_rectangle((0, 0, size - 1, size - 1), r,
-                                          outline=(255, 255, 255, 125), width=max(1, size // 170))
-    return img
+def _largest(mask: np.ndarray) -> np.ndarray:
+    lab, n = _label(mask)
+    if n == 0:
+        return mask
+    sizes = [(int((lab == i).sum()), i) for i in range(1, n + 1)]
+    return lab == max(sizes)[1]
 
 
-def badge_group(size: int):
-    """سایه + هاله + پلاک روی بوم مربع بزرگ‌تر (تا دوران بدون برش انجام شود)."""
-    canvas = int(size * 1.9)
-    shadow, _ = bp.drop_shadow((size, size), int(size * 0.235), blur=int(size * 0.085),
-                               offset=(0, int(size * 0.05)), alpha=200, spread=int(size * 0.012))
-    glow, _ = bp.drop_shadow((size, size), int(size * 0.235), blur=int(size * 0.12),
-                             offset=(0, 0), alpha=115, spread=int(size * 0.025))
-
-    group = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
-    for mask, color in ((glow, (72, 168, 245)), (shadow, (1, 5, 16))):
-        tint = Image.new("RGBA", mask.size, color + (255,))
-        tint.putalpha(mask)
-        group.alpha_composite(tint, ((canvas - mask.width) // 2, (canvas - mask.height) // 2))
-    p = plate(size)
-    group.alpha_composite(p, ((canvas - size) // 2, (canvas - size) // 2))
-    return group, p
+def _keep_big(mask: np.ndarray, min_px=900) -> np.ndarray:
+    lab, n = _label(mask)
+    out = np.zeros_like(mask)
+    for i in range(1, n + 1):
+        m = lab == i
+        if m.sum() >= min_px:
+            out |= m
+    return out
 
 
+def segment_logo(path=LOGO_SRC):
+    """لوگو را به شش المان سازنده تقسیم می‌کند: bar, arc, house, cross, tubes, chest."""
+    im = Image.open(path).convert("RGBA")
+    a = np.array(im).astype(np.float32)
+    r, g, b, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+    H, W = al.shape
+    yy, xx = np.mgrid[0:H, 0:W]
+
+    # صلیب: تنها مؤلفهٔ متصل جدا از بدنهٔ لوگو
+    lab, n = _label(al > 200)
+    sizes = {i: int((lab == i).sum()) for i in range(1, n + 1)}
+    cross_core = lab == min(sizes, key=sizes.get)
+    cross = _largest(_dilate(cross_core, 3))
+
+    # سبزها (نوار بالا و هلال پایین)
+    green = ((g - np.maximum(r, b)) > 6) & (al > 12)
+    green = _dilate(green, 1)
+    bar_zone = (yy < 362) & (xx > 880)
+    green_bar = _largest(green & bar_zone)
+    green_arc = _largest(green & ~bar_zone)
+
+    # گوشی پزشکی: ناحیهٔ هندسی دقیق (لوله‌ها + حلقهٔ گوشی) و صفحهٔ گوشی
+    chest_disk = ((xx - 940) ** 2 + (yy - 952) ** 2) <= 160 ** 2
+    region = (((yy >= 482) & (yy <= 730) & (xx >= 893)) |
+              ((yy > 730) & (yy <= 878) & (xx >= 925)) |
+              chest_disk)
+    steth = region & (al > 12) & ~green & ~cross
+    chest = _largest(steth & chest_disk)
+    tubes = _largest(steth & ~chest_disk)
+    # حذف هالهٔ خاکستری سایه از لوله‌ها (فقط پیکسل‌های آبی‌رنگ گوشی می‌مانند)
+    chroma = np.clip(((b - r) - 18.0) / 46.0, 0, 1)
+    floor = np.clip((al - 30.0) / 40.0, 0, 1)
+    tubes_alpha_w = chroma * floor
+    chest_alpha_w = floor
+
+    house = (al > 12) & ~green & ~cross & ~steth
+    house = _keep_big(house, 2500)
+
+    masks = dict(bar=green_bar, arc=green_arc, house=house, cross=cross, tubes=tubes, chest=chest)
+    soft = {"tubes": tubes_alpha_w, "chest": chest_alpha_w}
+    layers = {}
+    for name, m in masks.items():
+        arr = a.copy()
+        arr[..., 3] = a[..., 3] * m * (soft.get(name, 1.0))
+        img = Image.fromarray(arr.astype(np.uint8), "RGBA")
+        bb = img.getchannel("A").point(lambda v: 255 if v > 12 else 0).getbbox()
+        layers[name] = (img.crop(bb), bb)  # (تصویر برش‌خورده، جعبه در مختصات لوگو)
+    return layers, (W, H)
+
+
+# ───────────────────────────── المان متحرک ─────────────────────────────
+class Element:
+    """یک المان لوگو با انیمیشن ورود اختصاصی."""
+
+    def __init__(self, name, img, box, logo_px, origin, order):
+        self.name = name
+        self.box = box
+        self.origin = origin
+        self.order = order
+        # مقیاس‌دهی به اندازهٔ نهایی روی بوم
+        self.s = logo_px / 1254.0
+        w = max(2, int(round(img.width * self.s)))
+        h = max(2, int(round(img.height * self.s)))
+        self.base = img.resize((w, h), Image.LANCZOS)
+        # مرکز المان روی بوم
+        cx = origin[0] + (box[0] + box[2]) / 2 * self.s
+        cy = origin[1] + (box[1] + box[3]) / 2 * self.s
+        self.center = (cx, cy)
+
+    def draw(self, dst, t, angle_pivot=None):
+        st = self.state(t)
+        if st is None:
+            return
+        s, ang, dx, dy, op, blur = st
+        img = self.base
+        if abs(s - 1.0) > 0.002:
+            img = img.resize((max(2, int(img.width * s)), max(2, int(img.height * s))), Image.BICUBIC)
+        if abs(ang) > 0.15:
+            img = img.rotate(ang, resample=Image.BICUBIC, expand=True)
+        if blur > 0.4:
+            img = img.filter(ImageFilter.GaussianBlur(blur))
+        px = self.center[0] + dx - img.width / 2
+        py = self.center[1] + dy - img.height / 2
+        if op < 0.999:
+            img = img.copy()
+            img.putalpha(img.getchannel("A").point(lambda v: int(v * op)))
+        dst.alpha_composite(img, (int(round(px)), int(round(py))))
+
+    # هر المان حالت خودش را تعریف می‌کند
+    def state(self, t):
+        return None
+
+
+# ───────────────────────────── پس‌زمینه و ذرات ─────────────────────────────
 def background(W, H, seed=7) -> Image.Image:
     rng = np.random.default_rng(seed)
     yy = np.arange(H, dtype=np.float32)[:, None]
     xx = np.arange(W, dtype=np.float32)[None, :]
-
     top, bottom = np.array([4, 9, 24], np.float32), np.array([10, 34, 62], np.float32)
-    t = (yy / H)
-    base = top[None, None, :] * (1 - t)[:, :, None] + bottom[None, None, :] * t[:, :, None]
+    tr = (yy / H)
+    base = top[None, None, :] * (1 - tr)[:, :, None] + bottom[None, None, :] * tr[:, :, None]
     base = np.repeat(base, W, axis=1)
 
     for gx, gy, gr, col, st, fall in [
@@ -210,7 +301,7 @@ def background(W, H, seed=7) -> Image.Image:
 def make_particles(W, H, n=80, seed=3):
     rng = np.random.default_rng(seed)
     ang = rng.uniform(0, 2 * np.pi, n)
-    rad = rng.uniform(0.20, 0.60, n) * W
+    rad = rng.uniform(0.20, 0.62, n) * W
     return dict(ang=ang, rad=rad, size=rng.uniform(1.1, 3.2, n),
                 phase=rng.uniform(0, 2 * np.pi, n), speed=rng.uniform(0.6, 2.2, n),
                 drift=rng.uniform(-0.4, 0.4, n), hue=rng.uniform(0, 1, n))
@@ -239,7 +330,27 @@ def draw_particles(size, P, t, intensity=1.0) -> Image.Image:
     return layer
 
 
-def wipe(layer: Image.Image, p: float, feather=70, mode="rtl"):
+def gaussian_band(w, h, center, width, angle_deg=0.0, color=(255, 255, 255)) -> Image.Image:
+    yy = np.arange(h, dtype=np.float32)[:, None]
+    xx = np.arange(w, dtype=np.float32)[None, :]
+    a = math.radians(angle_deg)
+    proj = xx * math.cos(a) + yy * math.sin(a)
+    alpha = np.exp(-0.5 * ((proj - center) / max(width, 1e-3)) ** 2)
+    rgb = np.empty((h, w, 3), np.float32)
+    rgb[..., 0], rgb[..., 1], rgb[..., 2] = color
+    return Image.fromarray(np.dstack([rgb, alpha * 255.0]).astype(np.uint8), "RGBA")
+
+
+def ellipse_layer(radius, alpha, width, col, pad=12) -> Image.Image:
+    side = int(2 * (radius + pad))
+    img = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    c = side / 2
+    ImageDraw.Draw(img).ellipse((c - radius, c - radius, c + radius, c + radius),
+                                outline=tuple(col) + (int(alpha),), width=max(1, width))
+    return img
+
+
+def wipe(layer, p, feather=70, mode="rtl"):
     if p >= 1:
         return layer
     if p <= 0:
@@ -257,13 +368,31 @@ def wipe(layer: Image.Image, p: float, feather=70, mode="rtl"):
     return Image.fromarray(arr, "RGBA")
 
 
-def centered(img: Image.Image, cx, cy):
-    bb = bp.content_box(img)
-    return int(round(cx - (bb[0] + bb[2]) / 2)), int(round(cy - (bb[1] + bb[3]) / 2))
+def angle_sweep(layer, p, center, a0, a1, feather=0.15):
+    """نمایش تدریجی بر اساس زاویه حول یک مرکز (برای کشیده‌شدن هلال)."""
+    if p >= 1:
+        return layer
+    if p <= 0:
+        return None
+    arr = np.array(layer)
+    h, w = arr.shape[:2]
+    yy = np.arange(h, dtype=np.float32)[:, None] + 0
+    xx = np.arange(w, dtype=np.float32)[None, :] + 0
+    ang = np.degrees(np.arctan2(yy - center[1], xx - center[0])) % 360
+    start = a0 % 360
+    span = (a1 - a0) % 360
+    rel = (ang - start) % 360
+    m = np.clip((span - rel) / max(1e-3, span * feather), 0, 1)
+    m = np.where(rel <= span, 1.0, m)
+    # پنجرهٔ نرم در جهت پیشرفت
+    reveal = span * p
+    m = np.clip((reveal - rel) / max(1.0, span * feather * 0.4), 0, 1)
+    arr[..., 3] = (arr[..., 3].astype(np.float32) * m).astype(np.uint8)
+    return Image.fromarray(arr, "RGBA")
 
 
 # ───────────────────────────── صحنه ─────────────────────────────
-class LogoMotion:
+class LogoBuild:
     def __init__(self, name: str):
         self.lay = LAYOUTS[name]
         self.name = name
@@ -271,17 +400,29 @@ class LogoMotion:
         self.W, self.H = W, H
         self.bg_img = background(W, H)
         self.particles = make_particles(W, H)
-        self.badge_size = int(W * self.lay["badge"])
-        self.group, self.plate_img = badge_group(self.badge_size)
-        self.badge_center = (W // 2, int(H * self.lay["badge_cy"]))
-        self.shine_full = gaussian_band(2000, 2000, center=0, width=46, angle_deg=52)
+
+        self.logo_px = int(W * self.lay["logo"])
+        self.s = self.logo_px / 1254.0
+        logo_cy = int(H * self.lay["logo_cy"])
+        self.origin = ((W - self.logo_px) / 2, logo_cy - self.logo_px / 2)
+        self.mid = (W / 2, logo_cy)
+
+        layers, _ = segment_logo()
+        self.parts = {}
+        for nm, (img, box) in layers.items():
+            w = max(2, int(round(img.width * self.s)))
+            h = max(2, int(round(img.height * self.s)))
+            self.parts[nm] = (img.resize((w, h), Image.LANCZOS), box, self._center(box))
+
+        self.shine_full = gaussian_band(2400, 2400, center=0, width=70, angle_deg=48)
 
         title_size = int(W * self.lay["title_size"])
         self.title = bp.text_layer("درمانگاه سهند", title_size, "black",
                                    gradient=((255, 255, 255), (156, 214, 255)), align="center",
                                    shadow=0.55, shadow_blur=int(title_size * 0.15))
         self.subtitle = bp.text_layer("سامانه جامع مدیریت درمانگاه", int(W * self.lay["sub_size"]),
-                                      "medium", (176, 208, 236), align="center", shadow=0.4, shadow_blur=10)
+                                      "medium", (176, 208, 236), align="center",
+                                      shadow=0.4, shadow_blur=10)
         latin_size = int(W * self.lay["latin_size"])
         self.latin_frames = [
             bp.text_layer("SAHAND CLINICPRO", latin_size, "semibold", C["sky"], align="center",
@@ -290,173 +431,200 @@ class LogoMotion:
             for i in range(24)
         ]
 
-    # ── پس‌زمینه
-    def render_bg(self, t) -> Image.Image:
-        k = 0.22 + 0.78 * ease_out(seg(t, 0.0, T_BG_IN))
-        img = ImageEnhance.Brightness(self.bg_img).enhance(k).convert("RGBA")
-        img.alpha_composite(draw_particles((self.W, self.H), self.particles, t,
-                                           intensity=clamp01(t / 0.7)))
-        return img
+    def _center(self, box):
+        return (self.origin[0] + (box[0] + box[2]) / 2 * self.s,
+                self.origin[1] + (box[1] + box[3]) / 2 * self.s)
 
-    # ── جرقه و شعاع
-    def render_spark(self, dst, t):
-        cx, cy = self.badge_center
-        p = seg(t, *T_SPARK)
-        if 0 < p < 1:
-            a = math.sin(math.pi * p) ** 1.4
-            r = 3 + 24 * ease_out(p)
-            side = int(r * 8)
-            glow = Image.new("RGBA", (side, side), (0, 0, 0, 0))
-            d = ImageDraw.Draw(glow)
-            c = side / 2
-            for rr, aa in ((r * 3.0, 55), (r * 1.5, 110), (r * 0.6, 235)):
-                d.ellipse((c - rr, c - rr, c + rr, c + rr), fill=(205, 240, 255, int(aa * a)))
-            glow = glow.filter(ImageFilter.GaussianBlur(side // 12))
-            blend(dst, glow, cx - side // 2, cy - side // 2, 1.0)
+    # ── ابزار ترسیم المان
+    def zoom_at(self, t):
+        """پالس کوچک کل نشان هنگام نشستن صفحهٔ گوشی."""
+        if t < LAND_CHEST:
+            return 1.0
+        return 1.0 + 0.018 * math.exp(-(t - LAND_CHEST) / 0.16)
 
-        p = seg(t, *T_STREAK)
-        if 0 < p < 1:
-            a = math.sin(math.pi * min(1.0, p * 1.12)) ** 1.2
-            w = int(self.W * (0.12 + 1.02 * ease_out(p)))
-            band = gaussian_band(w, 30, center=15, width=5.0, angle_deg=0)
-            img = Image.new("RGBA", (w, 30), (0, 0, 0, 0))
-            img.alpha_composite(band)
-            img = img.filter(ImageFilter.GaussianBlur(2.0))
-            blend(dst, img, cx - w // 2, cy - 15, 0.9 * a)
+    def _put(self, dst, name, *, scale=1.0, angle=0.0, dx=0.0, dy=0.0, op=1.0, blur=0.0,
+             alpha_hook=None, zoom=1.0):
+        img, box, center = self.parts[name]
+        center = (self.mid[0] + (center[0] - self.mid[0]) * zoom,
+                  self.mid[1] + (center[1] - self.mid[1]) * zoom)
+        scale *= zoom
+        base = img
+        if abs(scale - 1.0) > 0.002:
+            base = base.resize((max(2, int(base.width * scale)), max(2, int(base.height * scale))),
+                               Image.BICUBIC)
+        if alpha_hook is not None:
+            base = alpha_hook(base, (center[0] - base.width / 2, center[1] - base.height / 2))
+            if base is None:
+                return
+        if abs(angle) > 0.15:
+            base = base.rotate(angle, resample=Image.BICUBIC, expand=True)
+        if blur > 0.35:
+            base = base.filter(ImageFilter.GaussianBlur(blur))
+        if op < 0.999:
+            base = base.copy()
+            base.putalpha(base.getchannel("A").point(lambda v: int(v * op)))
+        dst.alpha_composite(base, (int(round(center[0] + dx - base.width / 2)),
+                                   int(round(center[1] + dy - base.height / 2))))
 
-    # ── فلاش فرود لوگو
-    def render_flash(self, dst, t):
-        d = (t - T_LAND) / 0.16
-        if abs(d) > 3.2:
-            return
-        a = math.exp(-0.5 * d * d) * 0.60
-        cx, cy = self.badge_center
-        r = self.badge_size * (0.62 + 0.30 * min(1.0, abs(d) / 3.0))
-        side = int(r * 4.0)
-        img = Image.new("RGBA", (side, side), (0, 0, 0, 0))
-        dd = ImageDraw.Draw(img)
-        c = side / 2
-        for rr, aa in ((r, 70), (r * 0.62, 130), (r * 0.24, 220)):
-            dd.ellipse((c - rr, c - rr, c + rr, c + rr), fill=(225, 246, 255, int(aa * a)))
-        img = img.filter(ImageFilter.GaussianBlur(side // 9))
-        blend(dst, img, cx - side // 2, cy - side // 2, 1.0)
-
-    # ── حلقه‌های موج
-    def render_rings(self, dst, t):
-        cx, cy = self.badge_center
-        for i, t0 in enumerate(T_RINGS):
-            p = seg(t, t0, t0 + T_RING_LEN)
-            if not 0 < p < 1:
-                continue
-            e = ease_out(p)
-            r = self.badge_size * (0.50 + 1.05 * e + 0.08 * i)
-            a = (1 - e) ** 1.7 * (0.60 - 0.10 * i)
-            col = (110, 205, 255) if i % 2 == 0 else (90, 225, 185)
-            layer = ellipse_layer((self.W, self.H), r, 255 * a, 2 + (i == 0), col)
-            layer = layer.filter(ImageFilter.GaussianBlur(1.3))
-            blend(dst, layer, cx - layer.width // 2, cy - layer.height // 2, 1.0)
-
-    # ── لوگو
-    def render_badge(self, dst, t):
-        p = seg(t, T_BADGE, T_BADGE + T_BADGE_LEN)
+    # ── اجزا
+    def draw_bar(self, dst, t):
+        p = seg(t, T_BAR)
         if p <= 0:
             return
-        sp = spring(p)
-        scale = 0.50 + 0.50 * sp
-        rot = -16.0 * (1 - ease_out(seg(t, T_BADGE, T_BADGE + 0.85)))
-        alpha = clamp01((t - T_BADGE) / 0.30)
-        blur = 7.0 * (1 - ease_out(seg(t, T_BADGE, T_BADGE + 0.50)))
-        float_y = math.sin((t - 2.2) * 1.05) * 4.0 * clamp01((t - 2.2) / 1.2)
+        e = spring(p)
+        self._put(dst, "bar", zoom=self.zoom_at(t), scale=0.82 + 0.18 * e, dx=0, dy=-96 * (1 - e),
+                  op=clamp01(p * 3), blur=2.2 * (1 - ease_out(p)))
 
-        size = max(8, int(round(self.group.width * scale)))
-        g = self.group.resize((size, size), Image.LANCZOS)
-        if abs(rot) > 0.2:
-            g = g.rotate(rot, resample=Image.BICUBIC, expand=False)
-        if blur > 0.3:
-            g = g.filter(ImageFilter.GaussianBlur(blur))
+    def draw_arc(self, dst, t):
+        p = seg(t, T_ARC)
+        if p <= 0:
+            return
+        e = ease_in_out(p)
+        # مرکز چرخش هلال (نزدیک مرکز لوگو) برای sweep
+        cx_logo, cy_logo = 620.0, 700.0
+        def hook(base, pos):
+            cxl = cx_logo * self.s + self.origin[0] - pos[0]
+            cyl = cy_logo * self.s + self.origin[1] - pos[1]
+            return angle_sweep(base, e, (cxl, cyl), 196.0, 52.0, feather=0.35)
+        self._put(dst, "arc", zoom=self.zoom_at(t), angle=-4.0 * (1 - e), dy=14 * (1 - e), op=clamp01(p * 2.5),
+                  alpha_hook=hook)
 
-        sh_p = seg(t, *T_SHINE)
-        if 0 < sh_p < 1:
-            g = self._shine(g, size, sh_p)
+    def draw_house(self, dst, t):
+        p = seg(t, T_HOUSE)
+        if p <= 0:
+            return
+        e = ease_in_out(p)
+        def hook(base, pos):
+            arr = np.array(base)
+            h = arr.shape[0]
+            ynorm = (np.arange(h, dtype=np.float32) / max(1, h - 1))[:, None]
+            front = -0.12 + 1.30 * e
+            m = np.clip((front - ynorm) / 0.14, 0, 1)
+            arr[..., 3] = (arr[..., 3].astype(np.float32) * m).astype(np.uint8)
+            return Image.fromarray(arr, "RGBA")
+        self._put(dst, "house", zoom=self.zoom_at(t), scale=0.975 + 0.025 * e,
+                  blur=2.6 * (1 - ease_out(p)), alpha_hook=hook)
 
-        cx, cy = self.badge_center
-        blend(dst, g, cx - size // 2, cy - size // 2 + int(float_y), alpha)
+    def draw_cross(self, dst, t):
+        p = seg(t, T_CROSS)
+        if p <= 0:
+            return
+        e = ease_out_back(p, 2.6)
+        self._put(dst, "cross", zoom=self.zoom_at(t), scale=0.35 + 0.65 * e, angle=-14 * (1 - ease_out(p)),
+                  op=clamp01(p * 3.2), blur=2.4 * (1 - ease_out(p)))
+        # فلاش کوتاه هنگام نشستن صلیب
+        d = (t - LAND_CROSS) / 0.13
+        if abs(d) < 3:
+            a = math.exp(-0.5 * d * d) * 0.5
+            r = self.logo_px * 0.20
+            side = int(r * 5)
+            img = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+            dd = ImageDraw.Draw(img)
+            c = side / 2
+            for rr, aa in ((r * 1.5, 60), (r * 0.8, 120), (r * 0.3, 200)):
+                dd.ellipse((c - rr, c - rr, c + rr, c + rr), fill=(210, 245, 255, int(aa * a)))
+            img = img.filter(ImageFilter.GaussianBlur(side // 10))
+            blend(dst, img, self.mid[0] - side / 2, self.mid[1] - side / 2, 1.0)
 
-        if t > T_BADGE + 0.55:
-            breathe = 0.5 + 0.5 * math.sin((t - 1.2) * 1.4)
-            r = self.badge_size * (0.98 + 0.05 * breathe)
-            ring = ellipse_layer((self.W, self.H), r, 26 + 22 * breathe, 2, (110, 205, 255), pad=14)
-            blend(dst, ring, cx - ring.width // 2, cy - ring.height // 2 + int(float_y * 0.4), 1.0)
+    def draw_tubes(self, dst, t):
+        p = seg(t, T_TUBES)
+        if p <= 0:
+            return
+        e = spring(p)
+        self._put(dst, "tubes", zoom=self.zoom_at(t), angle=26 * (1 - e), dx=78 * (1 - e), dy=-38 * (1 - e),
+                  scale=0.96 + 0.04 * e, op=clamp01(p * 3), blur=2.2 * (1 - ease_out(p)))
 
-    def _shine(self, g: Image.Image, size: int, p: float) -> Image.Image:
-        """نوار نور مورب که روی سطح پلاک می‌گذرد."""
-        ratio = self.badge_size / self.group.width
-        psize = max(6, int(round(size * ratio)))
-        off = int((self.group.width - size) // 2) + (size - psize) // 2
+    def draw_chest(self, dst, t):
+        p = seg(t, T_CHEST)
+        if p <= 0:
+            return
+        e = ease_out_back(p, 2.4)
+        self._put(dst, "chest", zoom=self.zoom_at(t), scale=0.38 + 0.62 * e, angle=-20 * (1 - ease_out(p)),
+                  op=clamp01(p * 3.2), blur=2.6 * (1 - ease_out(p)))
+        # موج ضربه
+        q = seg(t, (LAND_CHEST, LAND_CHEST + 0.95))
+        if 0 < q < 1:
+            r = self.logo_px * (0.10 + 0.36 * ease_out(q))
+            ring = ellipse_layer(r, 190 * (1 - q) ** 1.6, 2, (255, 255, 255), pad=14)
+            blend(dst, ring, self.parts["chest"][2][0] - ring.width / 2,
+                  self.parts["chest"][2][1] - ring.height / 2, 1.0)
 
-        plate = self.plate_img.resize((psize, psize), Image.LANCZOS)
-        mask = np.array(plate.getchannel("A"), np.float32) / 255.0
-
-        src_w = self.shine_full.width
-        travel = int(-psize * 0.9 + p * (psize * 2.6))
-        x0 = int((src_w - psize) / 2 + travel * 0.72)
-        x0 = max(0, min(src_w - psize, x0))
-        band = np.array(self.shine_full.crop((x0, (src_w - psize) // 2, x0 + psize,
-                                             (src_w - psize) // 2 + psize)), np.float32)
-        band[..., 3] *= mask * 0.60
-        shine = Image.fromarray(band.astype(np.uint8), "RGBA")
-
-        out = g.copy()
-        out.alpha_composite(shine, (off, off))
-        return out
+    def draw_shine(self, dst, t):
+        p = seg(t, T_SHINE)
+        if not 0 < p < 1:
+            return
+        # نوار نور روی کل نشان
+        size = int(self.logo_px * 1.5)
+        travel = int(-size * 0.5 + p * size * 2.0)
+        crop = self.shine_full.crop((int(self.shine_full.width / 2 - size / 2 + travel * 0.6),
+                                     int(self.shine_full.height / 2 - size / 2),
+                                     int(self.shine_full.width / 2 + size / 2 + travel * 0.6),
+                                     int(self.shine_full.height / 2 + size / 2)))
+        # ماسک با آلفای ترکیب فعلی
+        mask = dst.getchannel("A").crop((int(self.mid[0] - size / 2), int(self.mid[1] - size / 2),
+                                         int(self.mid[0] + size / 2), int(self.mid[1] + size / 2)))
+        arr = np.array(crop.convert("RGBA"), np.float32)
+        ma = np.array(mask, np.float32) / 255.0
+        if arr.shape[:2] != ma.shape:
+            return
+        arr[..., 3] *= ma * 0.55 * math.sin(math.pi * p) ** 0.6
+        blend(dst, Image.fromarray(arr.astype(np.uint8), "RGBA"),
+              self.mid[0] - size / 2, self.mid[1] - size / 2, 1.0)
 
     # ── تایپوگرافی
-    def render_type(self, dst, t):
+    def draw_type(self, dst, t):
         W, H = self.W, self.H
-        cy = int(H * self.lay["title_cy"])
-
-        p = seg(t, *T_TITLE)
+        p = seg(t, T_TITLE)
         if p > 0:
             layer = wipe(self.title, ease_in_out(p), feather=int(W * 0.075), mode="rtl")
             if layer is not None:
-                x, y = centered(layer, W // 2, cy + int((1 - ease_out(p)) * 18))
+                x = int(W / 2 - layer.width / 2)
+                y = int(H * self.lay["title_cy"] - layer.height / 2 + (1 - ease_out(p)) * 16)
                 blend(dst, layer, x, y, clamp01(p * 2.2))
 
-        p = seg(t, *T_LATIN)
+        p = seg(t, T_LATIN)
         if p > 0:
             idx = min(len(self.latin_frames) - 1, int(ease_out(p) * (len(self.latin_frames) - 1)))
             layer = self.latin_frames[idx]
-            x, y = centered(layer, W // 2, int(H * self.lay["latin_cy"]))
-            blend(dst, layer, x, y, clamp01(p * 2.0))
+            blend(dst, layer, int(W / 2 - layer.width / 2),
+                  int(H * self.lay["latin_cy"] - layer.height / 2), clamp01(p * 2.0))
 
-        p = seg(t, *T_DIVIDER)
+        p = seg(t, T_DIVIDER)
         if p > 0:
-            w = max(4, int(W * 0.20 * ease_out(p)))
+            w = max(4, int(W * 0.19 * ease_out(p)))
             line = Image.new("RGBA", (w, 3), (120, 200, 245, int(185 * clamp01(p * 1.6))))
             line = line.filter(ImageFilter.GaussianBlur(1.1))
             blend(dst, line, W // 2 - w // 2, int(H * self.lay["div_y"]) - 1, 1.0)
 
-        p = seg(t, *T_SUBTITLE)
+        p = seg(t, T_SUBTITLE)
         if p > 0:
             layer = wipe(self.subtitle, ease_in_out(p), feather=int(W * 0.06), mode="rtl")
             if layer is not None:
-                x, y = centered(layer, W // 2, int(H * self.lay["sub_cy"]))
-                blend(dst, layer, x, y, clamp01(p * 2.0))
+                blend(dst, layer, int(W / 2 - layer.width / 2),
+                      int(H * self.lay["sub_cy"] - layer.height / 2), clamp01(p * 2.0))
 
     # ── فریم
     def frame(self, t: float, alpha=False):
         if alpha:
             dst = Image.new("RGBA", (self.W, self.H), (0, 0, 0, 0))
         else:
-            dst = self.render_bg(t)
-        self.render_rings(dst, t)
-        self.render_spark(dst, t)
-        self.render_flash(dst, t)
-        self.render_badge(dst, t)
-        self.render_type(dst, t)
+            k = 0.22 + 0.78 * ease_out(seg(t, (0.0, 0.5)))
+            dst = ImageEnhance.Brightness(self.bg_img).enhance(k).convert("RGBA")
+            dst.alpha_composite(draw_particles((self.W, self.H), self.particles, t,
+                                               intensity=clamp01(t / 0.7)))
+
+        # گردآمدن المان‌ها به ترتیب عمق
+        self.draw_bar(dst, t)
+        self.draw_arc(dst, t)
+        self.draw_house(dst, t)
+        self.draw_tubes(dst, t)
+        self.draw_chest(dst, t)
+        self.draw_cross(dst, t)
+        self.draw_shine(dst, t)
+        self.draw_type(dst, t)
+
         if alpha:
             return dst
-
         arr = np.array(dst.convert("RGB"), np.float32)
         if t > T_FADE_OUT:
             arr *= max(0.0, 1.0 - (t - T_FADE_OUT) / (T_TOTAL - T_FADE_OUT))
@@ -481,67 +649,99 @@ def make_sound(total=T_TOTAL) -> np.ndarray:
     mix = np.zeros(n, np.float32)
     noise = rng.normal(0, 1, n).astype(np.float32)
 
-    # رایزر نرم ورود
-    riser_env = (np.clip(t / 0.85, 0, 1) ** 2 * np.clip((1.10 - t) / 0.28, 0, 1)).astype(np.float32)
-    mix += _lowpass(noise, 2400) * riser_env * 0.15
+    def bell(t0, f0, dec, amp, parts=((1, 1.0), (2.01, 0.35), (3.02, 0.14))):
+        tt = t - t0
+        sig = np.zeros(n, np.float32)
+        for h, ha in parts:
+            sig += ha * np.sin(2 * np.pi * f0 * h * tt)
+        return np.where(tt >= 0, sig * np.exp(-np.clip(tt, 0, None) / dec), 0).astype(np.float32) * amp
 
-    # ووش فرود لوگو
-    whoosh_env = (np.clip((t - 0.42) / 0.20, 0, 1) * np.clip((1.35 - t) / 0.40, 0, 1)).astype(np.float32)
-    mix += _lowpass(noise, 820) * whoosh_env * 0.26
+    def tick(t0, f0, dec=0.055, amp=0.10):
+        tt = t - t0
+        s = np.sin(2 * np.pi * f0 * tt) * np.exp(-np.clip(tt, 0, None) / dec)
+        return np.where(tt >= 0, s, 0).astype(np.float32) * amp
 
-    # ضربهٔ نرم فرود
-    tp = t - 0.94
+    # رایزر و بستر
+    riser_env = (np.clip(t / 0.9, 0, 1) ** 2 * np.clip((1.2 - t) / 0.3, 0, 1)).astype(np.float32)
+    mix += _lowpass(noise, 2400) * riser_env * 0.10
+
+    # ووش هنگام کشیده‌شدن هلال و ورود خانه
+    for a, b, amp in ((0.44, 1.10, 0.20), (0.70, 1.42, 0.16), (1.18, 1.90, 0.12)):
+        env = (np.clip((t - a) / 0.18, 0, 1) * np.clip((b - t) / 0.35, 0, 1)).astype(np.float32)
+        mix += _lowpass(noise, 700 + 600 * (a > 1.5)) * env * amp
+
+    # تیک‌های ورود هر المان (زیر و بم به ترتیب)
+    mix += tick(LAND_BAR, 620, 0.045, 0.085)
+    mix += tick(LAND_ARC, 500, 0.06, 0.075)
+    mix += tick(LAND_HOUSE, 300, 0.09, 0.11)
+    mix += bell(LAND_CROSS, 1180, 0.16, 0.075, parts=((1, 1.0), (2.0, 0.3)))
+    mix += tick(LAND_TUBES, 860, 0.05, 0.065)
+
+    # ضربهٔ اصلی هنگام نشستن صفحهٔ گوشی
+    tp = t - LAND_CHEST
     thump = np.sin(2 * np.pi * 62.0 * tp) * np.exp(-np.clip(tp, 0, None) * 6.0)
     thump = np.where(tp >= 0, thump, 0).astype(np.float32)
     click = _lowpass(rng.normal(0, 1, n).astype(np.float32), 5200) * np.exp(-np.clip(tp, 0, None) * 45)
     click = np.where(tp >= 0, click, 0).astype(np.float32)
-    mix += thump * 0.42 + click * 0.09
+    mix += thump * 0.46 + click * 0.10
 
-    # زنگ‌های ملایم روی تیتر و زیرنویس
-    for t0, f0, dec, amp in ((2.22, 1046.5, 0.90, 0.098), (2.56, 1568.0, 0.70, 0.055),
-                             (3.12, 1318.5, 0.78, 0.046)):
-        tt = t - t0
-        bell = np.zeros(n, np.float32)
-        for h, ha in ((1, 1.0), (2.01, 0.40), (3.02, 0.16), (4.07, 0.07)):
-            bell += ha * np.sin(2 * np.pi * f0 * h * tt)
-        bell = np.where(tt >= 0, bell * np.exp(-np.clip(tt, 0, None) / dec), 0).astype(np.float32)
-        mix += bell * amp
+    # شیمِر نور
+    shimmer_env = (np.clip((t - 2.06) / 0.30, 0, 1) * np.clip((2.82 - t) / 0.45, 0, 1)).astype(np.float32)
+    mix += (noise - _lowpass(noise, 5200)) * shimmer_env * 0.045
 
-    # شیمِر ملایم هنگام عبور نور روی لوگو
-    shimmer_env = (np.clip((t - 1.42) / 0.35, 0, 1) * np.clip((2.30 - t) / 0.45, 0, 1)).astype(np.float32)
-    hi_noise = noise - _lowpass(noise, 5200)
-    mix += hi_noise * shimmer_env * 0.05
+    # زنگ‌های تایپوگرافی
+    mix += bell(2.64, 1046.5, 0.90, 0.095)
+    mix += bell(2.96, 1568.0, 0.70, 0.052)
+    mix += bell(3.40, 1318.5, 0.80, 0.046)
 
-    # پد عمق
+    # پد پایه
     pad = (np.sin(2 * np.pi * 82.4 * t) * 0.10 + np.sin(2 * np.pi * 123.5 * t) * 0.06
            + np.sin(2 * np.pi * 164.8 * t) * 0.035)
-    pad *= np.clip(t / 1.3, 0, 1) * np.clip((total - 0.15 - t) / 1.5, 0, 1)
+    pad *= np.clip(t / 1.4, 0, 1) * np.clip((total - 0.2 - t) / 1.6, 0, 1)
     mix += (pad * 0.5).astype(np.float32)
 
-    mix *= np.clip((total - t) / 0.6, 0, 1)
-    mix = np.tanh(mix * 1.85) / np.tanh(1.85)
+    mix *= np.clip((total - t) / 0.65, 0, 1)
+    mix = np.tanh(mix * 1.9) / np.tanh(1.9)
     mix /= max(1e-6, np.max(np.abs(mix))) * 1.05
     right = np.roll(mix, int(SR * 0.006)) * 0.99
     return np.stack([mix, right], axis=1).astype(np.float32)
 
 
 # ───────────────────────────── ساخت ─────────────────────────────
-def save_still(lm: LogoMotion, t: float, path: Path, alpha=False):
-    fr = lm.frame(t, alpha=alpha)
-    img = fr if isinstance(fr, Image.Image) else Image.fromarray(fr)
-    img.save(path)
+def preview_elements():
+    layers, (W, H) = segment_logo()
+    names = list(layers)
+    tints = dict(bar=(70, 230, 90), arc=(190, 255, 120), house=(255, 200, 60),
+                 cross=(255, 80, 200), tubes=(0, 235, 255), chest=(255, 255, 255))
+    tiles = []
+    for nm in names:
+        img, box = layers[nm]
+        tile = Image.new("RGB", (520, 520), (12, 18, 34))
+        sc = min(460 / img.width, 460 / img.height, 1.0)
+        prev = img.resize((max(1, int(img.width * sc)), max(1, int(img.height * sc))), Image.LANCZOS)
+        tile.paste(prev, ((520 - prev.width) // 2, (520 - prev.height) // 2), prev)
+        ImageDraw.Draw(tile).text((12, 12), nm, fill=tints[nm])
+        tiles.append(tile)
+    sheet = Image.new("RGB", (520 * 3, 520 * 2), (12, 18, 34))
+    for i, tl in enumerate(tiles):
+        sheet.paste(tl, ((i % 3) * 520, (i // 3) * 520))
+    p = WORK / "elements.png"
+    WORK.mkdir(exist_ok=True, parents=True)
+    sheet.save(p)
+    print("✓", p)
 
 
 def render_video(name: str, alpha=False, stills=None):
     WORK.mkdir(parents=True, exist_ok=True)
-    lm = LogoMotion(name)
+    lm = LogoBuild(name)
     W, H = lm.W, lm.H
 
     if stills:
         for ts in stills:
-            p = WORK / f"still_{name}_{float(ts):05.2f}.png"
-            save_still(lm, float(ts), p, alpha=alpha)
-            print("  ↳", p)
+            out = WORK / f"still_{name}_{float(ts):05.2f}.png"
+            fr = lm.frame(float(ts), alpha=alpha)
+            (fr if isinstance(fr, Image.Image) else Image.fromarray(fr)).save(out)
+            print("  ↳", out)
         return
 
     fps = ALPHA_FPS if alpha else FPS
@@ -550,16 +750,15 @@ def render_video(name: str, alpha=False, stills=None):
     if alpha:
         out_path = HERE / f"logo-motion-alpha.{ALPHA_FORMAT}"
         if ALPHA_FORMAT == "webm":
-            cmd = [FFMPEG, "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}",
-                   "-r", str(fps), "-i", "-", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p",
-                   "-b:v", "0", "-crf", "26", "-row-mt", "1", "-auto-alt-ref", "0",
-                   "-metadata:s:v:0", "alpha_mode=1", str(out_path)]
+            cmd = [FFMPEG, "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}", "-r", str(fps),
+                   "-i", "-", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-b:v", "0", "-crf", "26",
+                   "-row-mt", "1", "-auto-alt-ref", "0", "-metadata:s:v:0", "alpha_mode=1", str(out_path)]
         else:
             cmd = [FFMPEG, "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}", "-r", str(fps),
                    "-i", "-", "-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le",
-                   "-vendor", "apl0", "-qscale:v", "18", str(out_path)]
+                   "-vendor", "apl0", "-alpha_bits", "8", "-qscale:v", "26", str(out_path)]
     else:
-        wav = WORK / f"logo_sound_{name}.wav"
+        wav = WORK / f"sound_{name}.wav"
         bp.write_wav(wav, make_sound(T_TOTAL), sr=SR)
         out_path = HERE / f"logo-motion-{name}.mp4"
         cmd = [FFMPEG, "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps),
@@ -574,8 +773,7 @@ def render_video(name: str, alpha=False, stills=None):
         for f in range(frames):
             t = f / fps
             fr = lm.frame(t, alpha=alpha)
-            data = np.array(fr, dtype=np.uint8).tobytes() if isinstance(fr, Image.Image) else fr.tobytes()
-            proc.stdin.write(data)
+            proc.stdin.write((np.array(fr, np.uint8) if isinstance(fr, Image.Image) else fr).tobytes())
             if f % (fps * 2) == 0:
                 print(f"    {t:4.1f}s / {T_TOTAL}s", flush=True)
     finally:
@@ -588,12 +786,17 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", default="all", choices=["all", "square", "vertical", "alpha"])
     ap.add_argument("--stills", default="")
-    ap.add_argument("--alpha-format", default="webm", choices=["webm", "mov"])
+    ap.add_argument("--preview", action="store_true")
+    ap.add_argument("--alpha-format", default="mov", choices=["webm", "mov"])
     args = ap.parse_args()
     ALPHA_FORMAT = args.alpha_format
+    if args.preview:
+        preview_elements()
+        sys.exit(0)
     st = [s.strip() for s in args.stills.split(",") if s.strip()] or None
     if st:
-        for nm in (["square", "vertical"] if args.only == "all" else [args.only if args.only != "alpha" else "square"]):
+        for nm in (["square", "vertical"] if args.only == "all" else
+                   ([args.only] if args.only != "alpha" else ["square"])):
             render_video(nm, stills=st)
         sys.exit(0)
     if args.only in ("all", "square"):
