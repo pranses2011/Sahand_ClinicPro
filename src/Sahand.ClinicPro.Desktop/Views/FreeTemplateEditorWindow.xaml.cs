@@ -48,7 +48,7 @@ public partial class FreeTemplateEditorWindow : Window
         _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         VariableBox.ItemsSource = _variables;
-        VariablePalette.ItemsSource = _variables;
+        VariablePalette.ItemsSource = _variables.GroupBy(v => v.Group).ToArray();
         var preset = PaperBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => string.Equals(x.Content as string, paper, StringComparison.OrdinalIgnoreCase));
         if (preset is not null) PaperBox.SelectedItem = preset; else PaperBox.Text = paper;
         OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
@@ -214,7 +214,7 @@ public partial class FreeTemplateEditorWindow : Window
     }
     private void Select(FreeTemplateElement item)
     {
-        _selected = item; PropertiesActions.IsEnabled = true; PropertiesScroll.IsEnabled = true;
+        _selected = item; PropertiesActions.IsEnabled = true; ElementProperties.IsEnabled = true;
         TextBoxValue.Text = item.Text; VariableBox.SelectedValue = item.Key;
         VariableBox.IsEnabled = item.Kind == "variable";
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
@@ -227,7 +227,7 @@ public partial class FreeTemplateEditorWindow : Window
         TextBoxValue.Clear(); VariableBox.SelectedIndex = -1;
         XBox.Clear(); YBox.Clear(); WidthBox.Clear(); HeightBox.Clear(); FontBox.Clear(); ColorBox.Clear();
         BoldBox.IsChecked = false; ItalicBox.IsChecked = false; UnderlineBox.IsChecked = false; AlignmentBox.SelectedIndex = 0;
-        PropertiesActions.IsEnabled = false; PropertiesScroll.IsEnabled = false;
+        PropertiesActions.IsEnabled = false; ElementProperties.IsEnabled = false;
     }
     private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
     private bool HasPending()

@@ -47,7 +47,6 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MinWidth="200"/><ColumnDefinition Width="4.7*" MinWidth="300"/><ColumnDefinition Width="2.2*" MinWidth="210"/></Grid.ColumnDefinitions>
             <!-- RTL: ابزارها در راست، بوم در وسط و ویژگی‌ها در چپ. -->
             <Border Background="White" BorderBrush="#E1E7EF" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,10,0">
-                <DockPanel><Button Style="{StaticResource DesignerButton}" DockPanel.Dock="Bottom" Content="اعمال ابعاد و حاشیه" Click="ResizeCanvas_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,8,0,0"/>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
                     <TextBlock Text="اجزای سند" FontWeight="Bold" FontSize="16" Foreground="#172640" Margin="0,0,0,4"/>
                     <TextBlock Text="برای افزودن کلیک کنید یا ابزار را به بوم بکشید." Foreground="#64768A" TextWrapping="Wrap" FontSize="11" Margin="0,0,0,12"/>
@@ -61,26 +60,23 @@
                     <TextBlock Text="متغیرهای این سند" FontWeight="SemiBold" Foreground="#172640" Margin="3,12,3,2"/>
                     <TextBlock Text="برای افزودن یک متغیر کلیک کنید یا آن را به بوم بکشید." Foreground="#64768A" TextWrapping="Wrap" FontSize="11" Margin="3,0,3,6"/>
                     <ItemsControl x:Name="VariablePalette">
-                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate><DataTemplate>
-                            <Button Style="{StaticResource ToolButton}" Tag="variable" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="3" MaxWidth="165" ToolTip="افزودن یا کشیدن متغیر به بوم">
-                                <TextBlock Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center"/>
-                            </Button>
+                            <StackPanel Margin="0,2,0,8">
+                                <Border Background="#F3F7FD" CornerRadius="5" Padding="7,5" Margin="0,3,0,3">
+                                    <TextBlock Text="{Binding Key}" FontWeight="SemiBold" Foreground="#263C5B"/>
+                                </Border>
+                                <ItemsControl ItemsSource="{Binding}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <Button Style="{StaticResource ToolButton}" Tag="variable" Click="Add_Click" PreviewMouseLeftButtonDown="ToolDown" PreviewMouseMove="ToolMove" Margin="3" MaxWidth="165" ToolTip="افزودن یا کشیدن متغیر به بوم">
+                                            <TextBlock Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center"/>
+                                        </Button>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </DataTemplate></ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Separator Margin="0,12"/>
-                    <TextBlock Text="تنظیمات سند" FontWeight="Bold" FontSize="15" Foreground="#172640" Margin="0,0,0,8"/>
-                    <TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>
-                    <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="PaperBox" IsEditable="True" IsTextSearchEnabled="False" Margin="0,5,0,9"><ComboBoxItem Content="A3"/><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="B5"/><ComboBoxItem Content="Letter"/><ComboBoxItem Content="Legal"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
-                    <TextBlock Text="جهت کاغذ" FontWeight="SemiBold"/>
-                    <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="OrientationBox" SelectedIndex="0" Margin="0,5,0,9"><ComboBoxItem Content="عمودی"/><ComboBoxItem Content="افقی"/></ComboBox>
-                    <TextBlock Text="عرض و ارتفاع بوم بدنه (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
-                    <UniformGrid Columns="2" Margin="0,5,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="CanvasWidthBox" ToolTip="عرض بوم"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="CanvasHeightBox" ToolTip="ارتفاع بوم"/></UniformGrid>
-                    <TextBlock Text="حاشیه داخلی برگه (پیکسل؛ خالی = پیش‌فرض)" TextWrapping="Wrap" FontSize="11"/>
-                    <TextBox Style="{StaticResource DesignerTextBox}" x:Name="SheetPaddingBox" Margin="0,4,0,8" ToolTip="۰ تا ۱۰۰ پیکسل؛ مستقل از حاشیه چاپگر"/>
-                    <TextBlock Text="متن یا جدول طولانی ممکن است در کادر ثابت بریده شود. داده واقعی و تمام صفحات را پیش از استفاده بررسی کنید." TextWrapping="Wrap" Foreground="#9A4B35" FontSize="11" Margin="0,14,0,0"/>
-                    <TextBlock Text="حاشیه داخلی با حاشیه فیزیکی چاپگر متفاوت است؛ چاپ آزمایشی لازم است." TextWrapping="Wrap" FontSize="11" Foreground="#64768A" Margin="0,8,0,0"/>
-                </StackPanel></ScrollViewer></DockPanel>
+                </StackPanel></ScrollViewer>
             </Border>
             <Border Grid.Column="1" Background="#E0E8F6" CornerRadius="10" Margin="0,0,10,0" ClipToBounds="True">
                 <DockPanel>
@@ -122,6 +118,23 @@
                     <Button Style="{StaticResource DesignerButton}" Content="حذف" Click="Remove_Click"/>
                 </StackPanel>
                 <ScrollViewer x:Name="PropertiesScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
+                    <TextBlock Text="تنظیمات سند" FontWeight="Bold" FontSize="15" Foreground="#172640" Margin="0,0,0,8"/>
+                    <UniformGrid Columns="2">
+                        <StackPanel Margin="0,0,4,0"><TextBlock Text="کاغذ سند" FontWeight="SemiBold"/>
+                            <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="PaperBox" IsEditable="True" IsTextSearchEnabled="False" Margin="0,4,0,7"><ComboBoxItem Content="A3"/><ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="B5"/><ComboBoxItem Content="Letter"/><ComboBoxItem Content="Legal"/><ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/></ComboBox>
+                        </StackPanel>
+                        <StackPanel Margin="4,0,0,0"><TextBlock Text="جهت کاغذ" FontWeight="SemiBold"/>
+                            <ComboBox Style="{StaticResource DesignerComboBox}" x:Name="OrientationBox" SelectedIndex="0" Margin="0,4,0,7"><ComboBoxItem Content="عمودی"/><ComboBoxItem Content="افقی"/></ComboBox>
+                        </StackPanel>
+                    </UniformGrid>
+                    <TextBlock Text="عرض و ارتفاع بوم بدنه (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
+                    <UniformGrid Columns="2" Margin="0,5,0,8"><TextBox Style="{StaticResource DesignerTextBox}" x:Name="CanvasWidthBox" ToolTip="عرض بوم"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="CanvasHeightBox" ToolTip="ارتفاع بوم"/></UniformGrid>
+                    <TextBlock Text="حاشیه داخلی برگه (پیکسل؛ خالی = پیش‌فرض)" TextWrapping="Wrap" FontSize="11"/>
+                    <TextBox Style="{StaticResource DesignerTextBox}" x:Name="SheetPaddingBox" Margin="0,4,0,8" ToolTip="۰ تا ۱۰۰ پیکسل؛ مستقل از حاشیه چاپگر"/>
+                    <TextBlock Text="جدول یا متن طولانی ممکن است بریده شود؛ حاشیه چاپگر متفاوت است. پیش‌نمایش و چاپ آزمایشی لازم است." TextWrapping="Wrap" Foreground="#9A4B35" FontSize="11" Margin="0,3,0,0"/>
+                    <Button Style="{StaticResource DesignerButton}" Content="اعمال ابعاد و حاشیه" Click="ResizeCanvas_Click" Background="#E7F0FF" BorderBrush="#C8DBF5" Margin="0,8,0,4"/>
+                    <Separator Margin="0,10"/>
+                    <StackPanel x:Name="ElementProperties">
                     <TextBlock Text="ویژگی‌های عنصر" FontWeight="Bold" FontSize="16" Foreground="#172640" Margin="0,0,0,3"/>
                     <TextBlock Text="عنصر موردنظر را روی بوم انتخاب کنید." Foreground="#64768A" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <TextBlock Text="متن یا برچسب"/><TextBox Style="{StaticResource DesignerTextBox}" x:Name="TextBoxValue" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="55" Margin="0,4,0,8"/>
@@ -143,6 +156,7 @@
                     </WrapPanel>
                     <TextBlock Text="چیدمان متن"/><ComboBox Style="{StaticResource DesignerComboBox}" x:Name="AlignmentBox" SelectedIndex="0" Margin="0,4,0,8"><ComboBoxItem Content="راست (پیش‌فرض)"/><ComboBoxItem Content="وسط"/><ComboBoxItem Content="چپ"/></ComboBox>
                     <TextBlock Text="برای جابه‌جایی عنصر و برای تغییر اندازه، دستگیره‌های آن را بکشید." TextWrapping="Wrap" Foreground="#64768A" FontSize="11" Margin="0,12,0,0"/>
+                    </StackPanel>
                 </StackPanel></ScrollViewer></DockPanel>
             </Border>
         </Grid>
