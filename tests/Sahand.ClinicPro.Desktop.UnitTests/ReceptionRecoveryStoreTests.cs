@@ -57,7 +57,7 @@ public class ReceptionRecoveryStoreTests
             vm.CanRetryReception.Should().BeTrue();
             await vm.RetryReceptionCommand.ExecuteAsync(null);
             JsonSerializer.SerializeToElement(api.LastBody).GetProperty("RequestId").GetGuid().Should().Be(pending.Request.RequestId!.Value);
-            api.Calls.Should().NotContain(x => x.Endpoint is "consumables/consume" or "invoices/idempotent" or "payments/idempotent");
+            api.Calls.Should().NotContain(x => x.Endpoint == "consumables/consume" || x.Endpoint == "invoices/idempotent" || x.Endpoint == "payments/idempotent");
             store.Load("test-api", 7).Should().BeNull();
             vm.CanEditReception.Should().BeFalse();
         }
