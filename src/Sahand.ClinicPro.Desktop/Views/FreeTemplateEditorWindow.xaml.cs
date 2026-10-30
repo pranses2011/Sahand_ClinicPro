@@ -129,7 +129,7 @@ public partial class FreeTemplateEditorWindow : Window
             PageCanvas.Children.Add(border);
             if (ReferenceEquals(item, _selected))
             {
-                var handle = new Thumb { Style = (Style)FindResource("ResizeHandle"), Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
+                var handle = new Thumb { Tag = item, Style = (Style)FindResource("ResizeHandle"), Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
                     BorderThickness = new Thickness(1), Cursor = Cursors.SizeNWSE, ToolTip = "برای تغییر اندازه گوشه را بکشید" };
                 var allowed = false;
                 Point start = default;
@@ -208,7 +208,16 @@ public partial class FreeTemplateEditorWindow : Window
     {
         if (sender is not Border { Tag: FreeTemplateElement item } border) return;
         if (!CanDiscardPending()) { e.Handled = true; return; }
-        Select(item); _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; border.CaptureMouse(); e.Handled = true;
+        Select(item);
+        foreach (var element in PageCanvas.Children.OfType<Border>())
+        {
+            var selected = ReferenceEquals(element.Tag, item);
+            element.BorderThickness = new Thickness(selected ? 1 : 0);
+            element.BorderBrush = selected ? Brushes.DodgerBlue : Brushes.Transparent;
+        }
+        foreach (var handle in PageCanvas.Children.OfType<Thumb>())
+            handle.Visibility = ReferenceEquals(handle.Tag, item) ? Visibility.Visible : Visibility.Collapsed;
+        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; border.CaptureMouse(); e.Handled = true;
     }
     private void ItemMove(object sender, MouseEventArgs e)
     {
@@ -216,7 +225,10 @@ public partial class FreeTemplateEditorWindow : Window
         var p = e.GetPosition(PageCanvas);
         var position = FreeTemplateDesign.MoveWithinCanvas(_document, item, _startX + p.X - _dragStart.X, _startY + p.Y - _dragStart.Y);
         item.X = position.X; item.Y = position.Y;
-        Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y); XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
+        Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
+        foreach (var handle in PageCanvas.Children.OfType<Thumb>().Where(x => ReferenceEquals(x.Tag, item)))
+        { Canvas.SetLeft(handle, item.X + item.Width - handle.Width); Canvas.SetTop(handle, item.Y + item.Height - handle.Height); }
+        XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
     { if (sender is Border border) border.ReleaseMouseCapture(); RefreshCanvas(); e.Handled = true; }
