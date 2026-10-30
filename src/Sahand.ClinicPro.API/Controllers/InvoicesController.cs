@@ -81,5 +81,9 @@ public class InvoicesController : ApiBaseController
         {
             return Conflict(ApiResponse<object>.Failure("پذیرش همزمان تغییر کرد؛ پیش از تلاش مجدد فاکتورهای آن را بررسی کنید.", 409));
         }
+        catch (DbUpdateException ex) when (RequestIdConflict.IsRequestIdViolation(ex, RequestIdConflict.InvoiceIndex))
+        {
+            return Conflict(ApiResponse<object>.Failure("فاکتوری با همین شناسه هم‌زمان ثبت شده است؛ وضعیت را بررسی و فقط با همان شناسه دوباره تلاش کنید.", 409));
+        }
     }
 }

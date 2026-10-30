@@ -53,6 +53,10 @@ public class PaymentsController : ApiBaseController
         {
             return Conflict(ApiResponse<object>.Failure("فاکتور همزمان تغییر کرد؛ پیش از تلاش مجدد وضعیت پرداخت و مانده را بررسی کنید.", 409));
         }
+        catch (DbUpdateException ex) when (RequestIdConflict.IsRequestIdViolation(ex, RequestIdConflict.PaymentIndex))
+        {
+            return Conflict(ApiResponse<object>.Failure("پرداختی با همین شناسه هم‌زمان ثبت شده است؛ وضعیت را بررسی و فقط با همان شناسه دوباره تلاش کنید.", 409));
+        }
     }
 
     /// <summary>خلاصه صندوق امروز — کارت‌های آماری فرم ۱۴</summary>

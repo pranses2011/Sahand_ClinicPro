@@ -81,11 +81,27 @@ public sealed class SqlServerSafetyTests
 
             var invoiceDto = new CreateInvoiceDto(patient.Id, reception.Value, null, InvoiceType.Other, null, 0,
                 new List<InvoiceItemDto> { new(null, "Test", 1, 100m, 0, null, 0) }, RequestId: Guid.NewGuid());
+            var income = await db.AccountingAccounts.SingleAsync(a => a.AccountCode == "4101");
+            income.IsActive = false;
+            await db.SaveChangesAsync();
+            var blockedInvoice = await CreateInvoiceAsync(connectionString, invoiceDto);
+            Assert.Equal("BILLING.ACCOUNTS_UNAVAILABLE", blockedInvoice.Error.Code);
+            Assert.False(await db.Invoices.AnyAsync(i => i.RequestId == invoiceDto.RequestId));
+            income.IsActive = true;
+            await db.SaveChangesAsync();
             var invoice = await CreateInvoiceAsync(connectionString, invoiceDto);
             Assert.True(invoice.IsSuccess, invoice.Error?.Message);
             Assert.Equal(invoice.Value, (await CreateInvoiceAsync(connectionString, invoiceDto)).Value);
 
             var paymentDto = new RecordPaymentDto(invoice.Value, patient.Id, 100m, PaymentMethod.Cash, RequestId: Guid.NewGuid());
+            var cash = await db.AccountingAccounts.SingleAsync(a => a.AccountCode == "1101");
+            cash.IsDetail = false;
+            await db.SaveChangesAsync();
+            var blockedPayment = await RecordPaymentAsync(connectionString, paymentDto);
+            Assert.Equal("PAYMENT.ACCOUNTS_UNAVAILABLE", blockedPayment.Error.Code);
+            Assert.False(await db.Payments.AnyAsync(p => p.RequestId == paymentDto.RequestId));
+            cash.IsDetail = true;
+            await db.SaveChangesAsync();
             var payment = await RecordPaymentAsync(connectionString, paymentDto);
             Assert.True(payment.IsSuccess, payment.Error?.Message);
             // پاسخ اول را گم‌شده فرض می‌کنیم: بازپخش در کانتکست جدید همان نتیجه است.
@@ -104,6 +120,10 @@ public sealed class SqlServerSafetyTests
             Assert.Equal(100m, stored.PaidAmount);
             Assert.Equal(0m, stored.RemainingAmount);
             Assert.Equal(1, await verify.JournalEntries.CountAsync(j => j.ReferenceType == JournalReferenceType.Payment && j.ReferenceId == payment.Value));
+
+            // حتی پس از حذف نرم، همان کلید نباید برای رکورد جدید قابل استفاده شود.
+            await AssertUniqueIndexesIncludeDeletedRowsAsync(connectionString, patient.Id, service.Id,
+                receptionDto.RequestId!.Value, invoiceDto.RequestId!.Value, paymentDto.RequestId!.Value);
         });
     }
 
@@ -138,6 +158,42 @@ public sealed class SqlServerSafetyTests
             Assert.Equal(100m, stored.PaidAmount);
             Assert.Equal(0m, stored.RemainingAmount);
         });
+    }
+
+    private static async Task AssertUniqueIndexesIncludeDeletedRowsAsync(string connectionString, long patientId, long serviceId,
+        Guid receptionKey, Guid invoiceKey, Guid paymentKey)
+    {
+        await using (var deleted = CreateContext(connectionString))
+        {
+            (await deleted.Receptions.SingleAsync(r => r.RequestId == receptionKey)).IsDeleted = true;
+            (await deleted.Invoices.SingleAsync(i => i.RequestId == invoiceKey)).IsDeleted = true;
+            (await deleted.Payments.SingleAsync(p => p.RequestId == paymentKey)).IsDeleted = true;
+            await deleted.SaveChangesAsync();
+        }
+        await using (var duplicate = CreateContext(connectionString))
+        {
+            duplicate.Receptions.Add(new Reception { PatientId = patientId, ServiceId = serviceId,
+                ReceptionDate = DateTime.UtcNow, RequestId = receptionKey });
+            AssertSqlIndex(await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync()), "IX_Reception_RequestId");
+        }
+        await using (var duplicate = CreateContext(connectionString))
+        {
+            duplicate.Invoices.Add(new Invoice { PatientId = patientId, InvoiceDate = DateTime.UtcNow, RequestId = invoiceKey });
+            AssertSqlIndex(await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync()), "IX_Invoice_RequestId");
+        }
+        await using (var duplicate = CreateContext(connectionString))
+        {
+            duplicate.Payments.Add(new Payment { PatientId = patientId, PaymentDate = DateTime.UtcNow,
+                Amount = 1m, Method = PaymentMethod.Cash, RequestId = paymentKey });
+            AssertSqlIndex(await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync()), "IX_Payment_RequestId");
+        }
+    }
+
+    private static void AssertSqlIndex(DbUpdateException exception, string index)
+    {
+        var sql = Assert.IsType<SqlException>(exception.InnerException);
+        Assert.True(sql.Errors.Cast<SqlError>().Any(e => (e.Number is 2601 or 2627) &&
+            e.Message.Contains($"'{index}'", StringComparison.OrdinalIgnoreCase)), sql.Message);
     }
 
     private static async Task<(Result<long>? Result, Exception? Exception)> AttemptPaymentAsync(

@@ -46,6 +46,9 @@ jobs:
           done || true
           exit 0
 
+      - name: بررسی انتقال نتیجه شکست تست در CI
+        run: bash scripts/test_core_test_runner.sh
+
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
         # پروژهٔ تست دسکتاپ net8.0-windows است و WPF روی لینوکس اجرا نمی‌شود
@@ -60,23 +63,9 @@ jobs:
         # کنار گذاشته می‌شود.
         run: |
           set -o pipefail
-          # حلقه در سمت چپ pipe در زیرپوسته اجرا می‌شود؛ وضعیت باید در همان
-          # زیرپوسته exit شود، وگرنه مقدار والد همیشه صفر می‌ماند و شکست
-          # تست‌ها به‌اشتباه موفق گزارش می‌شود.
-          (
-            status=0
-            for project in \
-              tests/Sahand.ClinicPro.Domain.UnitTests/Sahand.ClinicPro.Domain.UnitTests.csproj \
-              tests/Sahand.ClinicPro.Application.UnitTests/Sahand.ClinicPro.Application.UnitTests.csproj \
-              tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
-              tests/Sahand.ClinicPro.API.IntegrationTests/Sahand.ClinicPro.API.IntegrationTests.csproj; do
-              echo "::group::$(basename "$project")"
-              dotnet test "$project" --no-build -c Release \
-                --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults || status=1
-              echo "::endgroup::"
-            done
-            exit "$status"
-          ) 2>&1 | tee test-run.log
+          # اسکریپت وضعیت تمام پروژه‌ها را برمی‌گرداند؛ pipefail مانع می‌شود
+          # tee شکست تست را به موفقیت تبدیل کند.
+          bash scripts/run_core_tests.sh 2>&1 | tee test-run.log
 
       - name: گزارش تست‌های ناموفق (annotation)
         if: failure()
