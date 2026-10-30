@@ -736,13 +736,12 @@ public partial class App : System.Windows.Application
             screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
             if (page.Equals("print-designer", StringComparison.OrdinalIgnoreCase))
             {
-                // رندر چیدمان در ابعاد مرجع، مستقل از محدودیت نمایشگر رانر.
+                // رندر چیدمان در ابعاد مرجع، مستقل از محدوده تصویر مانیتور.
                 // این تصویر جایگزین اسکرین‌شات روی صفحه نیست: تبدیل RTL و
                 // جزئیات رندر می‌توانند با خروجی مانیتور متفاوت باشند.
                 const int layoutWidth = 1568, layoutHeight = 885;
-                // درخت را از پنجره محدود رانر جدا می‌کنیم تا Clip والد،
-                // نواحی بیرون نمایشگر را از رندر مرجع حذف نکند.
-                window.Content = null;
+                // چیدمان را مستقیماً و بدون اجرای دوباره layout والد انجام
+                // می‌دهیم؛ بازچینی پنجره کوچک می‌تواند رندر را برش دهد.
                 view.Width = layoutWidth; view.Height = layoutHeight;
                 if (viewModel is FreeTemplateEditorWindow editor && editor.FindName("DesignerWorkspace") is FrameworkElement workspace)
                     workspace.Margin = new Thickness(63, 12, 78, 12);
