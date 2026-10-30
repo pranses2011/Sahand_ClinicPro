@@ -31,16 +31,16 @@ public class FreeTemplateDesignTests
     [Fact]
     public void Layer_order_is_preserved_in_output_and_stops_at_edges()
     {
-        var first = new FreeTemplateElement { Kind = "text", Text = "نخست" };
-        var second = new FreeTemplateElement { Kind = "text", Text = "دوم" };
+        var first = new FreeTemplateElement { Kind = "text", Text = "first" };
+        var second = new FreeTemplateElement { Kind = "text", Text = "second" };
         var doc = new FreeTemplateDocument { Elements = new() { first, second } };
         FreeTemplateDesign.MoveLayer(doc, first, -1).Should().BeFalse();
         FreeTemplateDesign.MoveLayer(doc, first, 1).Should().BeTrue();
         doc.Elements.Should().Equal(second, first);
         var html = FreeTemplateDesign.Build(doc, Array.Empty<string>());
-        html.IndexOf("دوم", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("نخست", StringComparison.Ordinal));
+        html.IndexOf("second", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("first", StringComparison.Ordinal));
         FreeTemplateDesign.TryRead(html, Array.Empty<string>(), out var loaded).Should().BeTrue();
-        loaded!.Elements.Select(x => x.Text).Should().Equal("دوم", "نخست");
+        loaded!.Elements.Select(x => x.Text).Should().Equal("second", "first");
         FreeTemplateDesign.MoveLayer(doc, first, 1).Should().BeFalse();
     }
 
