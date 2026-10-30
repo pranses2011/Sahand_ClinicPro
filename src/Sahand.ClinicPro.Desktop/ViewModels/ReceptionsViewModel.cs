@@ -1833,6 +1833,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// اجرای زنجیره پذیرش طبق فرم ۱۰ — پذیرش + مصرف لوازم + فاکتور + پرداخت اختیاری
     /// </summary>
     /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
+    /// <param name="confirmedPayable">مبلغ تأییدشده در پنجره پرداخت برای کنترل تغییر تعرفه</param>
     private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment, decimal? confirmedPayable = null)
     {
         if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;

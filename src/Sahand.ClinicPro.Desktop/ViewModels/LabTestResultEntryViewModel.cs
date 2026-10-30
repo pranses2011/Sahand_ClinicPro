@@ -132,6 +132,8 @@ public partial class LabTestResultEntryViewModel : ObservableObject
     /// <param name="patientAgeText">سن بیمار به فارسی (متن)</param>
     /// <param name="orderNumber">شماره درخواست</param>
     /// <param name="onSaved">فراخوانی پس از ذخیرهٔ موفق (تازه‌سازی لیست مادر)</param>
+    /// <param name="patientId">شناسه بیمار برای دریافت سابقه نتیجه</param>
+    /// <param name="orderStatus">وضعیت درخواست آزمایش</param>
     public LabTestResultEntryViewModel(IApiClient api, LabItemRow item, long orderId,
         string patientName, string patientAgeText, string orderNumber,
         Func<Task>? onSaved = null, long patientId = 0, int orderStatus = 0)

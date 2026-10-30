@@ -520,7 +520,6 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _auditLogEnabled = true;
 
-    /// <summary>سازنده</summary>
     /* ── کارت ساعت و تاریخ داشبورد: انتخاب تقویم‌های مناسبت‌های روز ──
        کلیدها با DashboardViewModel مشترک‌اند (LocalSettingsStore) تا تغییر
        در تنظیمات بی‌درنگ روی کارت داشبورد اعمال شود. */
