@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates;
 using Xunit;
 
 namespace Sahand.ClinicPro.Desktop.UnitTests;
@@ -19,6 +20,17 @@ public class VisualTemplateDesignTests
         VisualTemplateDesign.TryRead(html, allowed, out var loaded).Should().BeTrue();
         loaded.Select(x => x.Text).Should().Equal(rows.Select(x => x.Text));
         VisualTemplateDesign.Build(loaded, allowed).Should().Be(html);
+    }
+    [Fact]
+    public void Generated_body_is_accepted_by_renderer_and_keeps_literal_tokens_literal()
+    {
+        var html = VisualTemplateDesign.Build(new[] {
+            new VisualTemplateBlock { Kind = "text", Text = "{{patient_name}}" },
+            new VisualTemplateBlock { Kind = "variable", Text = "نام:", Key = "patient_name" }
+        }, new[] { "patient_name" });
+        PrintTemplateRenderer.HasUnsafeVariablePlacement(html).Should().BeFalse();
+        var output = PrintTemplateRenderer.Render(html, new Dictionary<string, object?> { ["patient_name"] = "<بیمار>" });
+        output.Should().Contain("&#123;&#123;patient_name&#125;&#125;").And.Contain("&lt;بیمار&gt;");
     }
     [Fact]
     public void Existing_or_modified_html_never_silently_converts_and_unknown_variables_rejected()
