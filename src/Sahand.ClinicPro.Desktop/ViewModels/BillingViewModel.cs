@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
 using Sahand.ClinicPro.Domain.Enums;
@@ -826,10 +826,34 @@ public partial class InvoiceFormViewModel : ObservableObject
         finally { IsBusy = false; }
     }
 
-    /// <summary>پیش‌نمایش چاپ</summary>
+    /// <summary>پیش‌نمایش محاسبه تأییدشده؛ هرگز رسید پرداخت یا فاکتور صادرشده نیست.</summary>
+    public bool TryCreateDraftPreview(out string html)
+    {
+        html = string.Empty;
+        if (!CanEditInvoice) return false;
+        var dto = BuildInvoiceRequest();
+        if (dto is null) return false;
+        if (_quote is null || _quoteInputs != JsonSerializer.Serialize(dto))
+        {
+            InvalidateQuote();
+            ErrorMessage = "ابتدا محاسبه فاکتور را دریافت و مبلغ آن را بررسی کنید.";
+            return false;
+        }
+        html = InvoiceDraftPreview.Build(dto, _quote, Patient!.FullName);
+        return true;
+    }
+
     [RelayCommand]
     private void Preview()
-        => _snackbar.Info("پیش‌نمایش چاپ در گام U19 (قالب‌های چاپ) متصل می‌شود");
+    {
+        if (!TryCreateDraftPreview(out var html)) return;
+        var window = new HtmlPrintWindow(html, "پیش‌نویس محاسبه فاکتور — صادر نشده")
+        {
+            Owner = System.Windows.Application.Current?.Windows.Cast<System.Windows.Window>().FirstOrDefault(w => w.IsActive)
+                ?? System.Windows.Application.Current?.MainWindow
+        };
+        window.ShowDialog();
+    }
 
     /// <summary>بستن</summary>
     [RelayCommand]

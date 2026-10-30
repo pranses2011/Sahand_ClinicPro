@@ -225,11 +225,11 @@
                                 <TextBlock Text="صدور فاکتور و پرداخت" Margin="9,0,0,0" FontSize="14" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button IsEnabled="False" ToolTip="پیش‌نمایش چاپ هنوز در این فرم متصل نیست" Command="{Binding PreviewCommand}" Margin="0,8,0,0"
+                        <Button ToolTip="نمایش پیش‌نویس محاسبه‌شده؛ سند صادرشده یا رسید پرداخت نیست" Command="{Binding PreviewCommand}" Margin="0,8,0,0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="🖨️ پیش‌نمایش" Margin="8,0,0,0" />
+                                <TextBlock Text="پیش‌نمایش پیش‌نویس" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
