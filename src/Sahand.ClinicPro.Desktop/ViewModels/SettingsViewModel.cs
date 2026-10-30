@@ -786,6 +786,9 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var local = new Dictionary<string, string>
         {
+            ["Printer.DefaultPrinter"] = DefaultPrinter ?? string.Empty,
+            ["Printer.InvoicePrinter"] = InvoicePrinter ?? string.Empty,
+            ["Printer.PrescriptionPrinter"] = PrescriptionPrinter ?? string.Empty,
             ["Printer.TicketPrinter"] = TicketPrinter ?? string.Empty,
             ["Printer.AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
             ["Printer.ClinicName"] = ClinicName ?? string.Empty,
