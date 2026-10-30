@@ -45,6 +45,9 @@ public partial class ComplementaryView : UserControl
         var before = template.Body;
         var beforePaper = template.PaperSize;
         var beforeOrientation = template.Orientation;
+        if (!string.Equals(beforeOrientation, "Portrait", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(beforeOrientation, "Landscape", StringComparison.OrdinalIgnoreCase))
+        { AppDialog.Error("طراحی قالب", "جهت ذخیره‌شده این قالب نامعتبر است؛ برای جلوگیری از بازنویسی، ابتدا جهت آن را اصلاح کنید."); return; }
         var variables = vm.ActiveVariables.ToArray();
         var keys = variables.Select(v => v.Key).ToArray();
         if (!FreeTemplateDesign.TryRead(before, keys, out var document))
