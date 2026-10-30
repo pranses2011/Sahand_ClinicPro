@@ -734,6 +734,23 @@ public partial class App : System.Windows.Application
                 g.DrawImageUnscaled(raw, 0, 0);
             }
             screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            if (page.Equals("print-designer", StringComparison.OrdinalIgnoreCase))
+            {
+                // رندر چیدمان در ابعاد مرجع، مستقل از محدودیت نمایشگر رانر.
+                // این تصویر جایگزین اسکرین‌شات روی صفحه نیست: تبدیل RTL و
+                // جزئیات رندر می‌توانند با خروجی مانیتور متفاوت باشند.
+                const int layoutWidth = 1568, layoutHeight = 885;
+                view.Width = layoutWidth; view.Height = layoutHeight;
+                view.Measure(new Size(layoutWidth, layoutHeight));
+                view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
+                var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
+                layout.Render(view);
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(layout));
+                var layoutPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "print-designer-layout.png");
+                using (var stream = File.Create(layoutPath)) encoder.Save(stream);
+                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout, 1568x885 at 96 DPI; not an on-screen screenshot. RTL transforms and rendering can differ.");
+            }
             window.Close();
             Shutdown(0);
         }
