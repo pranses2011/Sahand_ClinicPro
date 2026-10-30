@@ -71,8 +71,8 @@ public partial class FreeTemplateEditorWindow : Window
     {
         if (sender is not Border { IsMouseCaptured: true, Tag: FreeTemplateElement item } border || e.LeftButton != MouseButtonState.Pressed) return;
         var p = e.GetPosition(PageCanvas);
-        item.X = Math.Clamp(_startX + p.X - _dragStart.X, 0, Math.Max(0, _document.Width - item.Width));
-        item.Y = Math.Clamp(_startY + p.Y - _dragStart.Y, 0, Math.Max(0, _document.Height - item.Height));
+        item.X = Math.Round(Math.Clamp(_startX + p.X - _dragStart.X, 0, Math.Max(0, _document.Width - item.Width)), 2);
+        item.Y = Math.Round(Math.Clamp(_startY + p.Y - _dragStart.Y, 0, Math.Max(0, _document.Height - item.Height)), 2);
         Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y); XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
@@ -133,6 +133,12 @@ public partial class FreeTemplateEditorWindow : Window
     {
         try
         {
+            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height)
+                throw new ArgumentException("ابتدا دکمه اعمال ابعاد بوم را بزنید.");
+            if (_selected is { } item && (TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
+                ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
+                !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color))
+                throw new ArgumentException("ابتدا دکمه اعمال ویژگی‌ها را بزنید.");
             var paper = PaperBox.Text.Trim();
             if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
             ResultHtml = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); ResultPaperSize = paper; DialogResult = true;
