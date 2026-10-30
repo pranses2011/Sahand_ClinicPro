@@ -744,11 +744,10 @@ public partial class App : System.Windows.Application
                 // نواحی بیرون نمایشگر را از رندر مرجع حذف نکند.
                 window.Content = null;
                 view.Width = layoutWidth; view.Height = layoutHeight;
+                if (viewModel is FreeTemplateEditorWindow editor && editor.FindName("DesignerWorkspace") is FrameworkElement workspace)
+                    workspace.Margin = new Thickness(63, 12, 78, 12);
                 view.Measure(new Size(layoutWidth, layoutHeight));
                 view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
-                // SizeChanged و تغییرات چیدمان واکنش‌گرا باید پیش از ثبت اجرا شوند.
-                await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-                view.UpdateLayout();
                 if (Math.Abs(view.RenderSize.Width - layoutWidth) > 0.1 || Math.Abs(view.RenderSize.Height - layoutHeight) > 0.1)
                     throw new InvalidOperationException("رندر طراح به ابعاد مرجع نرسید.");
                 var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
