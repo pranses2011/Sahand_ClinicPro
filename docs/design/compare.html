@@ -1,231 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>مقایسهٔ طرح تأییدی و اسکرینشات واقعی — سهند کلینیکپرو</title>
+<title>مقایسه طرح و تصاویر واقعی سهند کلینیکپرو</title>
 <style>
-  :root{
-    --bg:#EEF3F8; --card:#FFFFFF; --ink:#172B4D; --ink2:#52647A;
-    --line:#D9E2EC; --brand:#1565C0; --brand2:#0D9488;
-    --ok:#0B7A63; --warn:#B45309; --bad:#C62828;
-    --sh:0 4px 18px rgba(23,43,77,.08);
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font-family:"Vazirmatn","Segoe UI",Tahoma,sans-serif;font-size:14px;line-height:1.9}
-  header{background:linear-gradient(115deg,#0B2C54,#1565C0 55%,#0D9488);color:#fff;
-         padding:28px 34px;box-shadow:var(--sh)}
-  header h1{margin:0 0 6px;font-size:24px;font-weight:800}
-  header p{margin:0;opacity:.92;font-size:13px;max-width:1000px}
-  .wrap{max-width:1680px;margin:0 auto;padding:24px}
-  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-           background:var(--card);border:1px solid var(--line);border-radius:14px;
-           padding:12px 18px;margin-bottom:22px;box-shadow:var(--sh)}
-  .toolbar a,.toolbar button{border:1px solid var(--line);background:#F7FAFD;color:var(--ink);
-           border-radius:9px;padding:7px 14px;font:inherit;font-size:12.5px;cursor:pointer;
-           text-decoration:none}
-  .toolbar a.on,.toolbar button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
-  .toolbar .sp{flex:1}
-  .summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-  .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px}
-  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
-          margin-bottom:26px;overflow:hidden;box-shadow:var(--sh)}
-  .sechead{display:flex;align-items:center;gap:12px;padding:14px 20px;
-           border-bottom:1px solid var(--line);background:#F8FBFE}
-  .sechead h2{margin:0;font-size:17px;font-weight:800}
-  .sechead .key{font-size:11px;color:var(--ink2);direction:ltr}
-  .badge{margin-inline-start:auto;font-size:11.5px;font-weight:700;border-radius:999px;
-         padding:5px 14px;border:1px solid}
-  .badge.pending{color:var(--warn);border-color:#FCD34D;background:#FFFBEB}
-  .badge.doing{color:var(--brand);border-color:#93C5FD;background:#EFF6FF}
-  .badge.done{color:var(--ok);border-color:#6EE7B7;background:#ECFDF5}
-  .badge.candidate{color:#9A3412;border-color:#FDBA74;background:#FFF7ED}
-  .badge.proposed{color:#0D47A1;border-color:#93C5FD;background:#EFF6FF}
-  .badge.review{color:#0B7A63;border-color:#6EE7B7;background:#ECFDF5}
-  .pair{display:grid;grid-template-columns:1fr 1fr;gap:0}
-  .pane{padding:16px;border-inline-end:1px solid var(--line);min-width:0}
-  .pane:last-child{border-inline-end:0}
-  .pane h3{margin:0 0 10px;font-size:13px;color:var(--ink2);font-weight:700}
-  .shot{width:100%;height:430px;object-fit:contain;object-position:top center;
-        background:#F4F7FB;border:1px solid var(--line);border-radius:10px;display:block}
-  .missing{display:flex;align-items:center;justify-content:center;text-align:center;
-           height:430px;background:repeating-linear-gradient(45deg,#F8FAFC,#F8FAFC 12px,#F1F5F9 12px,#F1F5F9 24px);
-           border:1px dashed #B8C6D6;border-radius:10px;color:var(--ink2);font-size:12.5px;padding:20px}
-  .overlay{margin:16px 20px 0;border-top:1px dashed var(--line);padding-top:12px}
-  .overlay label{font-size:12px;color:var(--ink2)}
-  .overlay input[type=range]{width:100%;direction:ltr;accent-color:var(--brand)}
-  .cmp{position:relative;height:430px;background:#F4F7FB;border:1px solid var(--line);
-       border-radius:10px;overflow:hidden;margin-top:8px}
-  .cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:top center}
-  .cmp .real{opacity:.5}
-  .notes{padding:12px 20px 20px;font-size:12.5px;color:var(--ink2)}
-  .notes ul{margin:6px 0 0;padding-inline-start:20px}
-  .foot{text-align:center;color:var(--ink2);font-size:11.5px;padding:18px}
-  .alert{background:#FFF7ED;border:1px solid #FDBA74;color:#7C2D12;border-radius:12px;
-         padding:12px 18px;margin-bottom:20px;font-size:12.5px;line-height:2}
-  .alert b{color:#9A3412}
-  @media(max-width:1100px){.pair{grid-template-columns:1fr}.pane{border-inline-end:0;border-bottom:1px solid var(--line)}}
+:root{font-family:Vazirmatn,Tahoma,sans-serif;color:#17324d;background:#edf3f8;line-height:1.9}
+body{margin:0}header{padding:28px 5%;background:linear-gradient(115deg,#16365d,#087d83);color:white}
+header h1{margin:0;font-size:24px}main{max-width:1550px;margin:auto;padding:24px}
+.notice,.toolbar,section{background:#fff;border:1px solid #d8e5ef;border-radius:14px;padding:18px;margin-bottom:18px}
+.notice{background:#fff8ed;border-color:#efd29d}.toolbar{display:flex;gap:12px;flex-wrap:wrap}
+a{color:#125fa6}section h2{margin:0 0 8px;font-size:19px}.notes{color:#526c80;font-size:13px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pane{min-width:0}.pane h3{font-size:14px}
+img{width:100%;height:auto;max-height:680px;object-fit:contain;object-position:top;border:1px solid #d8e5ef;border-radius:8px;background:#f4f7fa}
+.missing{padding:25px;background:#f4f7fa;border-radius:8px;color:#526c80}
+@media(max-width:900px){.pair{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header>
-  <h1>🔍 مقایسهٔ «طرح تأییدی مالک» با «اسکرینشات واقعی برنامه»</h1>
-  <p>شش صفحهای را که مالک طرحشان را تأیید کرد، یکییکی روی XAML اعمال کردم. ستون راست = همان طرح تأییدشده
-     (رندر <span dir="ltr">Edge headless</span>) و ستون چپ = <b>اسکرینشات واقعی</b> برنامهٔ WPF روی رانر ویندوزی
-     (<span dir="ltr">screenshot-pages.yml</span>) با فونت وزیرمتن و جهت راستبهچپ. هر دو تصویر دقیقاً
-     <b>۱۰۳۰×۷۷۴ پیکسل</b>اند تا لغزندهٔ «همپوشانی» کوچکترین مغایرت را نشان دهد.</p>
-</header>
-<div class="wrap">
-  <div class="alert">
-    ✅ <b>طرحها تأیید و روی XAML اعمال شدند — این همان مدرک کنارهم است که خواستهاید.</b>
-    پس از تأیید شما، شش صفحه (بههمراه نمای «نتایج و آمار» نظرسنجی) یکییکی از اول نوشته شدند؛
-    چهار دور اسکرینشات واقعی گرفته و هر بار مغایرتها رفع شد: حذف تولتیپ شناور، حذف نوار حاشیهٔ
-    ویندوز، اصلاح سرستونهای جدول، فشردهسازی پنلها، هماندازه کردن بوم و حذف نوار سیاه ۶پیکسلی لبهها.
-    اکنون <b>هر دو ستون دقیقاً ۱۰۳۰×۷۷۴ پیکسل</b> و میانگین اختلاف پیکسلی ۱۳٫۵ تا ۲۸٫۵ از ۲۵۵
-    (حدود ۵ تا ۱۱ درصد) است که عمدتاً از تفاوت رندر قلم HTML/WPF و تصویر واقعی نقشهٔ بدن میآید.
-    <a href="comparison-proof.png" target="_blank">📄 برگهٔ مقایسهٔ همهٔ صفحات (PNG)</a> ·
-    <a href="gallery.html" target="_blank">🎨 گالری طرحها</a> ·
-    <a href="approved/README.md" target="_blank">📐 مستندات طرحها</a>.
-    لطفاً نتیجهٔ نهایی را تأیید کنید؛ اگر مغایرتی خواستید اصلاح شود، شمارهٔ صفحه را بگویید.
-  </div>
-  <div class="toolbar">
-    <strong>صفحه:</strong>
-    <button data-filter="all" class="on">همه</button>
-    <button data-filter="dentistry">دندانپزشکی</button>
-    <button data-filter="ophthalmology">چشمپزشکی</button>
-    <button data-filter="physiotherapy">فیزیوتراپی</button>
-    <button data-filter="survey">نظرسنجی</button>
-    <button data-filter="print-template">قالب چاپ</button>
-    <button data-filter="print-settings">تنظیمات چاپگر و چاپ</button>
-    <span class="sp"></span>
-    <a href="comparison-proof.png" target="_blank">📄 برگهٔ مقایسهٔ کامل (PNG)</a>
-    <a href="approved/README.md" target="_blank">📐 مستندات طرحها</a>
-  </div>
-
-  <div class="summary" id="summary"></div>
-  <div id="sections"></div>
-  <div class="foot">سهند کلینیکپرو — چرخهٔ راستیآزمایی تصویری · هر دو ستون خروجی واقعیاند: طرح با Edge headless و برنامه با WPF روی ویندوز. نسخهٔ ۲٫۲۸٫۲۸.</div>
-</div>
-
+<header><h1>مقایسهٔ طرح و تصویر واقعی برنامه</h1><div>تصاویر WPF ویندوز با دادهٔ نمونه، بدون اتصال به بیمار واقعی</div></header>
+<main>
+<div class="notice"><strong>حدود مقایسه:</strong> تصویر برنامه با ابعاد قابل نمایش رانر (در این نوبت ۱۰۲۴×۷۲۰) و طرح‌ها با اندازه‌های متفاوت ساخته شده‌اند. بنابراین هم‌اندازه یا منطبق پیکسلی نیستند و درصد اختلاف معتبری محاسبه نشده است. اسکرین‌شات، عملکرد تعاملی، صفحه‌بندی یا چاپ فیزیکی را تأیید نمی‌کند. طرح قدیمی صفحه قالب که قبلاً کنار گذاشته شد به‌عنوان طرح تأییدشده نشان داده نمی‌شود.</div>
+<nav class="toolbar" id="navigation"></nav><div id="pages"></div>
+</main>
 <script>
-const PAGES = [
-  {key:'dentistry', title:'🦷 صفحهٔ دندانپزشکی', view:'DentistryView.xaml', status:'review', diff:'۱۹٫۰', notes:[
-    '✅ سربرگ، پنج کارت آماری، تبها، نوار جستجو، چارت FDI دو فک و پنل «دندان انتخابی / طرح درمان» همگیدر همان جای طرح قرار گرفتند.',
-    'اتصالها و فرمانهای واقعی (SelectTooth / SearchDentalPatient / AddDentalPlan / SaveDentalChart) حفظ شدند؛ جعبههای دندان ۳۴×۴۲ پیکسل دقیقاً هماندازهٔ طرحاند.',
-    'مغایرت باقیماندهٔ جزئی: رندر قلم وزیرمتن در WPF کمی ضخیمتر از Edge است و جدول طرح درمان در ستون باریک چپ فشردهتر دیده میشود.']},
-  {key:'ophthalmology', title:'👁️ صفحهٔ چشمپزشکی', view:'OphthalmologyView.xaml', status:'review', diff:'۱۵٫۸', notes:[
-    '✅ سه پنل چشم راست / چشم چپ / نسخهٔ عینک زنده و ردیف «روند فشار چشم + یافتهها» عیناً به همان ترتیب طرح پیادهسازی شد.',
-    'گیج فشار چشم سبز (۱۴) و قرمز (۲۳) با هشدار گلوکوم، فیلدهای Sphere/Cylinder/Axis/Add و نسخهٔ زنده همگی برقراراند.',
-    'مغایرت باقیماندهٔ جزئی: اعداد ترکیبی (مثلاً +۳٫۰۰ / -۰٫۷۵) در WPF تحت تأثیر جهت دوسویهٔ متن، نشانههای +/- را جابهجا نشان میدهد.']},
-  {key:'physiotherapy', title:'🏃 صفحهٔ فیزیوتراپی', view:'PhysiotherapyView.xaml', status:'review', diff:'۲۸٫۵', notes:[
-    '✅ پنل نقشهٔ بدن، فرم ثبت جلسه، غربالگری پرچمهای قرمز و نمودار روند پنج جلسه همگیدر همان چیدمان طرح قرار گرفتند.',
-    'نقشهٔ بدن همچنان توسط کدپشت روی BodyMapHost ساخته میشود (تصویر جلو/پشت و ناحیهٔ انتخابشدهٔ رنگی) — عملکرد واقعی حفظ شد.',
-    'بیشترین اختلاف پیکسلی این صفحه از همینجاست: طرح از دو شکل ساده با مربعهای قرمز/نارنجی استفاده میکرد، ولی برنامه تصویر واقعی نقشهٔ بدن خودش را نشان میدهد (خاکستری با ناحیهٔ سبز). این یک تفاوت عمدی و کاربردی است، نه نقص چیدمان.']},
-  {key:'survey', title:'📝 صفحهٔ نظرسنجی', view:'SurveyView.xaml', status:'review', diff:'۱۴٫۴', notes:[
-    '✅ پنج کارت آماری بالای همان صفحه آمدند (پیشتر در تب جدا پنهان بودند)؛ جدول ششستونی، توزیع ستارگان، میانگین پزشکان و نظرات آزاد همگیدر یک نگاه دیده میشوند.',
-    'چیدمان سهردیفی اصلاح شد: ردیف ۱ جدول+ستارگان، ردیف ۲ فقط پنل پزشکان در ستون چپ (همان خالیبودن سمت راست طرح)، ردیف ۳ نظرات آزاد تمامعرض.',
-    'همهٔ نمودارها به مجموعههای واقعی Stars/DoctorRatings/Comments بایند شدهاند، نه دادهٔ ثابت.']},
-  {key:'survey-results', title:'📊 نظرسنجی — نتایج و آمار', view:'SurveyView.xaml (تب ۲)', status:'review', diff:'۱۳٫۵', notes:[
-    '✅ تب دوم همان سربرگ و کارتهای آماری را دارد، با سه پنل «توزیع امتیازها / میانگین پزشکان / روند رضایت» و نظرات آزاد تمامعرض.',
-    'جابهجایی بین دو نما با TabIndex ویومدل انجام میشود؛ استایل تب دوم مستقل نوشته شد تا تریگر استایل پایه بهارث نرسد.',
-    'کمترین اختلاف پیکسلی در میان صفحات — حدود ۵٫۳٪.']},
-  {key:'print-template', title:'🖨️ صفحهٔ قالب چاپ', view:'ComplementaryView.xaml → PrintTemplateDesignView.xaml', status:'review', diff:'۱۴٫۴', notes:[
-    '✅ کتابخانهٔ ششکارتهای قالب در دو ردیف سهتایی، فیلتر موجودیت، نوار جستجو و نوار «ذخیرهٔ تغییرات» دقیقاً مثل طرح ساخته شد.',
-    'نخستین کارت (فاکتور) با DataTrigger روی IsDefault کادر آبی ضخیم و نشان «⭐ پیشفرض» میگیرد، همانند طرح.',
-    'امکانات قدیمی (طراح HTML، نظرسنجی، همگامسازی، پیشنمایش WebBrowser) حذف نشدند: نمای قدیمی در لایهٔ دوم زنده است و پیوند ریز «نمای کامل ↗» پایین صفحه جابهجا میکند.']},
-  {key:'print-settings', title:'⚙️ تنظیمات چاپگر و چاپ', view:'SettingsView.xaml → PrintSettingsDesignView.xaml', status:'review', diff:'۱۳٫۵', notes:[
-    '✅ مرکز چاپ با جدول ۱۲ سند (چاپگر/کاغذ/نسخه/پیشنمایش/خودکار)، پنل رفتار عمومی و فهرست چاپگرهای نصبشده عیناً در همان چیدمان طرح آمد.',
-    'جدول به PrintJobs و فهرست به PrinterNames بایند شدهاند؛ چیپهای «فعال/غیرفعال» از مقادیر بولی واقعی ساخته میشوند.',
-    'هفت بخش دیگر تنظیمات سیستم دستنخوردهاند و از همان پیوند «نمای کامل ↗» در دسترساند.']},
+const pages = [
+  {id:'dentistry',title:'دندان‌پزشکی',design:'approved/dentistry-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ تطبیق و همه عملیات نیازمند بررسی جداگانه‌اند.'},
+  {id:'ophthalmology',title:'چشم‌پزشکی',design:'approved/ophthalmology-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ صحت ورودی‌های بالینی از روی تصویر قابل تأیید نیست.'},
+  {id:'physiotherapy',title:'فیزیوتراپی',design:'approved/physiotherapy-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ اجزای کاربردی ممکن است با طرح تفاوت داشته باشند.'},
+  {id:'survey',title:'نظرسنجی',design:'approved/survey-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ ارسال واقعی و داده‌های سرور در تصویر آزموده نشده‌اند.'},
+  {id:'survey-results',title:'نتایج نظرسنجی',design:'approved/survey-results-design.png',note:'نمای نمونه آمار؛ نتایج واقعی و پیامک از روی تصویر تأیید نمی‌شوند.'},
+  {id:'print-template',title:'انتخاب و مدیریت قالب چاپ',design:null,note:'این تصویر صفحه انتخاب قالب است؛ طرح جدید تأییدشده مربوط به خود طراح آزاد در بخش بعد است.'},
+  {id:'print-designer',title:'طراح آزاد قالب چاپ',design:'print-template-new-proposal.png',note:'طرح جدید صریحاً تأییدشده در کنار تصویر خود طراح با داده نمونه. چیدمان و امکانات هنوز یکسان نیستند؛ آزمون تعاملی و چاپ فیزیکی لازم است.'},
+  {id:'print-settings',title:'تنظیمات چاپگر و چاپ',design:'approved/print-settings-design.png',note:'مرجع پیشین و تصویر فعلی؛ کنترل‌های غیرفعال هنوز به مسیر چاپ متصل نیستند و چاپگر واقعی آزموده نشده است.'}
 ];
-const BADGE = {pending:'⏳ در انتظار طرح', candidate:'🧩 مرجع مخزن', proposed:'🆕 طرح نو — منتظر تأیید', doing:'🔧 در حال رفع مغایرتها', done:'✅ منطبق', review:'✅ اعمال شد — منتظر تأیید نهایی مالک'};
-const sections = document.getElementById('sections');
-
-function imgWithFallback(img, candidates, alt){
-  let i = 0;
-  const tryNext = () => {
-    if (i >= candidates.length){ img.style.display='none'; return; }
-    img.src = candidates[i++];
-  };
-  img.addEventListener('error', tryNext);
-  img.alt = alt;
-  tryNext();
+const navigation=document.getElementById('navigation'), container=document.getElementById('pages');
+for(const p of pages){
+  const link=document.createElement('a');link.href='#'+p.id;link.textContent=p.title;navigation.appendChild(link);
+  const section=document.createElement('section');section.id=p.id;
+  const h=document.createElement('h2');h.textContent=p.title;section.appendChild(h);
+  const note=document.createElement('p');note.className='notes';note.textContent=p.note;section.appendChild(note);
+  const pair=document.createElement('div');pair.className='pair';
+  for(const [label,src] of [['مرجع طرح',p.design],['تصویر واقعی WPF (داده نمونه)','../screenshots/real/'+p.id+'.png']]){
+    const pane=document.createElement('div');pane.className='pane';const title=document.createElement('h3');title.textContent=label;pane.appendChild(title);
+    if(src){const link=document.createElement('a');link.href=src;link.target='_blank';const image=document.createElement('img');image.src=src;image.alt=label+' — '+p.title;link.appendChild(image);pane.appendChild(link)}
+    else{const empty=document.createElement('div');empty.className='missing';empty.textContent='برای این صفحه مرجع تأییدشدهٔ جداگانه‌ای نمایش داده نمی‌شود.';pane.appendChild(empty)}
+    pair.appendChild(pane);
+  }
+  section.appendChild(pair);
+  const metadata=document.createElement('a');metadata.href='../screenshots/real/'+p.id+'.png.txt';metadata.textContent='مشخصات اندازه و جهت تصویر';metadata.className='notes';section.appendChild(metadata);
+  container.appendChild(section);
 }
-
-PAGES.forEach(p => {
-  const el = document.createElement('section');
-  el.dataset.key = p.key;
-  el.innerHTML = `
-    <div class="sechead">
-      <h2>${p.title}</h2>
-      <span class="key" dir="ltr">${p.view}</span>
-      <span class="badge ${p.status}">${BADGE[p.status]}</span>
-      <span style="font-size:11px;color:#6B7C93;white-space:nowrap">اختلاف پیکسل: ${p.diff} / ۲۵۵</span>
-    </div>
-    <div class="pair">
-      <div class="pane">
-        <h3>🎨 طرح تأییدشدهٔ مالک <span dir="ltr" style="font-size:11px;opacity:.7">approved/${p.key}.html</span></h3>
-        <img class="shot design" alt="طرح تأییدی ${p.key}">
-        <div class="missing" style="display:none">رندر PNG این طرح هنوز ساخته نشده است — با اجرای workflow ویندوزی، فایل <b dir="ltr">approved/${p.key}.html</b> به <b dir="ltr">${p.key}-design.png</b> تبدیل و همینجا نمایش داده میشود. خود طرح را میتوانید در <a href="gallery.html" target="_blank">گالری</a> ببینید.</div>
-      </div>
-      <div class="pane">
-        <h3>📸 اسکرینشات واقعی WPF <span dir="ltr" style="font-size:11px;opacity:.7">docs/screenshots/real/${p.key}.png</span></h3>
-        <img class="shot real" alt="اسکرینشات واقعی ${p.key}">
-        <div class="missing" style="display:none">اسکرینشات واقعی هنوز ساخته نشده است — با اجرای workflow ویندوزی «📸 اسکرینشات واقعی صفحات» ساخته و به شاخه برگردانده میشود.</div>
-      </div>
-    </div>
-    <div class="overlay">
-      <label>🔀 همپوشانی برای یافتن مغایرت — شفافیت اسکرینشات واقعی: <b class="val">۵۰٪</b></label>
-      <input type="range" min="0" max="100" value="50">
-      <div class="cmp">
-        <img class="cmpdesign" alt="طرح"><img class="real cmpreal" alt="واقعی">
-      </div>
-    </div>
-    <div class="notes"><b>گزارش مقایسه / تفاوتهای باقیمانده:</b><ul>${p.notes.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
-  sections.appendChild(el);
-
-  const design = el.querySelector('.design');
-  const real   = el.querySelector('.real:not(.cmpreal)');
-  const cmpD   = el.querySelector('.cmpdesign');
-  const cmpR   = el.querySelector('.cmpreal');
-  const missD  = el.querySelectorAll('.missing')[0];
-  const missR  = el.querySelectorAll('.missing')[1];
-
-  imgWithFallback(design, [`approved/${p.key}-design.png`,`approved/${p.key}.png`,`approved/${p.key}.jpg`], p.key);
-  imgWithFallback(cmpD,   [`approved/${p.key}-design.png`,`approved/${p.key}.png`,`approved/${p.key}.jpg`], p.key);
-  imgWithFallback(real,   [`../screenshots/real/${p.key}.png`], p.key);
-  imgWithFallback(cmpR,   [`../screenshots/real/${p.key}.png`], p.key);
-  design.addEventListener('error', ()=>{ if(design.style.display==='none') missD.style.display='flex'; });
-  real.addEventListener('error',   ()=>{ if(real.style.display==='none')   missR.style.display='flex'; });
-  design.addEventListener('load',  ()=>missD.style.display='none');
-  real.addEventListener('load',    ()=>missR.style.display='none');
-
-  const range = el.querySelector('input[type=range]');
-  const val   = el.querySelector('.val');
-  const apply = () => {
-    const o = range.value/100;
-    cmpR.style.opacity = o;
-    val.textContent = (o*100).toFixed(0).replace(/\d/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]) + '٪';
-  };
-  range.addEventListener('input', apply); apply();
-});
-
-// خلاصهٔ بالای صفحه
-const sum = document.getElementById('summary');
-sum.innerHTML = PAGES.map(p=>`<span class="pill">${p.title.split(' ')[0]} ${p.key} — ${BADGE[p.status]}</span>`).join('');
-
-// فیلتر صفحات
-document.querySelectorAll('.toolbar button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    document.querySelectorAll('.toolbar button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');
-    const f=b.dataset.filter;
-    document.querySelectorAll('section').forEach(s=>{
-      s.style.display = (f==='all' || s.dataset.key===f || (f==='survey'&&s.dataset.key==='survey-results')) ? '' : 'none';
-    });
-  });
-});
 </script>
 </body>
 </html>
