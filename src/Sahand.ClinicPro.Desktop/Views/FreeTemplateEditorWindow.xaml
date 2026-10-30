@@ -68,14 +68,24 @@
             <Border Grid.Column="1" Background="#E0E8F6" CornerRadius="10" Margin="0,0,10,0" ClipToBounds="True">
                 <DockPanel>
                     <Border DockPanel.Dock="Top" Background="#F9FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,9">
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" ToolTip="بزرگ‌نمایی فقط نمایش بوم را تغییر می‌دهد و بر اندازه چاپ اثر ندارد">
-                                <TextBlock Text="بزرگ‌نمایی" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#45566F"/>
-                                <Slider x:Name="ZoomSlider" Width="110" Minimum="0.5" Maximum="1.5" Value="0.75" TickFrequency="0.25" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding Value, ElementName=ZoomSlider, StringFormat={}{0:P0}}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="#45566F"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="بوم سند" FontWeight="Bold" Foreground="#172640" VerticalAlignment="Center"/>
-                        </Grid>
+                        <StackPanel>
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" ToolTip="بزرگ‌نمایی فقط نمایش بوم را تغییر می‌دهد و بر اندازه چاپ اثر ندارد">
+                                    <TextBlock Text="بزرگ‌نمایی" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#45566F"/>
+                                    <Slider x:Name="ZoomSlider" Width="110" Minimum="0.5" Maximum="1.5" Value="0.75" TickFrequency="0.25" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Value, ElementName=ZoomSlider, StringFormat={}{0:P0}}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="#45566F"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="بوم سند" FontWeight="Bold" Foreground="#172640" VerticalAlignment="Center"/>
+                            </Grid>
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Content="T" Tag="text" Click="Add_Click" ToolTip="افزودن متن" AutomationProperties.Name="افزودن متن" Margin="2" MinWidth="35"/>
+                                <Button Content="{ }" Tag="variable" Click="Add_Click" ToolTip="افزودن اطلاعات سند" AutomationProperties.Name="افزودن اطلاعات سند" Margin="2" MinWidth="35"/>
+                                <Button Content="□" Tag="rectangle" Click="Add_Click" ToolTip="افزودن کادر" AutomationProperties.Name="افزودن کادر" Margin="2" MinWidth="35"/>
+                                <Button Content="―" Tag="line" Click="Add_Click" ToolTip="افزودن خط" AutomationProperties.Name="افزودن خط" Margin="2" MinWidth="35"/>
+                                <Button Content="▧" Tag="image" Click="Add_Click" ToolTip="افزودن تصویر PNG یا JPEG" AutomationProperties.Name="افزودن تصویر" Margin="2" MinWidth="35"/>
+                                <Button Content="×" Click="Remove_Click" ToolTip="حذف عنصر انتخاب‌شده" AutomationProperties.Name="حذف عنصر انتخاب‌شده" Margin="2" MinWidth="35"/>
+                            </WrapPanel>
+                        </StackPanel>
                     </Border>
                     <ScrollViewer FlowDirection="LeftToRight" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="18">
                         <Canvas x:Name="PageCanvas" Background="White" FlowDirection="LeftToRight" AllowDrop="True" Drop="Canvas_Drop" DragOver="Canvas_DragOver" HorizontalAlignment="Center">
