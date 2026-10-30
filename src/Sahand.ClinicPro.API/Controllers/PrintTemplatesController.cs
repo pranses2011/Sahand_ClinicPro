@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
@@ -89,14 +89,22 @@ public class PrintTemplatesController : ApiBaseController
         if (t is null)
             return NotFound(ApiResponse<object>.Failure("قالب یافت نشد"));
 
+        if (t.Type == PrintTemplateType.ReceptionReceipt && t.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker)
+            return Ok(ApiResponse<object>.Success(new { html = "", useOriginalReceptionReceipt = true }));
+
+        if (PrintTemplateRenderer.HasUnsafeVariablePlacement(t.HtmlBody))
+            return BadRequest(ApiResponse<object>.Failure("متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت."));
         var clinic = await ClinicInfoAsync();
         var sample = PrintTemplateRenderer.SampleData(t.Type.ToString());
-        var body = PrintTemplateRenderer.Render(t.HtmlBody, sample)
-            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        sample.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
+        sample.TryAdd("clinic_address", clinic.Address ?? "");
+        sample.TryAdd("clinic_phone", clinic.Phone ?? "");
+        sample.TryAdd("print_date", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var body = PrintTemplateRenderer.Render(t.HtmlBody, sample);
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, t.AccentColor, t.FontSize, t.FontFamily,
-            t.ShowClinicLogo, t.PaperSize);
+            t.ShowClinicLogo, t.PaperSize, t.Orientation).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, paperSize = t.PaperSize, type = t.Type.ToString() }));
     }
@@ -104,12 +112,24 @@ public class PrintTemplatesController : ApiBaseController
     /// <summary>رندر با متغیرهای واقعی — برای استفاده ماژول‌های چاپ (فاکتور/نسخه/…)</summary>
     /// <param name="type">نوع سند — قالب پیش‌فرض همان نوع استفاده می‌شود</param>
     /// <param name="request">متغیرهای سند</param>
+    /// <param name="authorization">بررسی دسترسی متناسب با نوع سند</param>
     [HttpPost("render/{type}")]
-    [HasPermission("settings.view")]
-    public async Task<IActionResult> Render(string type, [FromBody] RenderRequest request)
+    public async Task<IActionResult> Render(string type, [FromBody] RenderRequest request,
+        [FromServices] IAuthorizationService authorization)
     {
-        if (!Enum.TryParse<PrintTemplateType>(type, true, out var tType))
+        if (!Enum.TryParse<PrintTemplateType>(type, true, out var tType) || !Enum.IsDefined(tType))
             return BadRequest(ApiResponse<object>.Failure("نوع سند نامعتبر است"));
+
+        var canViewSettings = (await authorization.AuthorizeAsync(User, "PERMISSION:settings.view")).Succeeded;
+        var canPrintReceipt = tType == PrintTemplateType.ReceptionReceipt &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:receptions.print")).Succeeded;
+        var canPrintAppointment = tType == PrintTemplateType.AppointmentTicket &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:appointments.create")).Succeeded;
+        var canPrintLabResult = tType == PrintTemplateType.LabResult &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:lab.view")).Succeeded;
+        var canPrintInvoice = tType == PrintTemplateType.Invoice &&
+            (await authorization.AuthorizeAsync(User, "PERMISSION:invoices.view")).Succeeded;
+        if (!canViewSettings && !canPrintReceipt && !canPrintAppointment && !canPrintLabResult && !canPrintInvoice) return Forbid();
 
         var template = await _unitOfWork.Repository<PrintTemplate>().QueryableNoTracking
             .Where(t => !t.IsDeleted && t.IsActive && t.Type == tType)
@@ -118,14 +138,29 @@ public class PrintTemplatesController : ApiBaseController
         if (template is null)
             return NotFound(ApiResponse<object>.Failure("قالب فعالی برای این نوع سند ثبت نشده است"));
 
+        // قبض اصلی دقیقاً با FlowDocument قبلی در کلاینت چاپ می‌شود، نه
+        // بازسازی تقریبی HTML. انتخاب قالب‌های دیگر همچنان HTML را رندر می‌کند.
+        if (tType == PrintTemplateType.ReceptionReceipt &&
+            template.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker)
+            return Ok(ApiResponse<object>.Success(new
+            {
+                html = "", templateId = template.Id, templateName = template.TemplateName,
+                useOriginalReceptionReceipt = true
+            }));
+
+        if (PrintTemplateRenderer.HasUnsafeVariablePlacement(template.HtmlBody))
+            return BadRequest(ApiResponse<object>.Failure("متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت."));
         var clinic = await ClinicInfoAsync();
-        var body = PrintTemplateRenderer.Render(template.HtmlBody,
-                request.Variables ?? new Dictionary<string, object?>())
-            .Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var variables = request.Variables ?? new Dictionary<string, object?>();
+        variables.TryAdd("clinic_name", clinic.ClinicName ?? "درمانگاه");
+        variables.TryAdd("clinic_address", clinic.Address ?? "");
+        variables.TryAdd("clinic_phone", clinic.Phone ?? "");
+        variables.TryAdd("print_date", PersianDateHelper.ToShamsi(DateTime.UtcNow));
+        var body = PrintTemplateRenderer.Render(template.HtmlBody, variables);
         var html = PrintTemplateRenderer.WrapDocument(
             body, clinic.ClinicName ?? "درمانگاه سهند", clinic.Address, clinic.Phone,
             logoUrl: null, template.AccentColor, template.FontSize, template.FontFamily,
-            template.ShowClinicLogo, template.PaperSize);
+            template.ShowClinicLogo, template.PaperSize, template.Orientation).Replace("__PRINT_DATE__", PersianDateHelper.ToShamsi(DateTime.UtcNow));
 
         return Ok(ApiResponse<object>.Success(new { html, templateId = template.Id, templateName = template.TemplateName }));
     }
@@ -198,6 +233,11 @@ public class PrintTemplatesController : ApiBaseController
 
         var error = Validate(dto);
         if (error is not null) return BadRequest(ApiResponse<object>.Failure(error));
+
+        if (template.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker &&
+            (dto.HtmlBody != BuiltInPrintTemplates.ReceptionReceiptMarker || parsedType != PrintTemplateType.ReceptionReceipt))
+            return BadRequest(ApiResponse<object>.Failure(
+                "قبض اصلی با موتور داخلی چاپ می‌شود؛ برای طراحی HTML یک قالب جدید بسازید."));
 
         if (dto.IsDefault && !template.IsDefault)
             await ClearDefaultAsync(parsedType, id);
@@ -315,10 +355,14 @@ public class PrintTemplatesController : ApiBaseController
     /// <summary>اعتبارسنجی مشترک</summary>
     private static string? Validate(SavePrintTemplateDto dto)
     {
+        if (dto.IsDefault && !dto.IsActive)
+            return "قالب پیش‌فرض باید فعال باشد";
         if (string.IsNullOrWhiteSpace(dto.TemplateName) || dto.TemplateName.Trim().Length < 3)
             return "نام قالب حداقل ۳ نویسه باشد";
         if (string.IsNullOrWhiteSpace(dto.HtmlBody) || dto.HtmlBody.Trim().Length < 10)
             return "بدنه HTML قالب خالی است";
+        if (dto.HtmlBody != BuiltInPrintTemplates.ReceptionReceiptMarker && PrintTemplateRenderer.HasUnsafeVariablePlacement(dto.HtmlBody))
+            return "متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت.";
         // ═══ چرخه سی‌ویکم (گزارش مالک) — قبول پهنای کامل اندازه‌های کاغذ:
         // استانداردهای A3/A4/A5/A6/B5/Letter/Legal + فیش حرارتی ۸۰/۵۸ میلی‌متری
         // + قالب سفارشی «Custom:عرضxارتفاع» (میلی‌متر). پیش‌تر فقط A4/A5/A6
@@ -326,6 +370,11 @@ public class PrintTemplatesController : ApiBaseController
         // «اندازه کاغذ باید A4 یا A5 یا A6 باشد» شکست می‌خورد ═══
         if (!IsValidPaperSize(dto.PaperSize))
             return "اندازه کاغذ معتبر نیست — استاندارد (A3…Legal)، حرارتی (Thermal80/58) یا Custom:عرضxارتفاع";
+        if (!string.Equals(dto.Orientation, "Portrait", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(dto.Orientation, "Landscape", StringComparison.OrdinalIgnoreCase))
+            return "جهت کاغذ معتبر نیست.";
+        if (string.Equals(dto.Orientation, "Landscape", StringComparison.OrdinalIgnoreCase) && PrintTemplateRenderer.LandscapePaper(dto.PaperSize) is null)
+            return "برای کاغذ پیوسته یا اندازه نامعتبر، جهت افقی پشتیبانی نمی‌شود.";
         if (dto.FontSize is < 8 or > 24)
             return "اندازه فونت بین ۸ تا ۲۴ باشد";
         return null;
@@ -344,13 +393,16 @@ public class PrintTemplatesController : ApiBaseController
     /// اعتبارسنجی اندازهٔ کاغذ — پذیرش اندازه‌های استاندارد، فیش حرارتی و قالب سفارشی
     /// الگوی سفارشی: Custom:100x180 یا Custom:100×180 (میلی‌متر، اعداد صحیح ۲۰ تا ۱۰۰۰)
     /// </summary>
-    private static bool IsValidPaperSize(string? paper) =>
-        paper is not null &&
-        (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }
-            .Contains(paper, StringComparer.OrdinalIgnoreCase)
-         || System.Text.RegularExpressions.Regex.IsMatch(
-                paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$", 
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+    private static bool IsValidPaperSize(string? paper)
+    {
+        if (string.IsNullOrWhiteSpace(paper)) return false;
+        if (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }
+            .Contains(paper, StringComparer.OrdinalIgnoreCase)) return true;
+        var match = System.Text.RegularExpressions.Regex.Match(paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var width) && int.TryParse(match.Groups[2].Value, out var height)
+            && width is >= 20 and <= 1000 && height is >= 20 and <= 1000;
+    }
 
     /// <summary>تبدیل به DTO جزئیات</summary>
     private static PrintTemplateDetailDto ToDetail(PrintTemplate t) => new(

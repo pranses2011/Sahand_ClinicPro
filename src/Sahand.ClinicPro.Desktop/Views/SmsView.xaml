@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SmsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.SmsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -182,10 +182,10 @@
                                 <TextBlock Text="تست اتصال" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{Binding SaveProviderCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveProviderCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ContentSave" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="ذخیره پنل" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ذخیره پنل (Ctrl+Shift+1)" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>

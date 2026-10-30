@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Events;
@@ -11,7 +11,7 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence;
 /// <summary>
 /// واحد کار — ذخیره تغییرات + انتشار رویدادهای دامنه از طریق MediatR
 /// </summary>
-public sealed class UnitOfWork : IUnitOfWork
+public sealed class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly ClinicProDbContext _context;
     private readonly IMediator _mediator;
@@ -64,6 +64,9 @@ public sealed class UnitOfWork : IUnitOfWork
         }
     }
 
-    /// <summary>آزادسازی منابع کانتکست</summary>
+    /// <summary>آزادسازی همگام برای محدوده‌های DI که با using بسته می‌شوند.</summary>
+    public void Dispose() => _context.Dispose();
+
+    /// <summary>آزادسازی ناهمگام منابع کانتکست.</summary>
     public ValueTask DisposeAsync() => _context.DisposeAsync();
 }

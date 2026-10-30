@@ -292,9 +292,20 @@ public partial class LabViewModel : ViewModelBase
             return;
         }
 
-        var printed = Services.LabResultPrinter.Print(detail, row.Id);
-        if (printed)
-            _snackbar.Success($"برگهٔ نتیجهٔ «{row.Number ?? row.Id.ToString()}» به چاپگر ارسال شد");
+        try
+        {
+            var (outcome, fallback) = await LabResultTemplatePrint.PrintAsync(detail, row.Id,
+                vars => TemplatedPrintService.TryPrintAsync(_api, "LabResult", vars, $"نتیجه آزمایش {row.Number ?? row.Id.ToString()}"),
+                () => LabResultPrinter.Print(detail, row.Id));
+            if (fallback) _snackbar.Warning("قالب نتیجه دریافت نشد؛ از طرح داخلی استفاده شد.");
+            if (outcome == TemplatePrintOutcome.Printed) _snackbar.Success("برگهٔ نتیجه به چاپگر ارسال شد");
+            else if (outcome == TemplatePrintOutcome.NotPrinted) _snackbar.Info("برگهٔ نتیجه به چاپگر ارسال نشد");
+            else _snackbar.Info("پنجرهٔ چاپ قالب بسته شد؛ نتیجهٔ چاپ مرورگر قابل تأیید نیست");
+        }
+        catch
+        {
+            _snackbar.Error("اجرای چاپ ناموفق بود؛ پیش از تلاش مجدد خروجی چاپگر را بررسی کنید.");
+        }
     }
 
     /// <summary>

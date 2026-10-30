@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.LicenseStatusView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.LicenseStatusView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -68,9 +68,9 @@
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      FlowDirection="LeftToRight" FontFamily="{DynamicResource App.CodeFont}" FontSize="12.5"
                                      Margin="0,0,8,0" VerticalAlignment="Center" />
-                            <Button Grid.Column="1" Command="{Binding SavePortalUrlCommand}"
+                            <Button shortcuts:SaveShortcut.Number="1" Grid.Column="1" Command="{Binding SavePortalUrlCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
-                                    VerticalAlignment="Center" Content="💾 ذخیره سرور" />
+                                    VerticalAlignment="Center" Content="💾 ذخیره سرور (Ctrl+Shift+1)" />
                         </Grid>
                         <TextBlock Text="نشانی ریشه کافی است — به‌صورت خودکار به api.php کامل می‌شود؛ این نشانی برای فعال‌سازی و تپ‌قلب روزانه به‌کار می‌رود."
                                    FontSize="10.5" Opacity="0.6" TextWrapping="Wrap" Margin="0,8,0,0" />

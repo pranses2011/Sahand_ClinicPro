@@ -1,0 +1,462 @@
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Microsoft.Win32;
+using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates;
+using Sahand.ClinicPro.Desktop.ViewModels;
+
+namespace Sahand.ClinicPro.Desktop.Views;
+
+/// <summary>ویرایش نسخه محلی بوم؛ تغییر سرور تنها با ذخیره صفحه اصلی انجام می‌شود.</summary>
+public partial class FreeTemplateEditorWindow : Window
+{
+    private const string DragFormat = "SahandClinicPro.FreeTemplate.Kind";
+    private const string DragVariableFormat = "SahandClinicPro.FreeTemplate.VariableKey";
+    private readonly FreeTemplateDocument _document;
+    private readonly IReadOnlyList<ComplementaryViewModel.TemplateVariable> _variables;
+    private readonly string _originalDocument, _originalPaper, _originalOrientation;
+    private readonly string _templateType;
+    private readonly IReadOnlyDictionary<string, object?> _sampleData;
+    private readonly string? _accent, _fontFamily;
+    private readonly int _fontSize;
+    private readonly bool _showLogo, _screenshotMode;
+    private bool _applied, _moveCommitted;
+    private FreeTemplateElement? _selected;
+    private Point _toolStart, _dragStart;
+    private double _startX, _startY;
+    public string? ResultHtml { get; private set; }
+    public string? ResultPaperSize { get; private set; }
+    public string? ResultOrientation { get; private set; }
+
+    public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation,
+        string templateType = "Invoice", string? accent = null, int fontSize = 13, bool showLogo = false, string? fontFamily = null, bool screenshotMode = false)
+    {
+        _templateType = templateType; _accent = accent; _fontSize = fontSize; _showLogo = showLogo; _fontFamily = fontFamily; _screenshotMode = screenshotMode;
+        _sampleData = PrintTemplateRenderer.SampleData(templateType);
+        _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
+        _originalDocument = JsonSerializer.Serialize(_document);
+        _originalPaper = paper;
+        _originalOrientation = orientation;
+        _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
+        InitializeComponent();
+        VariableBox.ItemsSource = _variables;
+        VariablePalette.ItemsSource = _variables.GroupBy(v => v.Group).ToArray();
+        var preset = PaperBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => string.Equals(x.Content as string, paper, StringComparison.OrdinalIgnoreCase));
+        if (preset is not null) PaperBox.SelectedItem = preset; else PaperBox.Text = paper;
+        OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        if (_document.Elements.Count > 0) Select(_document.Elements[0]);
+        else ClearSelection();
+        RefreshCanvas();
+    }
+    private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement workspace || workspace.Parent is not FrameworkElement parent) return;
+        // در قاب هم‌اندازه طرح، کناره‌ها و نسبت سه ستون به مرجع نزدیک‌ترند؛
+        // روی نمایشگرهای کوچک فضای کناری به حداقل کاهش می‌یابد.
+        var target = parent.ActualWidth >= 1400 ? new Thickness(78, 12, 63, 12) : new Thickness(16, 12, 16, 12);
+        if (workspace.Margin != target) workspace.Margin = target;
+    }
+    private static string Number(double n) => n.ToString("0.##", CultureInfo.InvariantCulture);
+    private static double ReadNumber(TextBox box)
+    {
+        if (FreeTemplateInput.TryNumber(box.Text, out var value)) return value;
+        throw new ArgumentException("عدد معتبر وارد کنید (برای اعشار از نقطه یا ممیز فارسی استفاده کنید).");
+    }
+    private int ReadFontSize()
+    {
+        if (FreeTemplateInput.TryInteger(FontBox.Text, out var value)) return value;
+        throw new ArgumentException("اندازه فونت باید عدد صحیح معتبر باشد.");
+    }
+    private int? ReadPadding()
+    {
+        var text = SheetPaddingBox.Text.Trim();
+        if (text.Length == 0) return null;
+        if (FreeTemplateInput.TryInteger(text, out var value) && value is >= 0 and <= 100) return value;
+        throw new ArgumentException("حاشیه داخلی باید خالی یا عدد صحیح بین ۰ و ۱۰۰ باشد.");
+    }
+    private static BitmapSource DecodeImage(byte[] data)
+    {
+        using var input = new MemoryStream(data, writable: false);
+        var decoder = BitmapDecoder.Create(input, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        if (decoder is not (PngBitmapDecoder or JpegBitmapDecoder) || decoder.Frames.Count != 1)
+            throw new ArgumentException("تصویر PNG یا JPEG تک‌فریم انتخاب کنید.");
+        var frame = decoder.Frames[0];
+        if (frame.PixelWidth < 1 || frame.PixelHeight < 1 || frame.PixelWidth > 2048 || frame.PixelHeight > 2048)
+            throw new ArgumentException("ابعاد تصویر باید حداکثر ۲۰۴۸ در ۲۰۴۸ پیکسل باشد.");
+        frame.Freeze();
+        return frame;
+    }
+    private static UIElement ImagePreview(string? data)
+    {
+        try { return new Image { Source = DecodeImage(Convert.FromBase64String(data ?? "")), Stretch = Stretch.Fill }; }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or NotSupportedException or InvalidOperationException)
+        { return new TextBlock { Text = "تصویر قابل نمایش نیست", Foreground = Brushes.DarkRed, TextWrapping = TextWrapping.Wrap }; }
+    }
+    private UIElement SampleTable(string[][] rows, FreeTemplateElement item, Brush ink)
+    {
+        var panel = new StackPanel { FlowDirection = FlowDirection.RightToLeft, ToolTip = _screenshotMode ? null : "نمایش تقریبی جدول نمونه؛ خروجی واقعی را در پیش‌نمایش بررسی کنید" };
+        if (!string.IsNullOrWhiteSpace(item.Text)) panel.Children.Add(new TextBlock { Text = item.Text, FontSize = item.FontSize, FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null, Foreground = ink, TextWrapping = TextWrapping.Wrap });
+        var grid = new Grid();
+        var columns = rows.Max(x => x.Length);
+        for (var i = 0; i < columns; i++) grid.ColumnDefinitions.Add(new ColumnDefinition());
+        for (var row = 0; row < rows.Length; row++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            for (var col = 0; col < rows[row].Length; col++)
+            {
+                var cell = new Border { Padding = new Thickness(3, 2, 3, 2), BorderBrush = Brushes.LightGray, BorderThickness = new Thickness(0, 0, 0, 0.5),
+                    Background = row == 0 ? new SolidColorBrush(Color.FromRgb(0xE8, 0xEF, 0xF9)) : Brushes.White,
+                    Child = new TextBlock { Text = rows[row][col], FontSize = Math.Min(item.FontSize, 12), Foreground = ink, TextWrapping = TextWrapping.Wrap, FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null, FontWeight = row == 0 ? FontWeights.Bold : FontWeights.Normal } };
+                Grid.SetRow(cell, row); Grid.SetColumn(cell, col); grid.Children.Add(cell);
+            }
+        }
+        panel.Children.Add(grid);
+        return panel;
+    }
+    private sealed record ResizeTag(FreeTemplateElement Item, FreeTemplateResizeHandle Direction);
+
+    private static void PlaceResizeHandle(Thumb handle, FreeTemplateElement item, FreeTemplateResizeHandle direction)
+    {
+        var horizontal = direction is FreeTemplateResizeHandle.Left or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.BottomLeft ? 0 :
+            direction is FreeTemplateResizeHandle.Right or FreeTemplateResizeHandle.TopRight or FreeTemplateResizeHandle.BottomRight ? 1 : 0.5;
+        var vertical = direction is FreeTemplateResizeHandle.Top or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.TopRight ? 0 :
+            direction is FreeTemplateResizeHandle.Bottom or FreeTemplateResizeHandle.BottomLeft or FreeTemplateResizeHandle.BottomRight ? 1 : 0.5;
+        Canvas.SetLeft(handle, item.X + horizontal * Math.Max(0, item.Width - handle.Width));
+        Canvas.SetTop(handle, item.Y + vertical * Math.Max(0, item.Height - handle.Height));
+    }
+    private void RefreshCanvas(bool resetCanvasInputs = true)
+    {
+        PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
+        if (resetCanvasInputs)
+        {
+            CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+            SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+        }
+        PageCanvas.Children.Clear();
+        foreach (var item in _document.Elements)
+        {
+            var label = item.Kind switch { "variable" => item.Text + " «" + (_variables.FirstOrDefault(v => v.Key == item.Key)?.Label ?? item.Key) + "»", "text" => item.Text, "line" => "────────", _ => "" };
+            if (item.Kind == "variable" && SampleValuesBox.IsChecked == true && FreeTemplatePreview.TrySampleText(_sampleData, item.Key, out var sample))
+                label = item.Text + " " + sample;
+            var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
+            var content = new Border { BorderBrush = ink,
+                BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
+                Child = item.Kind == "image" ? ImagePreview(item.ImageData) :
+                    item.Kind == "variable" && SampleValuesBox.IsChecked == true && FreeTemplatePreview.TrySampleTable(_sampleData, item.Key, out var rows) ? SampleTable(rows, item, ink) :
+                    new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, FontWeight = item.Bold ? FontWeights.Bold : FontWeights.Normal,
+                    FontStyle = item.Italic ? FontStyles.Italic : FontStyles.Normal, TextDecorations = item.Underline ? TextDecorations.Underline : null,
+                    TextAlignment = item.Alignment == "center" ? TextAlignment.Center : item.Alignment == "left" ? TextAlignment.Left : TextAlignment.Right,
+                    Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
+            var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,
+                BorderThickness = new Thickness(ReferenceEquals(item, _selected) ? 1 : 0),
+                BorderBrush = ReferenceEquals(item, _selected) ? Brushes.DodgerBlue : Brushes.Transparent,
+                Background = Brushes.Transparent, ClipToBounds = true, Child = content };
+            Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
+            border.MouseLeftButtonDown += ItemDown; border.MouseMove += ItemMove; border.MouseLeftButtonUp += ItemUp;
+            border.LostMouseCapture += ItemCaptureLost;
+            PageCanvas.Children.Add(border);
+            if (ReferenceEquals(item, _selected))
+            {
+                foreach (var direction in Enum.GetValues<FreeTemplateResizeHandle>())
+                {
+                    var cursor = direction switch
+                    {
+                        FreeTemplateResizeHandle.Left or FreeTemplateResizeHandle.Right => Cursors.SizeWE,
+                        FreeTemplateResizeHandle.Top or FreeTemplateResizeHandle.Bottom => Cursors.SizeNS,
+                        FreeTemplateResizeHandle.TopRight or FreeTemplateResizeHandle.BottomLeft => Cursors.SizeNESW,
+                        _ => Cursors.SizeNWSE
+                    };
+                    var handle = new Thumb { Tag = new ResizeTag(item, direction), Style = (Style)FindResource("ResizeHandle"), Width = 10, Height = 10,
+                        Background = Brushes.White, BorderBrush = Brushes.DodgerBlue, BorderThickness = new Thickness(1), Cursor = cursor,
+                        ToolTip = "برای تغییر اندازه دستگیره را بکشید" };
+                    var allowed = false;
+                    Point start = default;
+                    var original = new FreeTemplateElement();
+                    handle.DragStarted += (_, _) =>
+                    {
+                        allowed = CanDiscardPending();
+                        if (!allowed) return;
+                        Select(item);
+                        CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+                        SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+                        start = Mouse.GetPosition(PageCanvas);
+                        original = new FreeTemplateElement { X = item.X, Y = item.Y, Width = item.Width, Height = item.Height };
+                    };
+                    handle.DragDelta += (_, _) =>
+                    {
+                        if (!allowed) return;
+                        var point = Mouse.GetPosition(PageCanvas);
+                        var size = FreeTemplateDesign.ResizeFromHandle(_document, original, direction, point.X - start.X, point.Y - start.Y);
+                        item.X = size.X; item.Y = size.Y; item.Width = size.Width; item.Height = size.Height;
+                        Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y); border.Width = size.Width; border.Height = size.Height;
+                        XBox.Text = Number(size.X); YBox.Text = Number(size.Y); WidthBox.Text = Number(size.Width); HeightBox.Text = Number(size.Height);
+                        foreach (var h in PageCanvas.Children.OfType<Thumb>())
+                            if (h.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item)) PlaceResizeHandle(h, item, tag.Direction);
+                    };
+                    handle.DragCompleted += (_, e) =>
+                    {
+                        if (!allowed) return;
+                        if (e.Canceled) { item.X = original.X; item.Y = original.Y; item.Width = original.Width; item.Height = original.Height; Select(item); }
+                        RefreshCanvas();
+                    };
+                    Panel.SetZIndex(handle, 1); PlaceResizeHandle(handle, item, direction); PageCanvas.Children.Add(handle);
+                }
+            }
+        }
+    }
+    private void Select(FreeTemplateElement item)
+    {
+        _selected = item; PropertiesActions.IsEnabled = true; ElementProperties.IsEnabled = true;
+        TextBoxValue.Text = item.Text; VariableBox.SelectedValue = item.Key;
+        VariableBox.IsEnabled = item.Kind == "variable";
+        XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
+        FontBox.Text = item.FontSize.ToString(CultureInfo.InvariantCulture); ColorBox.Text = item.Color;
+        BoldBox.IsChecked = item.Bold; ItalicBox.IsChecked = item.Italic; UnderlineBox.IsChecked = item.Underline; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
+    }
+    private void ClearSelection()
+    {
+        _selected = null;
+        TextBoxValue.Clear(); VariableBox.SelectedIndex = -1;
+        XBox.Clear(); YBox.Clear(); WidthBox.Clear(); HeightBox.Clear(); FontBox.Clear(); ColorBox.Clear();
+        BoldBox.IsChecked = false; ItalicBox.IsChecked = false; UnderlineBox.IsChecked = false; AlignmentBox.SelectedIndex = 0;
+        PropertiesActions.IsEnabled = false; ElementProperties.IsEnabled = false;
+    }
+    private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
+    private bool HasPending()
+    {
+        var dirty = false;
+        try
+        {
+            dirty = ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding;
+            if (_selected is { } item)
+                dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
+                    ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
+                    !FreeTemplateInput.TryInteger(FontBox.Text, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || (ItalicBox.IsChecked == true) != item.Italic || (UnderlineBox.IsChecked == true) != item.Underline || ReadAlignment() != item.Alignment;
+        }
+        catch (ArgumentException) { dirty = true; }
+        return dirty;
+    }
+    private bool CanDiscardPending() => !HasPending() || AppDialog.Confirm("تغییرات اعمال‌نشده", "تغییرات ویژگی یا ابعاد هنوز اعمال نشده‌اند و با این کار کنار گذاشته می‌شوند. ادامه می‌دهید؟", AppDialogIcon.Warning) == true;
+    private void Window_Closing(object? sender, CancelEventArgs e)
+    {
+        if (_applied) return;
+        var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
+        if ((HasPending() || JsonSerializer.Serialize(_document) != _originalDocument || PaperBox.Text != _originalPaper ||
+            !string.Equals(orientation, _originalOrientation, StringComparison.OrdinalIgnoreCase)) &&
+            AppDialog.Confirm("انصراف از طراحی", "همه تغییرات این پنجره بدون اعمال به قالب کنار گذاشته شوند؟", AppDialogIcon.Warning) != true)
+            e.Cancel = true;
+    }
+    private void ItemDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Border { Tag: FreeTemplateElement item } border) return;
+        if (!CanDiscardPending()) { e.Handled = true; return; }
+        Select(item);
+        foreach (var element in PageCanvas.Children.OfType<Border>())
+        {
+            var selected = ReferenceEquals(element.Tag, item);
+            element.BorderThickness = new Thickness(selected ? 1 : 0);
+            element.BorderBrush = selected ? Brushes.DodgerBlue : Brushes.Transparent;
+        }
+        foreach (var handle in PageCanvas.Children.OfType<Thumb>())
+            handle.Visibility = handle.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item) ? Visibility.Visible : Visibility.Collapsed;
+        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; _moveCommitted = false;
+        if (!border.CaptureMouse()) RefreshCanvas();
+        e.Handled = true;
+    }
+    private void ItemMove(object sender, MouseEventArgs e)
+    {
+        if (sender is not Border { IsMouseCaptured: true, Tag: FreeTemplateElement item } border || e.LeftButton != MouseButtonState.Pressed) return;
+        var p = e.GetPosition(PageCanvas);
+        var position = FreeTemplateDesign.MoveWithinCanvas(_document, item, _startX + p.X - _dragStart.X, _startY + p.Y - _dragStart.Y);
+        item.X = position.X; item.Y = position.Y;
+        Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
+        foreach (var handle in PageCanvas.Children.OfType<Thumb>())
+            if (handle.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item)) PlaceResizeHandle(handle, item, tag.Direction);
+        XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
+    }
+    private void ItemUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Border { IsMouseCaptured: true } border)
+        {
+            _moveCommitted = true;
+            border.ReleaseMouseCapture();
+        }
+        else RefreshCanvas();
+        e.Handled = true;
+    }
+    private void ItemCaptureLost(object sender, MouseEventArgs e)
+    {
+        if (!ReferenceEquals(sender, e.OriginalSource)) return;
+        if (!_moveCommitted && sender is Border { Tag: FreeTemplateElement item })
+        {
+            item.X = _startX; item.Y = _startY;
+            Select(item);
+        }
+        _moveCommitted = false;
+        RefreshCanvas();
+    }
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape) return;
+        // Thumb برخلاف تصور، به‌صورت پیش‌فرض Escape را به CancelDrag تبدیل
+        // نمی‌کند. این کار DragCompleted.Canceled را فعال و ابعاد اولیه را
+        // بازمی‌گرداند؛ قطع capture هم همین مسیر را طی می‌کند.
+        if (Mouse.Captured is Thumb thumb && PageCanvas.Children.Contains(thumb) && thumb.IsDragging)
+        {
+            thumb.CancelDrag();
+            e.Handled = true;
+            return;
+        }
+        if (Mouse.Captured is Border { Tag: FreeTemplateElement } border && PageCanvas.Children.Contains(border))
+        {
+            // از دست رفتن capture بدون تأیید، مکان اولیه را بازمی‌گرداند.
+            border.ReleaseMouseCapture();
+            e.Handled = true;
+        }
+    }
+    private void SampleValues_Click(object sender, RoutedEventArgs e) => RefreshCanvas(resetCanvasInputs: false);
+    private void ToolDown(object sender, MouseButtonEventArgs e) => _toolStart = e.GetPosition(this);
+    private void ToolMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || sender is not Button { Tag: string kind } button) return;
+        var p = e.GetPosition(this);
+        if (Math.Abs(p.X - _toolStart.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(p.Y - _toolStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+        var data = new DataObject(); data.SetData(DragFormat, kind);
+        if (kind == "variable" && button.DataContext is ComplementaryViewModel.TemplateVariable variable)
+            data.SetData(DragVariableFormat, variable.Key);
+        DragDrop.DoDragDrop(button, data, DragDropEffects.Copy); e.Handled = true;
+    }
+    private void Canvas_DragOver(object sender, DragEventArgs e) { e.Effects = e.Data.GetDataPresent(DragFormat) ? DragDropEffects.Copy : DragDropEffects.None; e.Handled = true; }
+    private void Canvas_Drop(object sender, DragEventArgs e)
+    { if (e.Data.GetData(DragFormat) is string kind) { Add(kind, e.GetPosition(PageCanvas), e.Data.GetData(DragVariableFormat) as string); e.Handled = true; } }
+    private void Add_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string kind } button)
+            Add(kind, new Point(20, 20), (button.DataContext as ComplementaryViewModel.TemplateVariable)?.Key);
+    }
+    private void Add(string kind, Point point, string? variableKey = null)
+    {
+        if (kind is not ("text" or "variable" or "rectangle" or "line" or "image")) return;
+        if (!CanDiscardPending()) return;
+        if (_document.Elements.Count >= 200) { AppDialog.Error("طراحی قالب", "حداکثر ۲۰۰ عنصر در بوم مجاز است."); return; }
+        if (kind == "variable" && _variables.Count == 0) { AppDialog.Error("طراحی قالب", "برای این سند متغیری در دسترس نیست."); return; }
+        var variable = kind == "variable" ? (variableKey is null ? _variables.FirstOrDefault() : _variables.FirstOrDefault(x => x.Key == variableKey)) : null;
+        if (kind == "variable" && variable is null) { AppDialog.Error("طراحی قالب", "متغیر انتخاب‌شده برای این سند معتبر نیست."); return; }
+        string? imageData = null;
+        if (kind == "image")
+        {
+            if (_document.Elements.Count(x => x.Kind == "image") >= 4) { AppDialog.Error("تصویر", "حداکثر چهار تصویر مجاز است."); return; }
+            var dialog = new OpenFileDialog { Filter = "تصویر PNG یا JPEG|*.png;*.jpg;*.jpeg", CheckFileExists = true, Multiselect = false };
+            if (dialog.ShowDialog(this) != true) return;
+            try
+            {
+                using var file = File.OpenRead(dialog.FileName);
+                if (file.Length is < 8 or > 32768) throw new ArgumentException("حجم تصویر باید حداکثر ۳۲ کیلوبایت باشد.");
+                var bytes = new byte[(int)file.Length]; file.ReadExactly(bytes);
+                imageData = Convert.ToBase64String(bytes);
+                if (FreeTemplateDesign.ImageMimeType(imageData) is null) throw new ArgumentException("فقط فایل PNG یا JPEG مجاز است.");
+                _ = DecodeImage(bytes);
+            }
+            catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+            { AppDialog.Error("تصویر", "خواندن تصویر ناموفق بود: " + ex.Message); return; }
+        }
+        var width = Math.Min(200, _document.Width); var height = kind == "line" ? 8 : kind == "image" ? 100 : 40;
+        var item = new FreeTemplateElement { Kind = kind, Text = kind == "text" ? "متن جدید" : kind == "variable" ? variable!.Label + ":" : "",
+            Key = kind == "variable" ? variable!.Key : "", ImageData = imageData, Width = width, Height = height,
+            X = Math.Clamp(point.X, 0, _document.Width - width), Y = Math.Clamp(point.Y, 0, _document.Height - height) };
+        _document.Elements.Add(item); Select(item); RefreshCanvas();
+    }
+    private void ColorPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is not null && sender is Button { Tag: string color }) ColorBox.Text = color;
+    }
+    private void Update_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null) return;
+        try
+        {
+            if (ReadNumber(CanvasWidthBox) != _document.Width || ReadNumber(CanvasHeightBox) != _document.Height || ReadPadding() != _document.SheetPadding)
+                throw new ArgumentException("ابتدا ابعاد بوم را اعمال کنید تا تغییرات آن کنار گذاشته نشود.");
+            var previous = _selected;
+            var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
+                X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
+                FontSize = ReadFontSize(), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Italic = ItalicBox.IsChecked == true, Underline = UnderlineBox.IsChecked == true, Alignment = ReadAlignment() };
+            var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
+            try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
+            catch { _document.Elements[index] = previous; throw; }
+            Select(updated); RefreshCanvas();
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException) { AppDialog.Error("ویژگی عنصر", ex.Message); }
+    }
+    private void ResizeCanvas_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var width = ReadNumber(CanvasWidthBox); var height = ReadNumber(CanvasHeightBox);
+            var padding = ReadPadding();
+            var oldW = _document.Width; var oldH = _document.Height; var oldPadding = _document.SheetPadding;
+            _document.Width = width; _document.Height = height; _document.SheetPadding = padding;
+            try
+            {
+                FreeTemplateDesign.ValidateCanvas(_document);
+                if (_document.Elements.Count > 0) FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray());
+            }
+            catch { _document.Width = oldW; _document.Height = oldH; _document.SheetPadding = oldPadding; throw; }
+            RefreshCanvas();
+        }
+        catch (ArgumentException ex) { AppDialog.Error("اندازه بوم", ex.Message); }
+    }
+    private void Layer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is not { } item || sender is not Button { Tag: string tag } || tag is not ("1" or "-1")) return;
+        if (!CanDiscardPending()) return;
+        Select(item);
+        FreeTemplateDesign.MoveLayer(_document, item, tag == "1" ? 1 : -1);
+        RefreshCanvas();
+    }
+    private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); ClearSelection(); RefreshCanvas(); } }
+    private (string Html, string Paper, string Orientation) BuildCurrentDesign()
+    {
+        if (HasPending()) throw new ArgumentException("ابتدا تغییرات ویژگی‌ها و ابعاد را با دکمه مربوط اعمال کنید.");
+        var paper = PaperBox.Text.Trim();
+        if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
+        var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
+        var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation, _document.SheetPadding);
+        if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
+        if (_document.Width > availableWidth)
+            throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
+        return (FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()), paper, orientation);
+    }
+    private void Preview_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var design = BuildCurrentDesign();
+            var html = FreeTemplatePreview.Create(design.Html, _templateType, design.Paper, _accent, _fontSize, _showLogo,
+                _variables.Select(v => v.Key).ToArray(), design.Orientation, _fontFamily);
+            var preview = new FreeTemplateSampleWindow(html) { Owner = this };
+            preview.ShowDialog();
+        }
+        catch (ArgumentException ex) { AppDialog.Error("پیش‌نمایش نمونه", ex.Message); }
+    }
+    private void Apply_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var design = BuildCurrentDesign();
+            if (_document.Elements.Any(x => x.Kind == "variable") && AppDialog.Confirm("بررسی محتوای چاپ",
+                "کادرهای بوم اندازه ثابت دارند و اطلاعات طولانی یا ردیف‌های جدول ممکن است بریده شوند. پیش از استفاده، تمام داده‌ها و صفحه‌ها را با داده واقعی و چاپ آزمایشی بررسی کنید. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
+            ResultHtml = design.Html; ResultPaperSize = design.Paper; ResultOrientation = design.Orientation; _applied = true; DialogResult = true;
+        }
+        catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
+    }
+    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+}

@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.Application.Common.Helpers;
@@ -50,7 +50,14 @@ public record CreateEmployeeDto(
     string? FieldOfStudy = null,
     string? EmergencyContact = null,
     string? EmergencyPhone = null,
-    bool IsInsured = false);
+    bool IsInsured = false,
+    // ═══ چرخهٔ جاری — نام تایپشدهٔ سمت/دپارتمان ═══
+    // فرم WPF این دو نام را (نرمالشده) همراه شناسهها میفرستد. سرور در صورت
+    // نیاز رکورد مرجع تازه میسازد؛ بنابراین کاربرانی که نقش Admin/Manager
+    // ندارند هم میتوانند سمت تازه تعریف کنند. تهی = کلاینت قدیمی (فقط
+    // شناسه معتبر است)؛ رشتهٔ خالی یا «—» = پاککردن آگاهانهٔ مقدار.
+    string? PositionName = null,
+    string? DepartmentName = null);
 
 /// <summary>
 /// فرمان ثبت پرسنل جدید
@@ -93,14 +100,22 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         if (exists)
             return Result<long>.Failure(new Error("DUPLICATE", "پرسنلی با این کد ملی ثبت شده است"));
 
+        // ═══ چرخهٔ جاری — سمت/دپارتمان تایپشده ═══
+        // نام تایپشده مقدم بر شناسه است؛ اگر رکورد مرجع وجود نداشته باشد
+        // سرور همانجا میسازد تا مقدار دستی کاربر بیصدا دور ریخته نشود.
+        var positionId = await EmployeeLookupResolver.ResolvePositionIdAsync(
+            _unitOfWork, dto.PositionId, dto.PositionName, cancellationToken);
+        var departmentId = await EmployeeLookupResolver.ResolveDepartmentIdAsync(
+            _unitOfWork, dto.DepartmentId, dto.DepartmentName, cancellationToken);
+
         var employee = new Employee
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             NationalCode = dto.NationalCode,
             Mobile = dto.Mobile,
-            DepartmentId = dto.DepartmentId,
-            PositionId = dto.PositionId,
+            DepartmentId = departmentId,
+            PositionId = positionId,
             EmploymentType = dto.EmploymentType,
             BaseSalary = dto.BaseSalary,
             CommissionPercent = dto.CommissionPercent,
@@ -223,12 +238,21 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         if (duplicateNational)
             return Result.Failure(new Error("DUPLICATE", "پرسنل دیگری با این کد ملی ثبت شده است"));
 
+        // ═══ چرخهٔ جاری — ریشهٔ «سمت دستی ذخیره نمیشود» ═══
+        // پیشتر فقط dto.PositionId ارسال میشد و چون کلاینت ایندکس کهنهٔ
+        // کامبو را میفرستاد، همان مقدار قبلی ثبت میشد. اکنون نام تایپشده
+        // از راه میرسد و مقدم است؛ سرور رکورد مرجع تازه را میسازد.
+        var positionId = await EmployeeLookupResolver.ResolvePositionIdAsync(
+            _unitOfWork, dto.PositionId, dto.PositionName, cancellationToken);
+        var departmentId = await EmployeeLookupResolver.ResolveDepartmentIdAsync(
+            _unitOfWork, dto.DepartmentId, dto.DepartmentName, cancellationToken);
+
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
         employee.NationalCode = dto.NationalCode;
         employee.Mobile = dto.Mobile;
-        employee.DepartmentId = dto.DepartmentId;
-        employee.PositionId = dto.PositionId;
+        employee.DepartmentId = departmentId;
+        employee.PositionId = positionId;
         employee.EmploymentType = dto.EmploymentType;
         employee.BaseSalary = dto.BaseSalary;
         employee.CommissionPercent = dto.CommissionPercent;

@@ -1,3 +1,6 @@
+﻿using Sahand.ClinicPro.Application.DTOs.Billing;
+using Sahand.ClinicPro.Application.DTOs.Receptions;
+using Sahand.ClinicPro.Domain.Enums;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -38,12 +41,35 @@ public partial class ReceptionsViewModel : ViewModelBase
         Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
 
     /// <summary>عنوان فهرست صف — «صف پذیرش امروز» یا تاریخچهٔ تاریخ انتخابی</summary>
-    [ObservableProperty] private string _queueTitle = "═══ صف پذیرش امروز ═══";
+    [ObservableProperty] private string _queueTitle = "صف پذیرش امروز";
 
     /* ── جستجوی هوشمند ── */
     /// <summary>عبارت جستجو — نام/نام‌خانوادگی/کد ملی/کد پیگیری APT/موبایل</summary>
     [ObservableProperty]
     private string _smartSearch = string.Empty;
+    private int _patientSearchVersion;
+    private long? _selectedAppointmentId;
+    private long? _selectedAppointmentPatientId;
+    private long? _selectedAppointmentDoctorId;
+    private void ClearSelectedAppointment()
+    {
+        _selectedAppointmentId = null;
+        _selectedAppointmentPatientId = null;
+        _selectedAppointmentDoctorId = null;
+        FoundAppointmentInfo = null;
+    }
+    partial void OnSmartSearchChanged(string value)
+    {
+        _patientSearchVersion++;
+        ClearSelectedAppointment();
+        FoundPatient = null;
+        FoundAppointmentInfo = null;
+        SelectedSearchResult = null;
+        PatientResults = new ObservableCollection<QuickPatient>();
+    }
+
+    [ObservableProperty]
+    private bool _isSearchingPatient;
 
     /// <summary>بیمار یافته‌شده</summary>
     [ObservableProperty]
@@ -86,7 +112,22 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// همچنان می‌تواند بعداً مقدار را عمداً عوض کند (مثلاً بیمهٔ تبعی).
     /// </summary>
     partial void OnFoundPatientChanged(QuickPatient? value)
-        => ApplyPatientInsurance(value);
+    {
+        InvalidateInquiry();
+        if (_selectedAppointmentId is not null && value?.Id != _selectedAppointmentPatientId) ClearSelectedAppointment();
+        ApplyPatientInsurance(value);
+        if (value is null || IsReceptionOutcomeUnknown || _receptionRecoveryStore is null) return;
+        try
+        {
+            var pending = _receptionRecoveryStore.Load(_invoiceRecoveryServer, value.Id);
+            if (pending is not null) RestorePendingReception(pending);
+        }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("بازیابی محلی پذیرش قابل خواندن نیست؛ پیش از ثبت جدید سوابق را بررسی و با پشتیبانی تماس بگیرید.");
+        }
+    }
 
     /// <summary>
     /// نشاندن بیمهٔ پروندهٔ بیمار روی کشوی بیمه — چرخهٔ ۴۴.
@@ -322,6 +363,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// </summary>
     partial void OnReceptionModeIndexChanged(int value)
     {
+        InvalidateInquiry();
         OnPropertyChanged(nameof(IsDoctorMode));
         OnPropertyChanged(nameof(IsServiceMode));
         RecalculateCost();
@@ -382,6 +424,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     private void AddService(ServiceOption? service)
     {
         if (service is null) return;
+        if (!_serviceTariffsLoaded || !Services.Contains(service))
+        { _snackbar.Error("تعرفه‌های بیمهٔ انتخابی هنوز آماده نیستند؛ فهرست تعرفه را تازه‌سازی کنید."); return; }
         var line = SelectedServices.FirstOrDefault(l => l.Service.Id == service.Id);
         if (line is not null) line.Quantity++;
         else
@@ -590,6 +634,9 @@ public partial class ReceptionsViewModel : ViewModelBase
     private int _insuranceIndex;
 
     /// <summary>تنظیم مستقل اعمال بیمه برای ویزیت</summary>
+    private bool _insurancePolicyLoaded;
+    private bool _insuranceListLoaded;
+    private bool _isInitializing = true;
     private bool ApplyInsuranceToDoctorVisits { get; set; } = true;
 
     /// <summary>تنظیم مستقل اعمال بیمه برای خدمات درمانی</summary>
@@ -598,6 +645,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>شماره بیمه</summary>
     [ObservableProperty]
     private string _insuranceNumber = string.Empty;
+    partial void OnInsuranceNumberChanged(string value) => InvalidateInquiry();
 
     /// <summary>کد ارجاع</summary>
     [ObservableProperty]
@@ -662,10 +710,19 @@ public partial class ReceptionsViewModel : ViewModelBase
     private ObservableCollection<ReceptionRow> _receptions = new();
 
     /// <summary>سازنده</summary>
-    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar)
+    private readonly IInvoiceRecoveryStore? _invoiceRecoveryStore;
+    private readonly IReceptionRecoveryStore? _receptionRecoveryStore;
+    private readonly string _invoiceRecoveryServer;
+    private PendingReception? _pendingReception;
+
+    public ReceptionsViewModel(IApiClient api, ISnackbarService snackbar, IInvoiceRecoveryStore? invoiceRecoveryStore = null,
+        IReceptionRecoveryStore? receptionRecoveryStore = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _invoiceRecoveryStore = invoiceRecoveryStore ?? (api is ApiClient ? new InvoiceRecoveryStore() : null);
+        _receptionRecoveryStore = receptionRecoveryStore ?? (api is ApiClient ? new ReceptionRecoveryStore() : null);
+        _invoiceRecoveryServer = api is ApiClient client ? client.PaymentRecoveryServer : "test-api";
         LoadPanelPrefs();
         _ = InitializeAsync();
     }
@@ -673,6 +730,8 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// <summary>بارگذاری اولیه</summary>
     private async Task InitializeAsync()
     {
+        try
+        {
         await LoadInsuranceBillingPolicyAsync();
         var doctors = await _api.GetAsync<AppointmentsViewModel.DoctorsPage>("doctors?page=1&pageSize=200");
         if (doctors?.Data is not null)
@@ -680,6 +739,8 @@ public partial class ReceptionsViewModel : ViewModelBase
                 Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
 
         var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+        _insuranceListLoaded = companies?.Data is not null;
+        if (!_insuranceListLoaded) _snackbar.Error("دریافت فهرست بیمه ناموفق بود؛ پیش از ثبت آن را تازه‌سازی کنید.");
         // چرخه بیست‌وسوم (گزارش شانزدهم مالک): «نوع بیمه گزینهٔ آزاد وجود ندارد و
         // هنوز بیمهٔ آسیا به‌عنوان آزاد ثبت می‌شود» — ریشهٔ باگ: کد، نمایهٔ صفرِ
         // کشو را «آزاد/بدون بیمه» تفسیر می‌کرد (InsuranceIndex <= 0) ولی کشو هیچ
@@ -700,6 +761,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
 
         await LoadAsync();
+        }
+        catch (Exception) { _snackbar.Error("بارگذاری اولیه پذیرش ناموفق بود؛ اطلاعات بیمه را تازه‌سازی کنید."); }
+        finally { _isInitializing = false; }
     }
 
     /// <summary>بارگذاری آمار و صف امروز</summary>
@@ -724,6 +788,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         var response = await _api.GetAsync<ReceptionsResponse>("receptions/today");
         if (response?.Data is not null)
         {
+            // بارگذاری صف امروز نباید عنوان تاریخچهٔ قبلی را روی دادهٔ امروز نگه دارد.
+            QueueTitle = "صف پذیرش امروز";
             Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
             // مراجعه‌کننده‌های اخیر + جمع‌های مالی پنل‌های اختیاری
             RecentPatients.Clear();
@@ -808,11 +874,11 @@ public partial class ReceptionsViewModel : ViewModelBase
         var vars = new Dictionary<string, object?>
         {
             ["clinic_name"] = receipt.ClinicName,
-            ["clinic_phone"] = string.Empty,
             ["patient_name"] = receipt.PatientName,
             ["patient_national_code"] = receipt.NationalCode ?? string.Empty,
             ["patient_mobile"] = receipt.Mobile ?? string.Empty,
-            ["queue_number"] = receipt.QueueNumber,
+            ["queue_number"] = receipt.DisplayReceptionNumber,
+            ["reception_code"] = receipt.DisplayReceptionNumber,
             ["reception_date"] = receipt.DateText,
             ["reception_time"] = receipt.TimeText,
             ["service_name"] = receipt.ServiceName ?? receipt.DoctorName,
@@ -826,15 +892,52 @@ public partial class ReceptionsViewModel : ViewModelBase
             ["items_total"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.ItemsTotal),
             ["insurance_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.InsuranceShare),
             ["patient_share"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.PatientShare),
+            ["payable"] = Money.FormatWithUnit(receipt.Payable),
+            ["amount"] = Money.FormatWithUnit(receipt.Payable),
+            ["discount"] = Money.FormatWithUnit(receipt.Discount),
+            ["tax"] = Money.FormatWithUnit(receipt.Tax),
             ["paid_amount"] = Sahand.ClinicPro.Desktop.Helpers.Money.FormatWithUnit(receipt.Paid),
-            ["payment_method"] = receipt.PaymentMethod == 2 ? "کارتخوان" : receipt.PaymentMethod == 1 ? "نقدی" : "—",
-            ["invoice_number"] = receipt.InvoiceNumber == 0 ? string.Empty : receipt.InvoiceNumber.ToString(),
+            ["payment_method"] = receipt.PaymentMethodText,
+            ["invoice_number"] = receipt.DisplayInvoiceNumbers,
             ["print_date"] = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now)
         };
-        if (await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
-                $"قبض پذیرش — {receipt.PatientName}"))
-            return;
-        ReceptionReceiptPrinter.Print(receipt);
+        var result = await TemplatedPrintService.TryPrintAsync(_api, "ReceptionReceipt", vars,
+            $"قبض پذیرش — {receipt.PatientName}", () => ReceptionReceiptPrinter.Print(receipt));
+        if (result == TemplatePrintOutcome.Fallback)
+        {
+            _snackbar.Warning("قالب انتخابی دریافت نشد؛ قبض با طرح داخلی چاپ می‌شود.");
+            result = ReceptionReceiptPrinter.Print(receipt) ? TemplatePrintOutcome.Printed : TemplatePrintOutcome.NotPrinted;
+        }
+        if (result == TemplatePrintOutcome.Printed)
+            _snackbar.Success("قبض به چاپگر ارسال شد");
+        else if (result == TemplatePrintOutcome.NotPrinted)
+            _snackbar.Info("قبض به چاپگر ارسال نشد");
+        else
+            _snackbar.Info("پنجره چاپ قالب بسته شد؛ نتیجه دیالوگ چاپ مرورگر قابل تأیید نیست");
+    }
+
+    private async Task<ReceptionReceipt?> LoadReceiptAsync(long receptionId)
+    {
+        var response = await _api.GetAsync<ReceptionReceiptResponse>($"receptions/{receptionId}/receipt");
+        var d = response?.Data;
+        if (d is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت اطلاعات ذخیره‌شده قبض ناموفق بود");
+            return null;
+        }
+        return new ReceptionReceipt(
+            QueueNumber: d.ReceptionId, InvoiceNumber: 0,
+            PatientName: d.PatientName, NationalCode: d.NationalCode, Mobile: d.Mobile,
+            DoctorName: d.DoctorName, ServiceName: d.ServiceName, RoomName: d.RoomName,
+            InsuranceName: d.InsuranceName, DateText: d.DateText, TimeText: d.TimeText,
+            Items: d.Items.Select(i => new ReceptionReceiptItem(i.Name, i.Quantity, i.UnitPrice)).ToList(),
+            ItemsTotal: d.ItemsTotal, InsuranceShare: d.InsuranceShare, PatientShare: d.PatientShare,
+            Payable: d.Payable, Paid: d.Paid, PaymentMethod: d.PaymentMethod,
+            ReferenceNumber: d.ReferenceNumber, CardNumber: d.CardNumber,
+            ClinicName: await GetReceiptClinicNameAsync(),
+            ReceptionNumberText: string.IsNullOrWhiteSpace(d.ReceptionNumber) ? "—" : d.ReceptionNumber,
+            InvoiceNumbersText: string.IsNullOrWhiteSpace(d.InvoiceNumbers) ? "—" : d.InvoiceNumbers,
+            Discount: d.Discount, Tax: d.Tax);
     }
 
     [RelayCommand]
@@ -842,45 +945,15 @@ public partial class ReceptionsViewModel : ViewModelBase
     {
         row ??= SelectedReception;
         if (row is null) { _snackbar.Error("ابتدا یک پذیرش را از فهرست انتخاب کنید"); return; }
-        var response = await _api.GetAsync<ReceptionReceiptResponse>($"receptions/{row.Id}/receipt");
-        var d = response?.Data;
-        if (d is null)
+        try
         {
-            _snackbar.Error(_api.LastError ?? "دریافت اطلاعات قبض ناموفق بود");
-            return;
+            var receipt = await LoadReceiptAsync(row.Id);
+            if (receipt is not null) await PrintReceiptAsync(receipt);
         }
-        long queueNo = 0;
-        if (!string.IsNullOrWhiteSpace(d.ReceptionNumber))
-            long.TryParse(new string(d.ReceptionNumber.Where(char.IsDigit).ToArray()), out queueNo);
-        var receipt = new ReceptionReceipt(
-            QueueNumber: queueNo != 0 ? queueNo : d.ReceptionId,
-            InvoiceNumber: 0,
-            PatientName: d.PatientName,
-            NationalCode: d.NationalCode,
-            Mobile: d.Mobile,
-            DoctorName: d.DoctorName,
-            ServiceName: d.ServiceName,
-            RoomName: d.RoomName,
-            InsuranceName: d.InsuranceName,
-            DateText: d.DateText,
-            TimeText: d.TimeText,
-            Items: d.Items.Select(i => new ReceptionReceiptItem(i.Name, i.Quantity, i.UnitPrice)).ToList(),
-            ItemsTotal: d.ItemsTotal,
-            InsuranceShare: d.InsuranceShare,
-            PatientShare: d.PatientShare,
-            Payable: d.Payable,
-            Paid: d.Paid,
-            PaymentMethod: d.PaymentMethod,
-            ReferenceNumber: d.ReferenceNumber,
-            CardNumber: d.CardNumber,
-            ClinicName: await GetReceiptClinicNameAsync());
-        // شمارهٔ فاکتور در متن قبض از InvoiceNumbers می‌آید؛ برای سازگاری با
-        // سازندهٔ قبض، شمارهٔ نخست فاکتور به‌صورت عددی استخراج می‌شود
-        var firstInvoice = (d.InvoiceNumbers ?? string.Empty).Split('،')[0].Trim();
-        if (long.TryParse(new string(firstInvoice.Where(char.IsDigit).ToArray()), out var invNo) && invNo > 0)
-            receipt = receipt with { InvoiceNumber = invNo };
-        await PrintReceiptAsync(receipt);
-        _snackbar.Success($"قبض پذیرش {d.PatientName} دوباره چاپ شد");
+        catch (Exception ex)
+        {
+            _snackbar.Error($"چاپ قبض انجام نشد: {ex.Message}");
+        }
     }
 
     /// <summary>نمایش پذیرش‌های تاریخ شمسی انتخابی — تاریخچه برای چاپ مجدد قبض</summary>
@@ -904,7 +977,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             return;
         }
         Receptions = new ObservableCollection<ReceptionRow>(response.Data.Select(MapRow));
-        QueueTitle = $"═══ پذیرش‌های {HistoryDateShamsi} (تاریخچه — برای چاپ مجدد قبض روی ردیف کلیک کنید) ═══";
+        QueueTitle = $"پذیرش‌های {HistoryDateShamsi} (تاریخچه)";
         _snackbar.Info($"{response.Data.Count} پذیرش برای {HistoryDateShamsi} یافت شد");
     }
 
@@ -912,7 +985,7 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task BackToTodayAsync()
     {
-        QueueTitle = "═══ صف پذیرش امروز ═══";
+        QueueTitle = "صف پذیرش امروز";
         HistoryDateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(IranClock.Now);
         await LoadAsync();
     }
@@ -930,70 +1003,60 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SmartSearchAsync()
     {
+        if (IsSubmitting || IsCreatingUnidentifiedPatient || IsSearchingPatient) return;
         var term = SmartSearch.Trim();
         if (term.Length < 2) { _snackbar.Error("بخشی از نام، کد ملی، موبایل یا کد پیگیری نوبت را وارد کنید"); return; }
-
-        IsBusy = true;
+        var version = ++_patientSearchVersion;
+        IsSearchingPatient = true;
+        ClearSelectedAppointment();
         FoundPatient = null;
         FoundAppointmentInfo = null;
-        Inquiry = null;
         SelectedSearchResult = null;
-
-        if (term.StartsWith("APT", StringComparison.OrdinalIgnoreCase))
+        PatientResults = new ObservableCollection<QuickPatient>();
+        try
         {
-            // جستجو با کد پیگیری نوبت
-            var appts = await _api.PostAsync<AppointmentsViewModel.SearchResponse>("appointments/search", new
+            if (term.StartsWith("APT", StringComparison.OrdinalIgnoreCase))
             {
-                search = term, pageNumber = 1, pageSize = 5
-            });
-            var appt = appts?.Data?.FirstOrDefault();
-            if (appt is null)
-            {
-                IsBusy = false;
-                _snackbar.Error("نوبتی با این کد پیگیری یافت نشد");
-                return;
+                var appts = await _api.PostAsync<AppointmentsViewModel.SearchResponse>("appointments/search", new
+                { search = term, pageNumber = 1, pageSize = 5 });
+                if (version != _patientSearchVersion) return;
+                var matches = appts?.Data?.Where(a => string.Equals(a.AppointmentCode, term, StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+                if (matches is null || matches.Count != 1)
+                { _snackbar.Error("نوبت یکتا با این کد یافت نشد؛ اطلاعات را بررسی کنید."); return; }
+                var appt = matches[0];
+                if (appt.PatientId is null || appt.DoctorId is null || appt.Status is not (1 or 2))
+                { _snackbar.Error("شناسه بیمار یا پزشک نوبت موجود نیست یا نوبت در وضعیت قابل پذیرش نیست؛ سرور و برنامه را به‌روز کنید."); return; }
+                if (string.IsNullOrWhiteSpace(appt.PatientMobile))
+                { _snackbar.Error("شماره بیمار در نوبت موجود نیست؛ بیمار را جداگانه جستجو کنید."); return; }
+                var patients = await FindPatientsAsync(appt.PatientMobile);
+                if (version != _patientSearchVersion) return;
+                var patientMatches = patients?.Where(x => x.Id == appt.PatientId && x.Mobile == appt.PatientMobile).Take(2).ToList();
+                if (patientMatches is null || patientMatches.Count != 1)
+                { _snackbar.Error("بیمار یکتا برای این نوبت یافت نشد؛ بیمار را جداگانه جستجو کنید."); return; }
+                var doctor = Doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
+                if (doctor is null) { _snackbar.Error("پزشک نوبت در فهرست فعال یافت نشد؛ نوبت را بررسی کنید."); return; }
+                FoundPatient = patientMatches[0];
+                _selectedAppointmentId = appt.Id;
+                _selectedAppointmentPatientId = appt.PatientId;
+                _selectedAppointmentDoctorId = appt.DoctorId;
+                FoundAppointmentInfo = $"نوبت {appt.DateShamsi} ساعت {appt.Time} — {appt.DoctorName}";
+                SelectedDoctor = doctor;
             }
-            // بیمارِ نوبت با موبایل (تطابق دقیق — موبایل نوبت داریم)
-            var patient = (await FindPatientsAsync(appt.PatientMobile ?? ""))
-                .FirstOrDefault(x => x.Mobile == appt.PatientMobile);
-            if (patient is null)
+            else
             {
-                IsBusy = false;
-                _snackbar.Error("بیمار نوبت یافت نشد");
-                return;
-            }
-            FoundPatient = patient;
-            FoundAppointmentInfo = $"نوبت {appt.DateShamsi} ساعت {appt.Time} — {appt.DoctorName}";
-            var doctor = Doctors.FirstOrDefault(d => d.Name == appt.DoctorName);
-            if (doctor is not null) SelectedDoctor = doctor;
-        }
-        else
-        {
-            // جستجوی بیمار — تطبیق جزئی نام/کد ملی/موبایل/پرونده از سمت سرور
-            var results = await FindPatientsAsync(term);
-
-            switch (results.Count)
-            {
-                case 0:
-                    _snackbar.Error("بیماری یافت نشد — بخشی از نام یا کد ملی را امتحان کنید یا ابتدا بیمار را ثبت کنید");
-                    break;
-
-                case 1:
-                    // تک‌نتیجه — انتخاب خودکار بدون نیاز به کلیک اضافه
-                    FoundPatient = results[0];
-                    _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}");
-                    break;
-
-                default:
-                    // چندنتیجه — فهرست برای انتخاب کاربر (گزارش شانزدهم مالک:
-                    // «جستجو موارد رو بیاره تا انتخاب بکنیم»)
-                    PatientResults = new ObservableCollection<QuickPatient>(results);
-                    _snackbar.Info($"{results.Count} بیمار یافت شد — از فهرست انتخاب کنید");
-                    break;
+                var results = await FindPatientsAsync(term);
+                if (version != _patientSearchVersion) return;
+                if (results is null) { _snackbar.Error(_api.LastError ?? "دریافت نتایج جستجو ناموفق بود"); return; }
+                if (results.Count == 0) _snackbar.Error("بیماری یافت نشد — بخشی از نام یا کد ملی را امتحان کنید یا ابتدا بیمار را ثبت کنید");
+                else if (results.Count == 1)
+                { FoundPatient = results[0]; _snackbar.Success($"بیمار یافت شد: {FoundPatient.FullName}"); }
+                else
+                { PatientResults = new ObservableCollection<QuickPatient>(results); _snackbar.Info($"{results.Count} بیمار یافت شد — از فهرست انتخاب کنید"); }
             }
         }
-
-        IsBusy = false;
+        catch (Exception)
+        { if (version == _patientSearchVersion) _snackbar.Error("دریافت نتایج جستجو ناموفق بود؛ دوباره تلاش کنید."); }
+        finally { IsSearchingPatient = false; }
     }
 
     /// <summary>
@@ -1012,22 +1075,33 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// سیستمی بدون کد ملی؛ بیمار بلافاصله انتخاب می‌شود و تکمیل هویت
     /// بعداً از پروندهٔ بیمار انجام می‌گردد
     /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isCreatingUnidentifiedPatient;
+
     [RelayCommand]
     private async Task CreateUnidentifiedPatientAsync()
     {
+        if (IsSubmitting || IsSearchingPatient || IsCreatingUnidentifiedPatient) return;
+        IsCreatingUnidentifiedPatient = true;
+        try
+        {
         int? age = int.TryParse(UnidentifiedAgeText?.Trim(), out var a) ? a : null;
         var response = await _api.PostAsync<UnidentifiedPatientEnvelope>("patients/unidentified",
             new { gender = UnidentifiedGenderIndex + 1, approximateAge = age });
         var dto = response?.Data;
         if (dto is null)
         {
-            _snackbar.Error(_api.LastError ?? "ساخت پروندهٔ موقت ناموفق بود");
+            _snackbar.Error((_api.LastError ?? "پاسخ ساخت پرونده دریافت نشد") + "؛ پیش از تکرار وجود پرونده را بررسی کنید.");
             return;
         }
         FoundPatient = new QuickPatient(dto.Id, "بیمار ناشناس", dto.TemporaryCode ?? string.Empty,
             dto.Mobile ?? string.Empty, null, null, null, null, UnidentifiedGenderIndex + 1);
         PatientResults = new ObservableCollection<QuickPatient>();
         _snackbar.Success($"پروندهٔ موقت ساخته شد — کد موقت: {dto.TemporaryCode} (تکمیل هویت بعداً از پروندهٔ بیمار)");
+        }
+        catch (Exception) { _snackbar.Error("پاسخ ساخت پرونده دریافت نشد؛ پیش از تکرار وجود پرونده را بررسی کنید."); }
+        finally { IsCreatingUnidentifiedPatient = false; }
     }
 
     /// <summary>پاکت پاسخ ساخت بیمار ناشناس</summary>
@@ -1045,11 +1119,11 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? Mobile { get; set; }
     }
 
-    private async Task<List<QuickPatient>> FindPatientsAsync(string term)
+    private async Task<List<QuickPatient>?> FindPatientsAsync(string term)
     {
         var response = await _api.GetAsync<PatientFormViewModel.SearchResponse>(
             $"patients/search?term={Uri.EscapeDataString(term)}");
-        if (response?.Data is null) return new List<QuickPatient>();
+        if (response?.Data is null) return null;
 
         return response.Data
             .Select(p => new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}",
@@ -1103,13 +1177,52 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     private async Task LoadInsuranceBillingPolicyAsync()
     {
+        _insurancePolicyLoaded = false;
         var response = await _api.GetAsync<InsurancePolicySettingsResponse>("settings/insurance-policy");
-        var settings = response?.Data ?? new List<InsurancePolicySetting>();
+        if (response?.Data is null)
+        { _snackbar.Error("دریافت تنظیمات بیمه ناموفق بود؛ پیش از ثبت آن را تازه‌سازی کنید."); return; }
+        _insurancePolicyLoaded = true;
+        var settings = response.Data;
         var visits = settings.FirstOrDefault(x => x.Key == "ApplyToDoctorVisits")?.Value;
         var services = settings.FirstOrDefault(x => x.Key == "ApplyToMedicalServices")?.Value;
-        if (bool.TryParse(visits, out var applyVisits)) ApplyInsuranceToDoctorVisits = applyVisits;
-        if (bool.TryParse(services, out var applyServices)) ApplyInsuranceToMedicalServices = applyServices;
+        ApplyInsuranceToDoctorVisits = !bool.TryParse(visits, out var applyVisits) || applyVisits;
+        ApplyInsuranceToMedicalServices = !bool.TryParse(services, out var applyServices) || applyServices;
         RecalculateCost();
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    private bool _isRefreshingInsurance;
+
+    /// <summary>دریافت دوبارهٔ تنظیمات و شرکت‌های بیمه پس از خطا.</summary>
+    [RelayCommand]
+    private async Task RefreshInsuranceAsync()
+    {
+        if (IsSubmitting || IsCreatingUnidentifiedPatient || IsRefreshingInsurance) return;
+        if (_isInitializing) { _snackbar.Info("بارگذاری اولیه هنوز تمام نشده است."); return; }
+        IsRefreshingInsurance = true;
+        var selectedId = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count ? InsuranceCompanies[InsuranceIndex].Id : 0;
+        try
+        {
+            await LoadInsuranceBillingPolicyAsync();
+            _insuranceListLoaded = false;
+            var companies = await _api.GetAsync<PatientFormViewModel.LookupCompanies>("lookups/insurance-companies");
+            if (companies?.Data is null)
+            { _snackbar.Error("دریافت فهرست بیمه ناموفق بود؛ دوباره تلاش کنید."); return; }
+            InsuranceCompanies.Clear();
+            InsuranceCompanies.Add(new InsuranceOption(0, "آزاد (بدون بیمه)", false));
+            foreach (var c in companies.Data)
+                InsuranceCompanies.Add(new InsuranceOption(c.Id, c.Name, c.IsContracted, c.CoveragePercent));
+            _insuranceListLoaded = true;
+            var index = InsuranceCompanies.ToList().FindIndex(c => c.Id == selectedId);
+            if (index < 0)
+            { InsuranceIndex = -1; _snackbar.Warning("شرکت بیمه قبلی در فهرست جدید نیست؛ بیمه را دوباره انتخاب کنید."); }
+            else { InsuranceIndex = index; InvalidateInquiry(); }
+            await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
+            RecalculateCost();
+        }
+        catch (Exception) { _snackbar.Error("دریافت اطلاعات بیمه ناموفق بود؛ دوباره تلاش کنید."); }
+        finally { IsRefreshingInsurance = false; }
     }
 
     private sealed class InsurancePolicySettingsResponse
@@ -1124,18 +1237,47 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string? Value { get; set; }
     }
 
+    private int _serviceLoadVersion;
+    private bool _serviceTariffsLoaded;
+
+    /// <summary>تلاش مجدد برای دریافت تعرفهٔ بیمهٔ فعلی.</summary>
+    [RelayCommand]
+    private async Task RefreshServiceTariffsAsync() =>
+        await LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(InsuranceIndex));
+
     /// <summary>بارگذاری خدمات، تعرفهٔ مؤثر و پرسنل پذیرش خدمت درمانی.</summary>
     /// <param name="insuranceCompanyId">شناسهٔ شرکت طرف‌قرارداد؛ تهی یعنی تعرفهٔ آزاد.</param>
     private async Task LoadServicesAndPerformersAsync(long? insuranceCompanyId = null)
     {
         // خدمات فعال با تعرفهٔ هدفِ منتخب — سهم‌های بیمه/بیمار همراه قیمت می‌آید
+        var version = ++_serviceLoadVersion;
+        _serviceTariffsLoaded = false;
         var url = $"lookups/services?search=&insuranceCompanyId={insuranceCompanyId?.ToString() ?? ""}";
-        var services = await _api.GetAsync<ServicesLookupResponse>(url);
+        ServicesLookupResponse? services;
+        try { services = await _api.GetAsync<ServicesLookupResponse>(url); }
+        catch (Exception)
+        {
+            if (version == _serviceLoadVersion) _snackbar.Error("دریافت تعرفه‌ها ناموفق بود؛ دوباره تلاش کنید.");
+            return;
+        }
+        if (version != _serviceLoadVersion) return;
+        if (services?.Data is null)
+        { _snackbar.Error("دریافت تعرفه‌ها ناموفق بود؛ دوباره تلاش کنید. ثبت خدمت تا دریافت تعرفه معتبر ممکن نیست."); return; }
         Services.Clear();
-        foreach (var s2 in services?.Data ?? new List<ServiceLookupDto>())
+        foreach (var s2 in services.Data)
             Services.Add(new ServiceOption(s2.ServiceId, s2.ServiceName, s2.Price,
                 s2.InsuranceShare, s2.PatientShare));
         RefreshFilteredServices();
+        foreach (var line in SelectedServices)
+        {
+            var same = Services.FirstOrDefault(s => s.Id == line.Service.Id);
+            if (same is not null) line.Service = same;
+        }
+        SyncPrimaryService();
+        RecalculateCost();
+        _serviceTariffsLoaded = true;
+        if (SelectedServices.Any(line => !Services.Any(s => s.Id == line.Service.Id)))
+            _snackbar.Warning("برخی خدمات انتخابی در تعرفهٔ جدید نیستند؛ آن‌ها را حذف یا اصلاح کنید.");
 
         // پرسنل فعال برای انتخاب انجام‌دهنده — فقط یک بار لازم است
         if (Performers.Count == 0)
@@ -1233,16 +1375,16 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Error("ابتدا قلم مصرفی را انتخاب کنید");
             return;
         }
-        if (ConsumableQty <= 0)
+        if (!ValidConsumableQuantity(ConsumableQty))
         {
-            _snackbar.Error("تعداد باید بیشتر از صفر باشد");
+            _snackbar.Error("تعداد باید مثبت، حداکثر دو رقم اعشار و در محدوده مجاز باشد");
             return;
         }
 
         // ادغام با ردیف موجود همان قلم
         var existing = Consumables.FirstOrDefault(c => c.Option.Id == SelectedConsumable.Id);
         var newQuantity = (existing?.Quantity ?? 0) + ConsumableQty;
-        if (newQuantity > SelectedConsumable.Available)
+        if (!ValidConsumableQuantity(newQuantity) || newQuantity > SelectedConsumable.Available)
         {
             _snackbar.Error($"موجودی انبار «{SelectedConsumable.Name}» فقط {SelectedConsumable.Available:0.#} است");
             return;
@@ -1384,46 +1526,36 @@ public partial class ReceptionsViewModel : ViewModelBase
         public decimal TotalPrice { get; set; }
     }
 
+    private int _inquiryVersion;
+    private void InvalidateInquiry()
+    {
+        _inquiryVersion++;
+        Inquiry = null;
+        CoveragePercent = InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count
+            ? InsuranceCompanies[InsuranceIndex].CoveragePercent : 0m;
+    }
+
     /// <summary>تغییر بیمه → محاسبه هزینه + بارگذاری مجدد تعرفه‌ها با بیمهٔ جدید</summary>
     partial void OnInsuranceIndexChanged(int value)
     {
-        Inquiry = null;
+        InvalidateInquiry();
         var selectedCompany = value >= 0 && value < InsuranceCompanies.Count
             ? InsuranceCompanies[value]
             : null;
         CoveragePercent = selectedCompany?.CoveragePercent ?? 0m;
         RecalculateCost();
 
-        // ═══ چرخهٔ بیست‌وششم ═══ تعرفه‌ها بیمه‌محورند — با تغییر بیمه، فهرست
-        // خدمات با تعرفهٔ همان بیمه بازخوانی می‌شود و خدمتِ قبلی هم اگر هنوز
-        // موجود باشد دوباره انتخاب می‌شود تا قیمت‌ها بی‌درنگ درست بمانند.
-        // (نمایهٔ صفر = آزاد → بیمهٔ تهی به سرور می‌رود)
-        var companyId = GetEffectiveServiceInsuranceCompanyId(value);
-        var previousLines = SelectedServices.Select(l => (l.Service.Id, l.Quantity)).ToList();
-        _ = LoadServicesAndPerformersAsync(companyId).ContinueWith(_ =>
-        {
-            if (previousLines.Count == 0) return;
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-            {
-                foreach (var line in SelectedServices.ToList())
-                {
-                    var same = Services.FirstOrDefault(s => s.Id == line.Service.Id)
-                               ?? Services.FirstOrDefault(s => s.Name == line.Service.Name);
-                    if (same is not null) line.Service = same;
-                    else { line.Changed -= OnSelectedServiceLineChanged; SelectedServices.Remove(line); }
-                }
-                SyncPrimaryService();
-                RecalculateCost();
-            });
-        });
+        // پاسخ‌های دیررس نباید تعرفهٔ بیمهٔ فعلی را بازنویسی کنند.
+        _ = LoadServicesAndPerformersAsync(GetEffectiveServiceInsuranceCompanyId(value));
     }
 
     /// <summary>استعلام بیمه — با Timeout ۳۰ ثانیه و پیام مناسب</summary>
     [RelayCommand]
     private async Task VerifyInsuranceAsync()
     {
+        if (IsInquiring || IsSubmitting) return;
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        if (InsuranceIndex <= 0) { _snackbar.Error("ابتدا نوع بیمه را انتخاب کنید"); return; }
+        if (InsuranceIndex <= 0 || InsuranceIndex >= InsuranceCompanies.Count) { _snackbar.Error("ابتدا نوع بیمه را انتخاب کنید"); return; }
 
         // ═══ چرخهٔ بیست‌وششم (گزارش هجدهم مالک) — رفع آف‌بای‌وان ═══
         // آیتم «آزاد» با شناسهٔ صفر در ابتدای کشوست و شرکت‌های واقعی از
@@ -1442,6 +1574,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Info("اعمال بیمه برای این دسته در تنظیمات درمانگاه غیرفعال است");
             return;
         }
+        var inquiryVersion = ++_inquiryVersion;
         IsInquiring = true;
         try
         {
@@ -1452,10 +1585,12 @@ public partial class ReceptionsViewModel : ViewModelBase
                 insuranceNumber = string.IsNullOrWhiteSpace(InsuranceNumber) ? null : InsuranceNumber.Trim()
             });
 
+            if (inquiryVersion != _inquiryVersion) return;
             if (response?.Data is null)
             {
-                Inquiry = new InquiryState(true, false, _api.LastError ?? "بیمه نامعتبر است", null, 0);
-                _snackbar.Error("بیمه نامعتبر: " + Inquiry.Message);
+                CoveragePercent = 0;
+                Inquiry = new InquiryState(true, false, _api.LastError ?? "استعلام بیمه ناموفق بود", null, 0);
+                _snackbar.Error("استعلام بیمه ناموفق بود: " + Inquiry.Message);
             }
             else
             {
@@ -1475,12 +1610,14 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
+            if (inquiryVersion != _inquiryVersion) return;
             // Timeout — «سامانه بیمه پاسخ نداد - ادامه بصورت آزاد؟»
             var proceed = Views.AppDialog.Confirm("عدم پاسخ سامانه بیمه", "سامانه بیمه پاسخ نداد. پذیرش به‌صورت آزاد ادامه یابد؟", Views.AppDialogIcon.Warning) == true;
             if (proceed)
             {
                 InsuranceIndex = 0;
-                Inquiry = new InquiryState(true, false, "استعلام ناموفق — پذیرش آزاد", null, 0);
+                Inquiry = null; // انتخاب صریح آزاد؛ استعلام شکست‌خورده مانع پذیرش آزاد نیست
+                _snackbar.Info("پذیرش آزاد انتخاب شد؛ تعرفهٔ آزاد را بررسی کنید.");
             }
         }
         finally
@@ -1515,7 +1652,7 @@ public partial class ReceptionsViewModel : ViewModelBase
         var categoryEnabled = ReceptionModeIndex == 1
             ? ApplyInsuranceToMedicalServices
             : ApplyInsuranceToDoctorVisits;
-        var hasApplicableInsurance = hasContractedInsurance && categoryEnabled;
+        var hasApplicableInsurance = hasContractedInsurance && categoryEnabled && Inquiry is not { IsDone: true, IsEligible: false };
         // ستون سهم بیمه فقط وقتی دیده می‌شود که شرکت طرف قرارداد باشد و
         // تنظیم مستقل همان دستهٔ ویزیت/خدمت اجازهٔ اعمال بیمه بدهد.
         HasInsurance = hasApplicableInsurance;
@@ -1559,13 +1696,37 @@ public partial class ReceptionsViewModel : ViewModelBase
 
     /* ═══════════ ثبت پذیرش ═══════════ */
 
+    private static bool ValidConsumableQuantity(decimal value) =>
+        value > 0 && value <= 99999999.99m && decimal.Round(value, 2) == value;
+
     /// <summary>اعتبارسنجی مشترک — چرخه ۲۴: در حالت خدمت درمانی به‌جای پزشک، خدمت الزامی است</summary>
     private bool ValidateReception()
     {
         if (FoundPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return false; }
+        if (_isInitializing || !_insuranceListLoaded || !_insurancePolicyLoaded || IsRefreshingInsurance || InsuranceIndex < 0 || InsuranceIndex >= InsuranceCompanies.Count)
+        { _snackbar.Error("اطلاعات بیمه آماده نیست؛ تنظیمات و فهرست بیمه را تازه‌سازی و انتخاب کنید."); return false; }
+        if (InsuranceCompanies[InsuranceIndex] is { Id: > 0, IsContracted: false })
+        { _snackbar.Error("بیمه انتخاب‌شده طرف قرارداد نیست؛ برای پذیرش آزاد، گزینه آزاد را صریحاً انتخاب کنید."); return false; }
+        if (ReferralCode?.Trim().Length > 50)
+        { _snackbar.Error("کد ارجاع نباید بیش از ۵۰ نویسه باشد."); return false; }
+        if (ReceptionModeIndex == 1 && BuildServiceSummary().Length > 200)
+        { _snackbar.Error("شرح مجموع خدمات بیش از ۲۰۰ نویسه است؛ خدمات را در پذیرش‌های جداگانه ثبت کنید."); return false; }
+        if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
+        if (_selectedAppointmentId is not null && (ReceptionModeIndex != 0 || FoundPatient.Id != _selectedAppointmentPatientId || SelectedDoctor?.Id != _selectedAppointmentDoctorId))
+        { _snackbar.Error("بیمار یا پزشک پذیرش با نوبت انتخاب‌شده مطابقت ندارد؛ نوبت را بررسی یا جستجو را پاک کنید."); return false; }
+        if (Inquiry is { IsDone: true, IsEligible: false })
+        { _snackbar.Error("استعلام بیمه تأیید نشده است؛ پیش از ثبت مجدداً استعلام کنید یا بیمهٔ آزاد را انتخاب کنید."); return false; }
+        if (ReceptionModeIndex == 0 && ApplyInsuranceToDoctorVisits && Inquiry is { IsDone: true, IsEligible: true } &&
+            InsuranceIndex >= 0 && InsuranceIndex < InsuranceCompanies.Count &&
+            InsuranceCompanies[InsuranceIndex] is { Id: > 0, IsContracted: true } company && CoveragePercent != company.CoveragePercent)
+        { _snackbar.Error("درصد استعلام با درصد قابل محاسبه در فاکتور یکسان نیست؛ پیش از ثبت با مسئول بیمه یا صندوق بررسی کنید."); return false; }
         if (ReceptionModeIndex == 1)
         {
             if (SelectedServices.Count == 0) { _snackbar.Error("ابتدا دست‌کم یک خدمت درمانی انتخاب کنید"); return false; }
+            if (Consumables.Any(c => !ValidConsumableQuantity(c.Quantity) || c.Quantity > c.Option.Available))
+            { _snackbar.Error("تعداد لوازم مصرفی نامعتبر یا بیش از موجودی نمایش‌داده‌شده است؛ اقلام را اصلاح کنید."); return false; }
+            if (!_serviceTariffsLoaded || SelectedServices.Any(line => !Services.Any(s => s.Id == line.Service.Id)))
+            { _snackbar.Error("تعرفهٔ معتبر بیمهٔ فعلی آماده نیست یا خدمتی در فهرست جدید وجود ندارد؛ تعرفه را تازه‌سازی و خدمات را بررسی کنید."); return false; }
         }
         else
         {
@@ -1573,6 +1734,64 @@ public partial class ReceptionsViewModel : ViewModelBase
         }
         return true;
     }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    [NotifyPropertyChangedFor(nameof(CanRetryReception))]
+    private bool _isSubmitting;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReception))]
+    [NotifyPropertyChangedFor(nameof(CanRetryReception))]
+    private bool _isReceptionOutcomeUnknown;
+
+    /// <summary>فرم در طول ثبت و تا بررسی نتیجه نامعلوم قابل تغییر نیست.</summary>
+    public bool CanEditReception => !IsSubmitting && !IsReceptionOutcomeUnknown && !IsCreatingUnidentifiedPatient && !IsRefreshingInsurance;
+
+    public bool CanRetryReception => !IsSubmitting && IsReceptionOutcomeUnknown && _pendingReception is not null &&
+        (_api as ApiClient)?.BranchId == _pendingReception.BranchId &&
+        (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
+    public string ReceptionRecoveryInfo => _pendingReception is null ? string.Empty :
+        $"درخواست ذخیره‌شده: {_pendingReception.PatientName} (شناسه {_pendingReception.Request.PatientId}) — {_pendingReception.TargetName}؛ نوبت: {_pendingReception.Request.AppointmentId?.ToString() ?? "بدون نوبت"}؛ بیمه: {_pendingReception.InsuranceName}؛ کد ارجاع: {_pendingReception.Request.ReferralCode ?? "ندارد"}. ارسال دوباره ممکن است پذیرش را ثبت کند؛ ابتدا صف، انبار، فاکتور و پرداخت را بررسی کنید. ادامه زنجیره خودکار نیست.";
+
+    private void RestorePendingReception(PendingReception pending)
+    {
+        _pendingReception = pending;
+        IsReceptionOutcomeUnknown = true;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        OnPropertyChanged(nameof(CanRetryReception));
+    }
+
+    /// <summary>فقط همان پذیرش بازپخش می‌شود؛ مراحل بعدی به‌صورت خودکار تکرار نمی‌شوند.</summary>
+    [RelayCommand]
+    private async Task RetryReceptionAsync()
+    {
+        if (!CanRetryReception || _pendingReception is null) return;
+        var pending = _pendingReception;
+        IDisposable? lease = null;
+        try
+        {
+            lease = _receptionRecoveryStore?.AcquireWorkflow(_invoiceRecoveryServer, pending.Request.PatientId);
+            IsSubmitting = true;
+            if (!CanRetryContext(pending))
+            { _snackbar.Error("سرور یا شعبه تغییر کرده است؛ درخواست را در محل اصلی بررسی کنید."); return; }
+            var result = await _api.PostAsync<ReceptionCreateResponse>("receptions/idempotent", pending.Request);
+            if (result?.Data is null or <= 0)
+            { _snackbar.Error("نتیجه پذیرش هنوز نامعلوم است؛ صف و سایر مراحل را بررسی کنید. " + _api.LastError); return; }
+            try { _receptionRecoveryStore?.Clear(pending); }
+            catch (Exception)
+            { _snackbar.Error($"پذیرش {result.Data} تأیید شد اما فایل بازیابی پاک نشد؛ با پشتیبانی بررسی کنید."); return; }
+            _pendingReception = null;
+            OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+            OnPropertyChanged(nameof(CanRetryReception));
+            _snackbar.Info($"پذیرش {result.Data} تأیید شد؛ مصرف، فاکتور و پرداخت خودکار انجام نشدند. سوابق را بررسی کنید.");
+        }
+        catch (Exception) { _snackbar.Error("بازیابی پذیرش انجام نشد یا زنجیره هنوز در حال اجراست؛ سوابق را بررسی کنید."); }
+        finally { IsSubmitting = false; lease?.Dispose(); }
+    }
+
+    private bool CanRetryContext(PendingReception pending) => (_api as ApiClient)?.BranchId == pending.BranchId &&
+        (_api is not ApiClient client || client.PaymentRecoveryServer == _invoiceRecoveryServer);
 
     /// <summary>«پذیرش و فاکتور» — ثبت پذیرش + صدور فاکتور بدون پرداخت</summary>
     [RelayCommand]
@@ -1590,10 +1809,13 @@ public partial class ReceptionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task ReceptionAndPayAsync()
     {
-        if (!ValidateReception()) return;
+        if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;
 
         // مبلغ پیش‌بینی‌شده = سهم بیمار خدمت + جمع لوازم مصرفی (قیمت پیشنهادیِ
         // بچ پرموجودی؛ مبلغ نهایی پس از مصرف واقعی از بچ‌ها در زنجیره محاسبه می‌شود)
+        var confirmedPayable = PayableByPatient;
+        if (confirmedPayable <= 0m)
+        { _snackbar.Info("مبلغ قابل پرداخت مثبت نیست؛ برای صدور بدون پرداخت از «پذیرش و فاکتور» استفاده کنید."); return; }
         var payVm = new ReceptionPayViewModel(PayableByPatientDisplay);
         var payWindow = new Views.ReceptionPayWindow(payVm)
         {
@@ -1604,16 +1826,53 @@ public partial class ReceptionsViewModel : ViewModelBase
         // انصراف — هیچ چیزی ثبت نمی‌شود
         if (payVm.Result is null) return;
 
-        await SubmitReceptionAsync(payVm.Result);
+        await SubmitReceptionAsync(payVm.Result, confirmedPayable);
     }
 
     /// <summary>
     /// اجرای زنجیره پذیرش طبق فرم ۱۰ — پذیرش + مصرف لوازم + فاکتور + پرداخت اختیاری
     /// </summary>
     /// <param name="payment">اطلاعات پرداخت منتخب از پنجرهٔ پرداخت — تهی یعنی بدون پرداخت (فقط فاکتور)</param>
-    private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment)
+    /// <param name="confirmedPayable">مبلغ تأییدشده در پنجره پرداخت برای کنترل تغییر تعرفه</param>
+    private async Task SubmitReceptionAsync(ReceptionPaymentInfo? payment, decimal? confirmedPayable = null)
     {
-        if (!ValidateReception()) return;
+        if (IsSubmitting || IsReceptionOutcomeUnknown || !ValidateReception()) return;
+        try
+        {
+            if (_invoiceRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient!.Id) is not null)
+            {
+                _snackbar.Error("فاکتور حل‌نشده‌ای برای این بیمار روی این دستگاه وجود دارد؛ پیش از پذیرش جدید، آن را در صندوق بررسی کنید.");
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("بازیابی فاکتور بیمار قابل بررسی نیست؛ پذیرش ارسال نشد. با پشتیبانی تماس بگیرید.");
+            return;
+        }
+        IDisposable? workflowLease = null;
+        try
+        {
+            workflowLease = _receptionRecoveryStore?.AcquireWorkflow(_invoiceRecoveryServer, FoundPatient!.Id);
+            var existing = _receptionRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient!.Id);
+            if (existing is not null)
+            {
+                RestorePendingReception(existing);
+                workflowLease?.Dispose();
+                _snackbar.Error("درخواست پذیرش حل‌نشده وجود دارد؛ ابتدا سوابق را بررسی کنید.");
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            workflowLease?.Dispose();
+            _snackbar.Error("قفل یا بازیابی پذیرش در دسترس نیست؛ درخواست جدید ارسال نشد.");
+            return;
+        }
+        IsSubmitting = true;
+        var receptionBranch = (_api as ApiClient)?.BranchId;
+        try
+        {
 
         // ═══ چرخهٔ بیست‌وششم — رفع آف‌بای‌وان بیمه (همان ریشهٔ بالا) ═══
         // نمایهٔ صفر = آزاد (شناسهٔ ۰) → تهی ارسال می‌شود؛ نمایه‌های بعدی
@@ -1628,27 +1887,49 @@ public partial class ReceptionsViewModel : ViewModelBase
         // ═══ چرخه ۲۴ — پذیرش خدمت درمانی یا ویزیت پزشک ═══
         var isServiceMode = ReceptionModeIndex == 1;
 
-        // ۱. ثبت پذیرش
-        var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions", new
+        // ۱. رزرو پایدار پیش از ثبت پذیرش؛ کلید تا پایان زنجیره حفظ می‌شود.
+        var receptionRequest = new CreateReceptionDto(FoundPatient!.Id,
+            isServiceMode ? null : SelectedDoctor!.Id, _selectedAppointmentId, company?.Id ?? 0L,
+            string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
+            string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
+            isServiceMode ? SelectedService!.Id : null, isServiceMode ? BuildServiceSummary() : null,
+            isServiceMode ? SelectedPerformer?.Id : null, isServiceMode ? SelectedRoom?.Id : null, Guid.NewGuid());
+        var pendingReception = new PendingReception(receptionRequest, FoundPatient.FullName,
+            isServiceMode ? BuildServiceSummary() : SelectedDoctor!.Name, _invoiceRecoveryServer, receptionBranch, company?.Name ?? "آزاد");
+        try { _receptionRecoveryStore?.Reserve(pendingReception); }
+        catch (Exception)
         {
-            patientId = FoundPatient!.Id,
-            doctorId = isServiceMode ? (long?)null : SelectedDoctor!.Id,
-            appointmentId = (long?)null,
-            insuranceCompanyId = company?.Id,
-            referralCode = string.IsNullOrWhiteSpace(ReferralCode) ? null : ReferralCode.Trim(),
-            notes = string.IsNullOrWhiteSpace(ReceptionNotes) ? null : ReceptionNotes.Trim(),
-            // حالت خدمت درمانی — خدمت + انجام‌دهندهٔ اختیاری از پرسنل
-            serviceId = isServiceMode ? SelectedService!.Id : (long?)null,
-            serviceName = isServiceMode ? BuildServiceSummary() : null,
-            performedByEmployeeId = isServiceMode ? SelectedPerformer?.Id : (long?)null,
-            // چرخهٔ ۳۹ — اتاق محل انجام خدمت؛ فقط پذیرش خدمتی (ویزیت پزشک: اتاق از
-            // برنامهٔ کاری خود پزشک می‌آید و ارسال تهی معنای درست دارد)
-            roomId = isServiceMode ? SelectedRoom?.Id : (long?)null
-        });
-        if (reception?.Data is null)
+            IsReceptionOutcomeUnknown = true;
+            try
+            {
+                var existing = _receptionRecoveryStore?.Load(_invoiceRecoveryServer, FoundPatient.Id);
+                if (existing is not null) RestorePendingReception(existing);
+            }
+            catch (Exception) { }
+            _snackbar.Error("رزرو ایمن پذیرش ناموفق بود و درخواست جدید ارسال نشد؛ سوابق را بررسی کنید.");
+            return;
+        }
+        _pendingReception = pendingReception;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        if (!CanRetryContext(pendingReception))
         {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("سرور یا شعبه تغییر کرد؛ پذیرش ارسال نشد و درخواست برای بررسی حفظ شد.");
+            return;
+        }
+        var reception = await _api.PostAsync<ReceptionCreateResponse>("receptions/idempotent", receptionRequest);
+        if (reception?.Data is null or <= 0)
+        {
+            IsReceptionOutcomeUnknown = true;
             IsBusy = false;
-            _snackbar.Error(_api.LastError ?? "ثبت پذیرش ناموفق بود");
+            _snackbar.Error((_api.LastError ?? "پاسخ ثبت پذیرش دریافت نشد") + "؛ پیش از تکرار، صف پذیرش را بررسی کنید.");
+            return;
+        }
+
+        if (!CanRetryContext(pendingReception))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و مراحل بعدی ارسال نشدند. ابتدا صف و صندوق را بررسی کنید.");
             return;
         }
 
@@ -1657,10 +1938,9 @@ public partial class ReceptionsViewModel : ViewModelBase
         // در پذیرش برای اونها هم هزینه به هزینه‌های بیمار اضافه بشه» — پیش از صدور
         // فاکتور، موجودی FEFO کم می‌شود و قیمت واقعی بچ‌ها برای اقلام فاکتور
         // برمی‌گردد؛ شکست مصرف (مثلاً کمبود هم‌زمان موجودی) با دیالوگ فارسی و
-        // حق انتخاب «ادامه بدون مصرفی» یا توقف صادقانه اعلام می‌شود — پذیرش
-        // ثبت‌شده باقی می‌ماند تا زنجیره دستی تکمیل شود.
+        // با نتیجهٔ نامعلوم ادامه نمی‌دهیم؛ پذیرش ثبت‌شده باقی می‌ماند تا
+        // مصرف و فاکتور به‌صورت دستی بررسی و تکمیل شوند.
         ConsumeResultDto? consumeResult = null;
-        var consumablesSkipped = false;
         if (isServiceMode && Consumables.Count > 0)
         {
             var consume = await _api.PostAsync<ConsumeResponse>("consumables/consume", new
@@ -1670,21 +1950,20 @@ public partial class ReceptionsViewModel : ViewModelBase
             });
             if (consume?.Data is null)
             {
+                IsReceptionOutcomeUnknown = true;
                 IsBusy = false;
-                var proceed = Views.AppDialog.Confirm("ثبت مصرف لوازم ناموفق",
-                    $"پذیرش با شماره صف {reception.Data} ثبت شد اما برداشت لوازم مصرفی از انبار شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}ادامه می‌دهید؟ (فاکتور فقط با هزینهٔ خدمت صادر می‌شود و اقلام مصرفی از انبار کم نشدند)", Views.AppDialogIcon.Warning) == true;
-                if (!proceed)
-                {
-                    _snackbar.Info($"پذیرش ثبت شد — شماره صف {reception.Data}؛ فاکتور/پرداخت متوقف شد تا مصرف لوازم اصلاح شود (اقلام را کم کنید یا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید)");
-                    await LoadAsync();
-                    return;
-                }
-                consumablesSkipped = true;
+                _snackbar.Error($"پذیرش با شناسه {reception.Data} ثبت شد؛ پاسخ برداشت لوازم دریافت نشد یا ناموفق بود. پیش از تکرار یا صدور فاکتور، مصرف و موجودی را بررسی کنید.");
+                await LoadAsync();
+                return;
             }
-            else
-            {
-                consumeResult = consume.Data;
-            }
+            consumeResult = consume.Data;
+        }
+
+        if (!CanRetryContext(pendingReception))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و فاکتور ارسال نشد. مصرف و صف را بررسی کنید.");
+            return;
         }
 
         // ۲. صدور فاکتور خودکار — قلم ویزیت با کد خدمت K
@@ -1698,54 +1977,124 @@ public partial class ReceptionsViewModel : ViewModelBase
         //        موفقیت بی‌قید و شرط چاپ می‌شد و کاربر گمان می‌کرد همه‌چیز ثبت
         //        شده؛ اکنون شکست هر حلقه با دیالوگ فارسی خودِ برنامه (قانون ششم
         //        مالک — بدون MessageBox ویندوز) اعلام و کل زنجیره صادقانه گزارش می‌شود.
-        var invoiceFailed = false; // وضعیت صدور فاکتور برای پیام پایانی صادقانه
-        var invoice = await _api.PostAsync<InvoiceCreateResponse>("invoices", new
+        var invoiceDto = new CreateInvoiceDto(FoundPatient!.Id, reception.Data, null, InvoiceType.Visit,
+            company?.Id, 0m, BuildInvoiceItems(isServiceMode, consumeResult),
+            isServiceMode ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}" : $"پذیرش {FoundPatient.FullName}");
+        var preview = await _api.PostAsync<InvoicePreviewResponse>("invoices/preview", invoiceDto);
+        if (preview?.Data is null || string.IsNullOrWhiteSpace(preview.Data.QuoteVersion))
         {
-            patientId = FoundPatient.Id,
-            receptionId = reception.Data,
-            visitId = (long?)null,
-            type = 1,
-            insuranceCompanyId = company?.Id,
-            taxPercent = 0m,
-            items = BuildInvoiceItems(isServiceMode, consumeResult),
-            description = isServiceMode
-                ? $"پذیرش خدمت {BuildServiceSummary()} — {FoundPatient.FullName}"
-                : $"پذیرش {FoundPatient.FullName}"
-        });
-        if (invoice?.Data is null || invoice.Data <= 0)
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ محاسبه فاکتور دریافت نشد و فاکتور ارسال نشد. مصرف و صندوق را بررسی کنید. " + _api.LastError);
+            return;
+        }
+        if (payment is not null && preview.Data.PatientPayable != confirmedPayable)
         {
-            // پذیرش ثبت شده ولی فاکتور نه — از ماژول «صندوق و فاکتور» قابل تکمیل است؛
-            // خطای واقعی سرور (LastError) نمایش داده می‌شود تا ریشه مشخص باشد
-            invoiceFailed = true;
-            IsBusy = false;
-            Views.AppDialog.Error("صدور فاکتور ناموفق",
-                $"پذیرش با شماره صف {reception.Data} ثبت شد اما صدور فاکتور شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}فاکتور را بعداً از ماژول «صندوق و فاکتور» صادر کنید.");
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ مبلغ سرور با مبلغ تأییدشده متفاوت است و فاکتور یا پرداخت ارسال نشد. در صندوق بررسی کنید.");
+            return;
+        }
+        if (!CanRetryContext(pendingReception))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا سرور یا شعبه تغییر کرد و فاکتور ارسال نشد.");
+            return;
+        }
+        var request = invoiceDto with { ExpectedQuote = preview.Data.QuoteVersion, RequestId = Guid.NewGuid() };
+        var pending = new PendingInvoice(request, preview.Data, _invoiceRecoveryServer, receptionBranch);
+        try { _invoiceRecoveryStore?.Reserve(pending); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ رزرو ایمن فاکتور ناموفق بود و درخواست ارسال نشد. بازیابی و صندوق را بررسی کنید.");
+            return;
+        }
+        if (!CanRetryContext(pendingReception))
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ فاکتور ارسال نشد و درخواست برای بررسی در صندوق ذخیره شد.");
+            return;
+        }
+        var invoice = await _api.PostAsync<InvoiceCreateResponse>("invoices/idempotent", request);
+        if (invoice?.Data is null or <= 0)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ نتیجه صدور فاکتور نامعلوم است. پس از بررسی سوابق، بیمار را در فرم فاکتور صندوق برای بازیابی انتخاب کنید. " + _api.LastError);
+            return;
+        }
+        try { _invoiceRecoveryStore?.Clear(pending); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"فاکتور {invoice.Data} صادر شد اما فایل بازیابی پاک نشد؛ پرداخت ارسال نشد. در صندوق بررسی کنید.");
+            return;
         }
 
         // ۳. پرداخت (اختیاری) — روش و مرجع از پنجرهٔ پرداخت پذیرش (چرخهٔ ۳۹)
         var paymentFailed = false;
+        var paymentConfirmedButRecoveryRetained = false;
         if (payment is not null && invoice?.Data is not null && invoice.Data > 0)
         {
+            if (!CanRetryContext(pendingReception))
+            {
+                IsReceptionOutcomeUnknown = true;
+                _snackbar.Error($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
+                return;
+            }
             // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
             // (قیمت واقعی بچ‌ها از مصرف؛ اگر مصرف رد شده و کاربر ادامه داد، فقط خدمت)
-            var payable = PatientShare + (consumeResult?.TotalCost ?? 0m);
-            var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments", new
+            var detail = await _api.GetAsync<ReceptionInvoiceEnvelope>($"invoices/{invoice.Data}");
+            var payable = detail?.Data?.RemainingAmount;
+            if (!CanAutomaticallyPay(detail?.Data, invoice.Data.Value, FoundPatient.Id, confirmedPayable))
             {
-                invoiceId = invoice.Data,
-                patientId = FoundPatient.Id,
-                amount = payable,
-                // روش و مرجع از پنجرهٔ پرداخت — ۱ نقدی، ۲ کارتخوان (چرخهٔ ۳۹)
-                method = payment.Method,
-                referenceNumber = payment.ReferenceNumber,
-                cardNumber = payment.CardNumber
-            });
-            if (paymentResult?.Data is null || paymentResult.Data <= 0)
-            {
-                // پرداخت ثبت نشد — کاربر باید بداند؛ فاکتور بدهکار مانده است
                 paymentFailed = true;
-                IsBusy = false;
-                Views.AppDialog.Error("ثبت پرداخت ناموفق",
-                    $"فاکتور صادر شد اما ثبت پرداخت {Money.FormatWithUnit(payable)} شکست خورد:{Environment.NewLine}{_api.LastError ?? "خطای ناشناخته سرور"}{Environment.NewLine}{Environment.NewLine}پرداخت را بعداً از ماژول «صندوق و فاکتور» تکمیل کنید.");
+                _snackbar.Warning($"فاکتور صادر شد، اما مبلغ نهایی تأیید نشد یا با مبلغ تأییدشده تفاوت دارد؛ پرداخت ثبت نشد. شناسه فاکتور {invoice.Data} را در صندوق بررسی کنید.");
+            }
+            else if (!CanRetryContext(pendingReception))
+            {
+                paymentFailed = true;
+                _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
+            }
+            else
+            {
+                var sentPayment = false;
+                try
+                {
+                    var attempt = PaymentAttempt.Reserve(_api, invoice.Data.Value, FoundPatient.Id, payable!.Value,
+                        payment.Method, payment.ReferenceNumber, payment.CardNumber);
+                    if (!attempt.ContextMatches)
+                    {
+                        paymentFailed = true;
+                        _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید.");
+                    }
+                    else
+                    {
+                        sentPayment = true;
+                        var paymentResult = await _api.PostAsync<PaymentCreateResponse>("payments/idempotent", attempt.Request.ToRequest());
+                        if (paymentResult?.Data is null || paymentResult.Data <= 0)
+                        {
+                            paymentFailed = true;
+                            Views.AppDialog.Error("پاسخ پرداخت دریافت نشد",
+                                $"فاکتور {invoice.Data} صادر شد ولی نتیجه پرداخت مشخص نیست. پس از بررسی دریافت وجه و سوابق، همان فاکتور را در صندوق باز کنید.{Environment.NewLine}{_api.LastError}");
+                        }
+                        else
+                        {
+                            try { attempt.Clear(); }
+                            catch (Exception)
+                            {
+                                paymentFailed = true;
+                                paymentConfirmedButRecoveryRetained = true;
+                                _snackbar.Warning($"پرداخت فاکتور {invoice.Data} ثبت شد ولی فایل بازیابی پاک نشد؛ در صندوق بررسی کنید.");
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    paymentFailed = true;
+                    _snackbar.Warning(sentPayment
+                        ? $"فاکتور {invoice.Data} صادر شد؛ نتیجه پرداخت نامعلوم است و باید در صندوق بررسی شود."
+                        : $"فاکتور {invoice.Data} صادر شد؛ رزرو ایمن پرداخت ناموفق بود و پرداخت ارسال نشد.");
+                }
             }
         }
 
@@ -1754,18 +2103,33 @@ public partial class ReceptionsViewModel : ViewModelBase
         var queueNo = reception.Data;
         // پیام پایانی صادقانه — وضعیت واقعی هر سه حلقه (پذیرش/فاکتور/پرداخت)
         // چرخه سی‌ویکم: دیگر پس از شکست فاکتور/پرداخت، پیام «ثبت شد» چاپ نمی‌شود
-        if (invoiceFailed)
-            _snackbar.Info($"پذیرش ثبت شد — شماره صف {queueNo}؛ صدور فاکتور ناموفق بود (از ماژول مالی تکمیل کنید)");
+        if (paymentConfirmedButRecoveryRetained)
+            _snackbar.Info($"پذیرش و پرداخت ثبت شد — شناسه پذیرش {queueNo}؛ فایل بازیابی پرداخت در صندوق بررسی شود");
         else if (paymentFailed)
-            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور صادر شد اما پرداخت ثبت نشد");
-        else if (consumablesSkipped)
-            _snackbar.Info($"پذیرش موفق — شماره صف {queueNo}؛ فاکتور فقط با هزینهٔ خدمت صادر شد (مصرف لوازم ثبت نشد)");
+            _snackbar.Info($"پذیرش موفق — شناسه پذیرش {queueNo}؛ فاکتور صادر شد، وضعیت پرداخت را در صندوق بررسی کنید");
         else if (consumeResult is not null)
-            _snackbar.Success($"پذیرش موفق — شماره صف {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش {queueNo} (فاکتور شامل {consumeResult.Items?.Count ?? 0} قلم لوازم مصرفی ثبت شد)");
         else if (payment is not null)
-            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش: {queueNo} (فاکتور و پرداخت {(payment.Method == 2 ? "کارتخوان" : "نقدی")} ثبت شد)");
         else
-            _snackbar.Success($"پذیرش موفق — شماره صف: {queueNo} (فاکتور صادر شد)");
+            _snackbar.Success($"پذیرش موفق — شناسه پذیرش: {queueNo} (فاکتور صادر شد)");
+
+        if (paymentFailed)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Warning("زنجیره کامل تأیید نشد؛ درخواست پذیرش برای بررسی باقی ماند. ابتدا صف، فاکتور و پرداخت را بررسی کنید.");
+            return;
+        }
+        try { _receptionRecoveryStore?.Clear(pendingReception); }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error($"پذیرش {reception.Data} و فاکتور ثبت شدند اما فایل بازیابی پاک نشد؛ در صندوق بررسی کنید.");
+            return;
+        }
+        _pendingReception = null;
+        OnPropertyChanged(nameof(ReceptionRecoveryInfo));
+        OnPropertyChanged(nameof(CanRetryReception));
 
         // ═══ چرخهٔ ۸۲ (گزارش مالک) — چاپ قبض پذیرش پس از پرداخت ═══
         // «بعد از پذیرش و پرداخت و انتخاب روش پرداخت و تأیید، قبضی چاپ نمیشه؛
@@ -1775,52 +2139,15 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چاپ از دروازهٔ PrintFlow می‌گذرد، پس تنظیم «پیش‌نمایش قبل از چاپ» هم
         // رعایت می‌شود. خطای چاپ نباید زنجیرهٔ ثبت‌شده را زیر سؤال ببرد، لذا در
         // try/catch جدا و با پیام ملایم اعلام می‌شود.
-        if (!invoiceFailed && !paymentFailed && payment is not null && invoice?.Data is { } invoiceNo)
+        if (!paymentFailed && payment is not null && invoice?.Data is > 0)
         {
             try
             {
-                // اقلام قبض — همان اقلام فاکتور (خدمت/ویزیت + لوازم مصرفی با قیمت بچ)
-                var lines = new List<ReceptionReceiptItem>();
-                if (isServiceMode)
-                    foreach (var line in SelectedServices)
-                        lines.Add(new ReceptionReceiptItem(line.Service.Name, line.Quantity, line.Service.Price));
-                else
-                    lines.Add(new ReceptionReceiptItem($"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee));
-                foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
-                    lines.Add(new ReceptionReceiptItem($"لوازم مصرفی: {consumed.Name}",
-                        consumed.Quantity, consumed.UnitPrice));
-
-                var paidNow = PatientShare + (consumeResult?.TotalCost ?? 0m);
-                var invoiceTotal = lines.Sum(l => l.Total);
-                var now = IranClock.Now;
-
-                var receipt = new ReceptionReceipt(
-                    QueueNumber: queueNo ?? 0,
-                    InvoiceNumber: invoiceNo,
-                    PatientName: FoundPatient?.FullName ?? "—",
-                    NationalCode: FoundPatient?.NationalCode,
-                    Mobile: FoundPatient?.Mobile,
-                    DoctorName: isServiceMode
-                        ? (SelectedPerformer?.FullName ?? "—")
-                        : (SelectedDoctor?.Name ?? "—"),
-                    ServiceName: isServiceMode ? BuildServiceSummary() : null,
-                    RoomName: SelectedRoom?.DisplayName,
-                    InsuranceName: company?.Name ?? "آزاد (بدون بیمه)",
-                    DateText: Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper
-                        .ToShamsi(now),
-                    TimeText: now.ToString("HH:mm"),
-                    Items: lines,
-                    ItemsTotal: invoiceTotal,
-                    InsuranceShare: InsuranceShare,
-                    PatientShare: PatientShare,
-                    Payable: paidNow,
-                    Paid: paidNow,
-                    PaymentMethod: payment.Method,
-                    ReferenceNumber: payment.ReferenceNumber,
-                    CardNumber: payment.CardNumber,
-                    ClinicName: await GetReceiptClinicNameAsync());
-
-                await PrintReceiptAsync(receipt);
+                // چاپ اولیه و چاپ مجدد از یک منبع مالی ذخیره‌شده استفاده می‌کنند؛
+                // در صورت شکست دریافت، قبض حدسی یا دارای شناسه به جای شماره صادر نمی‌شود.
+                var receipt = await LoadReceiptAsync(reception.Data.Value);
+                if (receipt is not null) await PrintReceiptAsync(receipt);
+                else _snackbar.Warning("پذیرش و پرداخت ثبت شد؛ داده قبض دریافت نشد، از چاپ مجدد استفاده کنید.");
             }
             catch (Exception ex)
             {
@@ -1829,13 +2156,35 @@ public partial class ReceptionsViewModel : ViewModelBase
             }
         }
 
-        // ═══ پاک‌سازی فرم — چرخهٔ ۷۴: پاک‌سازی کامل پس از ثبت موفق ═══
-        // گزارش مالک: «در پذیرش، بعد از پذیرش و پرداخت، هنوز اطلاعات بیمار در
-        // فیلدهای پذیرش باقی میمونه». سه نشتی قبلی:
-        //   ۱) PatientResults/SelectedSearchResult پاک نمی‌شد → با پاک‌شدن
-        //      FoundPatient، «نتایج جستجوی بیمار قبلی» دوباره نمایان می‌شد؛
-        //   ۲) SelectedDoctor پاک نمی‌شد → پزشکِ پذیرش قبل روی کشو می‌ماند؛
-        //   ۳) بخش هزینه (VisitFee/سهم بیمه/بیمار) اعداد پذیرش قبل را نگه می‌داشت.
+        ResetReceptionForm();
+
+        await LoadAsync();
+        }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
+        }
+        finally { IsBusy = false; IsSubmitting = false; workflowLease?.Dispose(); }
+    }
+
+    /// <summary>شروع پذیرش تازه بدون پاک‌کردن سوابق بازیابی یا نتیجه نامعلوم.</summary>
+    [RelayCommand]
+    private void NewReception()
+    {
+        if (!CanEditReception)
+        {
+            _snackbar.Warning("تا پایان عملیات یا بررسی نتیجه نامعلوم نمی‌توان فرم را بازنشانی کرد.");
+            return;
+        }
+        ResetReceptionForm();
+    }
+
+    private void ResetReceptionForm()
+    {
+        _patientSearchVersion++;
+        InvalidateInquiry();
+        ClearSelectedAppointment();
         SmartSearch = string.Empty;
         FoundPatient = null;
         FoundAppointmentInfo = null;
@@ -1843,6 +2192,10 @@ public partial class ReceptionsViewModel : ViewModelBase
         SelectedSearchResult = null;
         InsuranceNumber = string.Empty;
         ReferralCode = null;
+        VisitTypeIndex = 0;
+        UnidentifiedAgeText = string.Empty;
+        UnidentifiedGenderIndex = 0;
+        ReceptionModeIndex = 0;
         ReceptionNotes = null;
         Inquiry = null;
         InsuranceIndex = 0;
@@ -1864,7 +2217,6 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چرخهٔ ۷۶ — ویزارد برای پذیرش بعدی به گام نخست بازمی‌گردد
         WizardStep = 0;
 
-        await LoadAsync();
     }
 
     /// <summary>
@@ -1874,59 +2226,23 @@ public partial class ReceptionsViewModel : ViewModelBase
     /// </summary>
     /// <param name="isServiceMode">حالت پذیرش خدمتی؟</param>
     /// <param name="consumeResult">نتیجهٔ مصرف لوازم — تهی یعنی بدون مصرفی</param>
-    private List<object> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
+    private List<InvoiceItemDto> BuildInvoiceItems(bool isServiceMode, ConsumeResultDto? consumeResult)
     {
-        var items = new List<object>();
-
-        // پذیرش چندخدمتی: هر خدمت انتخاب‌شده یک قلم فاکتور با تعداد خودش است
-        // تا یک فاکتور واحد برای کل مراجعه صادر شود (نه چند فاکتور جدا)
+        var items = new List<InvoiceItemDto>();
         if (isServiceMode)
         {
             foreach (var line in SelectedServices)
-                items.Add(new
-                {
-                    serviceId = (long?)line.Service.Id,
-                    doctorId = (long?)null,
-                    performedById = SelectedPerformer?.Id,
-                    medicationId = (long?)null,
-                    description = line.Service.Name,
-                    quantity = (decimal)line.Quantity,
-                    unitPrice = line.Service.Price,
-                    discountPercent = 0m
-                });
+                items.Add(new InvoiceItemDto(line.Service.Id, line.Service.Name, line.Quantity, line.Service.Price,
+                    0, null, 0, SelectedPerformer?.Id));
         }
         else
         {
-            items.Add(new
-            {
-                serviceId = (long?)null,
-                doctorId = (long?)SelectedDoctor!.Id,
-                performedById = (long?)null,
-                medicationId = (long?)null,
-                description = $"ویزیت {SelectedDoctor!.Name}",
-                quantity = 1m,
-                unitPrice = VisitFee,
-                discountPercent = 0m
-            });
+            items.Add(new InvoiceItemDto(null, $"ویزیت {SelectedDoctor!.Name}", 1m, VisitFee,
+                0, SelectedDoctor.Id, 0));
         }
-
-        // چرخهٔ ۳۹ — اقلام مصرفی با قیمت واقعی برداشت از بچ‌ها؛ معاف از بیمه
         foreach (var consumed in consumeResult?.Items ?? new List<ConsumeItemResultDto>())
-        {
-            items.Add(new
-            {
-                serviceId = (long?)null,
-                doctorId = (long?)null,
-                performedById = isServiceMode ? SelectedPerformer?.Id : (long?)null,
-                medicationId = (long?)consumed.MedicationId,
-                description = $"لوازم مصرفی: {consumed.Name}",
-                quantity = consumed.Quantity,
-                unitPrice = consumed.UnitPrice,
-                discountPercent = 0m,
-                isInsuranceExempt = true
-            });
-        }
-
+            items.Add(new InvoiceItemDto(null, $"لوازم مصرفی: {consumed.Name}", consumed.Quantity, consumed.UnitPrice,
+                0, null, 0, isServiceMode ? SelectedPerformer?.Id : null, true, consumed.MedicationId));
         return items;
     }
 
@@ -1999,6 +2315,8 @@ public partial class ReceptionsViewModel : ViewModelBase
         public decimal PatientShare { get; set; }
         public decimal Payable { get; set; }
         public decimal Paid { get; set; }
+        public decimal Discount { get; set; }
+        public decimal Tax { get; set; }
         public int PaymentMethod { get; set; }
         public string? ReferenceNumber { get; set; }
         public string? CardNumber { get; set; }
@@ -2032,6 +2350,28 @@ public partial class ReceptionsViewModel : ViewModelBase
         public string Message { get; set; } = string.Empty;
         public string? ApprovalCode { get; set; }
         public decimal CoveragePercent { get; set; }
+    }
+
+    /// <summary>پرداخت خودکار تنها با مبلغ و هویت تأییدشدهٔ فاکتور مجاز است.</summary>
+    public static bool CanAutomaticallyPay(ReceptionInvoiceDetail? detail, long invoiceId, long patientId, decimal? confirmedAmount) =>
+        detail is not null && detail.Id == invoiceId && detail.PatientId == patientId &&
+        detail.RemainingAmount is > 0m && detail.RemainingAmount == confirmedAmount;
+
+    public sealed class ReceptionInvoiceEnvelope
+    {
+        public ReceptionInvoiceDetail? Data { get; set; }
+    }
+
+    public sealed class ReceptionInvoiceDetail
+    {
+        public long? Id { get; set; }
+        public long? PatientId { get; set; }
+        public decimal? RemainingAmount { get; set; }
+    }
+
+    public sealed class InvoicePreviewResponse
+    {
+        public InvoicePreviewDto? Data { get; set; }
     }
 
     public sealed class InvoiceCreateResponse

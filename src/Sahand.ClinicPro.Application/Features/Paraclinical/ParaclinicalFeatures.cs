@@ -16,7 +16,12 @@ public record CreateImagingOrderDto(
 /// <summary>گزارش تصویربرداری — ماژول حرفه‌ای (نسخهٔ ۲ تأییدشده): جزئیات ساخت‌یافته (JSON: دوز/مقایسه/قالب/اندازه‌گیری/ایمنی/اطلاع بحرانی) و پرچم نهایی‌بودن</summary>
 public record ImagingReportDto(
     long OrderId, string? Technique, string? Findings, string? Impression,
-    string? Recommendation, string? ReportDetails = null, bool IsFinal = true);
+    string? Recommendation, string? ReportDetails = null, bool IsFinal = true,
+    ImagingReportExpectedState? ExpectedState = null);
+
+/// <summary>تصویر نسخهٔ گزارش هنگام بازشدن فرم، برای جلوگیری از بازنویسی دادهٔ قدیمی.</summary>
+public record ImagingReportExpectedState(ImagingOrderStatus Status, string? Technique, string? Findings,
+    string? Impression, string? Recommendation, string? ReportDetails);
 
 /// <summary>فرمان ثبت درخواست تصویربرداری</summary>
 public record CreateImagingOrderCommand(CreateImagingOrderDto Dto) : IRequest<Result<long>>;
@@ -28,7 +33,9 @@ public class CreateImagingOrderCommandValidator : AbstractValidator<CreateImagin
     public CreateImagingOrderCommandValidator()
     {
         RuleFor(x => x.Dto.PatientId).GreaterThan(0).WithMessage("شناسه بیمار الزامی است");
-        RuleFor(x => x.Dto.BodyPart).NotEmpty().WithMessage("ناحیه بدن الزامی است");
+        RuleFor(x => x.Dto.BodyPart).NotEmpty().MaximumLength(200).WithMessage("ناحیه بدن الزامی و حداکثر ۲۰۰ نویسه است");
+        RuleFor(x => x.Dto.Modality).IsInEnum().WithMessage("نوع تصویربرداری نامعتبر است");
+        RuleFor(x => x.Dto.Priority).IsInEnum().WithMessage("اولویت نامعتبر است");
     }
 }
 
@@ -44,13 +51,22 @@ public class CreateImagingOrderCommandHandler : IRequestHandler<CreateImagingOrd
     public async Task<Result<long>> Handle(CreateImagingOrderCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (string.IsNullOrWhiteSpace(dto.BodyPart) || dto.BodyPart.Trim().Length > 200 ||
+            !Enum.IsDefined(dto.Modality) || !Enum.IsDefined(dto.Priority))
+            return Result<long>.Failure(new Error("INVALID_IMAGING_ORDER", "نوع، ناحیه یا اولویت تصویربرداری معتبر نیست"));
+        if (!await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+                .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        if (dto.ReferringDoctorId.HasValue && !await _unitOfWork.Repository<Domain.Entities.People.Doctor>()
+                .AnyAsync(d => d.Id == dto.ReferringDoctorId.Value && !d.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("پزشک", dto.ReferringDoctorId.Value));
 
         var order = new ImagingOrder
         {
             PatientId = dto.PatientId,
             ReferringDoctorId = dto.ReferringDoctorId,
             Modality = dto.Modality,
-            BodyPart = dto.BodyPart,
+            BodyPart = dto.BodyPart.Trim(),
             Priority = dto.Priority,
             ClinicalInfo = dto.ClinicalInfo,
             Status = ImagingOrderStatus.Ordered
@@ -82,6 +98,22 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         if (order is null)
             return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.Dto.OrderId));
 
+        var expected = request.Dto.ExpectedState;
+        if (expected is null)
+            return Result.Failure(new Error("IMAGING_REPORT_VERSION_REQUIRED", "نسخهٔ گزارش مشخص نیست؛ برنامه را به‌روز و صف را تازه‌سازی کنید"));
+        if (expected.Status != order.Status || expected.Technique != order.Technique || expected.Findings != order.Findings ||
+            expected.Impression != order.Impression || expected.Recommendation != order.Recommendation || expected.ReportDetails != order.ReportDetails)
+            return Result.Failure(new Error("IMAGING_REPORT_STALE", "گزارش پس از بازشدن فرم تغییر کرده است؛ پیش از ثبت، آن را تازه‌سازی و بررسی کنید"));
+
+        // گزارش نهایی و لغوشده نباید با پیش‌نویس یا الحاقیهٔ فاقد تاریخچه
+        // بازنویسی شوند. مسیر الحاقیهٔ واقعی هنوز پیاده‌سازی نشده است.
+        if (order.Status is ImagingOrderStatus.Reported or ImagingOrderStatus.Cancelled)
+            return Result.Failure(new Error("IMAGING_REPORT_LOCKED", "گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست"));
+        if (request.Dto.IsFinal && order.Status != ImagingOrderStatus.Performed)
+            return Result.Failure(new Error("IMAGING_NOT_PERFORMED", "پیش از نهایی‌کردن گزارش، انجام مطالعه را ثبت کنید"));
+        if (request.Dto.IsFinal && string.IsNullOrWhiteSpace(request.Dto.Findings) && string.IsNullOrWhiteSpace(request.Dto.Impression))
+            return Result.Failure(new Error("IMAGING_REPORT_EMPTY", "برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"));
+
         order.Technique = request.Dto.Technique;
         order.Findings = request.Dto.Findings;
         order.Impression = request.Dto.Impression;
@@ -91,15 +123,9 @@ public class SubmitImagingReportCommandHandler : IRequestHandler<SubmitImagingRe
         {
             order.Status = ImagingOrderStatus.Reported;
             order.ReportedAt = DateTime.UtcNow;
-            order.PerformedAt ??= DateTime.UtcNow;
-        }
-        else if (order.Status is ImagingOrderStatus.Ordered or ImagingOrderStatus.Scheduled)
-        {
-            // پیش‌نویس/گزارش اولیه: مطالعه انجام‌شده محسوب می‌شود ولی هنوز نهایی نیست
-            order.Status = ImagingOrderStatus.Performed;
-            order.PerformedAt ??= DateTime.UtcNow;
         }
 
+        // خطای همزمانی باید از pipeline عبور کند تا تراکنش کامل rollback شود.
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result.Success();
     }
@@ -124,12 +150,26 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
         if (order is null)
             return Result.Failure(Error.NotFound("درخواست تصویربرداری", request.OrderId));
 
+        // از بازگشت گزارش نهایی یا درخواست لغوشده به صف انجام جلوگیری شود.
+        // گزارش نهایی فقط از مسیر ثبت گزارش ایجاد می‌شود، نه تغییر وضعیت صرف.
+        var allowed = (order.Status, request.Status) switch
+        {
+            (ImagingOrderStatus.Ordered, ImagingOrderStatus.Scheduled or ImagingOrderStatus.Performed or ImagingOrderStatus.Cancelled) => true,
+            (ImagingOrderStatus.Scheduled, ImagingOrderStatus.Performed or ImagingOrderStatus.Cancelled) => true,
+            (ImagingOrderStatus.Scheduled, ImagingOrderStatus.Scheduled) => true,
+            (ImagingOrderStatus.Performed, ImagingOrderStatus.Performed) => true,
+            (ImagingOrderStatus.Cancelled, ImagingOrderStatus.Cancelled) => true,
+            _ => false
+        };
+        if (!allowed)
+            return Result.Failure(new Error("INVALID_IMAGING_TRANSITION", "تغییر وضعیت این درخواست مجاز نیست؛ صف را تازه‌سازی کنید"));
         order.Status = request.Status;
         if (request.Status == ImagingOrderStatus.Performed)
             order.PerformedAt ??= DateTime.UtcNow;
         if (request.Status == ImagingOrderStatus.Scheduled)
             order.ScheduledAt ??= DateTime.UtcNow;
 
+        // خطای همزمانی باید از pipeline عبور کند تا تراکنش کامل rollback شود.
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         return Result.Success();
     }
@@ -138,7 +178,7 @@ public class UpdateImagingOrderStatusCommandHandler : IRequestHandler<UpdateImag
 /// <summary>فرمان ثبت طرح درمان دندانپزشکی</summary>
 public record CreateDentalPlanCommand(
     long PatientId, long? DentistId, decimal TotalCost,
-    int EstimatedSessions, string? PlanDetails) : IRequest<Result<long>>;
+    int EstimatedSessions, string? PlanDetails, long? ExpectedPlanId = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت طرح درمان دندانپزشکی</summary>
 public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCommand, Result<long>>
@@ -151,11 +191,34 @@ public class CreateDentalPlanCommandHandler : IRequestHandler<CreateDentalPlanCo
     /// <summary>اجرای ثبت طرح درمان</summary>
     public async Task<Result<long>> Handle(CreateDentalPlanCommand request, CancellationToken cancellationToken)
     {
+        // همهٔ ثبت‌های چارت یک بیمار روی rowversion بیمار رقابت می‌کنند تا
+        // بررسی آخرین طرح و درج طرح جدید در تراکنش واحد اتمیک بماند.
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient is null || patient.IsDeleted)
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.TotalCost < 0 || request.EstimatedSessions < 0)
+            return Result<long>.Failure(new Error("INVALID_DENTAL_PLAN", "مبلغ و تعداد جلسات نمی‌توانند منفی باشند"));
+        if (!DentalChartCompatibility.TryGetTotal(request.PlanDetails, out var calculatedTotal))
+            return Result<long>.Failure(new Error("DENTAL_PLAN_UNSUPPORTED", "ساختار یا مبلغ طرح ارسالی پشتیبانی نمی‌شود؛ برنامه را به‌روز و مقادیر را بررسی کنید"));
+        if (calculatedTotal != request.TotalCost)
+            return Result<long>.Failure(new Error("DENTAL_PLAN_TOTAL_MISMATCH", "جمع طرح با مبلغ اقلام آن برابر نیست"));
+        var previous = await _unitOfWork.Repository<DentalTreatmentPlan>().QueryableNoTracking
+            .Where(p => p.PatientId == request.PatientId && !p.IsDeleted)
+            .OrderByDescending(p => p.Id).FirstOrDefaultAsync(cancellationToken);
+        if (previous is not null && !DentalChartCompatibility.IsConsistent(previous.PlanDetails, previous.TotalCost))
+            return Result<long>.Failure(new Error("DENTAL_PLAN_LEGACY", "طرح قبلی ناسازگار است؛ برای جلوگیری از پنهان شدن آن ثبت متوقف شد"));
+        if (previous?.Id != request.ExpectedPlanId)
+            return Result<long>.Failure(new Error("DENTAL_PLAN_STALE", "چارت پس از بازشدن فرم تغییر کرده است؛ ابتدا پرونده را دوباره بارگذاری و بررسی کنید"));
+        // تغییر فیلد حسابرسی موجب اعمال شرط rowversion هنگام ذخیره می‌شود؛
+        // تعارض باید تا بیرون pipeline انتشار یابد تا کل تراکنش rollback شود.
+        patient.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Repository<Domain.Entities.People.Patient>().MarkPropertyModified(patient, p => p.UpdatedAt);
         var plan = new DentalTreatmentPlan
         {
             PatientId = request.PatientId,
             DentistId = request.DentistId,
-            CreatedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedDate = DateOnly.FromDateTime(Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranTimeFromStoredUtc(DateTime.UtcNow)),
             TotalCost = request.TotalCost,
             EstimatedSessions = request.EstimatedSessions,
             PlanDetails = request.PlanDetails,
@@ -190,6 +253,17 @@ public class RecordPhysioSessionCommandHandler : IRequestHandler<RecordPhysioSes
     /// <summary>اجرای ثبت جلسه</summary>
     public async Task<Result<long>> Handle(RecordPhysioSessionCommand request, CancellationToken cancellationToken)
     {
+        var patient = await _unitOfWork.Repository<Domain.Entities.People.Patient>().GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient is null || patient.IsDeleted)
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.SessionNumber < 1 || request.PainScore > 10 || request.Duration is <= 0 or > 1440)
+            return Result<long>.Failure(new Error("INVALID_PHYSIO_SESSION", "شماره جلسه، مدت یا شدت درد معتبر نیست"));
+        if (await _unitOfWork.Repository<PhysiotherapySession>().AnyAsync(
+            s => s.PatientId == request.PatientId && !s.IsDeleted && s.SessionNumber == request.SessionNumber, cancellationToken))
+            return Result<long>.Failure(new Error("PHYSIO_SESSION_DUPLICATE", "این شماره جلسه برای بیمار قبلاً ثبت شده است؛ سابقه را تازه‌سازی کنید"));
+        // شرط rowversion بیمار، بررسی شماره و ثبت را در رقابت همزمان محافظت می‌کند.
+        patient.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.Repository<Domain.Entities.People.Patient>().MarkPropertyModified(patient, p => p.UpdatedAt);
         var session = new PhysiotherapySession
         {
             PatientId = request.PatientId,
@@ -223,7 +297,7 @@ public record SaveEyeExamCommand(
     string? RightVisualAcuity, string? LeftVisualAcuity,
     decimal? PupilDistance, string? ColorVision,
     string? Findings, string? EyewearPrescription,
-    string? VisualField = null) : IRequest<Result<long>>;
+    string? VisualField = null, string? RightCorrectedVisualAcuity = null, string? LeftCorrectedVisualAcuity = null) : IRequest<Result<long>>;
 
 /// <summary>گرداننده ثبت معاینه چشم</summary>
 public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Result<long>>
@@ -236,6 +310,24 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
     /// <summary>اجرای ثبت معاینه چشم — همهٔ اندازه‌ها در رکورد بیمار می‌نشیند</summary>
     public async Task<Result<long>> Handle(SaveEyeExamCommand request, CancellationToken cancellationToken)
     {
+        var patientExists = await _unitOfWork.Repository<Domain.Entities.People.Patient>()
+            .AnyAsync(p => p.Id == request.PatientId && !p.IsDeleted, cancellationToken);
+        if (!patientExists)
+            return Result<long>.Failure(Error.NotFound("بیمار", request.PatientId));
+        if (request.VisitId.HasValue && !await _unitOfWork.Repository<Domain.Entities.Clinical.Visit>()
+                .AnyAsync(v => v.Id == request.VisitId.Value && v.PatientId == request.PatientId && !v.IsDeleted, cancellationToken))
+            return Result<long>.Failure(new Error("VISIT_PATIENT_MISMATCH", "ویزیت معتبر و متعلق به این بیمار یافت نشد"));
+        if (!EyeExamValueSafety.IsValid(request.RightSphere, request.RightCylinder, request.RightAxis,
+                request.LeftSphere, request.LeftCylinder, request.LeftAxis, request.RightIop, request.LeftIop, request.PupilDistance) ||
+            request.RightVisualAcuity?.Length > 10 || request.LeftVisualAcuity?.Length > 10 ||
+            request.RightCorrectedVisualAcuity?.Length > 10 || request.LeftCorrectedVisualAcuity?.Length > 10 || request.ColorVision?.Length > 100)
+            return Result<long>.Failure(new Error("INVALID_EYE_EXAM", "مقادیر معاینه یا دقت آن‌ها با محدوده ذخیره‌سازی سازگار نیست"));
+        if (request.RightSphere is null && request.RightCylinder is null && request.RightAxis is null &&
+            request.LeftSphere is null && request.LeftCylinder is null && request.LeftAxis is null &&
+            request.RightIop is null && request.LeftIop is null && request.PupilDistance is null &&
+            new[] { request.RightVisualAcuity, request.LeftVisualAcuity, request.RightCorrectedVisualAcuity, request.LeftCorrectedVisualAcuity, request.ColorVision,
+                request.Findings, request.EyewearPrescription, request.VisualField }.All(string.IsNullOrWhiteSpace))
+            return Result<long>.Failure(new Error("EMPTY_EYE_EXAM", "حداقل یک اندازه یا یافتهٔ معاینه لازم است"));
         var exam = new EyeExamRecord
         {
             PatientId = request.PatientId,
@@ -251,6 +343,8 @@ public class SaveEyeExamCommandHandler : IRequestHandler<SaveEyeExamCommand, Res
             LeftIop = request.LeftIop,
             RightVisualAcuity = request.RightVisualAcuity,
             LeftVisualAcuity = request.LeftVisualAcuity,
+            RightCorrectedVisualAcuity = request.RightCorrectedVisualAcuity,
+            LeftCorrectedVisualAcuity = request.LeftCorrectedVisualAcuity,
             PupilDistance = request.PupilDistance,
             VisualField = request.VisualField,
             ColorVision = request.ColorVision,

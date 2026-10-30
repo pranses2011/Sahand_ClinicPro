@@ -1,0 +1,81 @@
+name: SQL Server migration and financial safety
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - 'src/Sahand.ClinicPro.Application/Features/Billing/**'
+      - 'src/Sahand.ClinicPro.Application/Features/Receptions/**'
+      - 'src/Sahand.ClinicPro.Application/Features/Appointments/**'
+      - 'src/Sahand.ClinicPro.API/Controllers/*Survey*.cs'
+      - 'src/Sahand.ClinicPro.Domain/Communication/**'
+      - 'src/Sahand.ClinicPro.Domain/Billing/**'
+      - 'src/Sahand.ClinicPro.Domain/Scheduling/**'
+      - 'src/Sahand.ClinicPro.Domain/People/**'
+      - 'src/Sahand.ClinicPro.Application/Interfaces/IWaitlistNotifier.cs'
+      - 'src/Sahand.ClinicPro.Application/Interfaces/IDateTimeService.cs'
+      - 'scripts/annotate_test_failures.py'
+      - 'src/Sahand.ClinicPro.Application/Common/Behaviors/**'
+      - 'src/Sahand.ClinicPro.Infrastructure/Persistence/**'
+      - 'tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/SqlServerSafetyTests.cs'
+      - '.github/workflows/sqlserver-verification.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Sahand.ClinicPro.Application/Features/Billing/**'
+      - 'src/Sahand.ClinicPro.Application/Features/Receptions/**'
+      - 'src/Sahand.ClinicPro.Application/Features/Appointments/**'
+      - 'src/Sahand.ClinicPro.API/Controllers/*Survey*.cs'
+      - 'src/Sahand.ClinicPro.Domain/Communication/**'
+      - 'src/Sahand.ClinicPro.Domain/Billing/**'
+      - 'src/Sahand.ClinicPro.Domain/Scheduling/**'
+      - 'src/Sahand.ClinicPro.Domain/People/**'
+      - 'src/Sahand.ClinicPro.Application/Interfaces/IWaitlistNotifier.cs'
+      - 'src/Sahand.ClinicPro.Application/Interfaces/IDateTimeService.cs'
+      - 'scripts/annotate_test_failures.py'
+      - 'src/Sahand.ClinicPro.Application/Common/Behaviors/**'
+      - 'src/Sahand.ClinicPro.Infrastructure/Persistence/**'
+      - 'tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/SqlServerSafetyTests.cs'
+      - '.github/workflows/sqlserver-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sql-server:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: 'LocalTest-Only_456!'
+          MSSQL_MEMORY_LIMIT_MB: '2048'
+        ports:
+          - 1433:1433
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test SQL Server migrations, replay, queue and survey concurrency
+        env:
+          # Credentials belong only to this disposable CI container; never use a production database.
+          CLINICPRO_TEST_SQLSERVER: 'Server=127.0.0.1,1433;Database=master;User ID=sa;Password=LocalTest-Only_456!;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;Connect Timeout=5'
+        run: |
+          set -o pipefail
+          dotnet test tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
+            -c Release --filter 'Category=SqlServer' --logger 'trx;LogFileName=sqlserver.trx' --results-directory ./SqlServerTestResults | tee sqlserver-test.log
+      - name: Annotate SQL Server test failures
+        if: failure()
+        run: python3 scripts/annotate_test_failures.py sqlserver-test.log SqlServerTestResults
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: sqlserver-test-results
+          path: SqlServerTestResults/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -59,23 +59,69 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
     public async Task<Result<long>> Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.InvoiceId is not > 0 || dto.Amount <= 0 || dto.Amount > 999999999999999999m ||
+            decimal.Truncate(dto.Amount) != dto.Amount || dto.ReferenceNumber?.Length > 50 || dto.CardNumber?.Length > 20 ||
+            dto.RequestId == Guid.Empty)
+            return Result<long>.Failure(new Error("PAYMENT.INVALID", "شناسه فاکتور، مبلغ صحیح ریالی یا اطلاعات پرداخت نامعتبر است."));
+
+        // FindAsync ممکن است رکورد ردیابی‌شده را بدون اعمال فیلتر شعبه برگرداند.
+        // پیش از دسترسی به موجودیت‌های قابل ویرایش، دیده‌شدن هر دو را کنترل کن.
+        if (!await _unitOfWork.Repository<Patient>().QueryableNoTracking
+                .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        if (!await _unitOfWork.Repository<Invoice>().QueryableNoTracking
+                .AnyAsync(i => i.Id == dto.InvoiceId.Value && !i.IsDeleted, cancellationToken))
+            return Result<long>.Failure(Error.NotFound("فاکتور", dto.InvoiceId.Value));
 
         var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
-        if (patient is null)
+        if (patient is null || patient.IsDeleted)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
 
         var invoice = await _unitOfWork.Repository<Invoice>().GetByIdAsync(dto.InvoiceId!.Value, cancellationToken);
-        if (invoice is null)
+        if (invoice is null || invoice.IsDeleted)
             return Result<long>.Failure(Error.NotFound("فاکتور", dto.InvoiceId.Value));
+
+        if (invoice.PatientId != dto.PatientId)
+            return Result<long>.Failure(new Error("PAYMENT.PATIENT_MISMATCH", "بیمار پرداخت با بیمار فاکتور مطابقت ندارد."));
+        if (dto.RequestId.HasValue)
+        {
+            var prior = await _unitOfWork.Repository<Payment>().QueryableNoTracking
+                .FirstOrDefaultAsync(p => p.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.InvoiceId == dto.InvoiceId && prior.PatientId == dto.PatientId && prior.Amount == dto.Amount &&
+                       prior.Method == dto.Method && prior.ReferenceNumber == dto.ReferenceNumber && prior.CardNumber == dto.CardNumber
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("PAYMENT.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای پرداخت دیگری استفاده شده است."));
+        }
+        if (invoice.Status is InvoiceStatus.Cancelled or InvoiceStatus.Refunded or InvoiceStatus.Draft)
+            return Result<long>.Failure(new Error("PAYMENT.INVOICE_STATUS", "ثبت پرداخت برای فاکتور پیش‌نویس، ابطال‌شده یا برگشت‌خورده مجاز نیست."));
+        if (!Enum.IsDefined(dto.Method))
+            return Result<long>.Failure(new Error("PAYMENT.METHOD", "روش پرداخت معتبر نیست."));
+
+        if (invoice.TotalAmount < 0 || invoice.PaidAmount < 0 || invoice.RemainingAmount < 0 ||
+            invoice.RemainingAmount != invoice.TotalAmount - invoice.PaidAmount)
+            return Result<long>.Failure(new Error("PAYMENT.INVOICE_BALANCE", "مانده فاکتور ناسازگار است؛ پیش از ثبت پرداخت بررسی مالی لازم است."));
 
         if (invoice.RemainingAmount < dto.Amount)
             return Result<long>.Failure(new Error("OVERPAYMENT",
                 $"مبلغ پرداخت بیش از مانده فاکتور است — مانده {invoice.RemainingAmount:N0} ریال"));
 
+        // موفقیت مالی بدون سند دوبل گمراه‌کننده است. پیش از درج پرداخت،
+        // هر دو حساب موجود، فعال و قابل سند شدن باشند. بازپخش موفق قبلی
+        // همچنان بالاتر از این کنترل انجام می‌شود.
+        var cash = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == CashAccountCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        var receivable = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        if (cash is null || receivable is null)
+            return Result<long>.Failure(new Error("PAYMENT.ACCOUNTS_UNAVAILABLE",
+                "حساب صندوق یا مطالبات بیمار فعال و قابل ثبت سند نیست؛ کدینگ حسابداری را بررسی کنید."));
+
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
             PatientId = dto.PatientId,
+            RequestId = dto.RequestId,
             InvoiceId = invoice.Id,
             Amount = dto.Amount,
             Method = dto.Method,
@@ -98,9 +144,11 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         if (invoice.PaymentStatus == PaymentStatus.Paid)
             invoice.AddDomainEvent(new InvoicePaidEvent(invoice.Id, dto.PatientId, invoice.PaidAmount));
 
+        // پرداخت و فاکتور در تراکنش فرمان ذخیره می‌شوند تا شناسهٔ واقعی پرداخت
+        // پیش از ایجاد سند حسابداری در دسترس باشد.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
         // ── سند حسابداری دریافتی — بدهکار صندوق، بستانکار مطالبات بیمار ──
-        await GenerateReceiptJournalAsync(payment, invoice, cancellationToken);
-
+        await GenerateReceiptJournalAsync(payment, invoice, cash, receivable, cancellationToken);
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 
         _logger.LogInformation("پرداخت {Amount} ریال برای فاکتور {Number} ثبت شد",
@@ -110,19 +158,9 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
     }
 
     /// <summary>سند حسابداری دریافت وجه</summary>
-    private async Task GenerateReceiptJournalAsync(Payment payment, Invoice invoice, CancellationToken ct)
+    private async Task GenerateReceiptJournalAsync(Payment payment, Invoice invoice,
+        AccountingAccount cash, AccountingAccount receivable, CancellationToken ct)
     {
-        var cash = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == CashAccountCode, ct);
-        var receivable = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode, ct);
-
-        if (cash is null || receivable is null)
-        {
-            _logger.LogWarning("کدینگ حسابداری آماده نیست — سند پرداخت {Id} تولید نشد", payment.Id);
-            return;
-        }
-
         var entry = new JournalEntry
         {
             EntryDate = DateOnly.FromDateTime(DateTime.UtcNow),

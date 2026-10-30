@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ShiftsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ShiftsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -314,7 +314,7 @@
                         </ListBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Button Command="{Binding SaveShiftCommand}"
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveShiftCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0"
                                 MinHeight="40">
                             <StackPanel Orientation="Horizontal">
@@ -332,7 +332,7 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                            </StackPanel>
+                            <TextBlock Text=" (Ctrl+Shift+1)" VerticalAlignment="Center" /></StackPanel>
                         </Button>
                         <Button Command="{Binding CancelShiftEditCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -414,12 +414,12 @@
                         <ToggleButton Content="پنجشنبه" IsChecked="{Binding WeekThu}" Margin="0,0,5,0" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
                         <ToggleButton Content="جمعه" IsChecked="{Binding WeekFri}" Style="{StaticResource MaterialDesignFlatToggleButton}" FontSize="10.5" Padding="9,3" />
                     </StackPanel>
-                    <Button Command="{Binding AssignShiftCommand}"
+                    <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AssignShiftCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}"
                             MinHeight="40">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="LinkPlus" Width="15" Height="15" VerticalAlignment="Center" />
-                            <TextBlock Text="ثبت تخصیص" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="ثبت تخصیص (Ctrl+Shift+2)" Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

@@ -634,7 +634,7 @@ public class GetServicesQueryHandler : IRequestHandler<GetServicesQuery, Result<
                 // اولویت: ردیف بیمهٔ منتخب (تهی نبودن InsuranceCompanyId) بالاتر از آزاد
                 .OrderByDescending(t => t.InsuranceCompanyId == effectiveInsuranceCompanyId &&
                                         effectiveInsuranceCompanyId != null)
-                .ThenByDescending(t => t.Year)
+                .ThenByDescending(t => t.Year).ThenByDescending(t => t.Id)
                 .First());
 
         // ═══ چرخهٔ سی‌وهفتم (گزارش مالک) ═══ «تعرفه همه بیمه‌ها بهم ریخته و

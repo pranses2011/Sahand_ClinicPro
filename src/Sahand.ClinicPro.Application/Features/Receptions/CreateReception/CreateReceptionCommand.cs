@@ -1,3 +1,5 @@
+﻿using System.Security.Cryptography;
+using System.Text.Json;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
 using Sahand.ClinicPro.Domain.Interfaces;
@@ -53,34 +56,70 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.RequestId == Guid.Empty)
+            return Result<long>.Failure(new Error("RECEPTION.REQUEST_INVALID", "شناسه درخواست پذیرش معتبر نیست."));
 
-        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
+        // کوئری ردیابی‌شونده همچنان فیلتر شعبه/حذف را اعمال می‌کند؛ FindAsync
+        // می‌تواند موجودیت موجود در حافظه از شعبه دیگر را بازگرداند.
+        var patient = await _unitOfWork.Repository<Patient>().QueryableTracking
+            .FirstOrDefaultAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken);
         if (patient is null)
             return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+
+        string? fingerprint = null;
+        if (dto.RequestId.HasValue)
+        {
+            fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(dto with { RequestId = null })));
+            var prior = await _unitOfWork.Repository<Reception>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.PatientId == dto.PatientId && prior.RequestFingerprint == fingerprint
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("RECEPTION.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای پذیرش دیگری استفاده شده است."));
+        }
+
+        // ستون‌های پذیرش محدودیت طول دارند؛ خطای ذخیره نباید نتیجه‌ای مبهم
+        // برای کاربر بسازد. بازپخش موفق قبلی همچنان پیش از این کنترل است.
+        if (dto.ReferralCode?.Length > 50 || dto.ServiceName?.Length > 200)
+            return Result<long>.Failure(new Error("RECEPTION.TEXT_TOO_LONG",
+                "کد ارجاع حداکثر ۵۰ نویسه و شرح خدمات حداکثر ۲۰۰ نویسه است."));
 
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — پذیرش خدمت درمانی ═══
         // «قسمت پذیرش فقط پزشک دارد — بیمارِ آمپول/سرم/پانسمان/آزمایش/عکس چه
         // می‌شود؟» — پذیرش دوگونه است: ویزیت پزشک (DoctorId) یا خدمت درمانی
         // (ServiceId — از تعرفه‌ها: تزریقات/پانسمان/آزمایش/تصویربرداری و…).
         // دقیقاً یکی از دو مسیر الزامی است؛ انجام‌دهندهٔ خدمت پرسنل است.
-        if (dto.DoctorId is null && dto.ServiceId is null)
+        if ((dto.DoctorId is null) == (dto.ServiceId is null))
             return Result<long>.Failure(new Domain.Common.Error(
-                "RECEPTION.TARGET", "پذیرش نیازمند پزشک یا خدمت درمانی است — یکی را انتخاب کنید"));
+                "RECEPTION.TARGET", "برای پذیرش دقیقاً یکی از پزشک یا خدمت درمانی را انتخاب کنید"));
 
         if (dto.DoctorId is not null)
         {
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId.Value, cancellationToken);
+            var doctor = await _unitOfWork.Repository<Doctor>().QueryableNoTracking
+                .FirstOrDefaultAsync(d => d.Id == dto.DoctorId.Value && !d.IsDeleted && d.IsActive, cancellationToken);
             if (doctor is null)
                 return Result<long>.Failure(Error.NotFound("پزشک", dto.DoctorId.Value));
         }
 
+        Domain.Entities.Billing.Service? service = null;
         if (dto.ServiceId is not null)
         {
-            var service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
-                .GetByIdAsync(dto.ServiceId.Value, cancellationToken);
+            service = await _unitOfWork.Repository<Domain.Entities.Billing.Service>().QueryableNoTracking
+                .FirstOrDefaultAsync(s => s.Id == dto.ServiceId.Value && !s.IsDeleted && s.IsActive, cancellationToken);
             if (service is null)
                 return Result<long>.Failure(Error.NotFound("خدمت", dto.ServiceId.Value));
         }
+
+        // انتخاب صریح قدیمی یا غیرفعال نباید قبل از رسیدن به محاسبه فاکتور
+        // باعث ثبت پذیرش ناقص شود؛ null بیمه برای سازگاری کلاینت قدیمی است.
+        if (dto.InsuranceCompanyId is < 0)
+            return Result<long>.Failure(new Error("RECEPTION.INSURANCE_INVALID", "بیمه انتخاب‌شده معتبر نیست."));
+        if (dto.InsuranceCompanyId is > 0 && !await _unitOfWork.Repository<InsuranceCompany>().QueryableNoTracking
+            .AnyAsync(i => i.Id == dto.InsuranceCompanyId && !i.IsDeleted && i.IsActive && i.IsContracted, cancellationToken))
+            return Result<long>.Failure(new Error("RECEPTION.INSURANCE_INVALID", "بیمه انتخاب‌شده فعال یا طرف قرارداد نیست؛ بیمه را دوباره انتخاب کنید."));
+        if (dto.PerformedByEmployeeId is long performerId && !await _unitOfWork.Repository<Employee>().QueryableNoTracking
+            .AnyAsync(e => e.Id == performerId && !e.IsDeleted && e.IsActive, cancellationToken))
+            return Result<long>.Failure(new Error("RECEPTION.PERFORMER_INVALID", "پرسنل انجام‌دهنده معتبر یا فعال نیست."));
 
         // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت پذیرش خدمتی ═══
         // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
@@ -89,10 +128,23 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         // بسته هدایت نشود.
         if (dto.RoomId is not null)
         {
-            var room = await _unitOfWork.Repository<ExaminationRoom>()
-                .GetByIdAsync(dto.RoomId.Value, cancellationToken);
+            var room = await _unitOfWork.Repository<ExaminationRoom>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.Id == dto.RoomId.Value && !r.IsDeleted, cancellationToken);
             if (room is null || !room.IsActive)
                 return Result<long>.Failure(Error.NotFound("اتاق", dto.RoomId.Value));
+        }
+
+        Appointment? appointment = null;
+        if (dto.AppointmentId is long appointmentId)
+        {
+            appointment = await _unitOfWork.Repository<Appointment>().QueryableTracking
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && !a.IsDeleted, cancellationToken);
+            if (appointment is null || appointment.IsDeleted)
+                return Result<long>.Failure(Error.NotFound("نوبت", appointmentId));
+            if (appointment.PatientId != dto.PatientId || appointment.DoctorId != dto.DoctorId || dto.ServiceId is not null)
+                return Result<long>.Failure(new Error("RECEPTION.APPOINTMENT_MISMATCH", "بیمار یا پزشک پذیرش با نوبت مطابقت ندارد."));
+            if (appointment.Status is not (AppointmentStatus.Booked or AppointmentStatus.Confirmed))
+                return Result<long>.Failure(new Error("RECEPTION.APPOINTMENT_STATUS", "این نوبت برای پذیرش در وضعیت مجاز نیست."));
         }
 
         // ساعت پذیرش باید عین ساعت دیواری درمانگاه باشد (گزارش مالک: ساعت
@@ -132,13 +184,14 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         }
         var reception = new Reception
         {
+            RequestId = dto.RequestId,
+            RequestFingerprint = fingerprint,
             PatientId = dto.PatientId,
             DoctorId = dto.DoctorId,
             // چرخه ۲۴ — پذیرش خدمت درمانی (بدون پزشک)
             ServiceId = dto.ServiceId,
             ServiceName = dto.ServiceId is null ? null :
-                (dto.ServiceName ?? (await _unitOfWork.Repository<Domain.Entities.Billing.Service>()
-                    .GetByIdAsync(dto.ServiceId.Value, cancellationToken))?.ServiceName),
+                (dto.ServiceName ?? service?.ServiceName),
             PerformedByEmployeeId = dto.PerformedByEmployeeId,
             // چرخهٔ ۳۹ — اتاق محل انجام خدمت (پذیرش خدمتی)
             RoomId = dto.RoomId,
@@ -171,14 +224,8 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
         if (patient.LastVisitDate is null || patient.LastVisitDate < now)
             patient.LastVisitDate = now;
 
-        // اگر از نوبت است — وضعیت نوبت به حاضر تغییر می‌کند
-        if (dto.AppointmentId.HasValue)
-        {
-            var appointment = await _unitOfWork.Repository<Appointment>()
-                .GetByIdAsync(dto.AppointmentId.Value, cancellationToken);
-            if (appointment is not null)
-                appointment.Status = AppointmentStatus.Arrived;
-        }
+        // نوبت فقط پس از تطبیق بیمار، پزشک و وضعیت، حاضر می‌شود.
+        if (appointment is not null) appointment.Status = AppointmentStatus.Arrived;
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
 

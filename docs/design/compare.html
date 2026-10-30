@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مقایسه طرح و تصاویر واقعی سهند کلینیکپرو</title>
+<style>
+:root{font-family:Vazirmatn,Tahoma,sans-serif;color:#17324d;background:#edf3f8;line-height:1.9}
+body{margin:0}header{padding:28px 5%;background:linear-gradient(115deg,#16365d,#087d83);color:white}
+header h1{margin:0;font-size:24px}main{max-width:1550px;margin:auto;padding:24px}
+.notice,.toolbar,section{background:#fff;border:1px solid #d8e5ef;border-radius:14px;padding:18px;margin-bottom:18px}
+.notice{background:#fff8ed;border-color:#efd29d}.toolbar{display:flex;gap:12px;flex-wrap:wrap}
+a{color:#125fa6}section h2{margin:0 0 8px;font-size:19px}.notes{color:#526c80;font-size:13px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pane{min-width:0}.pane h3{font-size:14px}
+img{width:100%;height:auto;max-height:680px;object-fit:contain;object-position:top;border:1px solid #d8e5ef;border-radius:8px;background:#f4f7fa}
+.missing{padding:25px;background:#f4f7fa;border-radius:8px;color:#526c80}
+.overlay{position:relative;aspect-ratio:2720/1536;max-width:1200px;background:#edf3f8;overflow:hidden;border:1px solid #d8e5ef}
+.overlay img{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:fill;border:0;border-radius:0}
+.overlay-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.overlay-control input{width:min(320px,70vw)}
+@media(max-width:900px){.pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>مقایسهٔ طرح و تصویر واقعی برنامه</h1><div>تصاویر WPF ویندوز با دادهٔ نمونه، بدون اتصال به بیمار واقعی</div></header>
+<main>
+<div class="notice"><strong>حدود مقایسه:</strong> تصویر برنامه با ابعاد قابل نمایش رانر (در این نوبت ۱۰۲۴×۷۲۰) و طرح‌ها با اندازه‌های متفاوت ساخته شده‌اند. بنابراین هم‌اندازه یا منطبق پیکسلی نیستند و درصد اختلاف معتبری محاسبه نشده است. اسکرین‌شات، عملکرد تعاملی، صفحه‌بندی یا چاپ فیزیکی را تأیید نمی‌کند. طرح قدیمی صفحه قالب که قبلاً کنار گذاشته شد به‌عنوان طرح تأییدشده نشان داده نمی‌شود.</div>
+<nav class="toolbar" id="navigation"></nav><div id="pages"></div>
+</main>
+<script>
+const pages = [
+  {id:'dentistry',title:'دندان‌پزشکی',design:'approved/dentistry-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ تطبیق و همه عملیات نیازمند بررسی جداگانه‌اند.'},
+  {id:'ophthalmology',title:'چشم‌پزشکی',design:'approved/ophthalmology-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ صحت ورودی‌های بالینی از روی تصویر قابل تأیید نیست.'},
+  {id:'physiotherapy',title:'فیزیوتراپی',design:'approved/physiotherapy-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ اجزای کاربردی ممکن است با طرح تفاوت داشته باشند.'},
+  {id:'survey',title:'نظرسنجی',design:'approved/survey-design.png',note:'مرجع پیشین و تصویر فعلی با داده نمونه؛ ارسال واقعی و داده‌های سرور در تصویر آزموده نشده‌اند.'},
+  {id:'survey-results',title:'نتایج نظرسنجی',design:'approved/survey-results-design.png',note:'نمای نمونه آمار؛ نتایج واقعی و پیامک از روی تصویر تأیید نمی‌شوند.'},
+  {id:'print-template',title:'انتخاب و مدیریت قالب چاپ',design:null,note:'این تصویر صفحه انتخاب قالب است؛ طرح جدید تأییدشده مربوط به خود طراح آزاد در بخش بعد است.'},
+  {id:'print-designer',title:'طراح آزاد قالب چاپ',design:'print-template-new-proposal.png',note:'طرح جدید صریحاً تأییدشده در کنار تصویر خود طراح با داده نمونه. چیدمان و امکانات هنوز یکسان نیستند؛ آزمون تعاملی و چاپ فیزیکی لازم است.'},
+  {id:'print-settings',title:'تنظیمات چاپگر و چاپ',design:'approved/print-settings-design.png',note:'مرجع پیشین و تصویر فعلی؛ کنترل‌های غیرفعال هنوز به مسیر چاپ متصل نیستند و چاپگر واقعی آزموده نشده است.'}
+];
+const navigation=document.getElementById('navigation'), container=document.getElementById('pages');
+for(const p of pages){
+  const link=document.createElement('a');link.href='#'+p.id;link.textContent=p.title;navigation.appendChild(link);
+  const section=document.createElement('section');section.id=p.id;
+  const h=document.createElement('h2');h.textContent=p.title;section.appendChild(h);
+  const note=document.createElement('p');note.className='notes';note.textContent=p.note;section.appendChild(note);
+  const pair=document.createElement('div');pair.className='pair';
+  for(const [label,src] of [['مرجع طرح',p.design],['تصویر واقعی WPF (داده نمونه)','../screenshots/real/'+p.id+'.png']]){
+    const pane=document.createElement('div');pane.className='pane';const title=document.createElement('h3');title.textContent=label;pane.appendChild(title);
+    if(src){const link=document.createElement('a');link.href=src;link.target='_blank';const image=document.createElement('img');image.src=src;image.alt=label+' — '+p.title;link.appendChild(image);pane.appendChild(link)}
+    else{const empty=document.createElement('div');empty.className='missing';empty.textContent='برای این صفحه مرجع تأییدشدهٔ جداگانه‌ای نمایش داده نمی‌شود.';pane.appendChild(empty)}
+    pair.appendChild(pane);
+  }
+  section.appendChild(pair);
+  if(p.id==='print-designer'){
+    const title=document.createElement('h3');title.textContent='هم‌پوشانی رندر چیدمان در اندازهٔ مرجع';section.appendChild(title);
+    const explanation=document.createElement('p');explanation.className='notes';explanation.textContent='طرح اصلی ۲۷۲۰×۱۵۳۶ پیکسل است. رندر خارج از صفحه برنامه در همین وضوح و با مقیاس‌کردن قاب منطقی ۱۵۶۸×۸۸۵٫۴۶ ساخته شده است؛ اسکرین‌شات مانیتور نیست و تفاوت DPI، داده نمونه و متن‌های ناخوانای طرح نیز در اختلاف دیده می‌شود. با لغزنده شفافیت رندر را تغییر دهید.';section.appendChild(explanation);
+    const controls=document.createElement('label');controls.className='overlay-control';
+    const caption=document.createElement('span');caption.textContent='طرح ← میزان نمایش رندر برنامه →';controls.appendChild(caption);
+    const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value='50';slider.setAttribute('aria-label','میزان نمایش رندر برنامه در مقایسه با طرح');controls.appendChild(slider);section.appendChild(controls);
+    const overlay=document.createElement('div');overlay.className='overlay';
+    const design=document.createElement('img');design.src=p.design;design.alt='طرح تأییدشده';
+    const layout=document.createElement('img');layout.src='../screenshots/real/print-designer-layout.png';layout.alt='رندر خارج از صفحه برنامه در اندازه مرجع';layout.style.opacity='0.5';
+    slider.addEventListener('input',()=>{layout.style.opacity=String(Number(slider.value)/100)});
+    overlay.append(design,layout);section.appendChild(overlay);
+    const reference=document.createElement('a');reference.href=layout.src;reference.target='_blank';reference.className='notes';reference.textContent='باز کردن رندر هم‌اندازه در اندازه اصلی';section.appendChild(reference);
+  }
+  const metadata=document.createElement('a');metadata.href='../screenshots/real/'+p.id+'.png.txt';metadata.textContent='مشخصات اندازه و جهت تصویر';metadata.className='notes';section.appendChild(metadata);
+  container.appendChild(section);
+}
+</script>
+</body>
+</html>

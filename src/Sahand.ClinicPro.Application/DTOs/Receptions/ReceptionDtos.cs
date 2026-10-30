@@ -56,7 +56,9 @@ public record ReceptionReceiptDto(
     decimal Paid,
     int PaymentMethod,
     string? ReferenceNumber,
-    string? CardNumber);
+    string? CardNumber,
+    decimal Discount = 0,
+    decimal Tax = 0);
 
 /// <summary>درخواست ثبت پذیرش</summary>
 public record CreateReceptionDto(
@@ -76,4 +78,5 @@ public record CreateReceptionDto(
     // ═══ چرخهٔ سی‌ونه‌م (گزارش مالک) — اتاق انجام خدمت پذیرش خدمتی ═══
     // «اتاق معاینه برای پزشک در برنامهٔ کاری پزشک مشخص می‌شود ولی برای خدمات
     // درمانی نمی‌شود معین کرد» — شناسهٔ اتاق از فهرست اتاق‌های فعال درمانگاه
-    long? RoomId = null);
+    long? RoomId = null,
+    Guid? RequestId = null);

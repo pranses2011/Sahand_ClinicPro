@@ -1,0 +1,177 @@
+using System.Text.Json;
+using FluentAssertions;
+using MediatR;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using Sahand.ClinicPro.API.Controllers;
+using Sahand.ClinicPro.Domain.Entities.Paraclinical;
+using Microsoft.Extensions.DependencyInjection;
+using Sahand.ClinicPro.Application.Features.Paraclinical;
+using Sahand.ClinicPro.Domain.Entities.People;
+using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Infrastructure.Persistence;
+using Xunit;
+
+namespace Sahand.ClinicPro.API.IntegrationTests;
+
+public class DentalPatientSafetyTests
+{
+    [Fact]
+    public async Task Plan_requires_existing_patient_and_nonnegative_values()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-1", NationalCode = "0010000021", FirstName = "بیمار", LastName = "آزمایشی", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        (await handler.Handle(new(999999, null, 0, 0, "{}"), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, -1, 0, "{}"), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 0, -1, "{}"), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 0, 0, "{}"), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 0, 0, "{\"teeth\":{},\"rows\":[]}"), default)).IsSuccess.Should().BeTrue();
+        db.Set<Sahand.ClinicPro.Domain.Entities.Paraclinical.DentalTreatmentPlan>().Should().ContainSingle();
+    }
+    [Theory]
+    [InlineData(null)]
+    [InlineData("متن طرح قدیمی")]
+    [InlineData("[]")]
+    [InlineData("{\"teeth\":{},\"rows\":[],\"future\":123}")]
+    [InlineData("{\"teeth\":{\"11\":7},\"rows\":[]}")]
+    [InlineData("{\"teeth\":{\"11\":1,\"11\":2},\"rows\":[]}")]
+    [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"price\":10}]}")]
+    [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"x\",\"price\":10.5,\"status\":\"x\",\"surface\":\"x\",\"schedule\":\"x\"}]}")]
+    [InlineData("{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"x\",\"price\":1000000000000000000,\"status\":\"x\",\"surface\":\"x\",\"schedule\":\"x\"}]} ")]
+    [InlineData("{\"teeth\":{},\"rows\":[],\"extras\":{\"future\":\"مهم\"}}")]
+    public void Unsupported_dental_chart_is_not_safe_to_rewrite(string? details)
+    {
+        DentalChartCompatibility.CanEdit(details).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Current_dental_chart_structure_is_editable()
+    {
+        var json = "{\"teeth\":{\"11\":2,\"51\":1},\"rows\":[{\"tooth\":11,\"procedure\":\"ترمیم\",\"price\":10,\"status\":\"پیشنهاد\",\"surface\":\"O\",\"schedule\":\"بدون نوبت\"}],\"extras\":{\"clinical\":\"یادداشت\",\"consent\":false,\"isChildChart\":false}}";
+        DentalChartCompatibility.CanEdit(json).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("طرح قدیمی", false)]
+    [InlineData("{\"teeth\":[],\"rows\":[]}", false)]
+    [InlineData("{\"teeth\":{\"11\":2},\"rows\":[]}", true)]
+    public async Task Chart_endpoint_preserves_original_when_existing_plan_is_unsupported(string details, bool editable)
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-CHART", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var plan = new DentalTreatmentPlan { PatientId = patient.Id, PlanDetails = details };
+        db.Add(plan);
+        await db.SaveChangesAsync();
+        var controller = new ParaclinicalController(Mock.Of<IMediator>(), scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<IWebHostEnvironment>(), Mock.Of<IConfiguration>());
+        var response = (OkObjectResult)await controller.GetDentalChart(patient.Id);
+        var result = JsonSerializer.SerializeToElement(response.Value, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var data = result.GetProperty("data");
+        data.GetProperty("canEdit").GetBoolean().Should().Be(editable);
+        if (!editable) data.GetProperty("note").GetString().Should().Be(details);
+        else data.GetProperty("teeth").GetProperty("11").GetInt32().Should().Be(2);
+        plan.PlanDetails.Should().Be(details);
+    }
+
+    [Fact]
+    public async Task Existing_unsupported_chart_cannot_be_hidden_by_a_new_empty_chart()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-LEGACY", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        db.Add(new DentalTreatmentPlan { PatientId = patient.Id, PlanDetails = "جزئیات قدیمی" });
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        var result = await handler.Handle(new(patient.Id, null, 0, 0, "{\"teeth\":{},\"rows\":[]}"), default);
+        result.IsSuccess.Should().BeFalse();
+        db.Set<DentalTreatmentPlan>().Should().ContainSingle().Which.PlanDetails.Should().Be("جزئیات قدیمی");
+    }
+
+    [Fact]
+    public async Task Stale_or_missing_chart_version_cannot_hide_newer_plan()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-VERSION", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Patients.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        const string json = "{\"teeth\":{},\"rows\":[]}";
+        var first = await handler.Handle(new(patient.Id, null, 0, 0, json), default);
+        first.IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 0, 0, json), default)).IsSuccess.Should().BeFalse();
+        var second = await handler.Handle(new(patient.Id, null, 0, 0, json, first.Value), default);
+        second.IsSuccess.Should().BeTrue();
+        (await handler.Handle(new(patient.Id, null, 0, 0, json, first.Value), default)).IsSuccess.Should().BeFalse();
+        db.Set<DentalTreatmentPlan>().Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task Patient_touch_marks_only_audit_field_modified_even_when_value_is_unchanged()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-TOUCH", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var repository = scope.ServiceProvider.GetRequiredService<IUnitOfWork>().Repository<Patient>();
+        repository.MarkPropertyModified(patient, p => p.UpdatedAt);
+        db.Entry(patient).Property(p => p.UpdatedAt).IsModified.Should().BeTrue();
+        db.Entry(patient).Property(p => p.FirstName).IsModified.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Server_rejects_total_that_does_not_match_item_prices()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-TOTAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        const string json = "{\"teeth\":{},\"rows\":[{\"tooth\":11,\"procedure\":\"ترمیم\",\"price\":10,\"status\":\"پیشنهاد\",\"surface\":\"O\",\"schedule\":\"بدون نوبت\"}]}";
+        (await handler.Handle(new(patient.Id, null, 11, 1, json), default)).IsSuccess.Should().BeFalse();
+        (await handler.Handle(new(patient.Id, null, 10, 1, json), default)).IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Existing_mismatched_total_is_read_only_and_cannot_be_hidden()
+    {
+        using var factory = new InMemoryApiFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var patient = new Patient { MedicalRecordNo = "DENTAL-OLD-TOTAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000001" };
+        db.Add(patient);
+        await db.SaveChangesAsync();
+        const string details = "{\"teeth\":{},\"rows\":[]}";
+        var plan = new DentalTreatmentPlan { PatientId = patient.Id, PlanDetails = details, TotalCost = 100 };
+        db.Add(plan);
+        await db.SaveChangesAsync();
+        var controller = new ParaclinicalController(Mock.Of<IMediator>(), scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            Mock.Of<IWebHostEnvironment>(), Mock.Of<IConfiguration>());
+        var response = (OkObjectResult)await controller.GetDentalChart(patient.Id);
+        var data = JsonSerializer.SerializeToElement(response.Value, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }).GetProperty("data");
+        data.GetProperty("canEdit").GetBoolean().Should().BeFalse();
+        data.GetProperty("note").GetString().Should().Contain("100").And.Contain(details);
+        var handler = new CreateDentalPlanCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
+        (await handler.Handle(new(patient.Id, null, 0, 0, details, plan.Id), default)).IsSuccess.Should().BeFalse();
+    }
+
+}

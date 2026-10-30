@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.CompanyFormWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.CompanyFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -78,9 +78,9 @@
                        Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                        FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
             <UniformGrid Columns="2">
-                <Button Command="{Binding SaveCommand}"
+                <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCommand}"
                         Style="{StaticResource MaterialDesignRaisedButton}"
-                        Content="ذخیره" Height="40" Margin="0,0,4,0" />
+                        Content="ذخیره (Ctrl+Shift+1)" Height="40" Margin="0,0,4,0" />
                 <Button Command="{Binding CancelCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         Content="انصراف" Height="40" Margin="4,0,0,0" />

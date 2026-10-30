@@ -7,6 +7,12 @@ namespace Sahand.ClinicPro.Domain.Entities.Scheduling;
 /// </summary>
 public class Reception : AuditableEntity, ISoftDeletable
 {
+    /// <summary>شناسه یکتای درخواست ثبت پذیرش.</summary>
+    public Guid? RequestId { get; set; }
+
+    /// <summary>اثر انگشت درخواست اولیه برای بازپخش ایمن.</summary>
+    public string? RequestFingerprint { get; set; }
+
     /// <summary>شماره پذیرش - فرمت RCP-XXXXXXXX</summary>
     public string? ReceptionNumber { get; set; }
 

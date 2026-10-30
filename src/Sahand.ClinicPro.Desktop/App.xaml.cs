@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Globalization;
@@ -407,6 +408,10 @@ public partial class App : System.Windows.Application
                 Height = 745,
                 Topmost = true,
                 WindowStyle = WindowStyle.None,
+                // حاشیهٔ تغییر اندازهٔ پیشفرض WPF (چند پیکسل از کاغذدیواری
+                // ویندوز را در لبهٔ چپ عکس نشان میداد) — حذف کامل.
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(0),
                 ShowInTaskbar = false,
                 Left = 0,
                 Top = 0,
@@ -440,10 +445,355 @@ public partial class App : System.Windows.Application
         }
     }
 
+    /// <summary>کلیدهای صفحاتی که حالت راستیآزمایی تصویری میتواند رندر کند.</summary>
+    internal static readonly string[] ScreenshotPageKeys =
+    {
+        "dentistry", "ophthalmology", "physiotherapy", "survey", "survey-results",
+        "print-template", "print-settings", "print-designer", "imaging"
+    };
+
+    /// <summary>
+    /// نشاندن همان پنج عدد نمونهای طرح تأییدی روی کارتهای آماری صفحه،
+    /// تا اسکرینشات WPF و رندر HTML طرح دقیقاً یکسان دیده شوند.
+    /// </summary>
+    private static void DisableScreenshotTooltips(DependencyObject node)
+    {
+        ToolTipService.SetIsEnabled(node, false);
+        var count = VisualTreeHelper.GetChildrenCount(node);
+        for (var i = 0; i < count; i++) DisableScreenshotTooltips(VisualTreeHelper.GetChild(node, i));
+    }
+
+    private static void SetDesignKpis(ViewModels.DesignKpis k,
+        string v1, string v2, string v3, string v4, string v5)
+    {
+        k.V1 = v1; k.V2 = v2; k.V3 = v3; k.V4 = v4; k.V5 = v5;
+    }
+
+    /// <summary>
+    /// رندر **واقعی** یکی از صفحات برنامه (همان درخت بصری WPF که کاربر میبیند)
+    /// و ذخیرهٔ اسکرینشات PNG — ویژهٔ چرخهٔ مقایسه با طرح تأییدی مالک.
+    /// فقط با آرگومان صریح <c>--screenshot &lt;کلید&gt; &lt;مسیر&gt;</c> فعال
+    /// میشود؛ بدون ورود/سرور بالا میآید و دادهٔ نمونهٔ فارسی روی فرم مینشاند.
+    /// </summary>
+    private async Task RenderPageScreenshotAsync(string page, string path)
+    {
+        try
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("fa-IR");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("fa-IR");
+
+            UserControl view;
+            object viewModel;
+            var winWidth = 1180;
+            var winHeight = 800;
+
+            switch (page.ToLowerInvariant())
+            {
+                case "dentistry":
+                {
+                    var m = Services.GetRequiredService<DentistryViewModel>();
+                    SetDesignKpis(m.Kpis, "۱۲۴", "۱۸", "۷", "۵", "۴۸٫۵M");
+                    // دادهٔ نمونهٔ چارت — رنگها همان وضعیتهای واقعی برنامهد
+                    for (var i = 0; i < m.UpperTeeth.Count; i++)
+                        m.UpperTeeth[i].Condition = i switch { 2 => 1, 5 => 2, 9 => 3, 13 => 4, _ => 0 };
+                    for (var i = 0; i < m.LowerTeeth.Count; i++)
+                        m.LowerTeeth[i].Condition = i switch { 1 => 2, 4 => 1, 11 => 5, _ => 0 };
+                    m.SelectedTooth = m.UpperTeeth.Count > 2 ? m.UpperTeeth[2] : null;
+                    m.DentalPlan.Add(new DentalPlanRow(16, "درمان ریشه (۴ کانال)", 4500000m, "در انتظار", "#D97706", "O", "۱۴۰۵/۰۸/۱۲"));
+                    m.DentalPlan.Add(new DentalPlanRow(14, "ترمیم کامپوزیت", 1200000m, "انجامشده", "#059669", "M", "۱۴۰۵/۰۷/۲۸"));
+                    m.DentalPlan.Add(new DentalPlanRow(36, "روکش سرامیکی", 8000000m, "در انتظار", "#D97706", "—", "بدون نوبت"));
+                    viewModel = m;
+                    view = new DentistryView { DataContext = m };
+                    break;
+                }
+                case "ophthalmology":
+                {
+                    var m = Services.GetRequiredService<OphthalmologyViewModel>();
+                    SetDesignKpis(m.Kpis, "۸", "۲", "۶", "۴", "۹۶");
+                    m.OdSphere = "-2.50"; m.OdCylinder = "-0.75"; m.OdAxis = "180"; m.OdAdd = "+1.50"; m.OdIop = "۱۴";
+                    m.OsSphere = "-3.00"; m.OsCylinder = "-1.00"; m.OsAxis = "175"; m.OsAdd = "+1.50"; m.OsIop = "۲۳";
+                    m.Pd = "۶۲";
+                    m.EyeFindings = "حدت بینایی دو چشم با عینک کامل؛ فشار چشم چپ بالاتر از حد طبیعی — پیگیری گلوکوم.";
+                    m.SlitOd = "قرنیه شفاف، اتاق قدامی عمیق، عدسی شفاف.";
+                    m.SlitOs = "قرنیه شفاف، کاپ دیسک ۰٫۶ — نیازمند OCT.";
+                    m.PachymetryOd = "۵۴۲"; m.PachymetryOs = "۵۳۸";
+                    m.VisualFieldText = "میدان بینایی طبیعی";
+                    m.DiagnosisText = "آستیگماتیسم مرکب دوطرفه · مشکوک به گلوکوم چشم چپ";
+                    m.CarePlanText = "OCT عصب بینایی + تونومتری مجدد طی دو هفته";
+                    m.DrugPrescriptionText = "قطرهٔ تیمولول ۰٫۵٪ — یک قطره صبحگاهی چشم چپ";
+                    m.FollowUpText = "دو هفتهٔ دیگر";
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۵/۰۸/۰۳", "OD: -2.50 / -0.75 × 180", "OS: -3.00 / -1.00 × 175", "IOP چپ ۲۳"));
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۵/۰۵/۱۸", "OD: -2.25 / -0.50 × 180", "OS: -2.75 / -0.75 × 175", "طبیعی"));
+                    m.EyeHistory.Add(new EyeExamRow("۱۴۰۴/۱۱/۲۲", "OD: -2.00 / -0.50 × 180", "OS: -2.50 / -0.75 × 175", "طبیعی"));
+                    viewModel = m;
+                    view = new OphthalmologyView { DataContext = m };
+                    break;
+                }
+                case "physiotherapy":
+                {
+                    var m = Services.GetRequiredService<PhysiotherapyViewModel>();
+                    SetDesignKpis(m.Kpis, "۹", "۲", "۲۴", "۴۱", "۶۸٪");
+                    m.TotalSessions = 12;
+                    m.ActiveProtocolName = "کمردرد مزمن — پروتکل ۱۲ جلسهای";
+                    m.ProtocolGoal = "کاهش درد به زیر ۳ و بازگشت دامنهٔ حرکتی کمر";
+                    m.SelectedZone = "کمر (لومبار)";
+                    m.PainScore = 4;
+                    m.PhysioNotes = "بهبود قابل توجه در خمشدن به جلو؛ ادامهٔ تمرینات ثباتدهندهٔ مرکزی.";
+                    m.HomeProgram = "پلانک ۳×۳۰ ثانیه · کشش همسترینگ ۳×۳۰ ثانیه · پیادهروی ۲۰ دقیقه";
+                    m.History.Add(new PhysioSessionDto { Id = 5, DateShamsi = "۱۴۰۵/۰۸/۰۵", SessionNumber = 5, PainScore = 4, Duration = 45, Treatments = "TENS · اولتراسوند · تمرینات درمانی" });
+                    m.History.Add(new PhysioSessionDto { Id = 4, DateShamsi = "۱۴۰۵/۰۸/۰۱", SessionNumber = 4, PainScore = 5, Duration = 45, Treatments = "TENS · تمرینات درمانی" });
+                    m.History.Add(new PhysioSessionDto { Id = 3, DateShamsi = "۱۴۰۵/۰۷/۲۷", SessionNumber = 3, PainScore = 6, Duration = 40, Treatments = "لیزر درمانی · ماساژ" });
+                    m.History.Add(new PhysioSessionDto { Id = 2, DateShamsi = "۱۴۰۵/۰۷/۲۳", SessionNumber = 2, PainScore = 7, Duration = 40, Treatments = "اولتراسوند · تمرینات کششی" });
+                    m.History.Add(new PhysioSessionDto { Id = 1, DateShamsi = "۱۴۰۵/۰۷/۱۹", SessionNumber = 1, PainScore = 8, Duration = 35, Treatments = "ارزیابی اولیه · TENS" });
+                    viewModel = m;
+                    view = new PhysiotherapyView { DataContext = m };
+                    break;
+                }
+                case "survey":
+                case "survey-results":
+                {
+                    var m = Services.GetRequiredService<SurveyViewModel>();
+                    SetDesignKpis(m.Kpis, "۴۲٪", "۴٫۲/۵", "۳۱۲", "۲", "۱۸");
+                    m.Surveys.Add(new SurveyListRow(1, "رضایت از ویزیت پزشک", "ارزیابی کیفیت ویزیت و برخورد پزشک", "رضایت بیماران", true, "فعال", 312, "۴٫۲/۵", null));
+                    m.Surveys.Add(new SurveyListRow(2, "کیفیت پذیرش و برخورد", "نظرسنجی کوتاه پس از پذیرش", "کیفیت خدمات", true, "فعال", 194, "۴٫۵/۵", null));
+                    m.Surveys.Add(new SurveyListRow(3, "نظرسنجی فصلی پاییز", "ویژهٔ بیماران مزمن", "ارزیابی پزشک", false, "پایان یافته", 428, "۴٫۳/۵", null));
+                    m.TotalResponsesText = "۳۱۲";
+                    m.AverageText = "۴٫۲/۵";
+                    m.Last30Text = "۴۸";
+                    m.Stars.Add(new StarBar(5, 148, 100, "★★★★★"));
+                    m.Stars.Add(new StarBar(4, 96, 65, "★★★★"));
+                    m.Stars.Add(new StarBar(3, 41, 28, "★★★"));
+                    m.Stars.Add(new StarBar(2, 17, 12, "★★"));
+                    m.Stars.Add(new StarBar(1, 10, 7, "★"));
+                    m.DoctorRatings.Add(new DoctorRatingRow(1, "دکتر رضایی", 96, "۴٫۸", 96));
+                    m.DoctorRatings.Add(new DoctorRatingRow(2, "دکتر کریمی", 64, "۴٫۶", 92));
+                    m.DoctorRatings.Add(new DoctorRatingRow(3, "دکتر بهادری", 81, "۴٫۳", 86));
+                    m.Comments.Add(new SurveyCommentRow(1, "زهرا محمدی", "دکتر رضایی", "۵ ستاره", "برخورد بسیار خوب و توضیحات کامل بود. ممنونم.", "۱۴۰۵/۰۸/۰۳"));
+                    m.Comments.Add(new SurveyCommentRow(2, "علی احمدی", "دکتر کریمی", "۴ ستاره", "زمان انتظار کمی طولانی بود ولی ویزیت عالی بود.", "۱۴۰۵/۰۸/۰۲"));
+                    m.Comments.Add(new SurveyCommentRow(3, "مریم حسینی", "دکتر بهادری", "۵ ستاره", "محیط تمیز و پرسنل مؤدب.", "۱۴۰۵/۰۷/۲۹"));
+                    m.TabIndex = page.Equals("survey-results", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                    viewModel = m;
+                    view = new SurveyView { DataContext = m };
+                    winHeight = 830;
+                    break;
+                }
+                case "print-template":
+                {
+                    var m = Services.GetRequiredService<ComplementaryViewModel>();
+                    SetDesignKpis(m.Kpis, "۳", "۶", "۲", "۹", "۱۴۰۵/۰۸/۰۳");
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 1, Key = "Invoice", Title = "فاکتور — سربرگ A5", TypeFa = "فاکتور و قبض پرداخت", PaperSize = "A5", IsActive = true, IsDefault = true, IsLoaded = true, IsDirty = true, Body = "<div class=\"header\">درمانگاه سهند</div>" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 2, Key = "Prescription", Title = "نسخه — سربرگ پزشک", TypeFa = "نسخه پزشکی", PaperSize = "A5", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 3, Key = "ReceptionReceipt", Title = "رسید پذیرش کوتاه", TypeFa = "رسید پذیرش", PaperSize = "A6", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 4, Key = "InsuranceForm", Title = "صورت حساب بیمه", TypeFa = "صورت حساب بیمه", PaperSize = "A4", IsActive = false, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 5, Key = "LabResult", Title = "نتیجهٔ آزمایش", TypeFa = "آزمایشگاه", PaperSize = "A4", IsActive = true, Body = "" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 6, Key = "ImagingReport", Title = "گزارش تصویربرداری", TypeFa = "تصویربرداری", PaperSize = "A4", IsActive = true, Body = "" });
+                    m.VisibleTemplates.Clear();
+                    foreach (var r in m.PrintTemplates) m.VisibleTemplates.Add(r);
+                    m.SelectedTemplate = m.PrintTemplates.First();
+                    m.TabIndex = 0;
+                    viewModel = m;
+                    view = new ComplementaryView { DataContext = m };
+                    winWidth = 1240;
+                    break;
+                }
+                case "print-designer":
+                {
+                    var vars = new[] {
+                        new ComplementaryViewModel.TemplateVariable("بیمار", "👤", "نام بیمار", "patient_name"),
+                        new ComplementaryViewModel.TemplateVariable("سند", "📄", "شماره فاکتور", "invoice_code"),
+                        new ComplementaryViewModel.TemplateVariable("مالی", "🧾", "اقلام (جدول)", "items_html")
+                    };
+                    var sample = new FreeTemplateDocument { Width = 600, Height = 780, Elements = new() {
+                        new() { Kind = "text", Text = "فاکتور نمونه — فاقد اعتبار", X = 80, Y = 35, Width = 440, Height = 45, FontSize = 20, Bold = true, Alignment = "center" },
+                        new() { Kind = "line", X = 30, Y = 100, Width = 540, Height = 8 },
+                        new() { Kind = "variable", Key = "patient_name", Text = "نام بیمار:", X = 300, Y = 130, Width = 250, Height = 40 },
+                        new() { Kind = "variable", Key = "invoice_code", Text = "شماره:", X = 40, Y = 130, Width = 230, Height = 40 },
+                        new() { Kind = "variable", Key = "items_html", Text = "اقلام:", X = 30, Y = 210, Width = 540, Height = 350 }
+                    } };
+                    var designer = new FreeTemplateEditorWindow(sample, vars, "A4", "Portrait", screenshotMode: true);
+                    var content = designer.Content;
+                    designer.Content = null;
+                    view = new UserControl { Content = content };
+                    viewModel = designer;
+                    break;
+                }
+                case "print-settings":
+                {
+                    var m = Services.GetRequiredService<SettingsViewModel>();
+                    SetDesignKpis(m.Kpis, "۱۲", "۴", "۳", "۹", "۳۷");
+                    if (m.PrintJobs.Count == 0)
+                    {
+                        // همان ۱۲ سند مرکز چاپ — بدون نیاز به سرور
+                        foreach (var (key, title, desc) in new[]
+                        {
+                            ("ReceptionReceipt", "قبض پذیرش", "رسید پذیرش بیمار"),
+                            ("AppointmentTicket", "قبض نوبت", "رسید نوبتدهی"),
+                            ("Invoice", "فاکتور", "فاکتور خدمات"),
+                            ("Prescription", "نسخه", "نسخهٔ پزشک"),
+                            ("LabResult", "نتیجه آزمایش", "جواب آزمایش"),
+                            ("LabLabel", "برچسب نمونه", "لیبل ظرف نمونه"),
+                            ("ImagingReport", "گزارش تصویربرداری", "گزارش رادیولوژی"),
+                            ("ShiftReceipt", "رسید شیفت", "گزارش صندوق"),
+                            ("Payslip", "فیش حقوقی", "فیش پرسنل"),
+                            ("Certificate", "گواهی پزشکی", "گواهی و استعلاجی"),
+                            ("PatientCard", "کارت بیمار", "کارت شناسایی"),
+                            ("Reports", "گزارشها", "چاپ گزارشها"),
+                        })
+                        {
+                            m.PrintJobs.Add(new PrintJobRow
+                            {
+                                Key = key, Title = title, Description = desc, Icon = "🖨",
+                                Printer = string.Empty, Paper = "A5", CopiesInput = "1",
+                                Preview = true, AutoPrint = false
+                            });
+                        }
+                    }
+                    foreach (var n in new[] { "پیشفرض ویندوز", "HP LaserJet P1102", "EPSON LX-310", "چاپگر حرارتی ۸۰mm" })
+                        if (!m.PrinterNames.Contains(n)) m.PrinterNames.Add(n);
+                    m.ClinicName = "درمانگاه شبانهروزی سهند";
+                    m.SectionIndex = 3; // بخش «چاپگر و چاپ»
+                    viewModel = m;
+                    view = new SettingsView { DataContext = m };
+                    winWidth = 1240;
+                    winHeight = 850;
+                    break;
+                }
+                case "imaging":
+                {
+                    // همان مسیر قدیمی، با دادهٔ نمونهٔ کامل صف کار
+                    await RenderImagingScreenshotAsync(path);
+                    return;
+                }
+                default:
+                    throw new ArgumentException($"کلید ناشناختهٔ صفحه: {page}. کلیدهای مجاز: {string.Join(", ", ScreenshotPageKeys)}");
+            }
+
+            // به اندازه فضای واقعاً قابل نمایش رانر محدود می‌کنیم؛ اضافه‌کردن
+            // پیکسل سفید بیرون صفحه، دکمه‌های پایین را به‌اشتباه پنهان می‌کرد.
+            // ابعاد خروجی در فایل همراه ثبت می‌شود و الزاماً برابر طرح نیست.
+            var workArea = SystemParameters.WorkArea;
+            winWidth = Math.Max(1, Math.Min(1030, (int)workArea.Width));
+            winHeight = Math.Max(1, Math.Min(774, (int)workArea.Height));
+
+            view.Language = XmlLanguage.GetLanguage("fa-IR");
+            view.FlowDirection = FlowDirection.RightToLeft;
+            view.Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7));
+            // همان قلمی که طرحهای HTML با آن رندر شدند (وزیرمتن جاسازی‌شده
+            // داخل exe) — تا مقایسهٔ پیکسلی با رندر Edge معنادار باشد.
+            view.FontFamily = (TryFindResource("App.FontFamily") as FontFamily)
+                              ?? new FontFamily("Tahoma");
+            // تولتیپها هنگام CopyFromScreen ممکن است زیر نشانگر ماوس باز بمانند
+            // و یک کادر تیرهٔ اضافی وسط عکس بیندازند؛ مالک طرح را بدون آنها میبیند.
+            ToolTipService.SetIsEnabled(view, false);
+            ToolTipService.AddToolTipOpeningHandler(view, (_, args) => args.Handled = true);
+
+            var window = new Window
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0xEE, 0xF3, 0xF7)),
+                Content = view,
+                Width = winWidth,
+                Height = winHeight,
+                Topmost = true,
+                WindowStyle = WindowStyle.None,
+                // حذف حاشیهٔ تغییر اندازهٔ WPF تا نوار باریک کاغذدیواری
+                // ویندوز در لبهٔ چپ اسکرینشات نیفتد (همان رفع مسیر تصویربرداری).
+                ResizeMode = ResizeMode.NoResize,
+                BorderThickness = new Thickness(0),
+                ShowInTaskbar = false,
+                Left = workArea.Left,
+                Top = workArea.Top,
+                Title = $"اسکرینشات راستیآزمایی — {page}",
+                FlowDirection = FlowDirection.RightToLeft
+            };
+            window.Show();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            // خاصیت IsEnabled سرویس tooltip به فرزندان ارث نمی‌رسد؛
+            // پس پس از ساخته شدن قالب‌ها، آن را روی تمام درخت بصری می‌بندیم.
+            DisableScreenshotTooltips(view);
+            // فرصت به بارگذاریهای آغازین (که در نبود سرور شکست میخورند) تا
+            // نشانگر «در حال بارگذاری» فروبنشیند و فرم روی وضعیت پایدار رندر شود.
+            await Task.Delay(1400);
+            if (viewModel is ViewModelBase busyVm) busyVm.IsBusy = false;
+
+            var width = Math.Max(1, (int)Math.Ceiling(view.ActualWidth));
+            var height = Math.Max(1, (int)Math.Ceiling(view.ActualHeight));
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+            File.WriteAllText(path + ".txt",
+                $"Page={page} Flow={view.FlowDirection} Lang={view.Language} Actual={view.ActualWidth}x{view.ActualHeight} " +
+                $"Render={view.RenderSize.Width}x{view.RenderSize.Height} Desired={view.DesiredSize.Width}x{view.DesiredSize.Height}");
+
+            // هشدار فنی: PointToScreen(0,0) روی درخت بصری RTL، نقطهٔ لبهٔ
+            // **راست** ویو را برمیگرداند (WPF آینهٔ افقی روی ماتریس ریشه
+            // میگذارد) و CopyFromScreen از بیرون پنجره عکس سفید میگرفت.
+            // مبدأ درست همان گوشهٔ پنجره است — بهشرطی که حاشیهٔ تغییر اندازه
+            // (ResizeMode=NoResize) حذف شده باشد تا چیزی از دسکتاپ نماند.
+            var left = (int)window.Left;
+            var top = (int)window.Top;
+            // فقط ناحیه قابل‌رؤیت رانر گرفته می‌شود. اندازه واقعی در فایل
+            // همراه ذخیره است و با ابعاد طرح تأییدی یکسان فرض نمی‌شود.
+            var workW = Math.Max(1, (int)SystemParameters.WorkArea.Width);
+            var workH = Math.Max(1, (int)SystemParameters.WorkArea.Height);
+            var capW = Math.Min(width, workW);
+            var capH = Math.Min(height, workH);
+            using var raw = new System.Drawing.Bitmap(capW, capH);
+            using (var g = System.Drawing.Graphics.FromImage(raw))
+                g.CopyFromScreen(left, top, 0, 0, new System.Drawing.Size(capW, capH));
+            using var screen = new System.Drawing.Bitmap(width, height);
+            using (var g = System.Drawing.Graphics.FromImage(screen))
+            {
+                g.Clear(System.Drawing.Color.FromArgb(0xEE, 0xF3, 0xF8));
+                g.DrawImageUnscaled(raw, 0, 0);
+            }
+            screen.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            if (page.Equals("print-designer", StringComparison.OrdinalIgnoreCase))
+            {
+                // رندر چیدمان در ابعاد مرجع، مستقل از محدوده تصویر مانیتور.
+                // این تصویر جایگزین اسکرین‌شات روی صفحه نیست: تبدیل RTL و
+                // جزئیات رندر می‌توانند با خروجی مانیتور متفاوت باشند.
+                const int pixelWidth = 2720, pixelHeight = 1536;
+                const double layoutWidth = 1568;
+                var scale = pixelWidth / layoutWidth;
+                var layoutHeight = pixelHeight / scale;
+                // چیدمان را مستقیماً و بدون اجرای دوباره layout والد انجام
+                // می‌دهیم؛ بازچینی پنجره کوچک می‌تواند رندر را برش دهد.
+                view.Width = layoutWidth; view.Height = layoutHeight;
+                if (viewModel is FreeTemplateEditorWindow editor && editor.FindName("DesignerWorkspace") is FrameworkElement workspace)
+                    workspace.Margin = new Thickness(78, 12, 63, 12);
+                view.Measure(new Size(layoutWidth, layoutHeight));
+                view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
+                if (Math.Abs(view.RenderSize.Width - layoutWidth) > 0.1 || Math.Abs(view.RenderSize.Height - layoutHeight) > 0.1)
+                    throw new InvalidOperationException("رندر طراح به ابعاد مرجع نرسید.");
+                var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(pixelWidth, pixelHeight, 96 * scale, 96 * scale, PixelFormats.Pbgra32);
+                layout.Render(view);
+                var pixels = new byte[pixelWidth * pixelHeight * 4];
+                layout.CopyPixels(pixels, pixelWidth * 4, 0);
+                for (var i = 3; i < pixels.Length; i += 4)
+                    if (pixels[i] < 250) throw new InvalidOperationException("رندر هم‌اندازه ناقص یا شفاف است.");
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                // ریشه RTL در RenderTargetBitmap نسبت به خروجی پنجره آینه‌ای
+                // است؛ برگرداندن افقی در خروجی، همان جهت پنجره را بازمی‌گرداند.
+                var oriented = new System.Windows.Media.Imaging.TransformedBitmap(layout, new ScaleTransform(-1, 1));
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(oriented));
+                var layoutPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "print-designer-layout.png");
+                using (var stream = File.Create(layoutPath)) encoder.Save(stream);
+                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout 1568 x approximately 885.46 DIP, rendered at 2720x1536 pixels to match the reference image size; horizontally corrected for RTL. Not an on-screen screenshot; DPI and rendering can differ.");
+            }
+            window.Close();
+            Shutdown(0);
+        }
+        catch (Exception ex)
+        {
+            LogCrash($"اسکرینشات {page}", ex);
+            try { File.WriteAllText(path + ".error.txt", ex.ToString()); } catch { }
+            Shutdown(1);
+        }
+    }
+
     /// <summary>رویداد راه‌اندازی — ساخت کانتینر DI و انتخاب پنجره آغازین</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        Sahand.ClinicPro.Desktop.Services.SaveShortcut.Register();
 
         // ═══ سپر ضدبسته‌شدن برنامه (گزارش مالک: «تصویربرداری را باز می‌کنم
         // برنامه بسته می‌شود») ═══ هیچ خطای یک صفحه نباید کل برنامه را ببندد:
@@ -503,6 +853,18 @@ public partial class App : System.Windows.Application
         // خودِ درخت بصری WPF عکس PNG می‌گیرد و خارج می‌شود؛ در CI ویندوزی برای
         // مقایسهٔ عینیِ پیاده‌سازی با طرح تأییدی استفاده می‌شود و در اجرای عادی
         // کاربران هرگز فعال نیست.
+        // ═══ حالت عمومی اسکرینشات واقعی (چرخهٔ مقایسه با طرح تأییدی مالک) ═══
+        // --screenshot <کلیدصفحه> <مسیر> — هر یک از شش صفحهٔ هدف (و تصویربرداری)
+        // را همانطور که کاربر میبیند رندر و PNG میکند؛ توضیحات کامل بالای متد.
+        var pageShotIndex = Array.IndexOf(e.Args, "--screenshot");
+        if (pageShotIndex >= 0)
+        {
+            var key = pageShotIndex + 1 < e.Args.Length ? e.Args[pageShotIndex + 1] : "dentistry";
+            var outPath = pageShotIndex + 2 < e.Args.Length ? e.Args[pageShotIndex + 2] : $"{key}-screenshot.png";
+            _ = RenderPageScreenshotAsync(key, outPath);
+            return;
+        }
+
         var shotIndex = Array.IndexOf(e.Args, "--imaging-screenshot");
         if (shotIndex >= 0)
         {

@@ -4,9 +4,10 @@ namespace Sahand.ClinicPro.Desktop.Services;
 /// کاتالوگ یکپارچهٔ سندهای چاپی برنامه — بازطراحی تأییدشدهٔ مالک:
 /// «همهٔ فرم‌ها و صفحه‌هایی که دکمهٔ چاپ دارند یا به چاپ نیاز دارند، با
 /// عنوان خودشان فهرست شوند تا برای هر کدام چاپگر جداگانه انتخاب شود».
-/// هر سند: چاپگر اختصاصی، اندازهٔ کاغذ، تعداد نسخه، پیش‌نمایش و چاپ
-/// خودکارِ خودش را دارد؛ مقدارها در ذخیرهٔ محلی با کلید
-/// Printer.Job.{Key}.* نگه داشته می‌شوند و در نبود مقدار، زنجیرهٔ
+/// فقط گزینه‌هایی که به مسیر سند متصل‌اند در تنظیمات فعال می‌شوند؛ برخی
+/// مسیرها (از جمله HTML) همهٔ گزینه‌ها را پشتیبانی نمی‌کنند. مقدارهای
+/// پشتیبانی‌شده در ذخیرهٔ محلی با کلید Printer.Job.{Key}.* نگه داشته
+/// می‌شوند و در نبود مقدار، زنجیرهٔ
 /// سازگاری با کلیدهای قدیمی (Receipt/Ticket/Default و…) پیموده می‌شود
 /// تا رفتار نصب‌های فعلی بی‌تغییر بماند.
 /// </summary>
@@ -28,6 +29,11 @@ public static class PrintJobSettings
         new PrintJobInfo("ReceptionReceipt", "قبض پذیرش و پرداخت", "صفحهٔ پذیرش — پس از ثبت و پرداخت", "🧾", "حرارتی ۸۰", new[] { "Printer.Receipt", "Printer.Ticket", "Printer.TicketPrinter" }),
         new PrintJobInfo("AppointmentTicket", "قبض نوبت", "نوبت‌دهی — برگهٔ راهنمای بیمار", "🎫", "حرارتی ۸۰", new[] { "Printer.Ticket", "Printer.TicketPrinter" }),
         new PrintJobInfo("Invoice", "فاکتور", "مالی — فاکتور خدمات و فروش", "📄", "A5", new[] { "Printer.InvoicePrinter" }),
+        new PrintJobInfo("PhysioHomeProgram", "تمرین خانگی فیزیوتراپی", "فیزیوتراپی — پیش‌نویس برنامهٔ بیمار", "🏠", "A4", new[] { "Printer.DefaultPrinter" }),
+        new PrintJobInfo("PhysioReferralReport", "گزارش ارجاع فیزیوتراپی", "فیزیوتراپی — پیش‌نویس گزارش برای ارجاع‌دهنده", "📄", "A4", new[] { "Printer.DefaultPrinter" }),
+        new PrintJobInfo("DentalChart", "چارت دندان", "دندان‌پزشکی — وضعیت ثبت‌شدهٔ دندان‌ها", "🦷", "A4", new[] { "Printer.DefaultPrinter" }),
+        new PrintJobInfo("DentalTreatmentPlan", "طرح درمان دندان", "دندان‌پزشکی — پیش‌نویس اقلام طرح", "📋", "A4", new[] { "Printer.DefaultPrinter" }),
+        new PrintJobInfo("GlassesPrescription", "پیش‌نویس نسخهٔ عینک", "چشم‌پزشکی — پیش‌نویس نیازمند امضای دستی", "👓", "A5", new[] { "Printer.PrescriptionPrinter" }),
         new PrintJobInfo("Prescription", "نسخهٔ پزشک", "ویزیت و پروندهٔ بیمار", "💊", "A5", new[] { "Printer.PrescriptionPrinter" }),
         new PrintJobInfo("LabResult", "نتیجهٔ آزمایش", "آزمایشگاه — گزارش جواب بیمار", "🧪", "A4", new[] { "Printer.DefaultPrinter" }),
         new PrintJobInfo("SpecimenLabel", "برچسب نمونه (QR)", "آزمایشگاه — برچسب ظرف نمونه", "🏷️", "برچسب ۴۰×۳۰", new[] { "Printer.DefaultPrinter" }),
@@ -42,25 +48,28 @@ public static class PrintJobSettings
     /// <summary>یافتن مشخصات سند با کلید</summary>
     public static PrintJobInfo? Find(string key) => Jobs.FirstOrDefault(j => j.Key == key);
 
-    private static string StorageKey(string jobKey, string part) => $"Printer.Job.{jobKey}.{part}";
+    /// <summary>کلید محلی تنظیم سند برای ثبت گروهی.</summary>
+    public static string StorageKey(string jobKey, string part) => $"Printer.Job.{jobKey}.{part}";
 
     /// <summary>
     /// چاپگر اختصاصی سند — اول مقدار اختصاصی همین سند، بعد کلیدهای قدیمی
     /// همان خانواده، و در پایان تهی یعنی «پیش‌فرض ویندوز».
     /// </summary>
     public static string? PrinterFor(string jobKey)
-    {
-        var own = LocalSettingsStore.Get(StorageKey(jobKey, "Printer"));
-        if (!string.IsNullOrWhiteSpace(own)) return own;
-        var job = Find(jobKey);
-        if (job is not null)
-            foreach (var legacy in job.LegacyKeys)
-            {
-                var value = LocalSettingsStore.Get(legacy);
-                if (!string.IsNullOrWhiteSpace(value)) return value;
-            }
-        return null;
-    }
+        => ResolvePrinter(PrinterOverrideFor(jobKey), LegacyPrintersFor(jobKey));
+
+    /// <summary>فقط انتخاب اختصاصی؛ خالی به معنای ارث از تنظیمات قدیمی است.</summary>
+    public static string PrinterOverrideFor(string jobKey) => LocalSettingsStore.Get(StorageKey(jobKey, "Printer"));
+
+    /// <summary>چاپگر ارثی، بدون لحاظ انتخاب اختصاصی ذخیره‌شده.</summary>
+    public static string? FallbackPrinterFor(string jobKey) => ResolvePrinter(null, LegacyPrintersFor(jobKey));
+
+    private static IEnumerable<string> LegacyPrintersFor(string jobKey)
+        => (Find(jobKey)?.LegacyKeys ?? Array.Empty<string>()).Select(LocalSettingsStore.Get);
+
+    /// <summary>انتخاب اختصاصی مقدم است؛ در نبود آن اولین مقدار قدیمی و سپس پیش‌فرض ویندوز.</summary>
+    public static string? ResolvePrinter(string? own, IEnumerable<string?> legacy)
+        => !string.IsNullOrWhiteSpace(own) ? own : legacy.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
     /// <summary>ذخیرهٔ چاپگر اختصاصی سند</summary>
     public static void SetPrinter(string jobKey, string? printer)

@@ -1,4 +1,6 @@
-﻿using FluentValidation;
+using System.Security.Cryptography;
+using System.Text.Json;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,6 +9,8 @@ using Sahand.ClinicPro.Application.Common.Security;
 using Sahand.ClinicPro.Application.DTOs.Billing;
 using Sahand.ClinicPro.Domain.Common;
 using Sahand.ClinicPro.Domain.Entities.Accounting;
+using Sahand.ClinicPro.Domain.Entities.Clinical;
+using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Entities.Billing;
 using Sahand.ClinicPro.Domain.Entities.People;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
@@ -22,6 +26,9 @@ namespace Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
 /// </summary>
 /// <param name="Dto">داده فاکتور</param>
 public record CreateInvoiceCommand(CreateInvoiceDto Dto) : IRequest<Result<long>>;
+
+/// <summary>محاسبهٔ فقط‌خواندنی فاکتور، با همان قوانین صدور.</summary>
+public record PreviewInvoiceQuery(CreateInvoiceDto Dto) : IRequest<Result<InvoicePreviewDto>>;
 
 /// <summary>اعتبارسنج صدور فاکتور</summary>
 public class CreateInvoiceCommandValidator : AbstractValidator<CreateInvoiceCommand>
@@ -53,7 +60,8 @@ public class InvoiceItemDtoValidator : AbstractValidator<InvoiceItemDto>
 /// <summary>
 /// گرداننده صدور فاکتور — سهم بیمه و بیمار محاسبه و سند حسابداری خودکار تولید می‌شود
 /// </summary>
-public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand, Result<long>>
+public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand, Result<long>>,
+    IRequestHandler<PreviewInvoiceQuery, Result<InvoicePreviewDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateInvoiceCommandHandler> _logger;
@@ -70,14 +78,147 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         _logger = logger;
     }
 
-    /// <summary>اجرای صدور فاکتور</summary>
+    private sealed record InvoiceCalculation(Invoice Invoice, Patient Patient);
+    private static decimal RoundRial(decimal amount) => decimal.Round(amount, 0, MidpointRounding.ToEven);
+
+    /// <summary>اجرای صدور فاکتور پس از محاسبه و تطبیق پیش‌نمایش اختیاری.</summary>
     public async Task<Result<long>> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (dto.RequestId == Guid.Empty || !InvoiceAmountSafety.Valid(dto))
+            return Result<long>.Failure(new Error("BILLING.AMOUNTS_INVALID", "شناسه درخواست، تعداد، مبلغ یا اطلاعات فاکتور نامعتبر است."));
+        string? fingerprint = null;
+        if (dto.RequestId.HasValue)
+        {
+            // بررسی شعبه حتی برای بازپخش؛ شناسه فاکتور شعبه دیگر افشا نشود.
+            if (!await _unitOfWork.Repository<Patient>().QueryableNoTracking
+                    .AnyAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken))
+                return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+            fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(dto with { RequestId = null })));
+            var prior = await _unitOfWork.Repository<Invoice>().QueryableNoTracking
+                .FirstOrDefaultAsync(i => i.RequestId == dto.RequestId, cancellationToken);
+            if (prior is not null)
+                return prior.PatientId == dto.PatientId && prior.RequestFingerprint == fingerprint
+                    ? Result<long>.Success(prior.Id)
+                    : Result<long>.Failure(new Error("BILLING.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای فاکتور دیگری استفاده شده است."));
+        }
+        var calculation = await CalculateAsync(dto, preview: false, cancellationToken);
+        if (calculation.IsFailure) return Result<long>.Failure(calculation.Error);
+        var invoice = calculation.Value.Invoice;
+        var patient = calculation.Value.Patient;
+        if (dto.ExpectedQuote is not null && dto.ExpectedQuote != QuoteVersion(dto, invoice))
+            return Result<long>.Failure(new Error("BILLING.QUOTE_CHANGED", "مبلغ یا تنظیمات فاکتور تغییر کرده است؛ پیش‌نمایش را دوباره دریافت کنید."));
+        // صدور بدون سند دوبل موفقیت محسوب نمی‌شود؛ کنترل پیش از درج انجام
+        // می‌شود و بازپخش فاکتور ثبت‌شده همچنان پیش از این مرحله است.
+        var receivable = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        var income = await _unitOfWork.Repository<AccountingAccount>()
+            .FirstOrDefaultAsync(a => a.AccountCode == MedicalIncomeCode && !a.IsDeleted && a.IsActive && a.IsDetail, cancellationToken);
+        if (receivable is null || income is null)
+            return Result<long>.Failure(new Error("BILLING.ACCOUNTS_UNAVAILABLE",
+                "حساب مطالبات بیمار یا درآمد خدمات فعال و قابل ثبت سند نیست؛ کدینگ حسابداری را بررسی کنید."));
+        invoice.RequestId = dto.RequestId;
+        invoice.RequestFingerprint = fingerprint;
+        await _unitOfWork.Repository<Invoice>().AddAsync(invoice, cancellationToken);
 
-        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
-        if (patient is null)
-            return Result<long>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        // ═══ چرخهٔ ۷۵ — ریشهٔ «فاکتور شماره — سعید نجفی» در دفتر روزنامه ═══
+        // گزارش مالک: «در لیست اسناد، شماره فاکتور رو نمیندازه و به جاش خط
+        // تیره میندازه». ریشه: InvoiceNumber با «مقدار پیش‌فرض SQL» (سکانس
+        // SeqInvoiceNumber) فقط هنگام INSERT ساخته می‌شود؛ پیش‌تر سند حسابداری
+        // «پیش از» ذخیره تولید می‌شد و شماره هنوز تهی بود ⇒ توضیح سند با
+        // «فاکتور شماره (خالی)» ثبت می‌شد. اکنون: نخست فاکتور ذخیره می‌شود تا
+        // شمارهٔ واقعی از دیتابیس برگردد (EF مقدار پیش‌فرض تولیدی را پس از
+        // INSERT روی خود موجودیت برمی‌خواند)، سپس سند با همان شماره ساخته و
+        // در همان تراکنشِ فرمان (TransactionBehavior) ذخیره می‌شود — اتمیک.
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        // شناسهٔ تولیدشدهٔ SQL باید پیش از ساخت رویداد دریافت شود.
+        invoice.AddDomainEvent(new InvoiceCreatedEvent(
+            invoice.Id, dto.PatientId, invoice.TotalAmount));
+
+        // ── سند حسابداری خودکار — قانون طلایی دوبل (اکنون با شمارهٔ واقعی) ──
+        await GenerateJournalEntryAsync(invoice, patient, receivable, income, cancellationToken);
+        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "فاکتور {Number} به مبلغ {Amount} ریال صادر شد — سهم بیمه {Insurance}",
+            invoice.InvoiceNumber, invoice.TotalAmount, invoice.InsuranceDiscount);
+
+        return Result<long>.Success(invoice.Id);
+    }
+
+    /// <summary>پیش‌نمایش بدون درج فاکتور، سند یا تغییر پذیرش.</summary>
+    Task<Result<InvoicePreviewDto>> IRequestHandler<PreviewInvoiceQuery, Result<InvoicePreviewDto>>.Handle(PreviewInvoiceQuery request, CancellationToken cancellationToken)
+        => PreviewAsync(request, cancellationToken);
+
+    public async Task<Result<InvoicePreviewDto>> PreviewAsync(PreviewInvoiceQuery request, CancellationToken cancellationToken)
+    {
+        var calculation = await CalculateAsync(request.Dto, preview: true, cancellationToken);
+        if (calculation.IsFailure) return Result<InvoicePreviewDto>.Failure(calculation.Error);
+        var invoice = calculation.Value.Invoice;
+        return Result<InvoicePreviewDto>.Success(new InvoicePreviewDto(invoice.SubTotal, invoice.DiscountAmount,
+            invoice.InsuranceDiscount, invoice.Tax, invoice.TotalAmount, invoice.InsuranceCompanyId,
+            QuoteVersion(request.Dto, invoice)));
+    }
+
+    private static string QuoteVersion(CreateInvoiceDto dto, Invoice invoice)
+    {
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            Request = dto with { ExpectedQuote = null, RequestId = null }, invoice.InsuranceCompanyId, invoice.SubTotal,
+            invoice.DiscountAmount, invoice.InsuranceDiscount, invoice.Tax, invoice.TotalAmount,
+            Items = invoice.Items.Select(i => new { i.ServiceId, i.Quantity, i.UnitPrice, i.DiscountAmount,
+                i.InsuranceShare, i.InsurancePercent, i.PatientShare, i.TotalPrice, i.DoctorId,
+                i.PerformedById, i.UnitCost, i.DoctorShareAmount }).ToArray()
+        });
+        return Convert.ToHexString(SHA256.HashData(bytes));
+    }
+
+    private async Task<Result<InvoiceCalculation>> CalculateAsync(CreateInvoiceDto dto, bool preview, CancellationToken cancellationToken)
+    {
+        if (!InvoiceAmountSafety.Valid(dto))
+            return Result<InvoiceCalculation>.Failure(new Error("BILLING.AMOUNTS_INVALID", "تعداد، مبلغ، درصد یا شناسه اقلام فاکتور نامعتبر یا خارج از دقت مجاز است."));
+
+        // بیمار از فیلتر شعبه و حذف نرم عبور می‌کند، حتی اگر قبلاً ردیابی شده باشد.
+        var patient = await _unitOfWork.Repository<Patient>().QueryableNoTracking
+            .FirstOrDefaultAsync(p => p.Id == dto.PatientId && !p.IsDeleted, cancellationToken);
+        if (patient is null || patient.IsDeleted)
+            return Result<InvoiceCalculation>.Failure(Error.NotFound("بیمار", dto.PatientId));
+
+        if (dto.ReceptionId is long receptionId)
+        {
+            var receptionRepo = _unitOfWork.Repository<Reception>();
+            var visible = await receptionRepo.QueryableNoTracking.AnyAsync(r => r.Id == receptionId && !r.IsDeleted, cancellationToken);
+            if (!visible) return Result<InvoiceCalculation>.Failure(Error.NotFound("پذیرش", receptionId));
+            var reception = await receptionRepo.GetByIdAsync(receptionId, cancellationToken);
+            if (reception is null || reception.IsDeleted) return Result<InvoiceCalculation>.Failure(Error.NotFound("پذیرش", receptionId));
+            if (reception.PatientId != dto.PatientId)
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.RECEPTION_PATIENT", "بیمار فاکتور با بیمار پذیرش مطابقت ندارد."));
+            if (reception.Status == ReceptionStatus.Cancelled)
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.RECEPTION_CANCELLED", "برای پذیرش لغوشده صدور فاکتور مجاز نیست."));
+            // اقلام قدیمی فاکتور شناسه دارو ندارند؛ وجود هر فاکتور قبلی، حتی
+            // ابطال‌شده یا حذف نرم‌شده، مانع تشخیص ایمن مبلغ مصرفی قبلی است.
+            // فاکتورهای بدون مصرفی همچنان می‌توانند جداگانه صادر شوند.
+            if (dto.Items.Any(i => i.MedicationId.HasValue) &&
+                await _unitOfWork.Repository<Invoice>().QueryableNoTracking.IgnoreQueryFilters()
+                    .AnyAsync(i => i.ReceptionId == receptionId, cancellationToken))
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.CONSUMABLE_PREVIOUS_INVOICE",
+                    "برای این پذیرش فاکتور قبلی وجود دارد؛ اقلام مصرفی را پیش از صدور مجدد به‌صورت دستی بررسی کنید."));
+            // همه صادرکنندگان وابسته به پذیرش در یک rowversion رقابت می‌کنند؛
+            // اگر هر دو پیش از بررسی فاکتور قبلی شروع شوند، تنها یکی ثبت می‌شود.
+            if (!preview)
+            {
+                reception.UpdatedAt = DateTime.UtcNow;
+                receptionRepo.MarkPropertyModified(reception, r => r.UpdatedAt);
+            }
+        }
+        if (dto.VisitId is long visitId)
+        {
+            var visit = await _unitOfWork.Repository<Visit>().QueryableNoTracking
+                .FirstOrDefaultAsync(v => v.Id == visitId && !v.IsDeleted, cancellationToken);
+            if (visit is null) return Result<InvoiceCalculation>.Failure(Error.NotFound("ویزیت", visitId));
+            if (visit.PatientId != dto.PatientId || (dto.ReceptionId.HasValue && visit.ReceptionId.HasValue && visit.ReceptionId != dto.ReceptionId))
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.VISIT_MISMATCH", "ویزیت با بیمار یا پذیرش فاکتور مطابقت ندارد."));
+        }
 
         // بیمه فقط وقتی مؤثر است که شرکت طرف قرارداد باشد و تنظیمات درمانگاه
         // برای دست‌کم یک دستهٔ موجود در فاکتور اجازهٔ اعمال بیمه بدهد.
@@ -91,6 +232,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         var billingPolicy = InsuranceBillingPolicy.FromSettings(insuranceSettings.Select(s =>
             new KeyValuePair<string, string?>(s.Key, s.Value)));
         var insurance = requestedInsurance is { IsActive: true, IsContracted: true } ? requestedInsurance : null;
+        if ((preview || dto.ExpectedQuote is not null) && dto.InsuranceCompanyId.HasValue && insurance is null)
+            return Result<InvoiceCalculation>.Failure(new Error("BILLING.INSURANCE_INVALID", "بیمه انتخاب‌شده معتبر یا طرف قرارداد نیست؛ برای تعرفه آزاد صریحاً آزاد را انتخاب کنید."));
         var hasInsuranceEligibleItems = insurance is not null && dto.Items.Any(item =>
             !item.IsInsuranceExempt && (item.DoctorId.HasValue && !item.ServiceId.HasValue
                 ? billingPolicy.ApplyToDoctorVisits
@@ -125,7 +268,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 .Where(e => performerIds.Contains(e.Id) && !e.IsDeleted && e.IsActive)
                 .Select(e => e.Id).ToListAsync(cancellationToken);
             if (validIds.Count != performerIds.Count)
-                return Result<long>.Failure(new Error("BILLING.INVALID_PERFORMER",
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.INVALID_PERFORMER",
                     "پرسنل انجام‌دهنده انتخاب‌شده معتبر یا فعال نیست"));
         }
 
@@ -159,7 +302,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             var insuredTariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
                 .Where(t => serviceIds.Contains(t.ServiceId) && t.InsuranceCompanyId == insurance.Id &&
                             t.IsActive && !t.IsDeleted)
-                .OrderByDescending(t => t.Year)
+                .OrderByDescending(t => t.Year).ThenByDescending(t => t.Id)
                 .ToListAsync(cancellationToken);
             insuredTariffShareByService = insuredTariffs
                 .GroupBy(t => t.ServiceId).ToDictionary(g => g.Key, g => g.First().InsuranceShare);
@@ -172,6 +315,28 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 .ToDictionaryAsync(s => s.Id, s => s.DefaultCost, cancellationToken);
         }
 
+        // قرارداد نسخه‌دار فاکتور دستی قیمت خدمت را هم با همان اولویت جستجوی
+        // تعرفه تطبیق می‌دهد؛ فرمان‌های قدیمی بدون نسخه رفتار پیشین را دارند.
+        if ((preview || dto.ExpectedQuote is not null) && serviceIds.Count > 0)
+        {
+            var services = await _unitOfWork.Repository<Service>().QueryableNoTracking
+                .Where(x => serviceIds.Contains(x.Id) && x.IsActive && !x.IsDeleted)
+                .ToListAsync(cancellationToken);
+            if (services.Count != serviceIds.Count)
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.SERVICE_INVALID", "خدمت انتخاب‌شده دیگر فعال نیست."));
+            var effectiveId = insurance is not null && billingPolicy.ApplyToMedicalServices ? insurance.Id : (long?)null;
+            var tariffs = await _unitOfWork.Repository<Tariff>().QueryableNoTracking
+                .Where(t => serviceIds.Contains(t.ServiceId) && t.IsActive && !t.IsDeleted &&
+                    (t.InsuranceCompanyId == effectiveId || (effectiveId != null && t.InsuranceCompanyId == null)))
+                .ToListAsync(cancellationToken);
+            var prices = services.ToDictionary(x => x.Id, x => tariffs.Where(t => t.ServiceId == x.Id)
+                .OrderByDescending(t => effectiveId != null && t.InsuranceCompanyId == effectiveId)
+                .ThenByDescending(t => t.Year).ThenByDescending(t => t.Id)
+                .Select(t => (decimal?)t.Price).FirstOrDefault() ?? x.DefaultPrice);
+            if (dto.Items.Any(i => i.ServiceId.HasValue && prices[i.ServiceId.Value] != i.UnitPrice))
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.TARIFF_CHANGED", "تعرفه خدمت تغییر کرده است؛ خدمت را دوباره انتخاب و فاکتور را محاسبه کنید."));
+        }
+
         // بهای تمام‌شدهٔ لوازم مصرفی از تراکنش‌های واقعی برداشت همان پذیرش
         // خوانده می‌شود؛ هیچ هزینه‌ای از کلاینت پذیرفته نمی‌شود.
         var medicationIds = dto.Items.Where(i => i.MedicationId.HasValue)
@@ -180,7 +345,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         if (medicationIds.Count > 0)
         {
             if (!dto.ReceptionId.HasValue)
-                return Result<long>.Failure(new Error("BILLING.CONSUMABLE_RECEPTION",
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.CONSUMABLE_RECEPTION",
                     "ثبت لوازم مصرفی در فاکتور نیازمند پذیرش مرتبط است"));
 
             var consumedRows = await _unitOfWork.Repository<PharmacyTransaction>().QueryableNoTracking
@@ -208,7 +373,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 var requestedQuantity = requested.Sum(i => i.Quantity);
                 if (!consumableCostByMedication.TryGetValue(requested.Key, out var consumed) ||
                     consumed.Quantity < requestedQuantity)
-                    return Result<long>.Failure(new Error("BILLING.CONSUMABLE_NOT_CONSUMED",
+                    return Result<InvoiceCalculation>.Failure(new Error("BILLING.CONSUMABLE_NOT_CONSUMED",
                         "اقلام مصرفی فاکتور باید پیش‌تر در همین پذیرش از انبار برداشت شده باشند"));
             }
         }
@@ -217,8 +382,8 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 
         foreach (var item in dto.Items)
         {
-            var gross = item.Quantity * item.UnitPrice;
-            var discount = gross * item.DiscountPercent / 100m;
+            var gross = RoundRial(item.Quantity * item.UnitPrice);
+            var discount = RoundRial(gross * item.DiscountPercent / 100m);
             var net = gross - discount;
 
             // ═══ چرخهٔ ۳۹ — معافیت بیمه‌ای قلم ═══ اقلام کالایی (لوازم مصرفی
@@ -234,7 +399,9 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 : item.ServiceId is long itemServiceId && insuredTariffShareByService.TryGetValue(itemServiceId, out var tariffShare)
                     ? tariffShare
                     : defaultInsurancePercent;
-            var insuranceShare = net * itemInsurancePercent / 100m;
+            if (!InvoiceAmountSafety.ValidPercent(itemInsurancePercent))
+                return Result<InvoiceCalculation>.Failure(new Error("BILLING.INSURANCE_PERCENT", "درصد سهم بیمه در تنظیمات یا تعرفه نامعتبر است."));
+            var insuranceShare = RoundRial(net * itemInsurancePercent / 100m);
             var patientShare = net - insuranceShare;
 
             subTotal += gross;
@@ -263,7 +430,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 TotalPrice = net,
                 DoctorId = item.DoctorId,
                 DoctorSharePercent = item.DoctorSharePercent,
-                DoctorShareAmount = net * item.DoctorSharePercent / 100m,
+                DoctorShareAmount = RoundRial(net * item.DoctorSharePercent / 100m),
                 PerformedById = performedById,
                 UnitCost = item.ServiceId.HasValue &&
                            costById.TryGetValue(item.ServiceId.Value, out var serviceUnitCost)
@@ -276,7 +443,10 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             });
         }
 
-        var tax = (subTotal - totalDiscount) * dto.TaxPercent / 100m;
+        var tax = RoundRial((subTotal - totalDiscount) * dto.TaxPercent / 100m);
+        if (subTotal > InvoiceAmountSafety.MaxRial || tax > InvoiceAmountSafety.MaxRial ||
+            subTotal - totalDiscount - totalInsuranceShare + tax > InvoiceAmountSafety.MaxRial)
+            return Result<InvoiceCalculation>.Failure(new Error("BILLING.AMOUNT_OVERFLOW", "مبلغ فاکتور از سقف قابل ذخیره بیشتر است."));
         invoice.SubTotal = subTotal;
         invoice.DiscountAmount = totalDiscount;
         invoice.InsuranceDiscount = totalInsuranceShare;
@@ -285,48 +455,13 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         invoice.PaidAmount = 0;
         invoice.RemainingAmount = invoice.TotalAmount;
 
-        await _unitOfWork.Repository<Invoice>().AddAsync(invoice, cancellationToken);
-
-        // ═══ چرخهٔ ۷۵ — ریشهٔ «فاکتور شماره — سعید نجفی» در دفتر روزنامه ═══
-        // گزارش مالک: «در لیست اسناد، شماره فاکتور رو نمیندازه و به جاش خط
-        // تیره میندازه». ریشه: InvoiceNumber با «مقدار پیش‌فرض SQL» (سکانس
-        // SeqInvoiceNumber) فقط هنگام INSERT ساخته می‌شود؛ پیش‌تر سند حسابداری
-        // «پیش از» ذخیره تولید می‌شد و شماره هنوز تهی بود ⇒ توضیح سند با
-        // «فاکتور شماره (خالی)» ثبت می‌شد. اکنون: نخست فاکتور ذخیره می‌شود تا
-        // شمارهٔ واقعی از دیتابیس برگردد (EF مقدار پیش‌فرض تولیدی را پس از
-        // INSERT روی خود موجودیت برمی‌خواند)، سپس سند با همان شماره ساخته و
-        // در همان تراکنشِ فرمان (TransactionBehavior) ذخیره می‌شود — اتمیک.
-        invoice.AddDomainEvent(new InvoiceCreatedEvent(
-            invoice.Id, dto.PatientId, invoice.TotalAmount));
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
-
-        // ── سند حسابداری خودکار — قانون طلایی دوبل (اکنون با شمارهٔ واقعی) ──
-        await GenerateJournalEntryAsync(invoice, patient, cancellationToken);
-        await _unitOfWork.SaveEntitiesAsync(cancellationToken);
-
-        _logger.LogInformation(
-            "فاکتور {Number} به مبلغ {Amount} ریال صادر شد — سهم بیمه {Insurance}",
-            invoice.InvoiceNumber, invoice.TotalAmount, totalInsuranceShare);
-
-        return Result<long>.Success(invoice.Id);
+        return Result<InvoiceCalculation>.Success(new InvoiceCalculation(invoice, patient));
     }
 
     /// <summary>تولید سند حسابداری متوازن برای فاکتور — بدهکار بیمار، بستانکار درآمد</summary>
     private async Task GenerateJournalEntryAsync(Invoice invoice, Patient patient,
-        CancellationToken ct)
+        AccountingAccount receivable, AccountingAccount income, CancellationToken ct)
     {
-        var receivable = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == PatientReceivableCode, ct);
-        var income = await _unitOfWork.Repository<AccountingAccount>()
-            .FirstOrDefaultAsync(a => a.AccountCode == MedicalIncomeCode, ct);
-
-        // اگر کدینگ هنوز تنظیم نشده سند تولید نمی‌شود — فاکتور مستقل کار می‌کند
-        if (receivable is null || income is null)
-        {
-            _logger.LogWarning("کدینگ حسابداری آماده نیست — سند خودکار فاکتور {Id} تولید نشد", invoice.Id);
-            return;
-        }
-
         var entry = new JournalEntry
         {
             EntryDate = DateOnly.FromDateTime(DateTime.UtcNow),

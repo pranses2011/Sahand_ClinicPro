@@ -37,6 +37,32 @@ public class PrintTemplateSeeder : IDataSeeder
     /// </summary>
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        // یک بار در نخستین ارتقا، قبض اصلی به عنوان قالب پیش‌فرض اضافه می‌شود.
+        // در اجراهای بعدی به انتخاب کاربر دست نمی‌زنیم. رکورد حذف‌شده نیز
+        // نشان‌دهندهٔ اجرای قبلی است تا تغییر انتخاب کاربر دوباره لغو نشود.
+        var hasOriginalReceipt = await _context.PrintTemplates.IgnoreQueryFilters()
+            .AnyAsync(t => t.Type == PrintTemplateType.ReceptionReceipt
+                && t.HtmlBody == BuiltInPrintTemplates.ReceptionReceiptMarker, cancellationToken);
+        if (!hasOriginalReceipt)
+        {
+            var oldDefaults = await _context.PrintTemplates
+                .Where(t => !t.IsDeleted && t.Type == PrintTemplateType.ReceptionReceipt && t.IsDefault)
+                .ToListAsync(cancellationToken);
+            foreach (var old in oldDefaults) old.IsDefault = false;
+            // ابتدا پیش‌فرض قبلی آزاد شود تا با ایندکس فیلترشده تداخل نکند.
+            if (oldDefaults.Count > 0) await _context.SaveChangesAsync(cancellationToken);
+            _context.PrintTemplates.Add(new PrintTemplate
+            {
+                TemplateName = BuiltInPrintTemplates.ReceptionReceiptName,
+                Type = PrintTemplateType.ReceptionReceipt,
+                Description = "قبض حرارتی اصلی برنامه؛ چاپ با موتور داخلی پیشین انجام می‌شود.",
+                HtmlBody = BuiltInPrintTemplates.ReceptionReceiptMarker,
+                PaperSize = "Thermal80", Orientation = "Portrait", FontSize = 11,
+                AccentColor = "#0078D7", ShowClinicLogo = false, IsActive = true, IsDefault = true
+            });
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         // انواعِ دارای پیش‌فرضِ زنده در دیتابیس — قالب تازهٔ همان نوع نباید
         // دوباره پرچم پیش‌فرض بگیرد (ایندکس یکتا اجازه نمی‌دهد).
         // نکته: Cast<int>() روی enum در زمان اجرا InvalidCastException می‌دهد (CA2021)

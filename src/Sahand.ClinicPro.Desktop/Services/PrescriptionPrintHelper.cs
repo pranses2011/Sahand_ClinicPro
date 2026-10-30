@@ -600,8 +600,9 @@ public static class PrescriptionPrintHelper
             Cursor = System.Windows.Input.Cursors.Hand,
             FontFamily = PrintFontFamily
         };
-        // رویداد کلیک چاپ —.paginator استاندارد سند به پرینتر فرستاده می‌شود؛
-        // اگر کاربر پرینتر را لغو کند یا پرینتری نصب نباشد، بی‌صدا بازمی‌گردد
+        // پنجره پس از ساخت نوار ابزار تخصیص می‌یابد؛ فقط ارسال موفق می‌تواند
+        // طبق تنظیم کاربر آن را ببندد، نه انصراف از دیالوگ چاپ.
+        Window? window = null;
         printBtn.Click += (_, _) =>
         {
             try
@@ -613,14 +614,20 @@ public static class PrescriptionPrintHelper
                 {
                     var queue = new System.Printing.LocalPrintServer().GetPrintQueues()
                         .FirstOrDefault(q => q.FullName == jobPrinter);
-                    if (queue is not null) dlg.PrintQueue = queue;
+                    if (queue is null)
+                    {
+                        Views.AppDialog.Error("چاپ نسخه", $"چاپگر انتخاب‌شده «{jobPrinter}» در دسترس نیست؛ تنظیمات چاپگر را بررسی کنید.");
+                        return;
+                    }
+                    dlg.PrintQueue = queue;
                 }
-                if (dlg.ShowDialog() == true)
+                // پیش‌فرض تعداد نسخه از تنظیم سند می‌آید؛ کاربر همچنان می‌تواند
+                // در دیالوگ آن را تغییر دهد و درایور باید پشتیبانی کند.
+                dlg.PrintTicket.CopyCount = PrintJobSettings.CopiesFor("Prescription");
+                if (dlg.ShowDialog() == true && document is IDocumentPaginatorSource src)
                 {
-                    // سند را مستقیم به پرینتر انتخابی ارسال می‌کنیم —
-                    // IDocumentPaginatorSource صفحه‌بندی استاندارد WPF را می‌سازد
-                    if (document is IDocumentPaginatorSource src)
-                        dlg.PrintDocument(src.DocumentPaginator, title);
+                    dlg.PrintDocument(src.DocumentPaginator, title);
+                    if (PrintFlow.ClosePreviewAfterPrint) window?.Close();
                 }
             }
             catch (Exception ex)
@@ -822,7 +829,7 @@ public static class PrescriptionPrintHelper
         grid.Children.Add(toolbarBorder);
         grid.Children.Add(previewScroller);
 
-        var window = new Window
+        window = new Window
         {
             Title = title,
             Content = grid,
@@ -844,14 +851,14 @@ public static class PrescriptionPrintHelper
             viewer.Document = null;
             viewer.Document = doc;
         };
-        closeBtn.Click += (_, _) => window.Close();
+        closeBtn.Click += (_, _) => window!.Close();
         // چرخه بیست‌وچهارم (گزارش هفدهم مالک): «کلید کنسل یا ESC برای بستن
         // کادرها» — کلید Escape پنجرهٔ پیش‌نمایش چاپ را هم می‌بندد
         window.PreviewKeyDown += (_, ke) =>
         {
             if (ke.Key == System.Windows.Input.Key.Escape)
             {
-                window.Close();
+                window!.Close();
                 ke.Handled = true;
             }
         };

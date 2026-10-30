@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sahand.ClinicPro.Desktop.Services;
+using Sahand.ClinicPro.Domain.Entities.Reporting;
 
 namespace Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -10,6 +11,9 @@ public partial class PrintTemplateRow : ObservableObject
 {
     /// <summary>شناسه — صفر یعنی قالب جدید</summary>
     public long Id { get; set; }
+
+    /// <summary>جزئیات قالب از سرور دریافت شده‌اند.</summary>
+    public bool IsLoaded { get; set; }
 
     /// <summary>کلید نوع — Invoice و…</summary>
     public string Key { get; set; } = "Invoice";
@@ -32,9 +36,27 @@ public partial class PrintTemplateRow : ObservableObject
     [ObservableProperty]
     private string _body = string.Empty;
 
+    /// <summary>قبض اصلی یک سند داخلی است و بدنه HTML قابل ویرایش ندارد.</summary>
+    public bool IsOriginalReceipt => Key == "ReceptionReceipt" && Body == BuiltInPrintTemplates.ReceptionReceiptMarker;
+    /// <summary>آیا ویرایشگر HTML و تنظیمات ظاهری قابل استفاده است؟</summary>
+    public bool IsHtmlTemplate => !IsOriginalReceipt;
+    partial void OnBodyChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsOriginalReceipt));
+        OnPropertyChanged(nameof(IsHtmlTemplate));
+    }
+
     /// <summary>اندازه کاغذ A4/A5/A6</summary>
     [ObservableProperty]
     private string _paperSize = "A5";
+
+    /// <summary>جهت ذخیره‌شده کاغذ</summary>
+    [ObservableProperty]
+    private string _orientation = "Portrait";
+
+    /// <summary>خانواده فونت ذخیره‌شده</summary>
+    [ObservableProperty]
+    private string? _fontFamily;
 
     /// <summary>رنگ تأکیدی هگز</summary>
     [ObservableProperty]
@@ -108,6 +130,8 @@ public partial class SurveyRow : ObservableObject
 
     /// <summary>متن خام JSON سوالات — برای بارگذاری در طراح ویرایش (چرخهٔ ۲۸)</summary>
     public string? QuestionsJson { get; init; }
+    /// <summary>نسخه فرم برای جلوگیری از بازنویسی همزمان.</summary>
+    public string? EditVersion { get; init; }
 }
 
 /// <summary>
@@ -192,8 +216,9 @@ public partial class ComplementaryViewModel : ViewModelBase
         new[] { new TemplateTypeOption("", "همه موجودیت‌ها") }.Concat(TemplateTypes).ToArray();
 
     /// <summary>بازسازی فهرست پالایه‌شده — پس از بارگذاری یا تغییر پالایه</summary>
-    private void ApplyTemplateFilter()
+    private void ApplyTemplateFilter(PrintTemplateRow? preferred = null)
     {
+        var previous = preferred ?? SelectedTemplate;
         // اندیسِ امن — اگر پالایه بیرون از بازه شد (مثلاً پس از حذف نوعی) به «همه» برمی‌گردد
         var idx = TemplateFilterIndex;
         if (idx < 0 || idx >= TemplateFilterOptions.Length) idx = 0;
@@ -207,9 +232,10 @@ public partial class ComplementaryViewModel : ViewModelBase
                 VisibleTemplates.Add(t);
         }
 
-        // اگر قالب انتخابی فعلی در فهرست پالایه‌شده نیست، اولین قالب فهرست انتخاب می‌شود
-        if (SelectedTemplate is null || (key.Length > 0 && SelectedTemplate.Key != key))
-            SelectedTemplate = VisibleTemplates.Count > 0 ? VisibleTemplates[0] : null;
+        // پاک شدن مجموعه در ListBox ممکن است انتخاب را موقتاً null کند؛ پس از
+        // پر کردن مجموعه، انتخاب پیشین را فقط اگر واقعاً در فهرست است بازگردان.
+        SelectedTemplate = previous is not null && VisibleTemplates.Contains(previous)
+            ? previous : VisibleTemplates.FirstOrDefault();
     }
 
     /// <summary>پالایه عوض شد — فهرست دوباره پالایه می‌شود (بدون رفت‌وبرگشت به سرور)</summary>
@@ -218,6 +244,20 @@ public partial class ComplementaryViewModel : ViewModelBase
     /// <summary>قالب انتخابی</summary>
     [ObservableProperty]
     private PrintTemplateRow? _selectedTemplate;
+
+    /// <summary>درخواست نمایش سند داخلی توسط نما.</summary>
+    public event Action? OriginalReceiptPreviewRequested;
+
+    /// <summary>بارگذاری جزئیات قالب انتخابی هنوز کامل نشده است.</summary>
+    [ObservableProperty]
+    private bool _isTemplateLoading;
+
+    /// <summary>آماده بودن ویرایشگر برای جلوگیری از تغییر هنگام دریافت جزئیات.</summary>
+    [ObservableProperty]
+    private bool _isTemplateSaving;
+    public bool IsTemplateReady => !IsTemplateLoading && !IsTemplateSaving;
+    partial void OnIsTemplateLoadingChanged(bool value) => OnPropertyChanged(nameof(IsTemplateReady));
+    partial void OnIsTemplateSavingChanged(bool value) => OnPropertyChanged(nameof(IsTemplateReady));
 
     /// <summary>پیش‌نمایش HTML رندرشده</summary>
     [ObservableProperty]
@@ -261,6 +301,11 @@ public partial class ComplementaryViewModel : ViewModelBase
 
     /// <summary>شناسهٔ نظرسنجی در حال ویرایش در طراح</summary>
     private long _designingSurveyId;
+    private string? _designingSurveyVersion;
+    private string? _originalDesignerQuestions;
+    private string? _initialDesignerRepresentation;
+    private string? DesignerRepresentation() => DesignerQuestions.Count == 0 ? null :
+        "[" + string.Join(",", DesignerQuestions.Select(q => q.ToJson())) + "]";
 
     /// <summary>عنوان در طراح سوالات</summary>
     [ObservableProperty]
@@ -339,15 +384,31 @@ public partial class ComplementaryViewModel : ViewModelBase
 
     /* ─── قالب‌های چاپ سفارشی — چرخه ۱۳ ─── */
 
-    /// <summary>بارگذاری فهرست قالب‌ها از سرور</summary>
+    private long _templateLoadVersion;
+
+    /// <summary>بارگذاری فهرست قالب‌ها از سرور بدون حذف تغییرات ذخیره‌نشده.</summary>
     [RelayCommand]
     public async Task LoadTemplatesAsync()
     {
+        if (PrintTemplates.Any(t => t.IsDirty))
+        {
+            _snackbar.Warning("برای بارگذاری دوباره، ابتدا همه قالب‌های تغییرکرده را ذخیره کنید.");
+            return;
+        }
+        var version = ++_templateLoadVersion;
         IsBusy = true;
         var response = await _api.GetAsync<TemplatesEnvelope>("print-templates");
         IsBusy = false;
+        if (version != _templateLoadVersion) return;
+        if (PrintTemplates.Any(t => t.IsDirty))
+        {
+            _snackbar.Warning("فهرست تازه اعمال نشد؛ قالبی هنگام دریافت تغییر کرده است.");
+            return;
+        }
+        if (response?.Data is null) { _snackbar.Error(_api.LastError ?? "بارگذاری قالب‌ها ناموفق بود"); return; }
+        var selectedId = SelectedTemplate?.Id;
         PrintTemplates.Clear();
-        foreach (var t in response?.Data ?? new List<TemplateApi>())
+        foreach (var t in response.Data)
         {
             var row = new PrintTemplateRow
             {
@@ -362,21 +423,26 @@ public partial class ComplementaryViewModel : ViewModelBase
             };
             row.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+                if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
             };
             PrintTemplates.Add(row);
         }
         // چرخهٔ سی‌وپنجم: پس از بارگذاری کامل، پالایهٔ موجودیت دوباره اعمال می‌شود
         // تا فهرست طراح همیشه فقط قالب‌های موجودیتِ منتخب را نشان دهد
-        ApplyTemplateFilter();
-        if (SelectedTemplate is null && PrintTemplates.Count > 0)
-            SelectedTemplate = PrintTemplates[0];
+        ApplyTemplateFilter(PrintTemplates.FirstOrDefault(t => t.Id == selectedId));
     }
 
     /// <summary>بارگذاری کامل بدنه و تنظیمات قالب انتخابی</summary>
     partial void OnSelectedTemplateChanged(PrintTemplateRow? value)
     {
-        if (value is null) return;
+        PreviewHtml = null;
+        IsTemplateLoading = value is { Id: > 0, IsLoaded: false };
+        if (value is null) { ActiveVariables.Clear(); return; }
+        if (value.IsLoaded) { RefreshPalette(value.Key); return; }
         _ = LoadTemplateBodyAsync(value);
     }
 
@@ -385,18 +451,29 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         if (template.Id == 0) { RefreshPalette(template.Key); return; }
         var response = await _api.GetAsync<TemplateDetailEnvelope>($"print-templates/{template.Id}");
+        if (!ReferenceEquals(SelectedTemplate, template)) return;
+        IsTemplateLoading = false;
         var d = response?.Data;
-        if (d is null) return;
+        if (d is null) { _snackbar.Error(_api.LastError ?? "بارگذاری جزئیات قالب ناموفق بود"); IsTemplateLoading = true; return; }
+        if (template.IsDirty) { _snackbar.Error("قالب هنگام بارگذاری تغییر کرد؛ دوباره انتخاب کنید"); IsTemplateLoading = true; return; }
+        ApplyTemplateDetails(template, d);
+    }
+
+    private void ApplyTemplateDetails(PrintTemplateRow template, TemplateDetailApi d)
+    {
         template.Title = d.TemplateName;
         template.Description = d.Description;
         template.Body = d.HtmlBody;
         template.PaperSize = d.PaperSize;
+        template.Orientation = d.Orientation;
+        template.FontFamily = d.FontFamily;
         template.AccentColor = d.AccentColor ?? "#16355E";
         template.FontSize = d.FontSize;
         template.ShowLogo = d.ShowClinicLogo;
         template.IsActive = d.IsActive;
         template.IsDefault = d.IsDefault;
         template.IsDirty = false;
+        template.IsLoaded = true;
         RefreshPalette(template.Key);
     }
 
@@ -419,8 +496,12 @@ public partial class ComplementaryViewModel : ViewModelBase
                 new TemplateVariable("مالی", "➕", "جمع جزء", "subtotal"),
                 new TemplateVariable("مالی", "🏷️", "تخفیف", "discount"),
                 new TemplateVariable("مالی", "🛡️", "سهم بیمه", "insurance_share"),
+                new TemplateVariable("مالی", "💳", "پرداخت‌شده", "paid"),
+                new TemplateVariable("مالی", "📌", "مانده", "remaining"),
+                new TemplateVariable("مالی", "✅", "وضعیت پرداخت", "payment_status"),
+                new TemplateVariable("مالی", "🧮", "مالیات", "tax"),
                 new TemplateVariable("مالی", "👛", "سهم بیمار", "patient_share"),
-                new TemplateVariable("مالی", "💰", "قابل پرداخت", "total"),
+                new TemplateVariable("مالی", "💰", "جمع قبل از سهم بیمه", "total"),
                 new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
                 new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
             },
@@ -496,6 +577,7 @@ public partial class ComplementaryViewModel : ViewModelBase
                 new TemplateVariable("مالی", "📄", "شماره فاکتور", "invoice_number"),
                 new TemplateVariable("درمانگاه", "🏥", "نام درمانگاه", "clinic_name"),
                 new TemplateVariable("درمانگاه", "📞", "تلفن درمانگاه", "clinic_phone"),
+                new TemplateVariable("درمانگاه", "📍", "نشانی درمانگاه", "clinic_address"),
                 new TemplateVariable("درمانگاه", "🖨️", "تاریخ چاپ", "print_date")
             },
             ["MedicalCertificate"] = new[]
@@ -570,7 +652,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     private void AddPresetTemplate(PresetTemplate? preset)
     {
         if (preset is null) return;
-        var fa = TemplateTypes.FirstOrDefault(t => t.Key == preset.TypeKey).Fa ?? preset.TypeKey;
+        var fa = TemplateTypes.FirstOrDefault(t => t.Key == preset.TypeKey)?.Fa ?? preset.TypeKey;
         var row = new PrintTemplateRow
         {
             Id = 0,
@@ -586,10 +668,16 @@ public partial class ComplementaryViewModel : ViewModelBase
         };
         row.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
         };
         PrintTemplates.Add(row);
-        SelectedTemplate = row;
+        var filterIdx = Array.FindIndex(TemplateFilterOptions, o => o.Key == row.Key);
+        if (filterIdx >= 0 && TemplateFilterIndex != filterIdx) TemplateFilterIndex = filterIdx;
+        ApplyTemplateFilter(row);
         _snackbar.Info($"قالب آمادهٔ «{preset.Title}» ساخته شد — نام بدهید و ذخیره کنید");
     }
 
@@ -613,7 +701,11 @@ public partial class ComplementaryViewModel : ViewModelBase
         };
         row.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty)) row.IsDirty = true;
+            if (e.PropertyName != nameof(PrintTemplateRow.IsDirty))
+                {
+                    row.IsDirty = true;
+                    if (ReferenceEquals(SelectedTemplate, row)) PreviewHtml = null;
+                }
         };
         PrintTemplates.Add(row);
         // چرخهٔ سی‌وپنجم: اگر فیلتر فعلی با نوع قالب تازه یکی نیست، فیلتر به همان
@@ -634,37 +726,91 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task SaveTemplateAsync()
     {
         if (SelectedTemplate is null) { _snackbar.Info("ابتدا یک قالب انتخاب کنید"); return; }
+        if (!IsTemplateReady) { _snackbar.Error("ابتدا منتظر پایان عملیات قالب بمانید"); return; }
         if (SelectedTemplate.Title.Trim().Length < 3) { _snackbar.Error("نام قالب حداقل ۳ نویسه باشد"); return; }
         if (SelectedTemplate.Body.Trim().Length < 10) { _snackbar.Error("بدنه قالب خالی است"); return; }
 
+        var template = SelectedTemplate;
         IsBusy = true;
         var payload = new
         {
-            templateName = SelectedTemplate.Title,
-            type = SelectedTemplate.Key,
-            description = SelectedTemplate.Description,
-            htmlBody = SelectedTemplate.Body,
-            paperSize = SelectedTemplate.PaperSize,
-            orientation = "Portrait",
-            fontSize = SelectedTemplate.FontSize,
-            fontFamily = (string?)null,
-            showClinicLogo = SelectedTemplate.ShowLogo,
-            accentColor = SelectedTemplate.AccentColor,
-            isActive = SelectedTemplate.IsActive,
-            isDefault = SelectedTemplate.IsDefault
+            templateName = template.Title,
+            type = template.Key,
+            description = template.Description,
+            htmlBody = template.Body,
+            paperSize = template.PaperSize,
+            orientation = template.Orientation,
+            fontSize = template.FontSize,
+            fontFamily = template.FontFamily,
+            showClinicLogo = template.ShowLogo,
+            accentColor = template.AccentColor,
+            isActive = template.IsActive,
+            isDefault = template.IsDefault
         };
-        var ok = SelectedTemplate.Id == 0
-            ? await _api.PostAsync("print-templates", payload)
-            : await _api.PutAsync($"print-templates/{SelectedTemplate.Id}", payload);
-        IsBusy = false;
+        bool ok;
+        IsTemplateSaving = true;
+        try
+        {
+            if (template.Id == 0)
+            {
+                var created = await _api.PostAsync<TemplateDetailEnvelope>("print-templates", payload);
+                ok = created?.IsSuccess == true && created.Data is { Id: > 0 };
+                if (ok) template.Id = created!.Data!.Id;
+            }
+            else ok = await _api.PutAsync($"print-templates/{template.Id}", payload);
+        }
+        finally { IsTemplateSaving = false; IsBusy = false; }
 
         if (ok)
         {
-            _snackbar.Success($"قالب «{SelectedTemplate.Title}» ذخیره شد");
-            SelectedTemplate.IsDirty = false;
+            // کاربر می‌تواند هنگام درخواست ویرایش یا انتخاب را عوض کند؛
+            // فقط همان عکس ارسالی ذخیره شده و تغییرات بعدی نباید حذف شوند.
+            template.IsLoaded = true;
+            var unchanged = template.Title == payload.templateName && template.Key == payload.type
+                && template.Description == payload.description && template.Body == payload.htmlBody
+                && template.PaperSize == payload.paperSize && template.Orientation == payload.orientation
+                && template.FontFamily == payload.fontFamily && template.FontSize == payload.fontSize
+                && template.ShowLogo == payload.showClinicLogo && template.AccentColor == payload.accentColor
+                && template.IsActive == payload.isActive && template.IsDefault == payload.isDefault;
+            if (!unchanged)
+            {
+                template.IsDirty = true;
+                _snackbar.Warning("نسخهٔ قبلی ذخیره شد؛ تغییرات جدید هنوز ذخیره نشده‌اند.");
+                return;
+            }
+            _snackbar.Success($"قالب «{template.Title}» ذخیره شد");
+            template.IsDirty = false;
             await LoadTemplatesAsync();
         }
         else _snackbar.Error(_api.LastError ?? "ذخیره قالب ناموفق بود");
+    }
+
+    /// <summary>انصراف تأییدشده از تغییرات قالب انتخابی، بدون تغییر ذخیرهٔ سرور.</summary>
+    [RelayCommand]
+    private async Task DiscardTemplateChangesAsync()
+    {
+        var template = SelectedTemplate;
+        if (!IsTemplateReady) { _snackbar.Error("ابتدا منتظر پایان عملیات قالب بمانید"); return; }
+        if (template is null || !template.IsDirty) { _snackbar.Info("تغییری برای انصراف وجود ندارد"); return; }
+        if (Views.AppDialog.Confirm("انصراف از تغییرات قالب",
+                "تغییرات ذخیره‌نشدهٔ این قالب حذف شوند؟", Views.AppDialogIcon.Warning) != true) return;
+        if (template.Id == 0)
+        {
+            PrintTemplates.Remove(template);
+            ApplyTemplateFilter();
+            return;
+        }
+        IsTemplateLoading = true;
+        var response = await _api.GetAsync<TemplateDetailEnvelope>($"print-templates/{template.Id}");
+        if (!ReferenceEquals(SelectedTemplate, template)) return;
+        IsTemplateLoading = false;
+        if (response?.Data is not { } detail)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت نسخه ذخیره‌شده ناموفق بود؛ تغییرات حفظ شدند");
+            return;
+        }
+        ApplyTemplateDetails(template, detail);
+        _snackbar.Info("نسخه ذخیره‌شده قالب بازگردانده شد");
     }
 
     /// <summary>کپی قالب انتخابی به‌عنوان نسخه جدید</summary>
@@ -672,6 +818,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task DuplicateTemplateAsync()
     {
         if (SelectedTemplate is null || SelectedTemplate.Id == 0) { _snackbar.Info("ابتدا یک قالب ذخیره‌شده انتخاب کنید"); return; }
+        if (PrintTemplates.Any(t => t.IsDirty)) { _snackbar.Warning("ابتدا تغییرات همه قالب‌ها را ذخیره کنید."); return; }
         IsBusy = true;
         var ok = await _api.PostAsync($"print-templates/{SelectedTemplate.Id}/duplicate",
             new { newName = $"{SelectedTemplate.Title} (کپی)" });
@@ -685,6 +832,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task SetDefaultTemplateAsync()
     {
         if (SelectedTemplate is null || SelectedTemplate.Id == 0) { _snackbar.Info("ابتدا یک قالب ذخیره‌شده انتخاب کنید"); return; }
+        if (PrintTemplates.Any(t => t.IsDirty)) { _snackbar.Warning("ابتدا تغییرات همه قالب‌ها را ذخیره کنید."); return; }
         IsBusy = true;
         var ok = await _api.PostAsync($"print-templates/{SelectedTemplate.Id}/set-default", new { });
         IsBusy = false;
@@ -698,6 +846,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         if (SelectedTemplate is null || SelectedTemplate.Id == 0) { _snackbar.Info("ابتدا یک قالب ذخیره‌شده انتخاب کنید"); return; }
         if (SelectedTemplate.IsDefault) { _snackbar.Error("قالب پیش‌فرض قابل حذف نیست — ابتدا قالب دیگر را پیش‌فرض کنید"); return; }
+        if (PrintTemplates.Any(t => t.IsDirty)) { _snackbar.Warning("ابتدا تغییرات همه قالب‌ها را ذخیره کنید."); return; }
         IsBusy = true;
         var ok = await _api.DeleteAsync($"print-templates/{SelectedTemplate.Id}");
         IsBusy = false;
@@ -710,14 +859,31 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task PreviewTemplateAsync()
     {
         if (SelectedTemplate is null) { _snackbar.Info("ابتدا یک قالب انتخاب کنید"); return; }
-        // برای قالب ذخیره‌نشده ابتدا ذخیره می‌کنیم تا پیش‌نمایش سروری دقیق باشد
-        if (SelectedTemplate.IsDirty || SelectedTemplate.Id == 0)
-            await SaveTemplateAsync();
-        if (SelectedTemplate.Id == 0) return;
-
+        if (IsTemplateLoading) { _snackbar.Error("ابتدا منتظر بارگذاری جزئیات قالب بمانید"); return; }
+        var template = SelectedTemplate;
+        PreviewHtml = null;
+        if (template.IsDirty || template.Id == 0)
+        {
+            if (!FreeTemplateDesign.HasMarker(template.Body))
+            { _snackbar.Info("برای پیش‌نمایش این نوع قالب ابتدا تغییرات را ذخیره کنید"); return; }
+            try
+            {
+                PreviewHtml = FreeTemplatePreview.Create(template.Body, template.Key, template.PaperSize, template.AccentColor,
+                    template.FontSize, template.ShowLogo, ActiveVariables.Select(v => v.Key).ToArray(), template.Orientation, template.FontFamily);
+                _snackbar.Info("پیش‌نمایش محلی با داده نمونه است؛ قالب هنوز ذخیره نشده است.");
+            }
+            catch (ArgumentException ex) { _snackbar.Error("پیش‌نمایش پیش‌نویس ممکن نیست: " + ex.Message); }
+            return;
+        }
+        if (template.IsOriginalReceipt)
+        {
+            OriginalReceiptPreviewRequested?.Invoke();
+            return;
+        }
         IsBusy = true;
-        var response = await _api.GetAsync<PreviewEnvelope>($"print-templates/{SelectedTemplate.Id}/preview");
+        var response = await _api.GetAsync<PreviewEnvelope>($"print-templates/{template.Id}/preview");
         IsBusy = false;
+        if (!ReferenceEquals(SelectedTemplate, template) || template.IsDirty) return;
         if (response?.Data?.Html is { Length: > 0 } html)
         {
             PreviewHtml = html;
@@ -730,7 +896,12 @@ public partial class ComplementaryViewModel : ViewModelBase
     [RelayCommand]
     private void InsertVariable(TemplateVariable? variable)
     {
-        if (SelectedTemplate is null || variable is null) return;
+        if (SelectedTemplate is null || variable is null || SelectedTemplate.IsOriginalReceipt || IsTemplateLoading) return;
+        if (VisualTemplateDesign.HasVisualMarker(SelectedTemplate.Body) || FreeTemplateDesign.HasMarker(SelectedTemplate.Body))
+        {
+            _snackbar.Info("برای افزودن متغیر به قالب بصری، طراح بصری را باز کنید تا ساختار قالب حفظ شود.");
+            return;
+        }
         SelectedTemplate.Body += $"{{{{{variable.Key}}}}}";
         SelectedTemplate.IsDirty = true;
     }
@@ -745,8 +916,10 @@ public partial class ComplementaryViewModel : ViewModelBase
         try
         {
             var response = await _api.GetAsync<SurveysResponse>("surveys");
+            if (response?.Data is null)
+            { _snackbar.Error(_api.LastError ?? "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."); return; }
             Surveys = new ObservableCollection<SurveyRow>(
-                (response?.Data ?? new List<SurveyDto>()).Select(s => new SurveyRow
+                response.Data.Select(s => new SurveyRow
                 {
                     Id = s.Id,
                     Title = s.Title,
@@ -754,9 +927,12 @@ public partial class ComplementaryViewModel : ViewModelBase
                     IsActive = s.IsActive,
                     ResponseCount = s.ResponseCount,
                     AverageRating = s.AverageRating,
-                    QuestionsJson = s.Questions
+                    QuestionsJson = s.Questions,
+                    EditVersion = s.EditVersion
                 }));
         }
+        catch (Exception)
+        { _snackbar.Error("دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."); }
         finally
         {
             IsBusy = false;
@@ -798,12 +974,18 @@ public partial class ComplementaryViewModel : ViewModelBase
     private async Task ToggleSurveyAsync(SurveyRow? row)
     {
         row ??= SelectedSurvey;
-        if (row is null) return;
+        if (row is null || IsBusy) return;
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
         IsBusy = true;
-        var ok = await _api.PostAsync($"surveys/{row.Id}/toggle-active", null);
-        IsBusy = false;
-        if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
-        else _snackbar.Error(_api.LastError ?? "عملیات ناموفق بود");
+        try
+        {
+            var ok = await _api.PostAsync($"surveys/{row.Id}/toggle-active", new { editVersion = row.EditVersion, desiredActive = !row.IsActive });
+            if (ok) { _snackbar.Success("وضعیت نظرسنجی تغییر کرد"); await LoadSurveysAsync(); }
+            else _snackbar.Error((_api.LastError ?? "عملیات ناموفق بود") + "؛ پیش از تکرار وضعیت را بررسی کنید.");
+        }
+        catch (Exception) { _snackbar.Error("پاسخ تغییر وضعیت دریافت نشد؛ پیش از تکرار فهرست را تازه‌سازی کنید."); }
+        finally { IsBusy = false; }
     }
 
     /// <summary>
@@ -817,16 +999,18 @@ public partial class ComplementaryViewModel : ViewModelBase
         row ??= SelectedSurvey;
         if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
 
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی در فهرست موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
+        if (!SurveyQuestionItem.TryParseList(row.QuestionsJson, out var existing))
+        { _snackbar.Error("ساختار سؤال‌ها پشتیبانی نمی‌شود؛ ویرایش برای حفاظت داده باز نشد."); return; }
         _designingSurveyId = row.Id;
+        _designingSurveyVersion = row.EditVersion;
+        _originalDesignerQuestions = row.QuestionsJson;
         DesignerTitle = row.Title;
         DesignerDescription = row.Description;
         DesignerQuestions.Clear();
-        var existing = SurveyQuestionItem.ParseList(row.QuestionsJson);
-        if (existing.Count > 0)
-            foreach (var q in existing)
-                DesignerQuestions.Add(q);
-        else
-            DesignerQuestions.Add(new SurveyQuestionItem { Text = "میزان رضایت کلی شما از خدمات درمانگاه؟" });
+        foreach (var q in existing) DesignerQuestions.Add(q);
+        _initialDesignerRepresentation = DesignerRepresentation();
         IsSurveyDesignerOpen = true;
     }
 
@@ -844,26 +1028,38 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(DesignerTitle) || DesignerTitle.Trim().Length < 3)
         { _snackbar.Error("عنوان نظرسنجی حداقل ۳ کاراکتر است"); return; }
-        if (DesignerQuestions.Count == 0)
-        { _snackbar.Error("حداقل یک سوال اضافه کنید"); return; }
-
-        var questionsJson = "[" + string.Join(",", DesignerQuestions.Select(q => q.ToJson())) + "]";
+        if (DesignerQuestions.Count > 100 || DesignerQuestions.Any(q => string.IsNullOrWhiteSpace(q.Text) || q.Text.Length > 2000))
+        { _snackbar.Error("متن سؤال‌ها را وارد کنید؛ حداکثر ۱۰۰ سؤال و ۲۰۰۰ نویسه برای هر سؤال مجاز است."); return; }
+        if (DesignerQuestions.Any(q => q.TypeKey == "choice" && q.Choices.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is var choices &&
+            (choices.Length < 2 || choices.Length > 100 || choices.Any(c => c.Length > 2000))))
+        { _snackbar.Error("برای سؤال چندگزینه‌ای بین ۲ تا ۱۰۰ گزینه معتبر وارد کنید."); return; }
+        var representation = DesignerRepresentation();
+        var questionsJson = representation == _initialDesignerRepresentation ? _originalDesignerQuestions : representation;
+        if (questionsJson?.Length > 200_000)
+        { _snackbar.Error("حجم سؤال‌ها بیش از حد مجاز است."); return; }
+        if (IsBusy) return;
         IsBusy = true;
-        var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
+        try
         {
-            title = DesignerTitle.Trim(),
-            description = DesignerDescription,
-            questions = questionsJson,
-            isActive = (bool?)null
-        });
-        IsBusy = false;
-        if (ok)
-        {
-            _snackbar.Success("نظرسنجی با سوالات جدید به‌روزرسانی شد");
-            IsSurveyDesignerOpen = false;
-            await LoadSurveysAsync();
+            var ok = await _api.PutAsync($"surveys/{_designingSurveyId}", new
+            {
+                title = DesignerTitle.Trim(),
+                description = DesignerDescription,
+                questions = questionsJson,
+                isActive = (bool?)null,
+                editVersion = _designingSurveyVersion
+            });
+            if (ok)
+            {
+                _snackbar.Success("نظرسنجی با سوالات جدید به‌روزرسانی شد");
+                IsSurveyDesignerOpen = false;
+                await LoadSurveysAsync();
+            }
+            else _snackbar.Error((_api.LastError ?? "ذخیرهٔ نظرسنجی ناموفق بود") + "؛ پیش از تکرار فهرست را بررسی کنید.");
         }
-        else _snackbar.Error(_api.LastError ?? "ذخیرهٔ نظرسنجی ناموفق بود");
+        catch (Exception)
+        { _snackbar.Error("پاسخ ذخیره دریافت نشد؛ پیش از تلاش مجدد فهرست را بررسی کنید."); }
+        finally { IsBusy = false; }
     }
 
     /// <summary>بستن طراح بدون ذخیره</summary>
@@ -878,15 +1074,18 @@ public partial class ComplementaryViewModel : ViewModelBase
     {
         row ??= SelectedSurvey;
         if (row is null) { _snackbar.Error("ابتدا یک نظرسنجی از جدول انتخاب کنید"); return; }
+        if (IsBusy) return;
+        if (string.IsNullOrWhiteSpace(row.EditVersion))
+        { _snackbar.Error("نسخهٔ نظرسنجی موجود نیست؛ سرور و برنامه را به‌روز و فهرست را تازه‌سازی کنید."); return; }
 
         var confirmed = Views.AppDialog.Confirm(
             "حذف نظرسنجی",
-            $"نظرسنجی «{row.Title}» حذف شود؟\nپاسخ‌های ثبت‌شده در دیتابیس حفظ می‌شوند.",
+            $"نظرسنجی «{row.Title}» حذف شود؟\nپاسخ‌ها در دیتابیس باقی می‌مانند، اما این نظرسنجی و نتایج آن از برنامه خارج می‌شوند و بازیابی از این صفحه ممکن نیست.",
             Views.AppDialogIcon.Warning);
         if (confirmed != true) return;
 
         IsBusy = true;
-        var ok = await _api.DeleteAsync($"surveys/{row.Id}");
+        var ok = await _api.DeleteAsync($"surveys/{row.Id}?editVersion={Uri.EscapeDataString(row.EditVersion)}");
         IsBusy = false;
         if (ok) { _snackbar.Success("نظرسنجی حذف شد"); await LoadSurveysAsync(); }
         else _snackbar.Error(_api.LastError ?? "حذف ناموفق بود");
@@ -1019,6 +1218,8 @@ public partial class ComplementaryViewModel : ViewModelBase
         public string? Description { get; set; }
         public string HtmlBody { get; set; } = "";
         public string PaperSize { get; set; } = "A5";
+        public string Orientation { get; set; } = "Portrait";
+        public string? FontFamily { get; set; }
         public int FontSize { get; set; } = 13;
         public bool ShowClinicLogo { get; set; } = true;
         public string? AccentColor { get; set; }
@@ -1056,6 +1257,7 @@ public partial class ComplementaryViewModel : ViewModelBase
         public double AverageRating { get; set; }
         /// <summary>سوالات JSON — چرخهٔ ۲۸: از GET / فهرست برای طراح</summary>
         public string? Questions { get; set; }
+        public string? EditVersion { get; set; }
     }
 
     /// <summary>پاسخ خلاصهٔ نتایج نظرسنجی — چرخهٔ ۲۸ (دیالوگ نتایج)</summary>

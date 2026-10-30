@@ -73,7 +73,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 ; خروجی publish دسکتاپ — توسط BUILD-INSTALLER.bat ساخته می‌شود
 Source: "..\publish\desktop\*"; DestDir: "{app}"; Excludes: "appsettings.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantFullInstall
 ; فقط فایل‌های به‌روزشده: خروجی سبک بدون Runtime؛ runtimeconfig نصب قبلی دست نمی‌خورد
-Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json,Sahand.ClinicPro.Desktop.deps.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantUpdateOnly
+Source: "..\publish\desktop-update\*"; DestDir: "{app}"; Excludes: "appsettings.json,Sahand.ClinicPro.Desktop.runtimeconfig.json"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: WantUpdateOnly
 ; پیکربندی کلاینت فقط در نصب اول ایجاد شود تا به‌روزرسانی نشانی سرور را بازنویسی نکند
 Source: "appsettings.client.example.json"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist; DestName: "appsettings.json"
 

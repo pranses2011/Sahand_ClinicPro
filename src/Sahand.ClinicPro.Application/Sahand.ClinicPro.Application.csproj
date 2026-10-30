@@ -27,6 +27,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
       <!-- پرس‌وجوهای LINQ صفحه‌بندی در Handlerها -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <!-- محافظت از قطعات جدول ارسالی به قالب چاپ -->
+    <PackageReference Include="HtmlSanitizer" />
     <!-- تولید فایل اکسل گزارش‌ها — چرخه دهم (MIT رایگان) -->
     <PackageReference Include="ClosedXML" />
   </ItemGroup>

@@ -21,8 +21,28 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 /// </summary>
 public class SurveyApiFactory : InMemoryApiFactory
 {
+    private readonly Lazy<Task<string>> _adminToken;
+
+    /// <summary>یک نشست واقعی برای مجموعهٔ تست، مانند استفادهٔ معمول کلاینت.</summary>
+    public SurveyApiFactory() => _adminToken = new Lazy<Task<string>>(AuthenticateAsync);
+
     /// <summary>نام دیتابیس درون‌حافظه‌ای</summary>
     protected override string DatabaseName => "SurveyFlowDb";
+
+    /// <summary>توکن ورود مشترک؛ سیاست محدودسازی واقعی API تغییر نمی‌کند.</summary>
+    public Task<string> AdminTokenAsync() => _adminToken.Value;
+
+    private async Task<string> AuthenticateAsync()
+    {
+        using var client = CreateClient();
+        using var login = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { usernameOrEmail = "admin", password = "Admin@123" });
+        login.StatusCode.Should().Be(HttpStatusCode.OK,
+            because: $"بذر ادمین باید امکان ورود دهد — بدنه: {await login.Content.ReadAsStringAsync()}");
+        using var packet = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        return packet.RootElement.GetProperty("data").GetProperty("accessToken").GetString()
+            ?? throw new InvalidOperationException("توکن ادمین در پاسخ ورود وجود ندارد");
+    }
 }
 
 /// <summary>مجموعه تست جریان نظرسنجی</summary>
@@ -40,6 +60,7 @@ public class SurveyCollectionFixture : ICollectionFixture<SurveyApiFactory>
 public class SurveyFlowTests
 {
     private readonly SurveyApiFactory _factory;
+    private static int _seedSequence;
     private static readonly JsonSerializerOptions Json = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -90,7 +111,8 @@ public class SurveyFlowTests
             description = "نسخه دوم",
             questions = (string?)null,
             surveyType = 2,
-            isActive = false
+            isActive = false,
+            editVersion = row.EditVersion
         });
         update.StatusCode.Should().Be(HttpStatusCode.OK,
             because: "ویرایش با مجوز manage مجاز است");
@@ -123,9 +145,7 @@ public class SurveyFlowTests
         await SubmitAsync(client, surveyId, patientId, doctorA, rating: 5, comment: "برخورد عالی بود");
         await SubmitAsync(client, surveyId, patientId, doctorB, rating: 1, comment: "انتظار بیش از این را داشتم");
 
-        var doctorA2 = await SeedSecondPatientAndGetSecondDoctorAsync(client);
-        _ = doctorA2; // بیمار دوم روی همان پزشک الف در SubmitAsync جداگانه زیر می‌آید
-        await SubmitAsync(client, surveyId, patientId + 1000, doctorA, rating: 4, comment: null as string);
+        await SubmitAsync(client, surveyId, patientId, doctorA, rating: 4, comment: null as string);
 
         // ── نتایج: کل ۳ پاسخ، میانگین (5+4+1)/3 ≈ 3.33 ──
         var results = await client.GetAsync($"/api/v1/surveys/{surveyId}/results");
@@ -171,7 +191,7 @@ public class SurveyFlowTests
         var surveyId = created.Data.GetProperty("surveyId").GetInt64();
 
         // غیرفعال‌سازی با toggle
-        var toggle = await client.PostAsync($"/api/v1/surveys/{surveyId}/toggle-active", null);
+        var toggle = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/toggle-active", new { editVersion = await GetEditVersion(client, surveyId), desiredActive = false });
         toggle.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var submit = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses",
@@ -199,6 +219,24 @@ public class SurveyFlowTests
                 VisitDate = DateTime.UtcNow,
                 Status = Domain.Enums.VisitStatus.Completed
             });
+            var futurePatient = new Patient
+            {
+                MedicalRecordNo = "MRN-SURVEY-FUTURE", NationalCode = "0055500099",
+                FirstName = "آینده", LastName = "آزمایشی", Mobile = "09129990099",
+                Gender = Domain.Enums.Gender.Female, IsActive = true
+            };
+            var blankMobile = new Patient
+            {
+                MedicalRecordNo = "MRN-SURVEY-BLANK", NationalCode = "0055500088",
+                FirstName = "بدون شماره", LastName = "آزمایشی", Mobile = "   ",
+                Gender = Domain.Enums.Gender.Female, IsActive = true
+            };
+            context.Patients.AddRange(futurePatient, blankMobile);
+            await context.SaveChangesAsync();
+            context.Visits.Add(new Visit { PatientId = blankMobile.Id, DoctorId = doctorId,
+                VisitDate = DateTime.UtcNow, Status = Domain.Enums.VisitStatus.Completed });
+            context.Visits.Add(new Visit { PatientId = futurePatient.Id, DoctorId = doctorId,
+                VisitDate = DateTime.UtcNow.AddDays(3), Status = Domain.Enums.VisitStatus.Completed });
             await context.SaveChangesAsync();
         }
 
@@ -207,8 +245,12 @@ public class SurveyFlowTests
         var created = await ReadAsync<JsonElementPacket>(create);
         var surveyId = created.Data.GetProperty("surveyId").GetInt64();
 
-        var send = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
+        // بدون نشانی صریح، پیامک به دامنهٔ فرضی و بررسی‌نشده ارسال نمی‌شود.
+        var missingUrl = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
             new { baseUrl = (string?)null });
+        missingUrl.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var send = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/send-links",
+            new { baseUrl = "https://example.com" });
         send.StatusCode.Should().Be(HttpStatusCode.OK,
             because: "نظرسنجی فعال و ویزیت امروز موجود است");
         var payload = await ReadAsync<SendLinksPacket>(send);
@@ -224,8 +266,164 @@ public class SurveyFlowTests
                 .Where(q => q.Status == Domain.Enums.SmsStatus.Queued)
                 .ToListAsync();
             queued.Should().Contain(q => q.Recipient == "09129990001");
+            queued.Should().NotContain(q => q.Recipient == "09129990099");
+            queued.Should().NotContain(q => string.IsNullOrWhiteSpace(q.Recipient));
             queued.Should().Contain(q => q.Message != null && q.Message.Contains($"/s/{surveyId}"));
         }
+    }
+
+    [Fact]
+    public async Task Invalid_or_empty_responses_are_rejected_and_audit_does_not_copy_answers()
+    {
+        var client = await LoginAsync();
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "محرمانگی پاسخ" });
+        var surveyId = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { rating = 6 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { comments = new string('x', 2001) })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { comments = " " })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        const string privateComment = "PRIVATE-SURVEY-COMMENT-83BD";
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new { rating = 4, comments = privateComment })).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        (await db.SurveyResponses.AnyAsync(r => r.SurveyId == surveyId && r.Comments == privateComment)).Should().BeTrue();
+        (await db.AuditLogs.AnyAsync(a => a.NewValues != null && a.NewValues.Contains(privateComment))).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Structured_answers_are_validated_and_keep_original_question_text()
+    {
+        var client = await LoginAsync();
+        const string questions = "[{\"text\":\"کیفیت؟\",\"type\":\"rating\"},{\"text\":\"انتخاب؟\",\"type\":\"choice\",\"options\":[\"الف\",\"ب\"]},{\"text\":\"توضیح؟\",\"type\":\"text\"}]";
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "پاسخ پویا", questions, surveyType = 1 });
+        var created = await ReadAsync<JsonElementPacket>(create);
+        var surveyId = created.Data.GetProperty("surveyId").GetInt64();
+
+        var invalid = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "6", "الف", "متن" } });
+        invalid.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var ok = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "5", "ب", "پاسخ آزاد" }, rating = 4 });
+        ok.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        const string changed = "[{\"text\":\"پرسش تغییر یافته\",\"type\":\"text\"}]";
+        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{surveyId}", new { title = "پاسخ پویا", questions = changed, surveyType = 1, editVersion = await GetEditVersion(client, surveyId) });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+        var stale = await client.PostAsJsonAsync($"/api/v1/surveys/{surveyId}/responses", new
+        { questionsSnapshot = questions, answers = new[] { "5", "ب", "متن" } });
+        stale.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var results = await client.GetAsync($"/api/v1/surveys/{surveyId}/results");
+        var payload = await ReadAsync<JsonElementPacket>(results);
+        var recent = payload.Data.GetProperty("recentAnswers");
+        recent.GetArrayLength().Should().Be(1);
+        using var snapshot = JsonDocument.Parse(recent[0].GetProperty("answers").GetString()!);
+        snapshot.RootElement[0].GetProperty("text").GetString().Should().Be("کیفیت؟");
+        snapshot.RootElement[1].GetProperty("answer").GetString().Should().Be("ب");
+        snapshot.RootElement[2].GetProperty("answer").GetString().Should().Be("پاسخ آزاد");
+    }
+
+    [Fact]
+    public async Task Survey_question_definitions_are_validated_before_create_or_change()
+    {
+        var client = await LoginAsync();
+        var invalidDefinitions = new[]
+        {
+            "{invalid", "{}", "[{\"text\":\"\",\"type\":\"text\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"unknown\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"choice\",\"options\":[\"تنها\"]}]",
+            "[{\"text\":\"سؤال\",\"q\":\"دیگر\"}]",
+            "[{\"text\":\"سؤال\",\"type\":\"rating\",\"options\":[\"x\",\"y\"]}]",
+            "[" + string.Join(",", Enumerable.Repeat("{\"text\":\"سؤال\",\"type\":\"text\"}", 101)) + "]"
+        };
+        foreach (var questions in invalidDefinitions)
+            (await client.PostAsJsonAsync("/api/v1/surveys", new { title = "فرم نامعتبر", questions }))
+                .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        const string valid = "[{\"q\":\"انتخاب؟\",\"type\":\"choice\",\"options\":\"الف|ب\"}]";
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "فرم معتبر", questions = valid });
+        create.StatusCode.Should().Be(HttpStatusCode.OK);
+        var id = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        var invalidUpdate = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "نباید ذخیره شود", questions = invalidDefinitions[0] });
+        invalidUpdate.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var stored = await db.Surveys.SingleAsync(s => s.Id == id);
+        stored.Title.Should().Be("فرم معتبر");
+        stored.Questions.Should().Be(valid);
+    }
+
+    [Fact]
+    public async Task Existing_invalid_questions_can_be_preserved_unchanged_when_disabling_survey()
+    {
+        var client = await LoginAsync();
+        long id;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var legacy = new Survey { Title = "فرم قدیمی", Questions = "invalid legacy", IsActive = true };
+            db.Surveys.Add(legacy);
+            await db.SaveChangesAsync();
+            id = legacy.Id;
+        }
+        var update = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new
+        { title = "فرم قدیمی", questions = "invalid legacy", isActive = false, editVersion = await GetEditVersion(client, id) });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var verify = _factory.Services.CreateScope();
+        var saved = await verify.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(s => s.Id == id);
+        saved.Questions.Should().Be("invalid legacy");
+        saved.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Response_rejects_invalid_or_mismatched_patient_doctor_and_visit()
+    {
+        var (client, doctorA, doctorB, patientId) = await SeedDoctorsAndPatientAsync();
+        long visitId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            var visit = new Visit { PatientId = patientId, DoctorId = doctorA, VisitDate = DateTime.UtcNow };
+            db.Visits.Add(visit);
+            await db.SaveChangesAsync();
+            visitId = visit.Id;
+        }
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "ارتباط پاسخ با ویزیت" });
+        var surveyId = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        var url = $"/api/v1/surveys/{surveyId}/responses";
+        (await client.PostAsJsonAsync(url, new { patientId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { doctorId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { visitId = long.MaxValue, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { patientId, doctorId = doctorB, visitId, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PostAsJsonAsync(url, new { patientId, doctorId = doctorA, visitId, rating = 4 })).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync(url, new { rating = 5 })).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var verify = _factory.Services.CreateScope();
+        var dbVerify = verify.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        (await dbVerify.SurveyResponses.CountAsync(r => r.SurveyId == surveyId)).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Result_dates_and_times_use_iran_day_even_across_midnight()
+    {
+        var client = await LoginAsync();
+        var create = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "تاریخ پاسخ" });
+        var id = (await ReadAsync<JsonElementPacket>(create)).Data.GetProperty("surveyId").GetInt64();
+        // ۲۱:۰۰ UTC برابر ۰۰:۳۰ روز بعد در تهران است. Kind مانند دادهٔ SQL نامشخص است.
+        var storedUtc = new DateTime(2026, 1, 1, 21, 0, 0, DateTimeKind.Unspecified);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+            db.SurveyResponses.Add(new SurveyResponse
+            {
+                SurveyId = id, Comments = "نظر آزمایشی", Answers = "[]", SubmittedAt = storedUtc, CreatedAt = storedUtc
+            });
+            await db.SaveChangesAsync();
+        }
+        var result = await client.GetAsync($"/api/v1/surveys/{id}/results");
+        result.StatusCode.Should().Be(HttpStatusCode.OK);
+        var data = (await ReadAsync<JsonElementPacket>(result)).Data;
+        var expectedDay = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(new DateTime(2026, 1, 2));
+        data.GetProperty("recentComments")[0].GetProperty("submittedShamsi").GetString().Should().Be(expectedDay + " — 00:30");
+        data.GetProperty("recentAnswers")[0].GetProperty("submittedShamsi").GetString().Should().Be(expectedDay);
     }
 
     /* ─── کمکی‌ها ─── */
@@ -233,13 +431,9 @@ public class SurveyFlowTests
     /// <summary>ورود ادمین و کلاینت احرازهویت‌شده</summary>
     private async Task<HttpClient> LoginAsync()
     {
+        var token = await _factory.AdminTokenAsync();
         var client = _factory.CreateClient();
-        var login = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { usernameOrEmail = "admin", password = "Admin@123" });
-        login.StatusCode.Should().Be(HttpStatusCode.OK, because: $"بذر ادمین پیش‌فرض فعال است — بدنه: {await login.Content.ReadAsStringAsync()}");
-        var packet = await ReadAsync<LoginPacket>(login);
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", packet.Data.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }
 
@@ -250,8 +444,9 @@ public class SurveyFlowTests
         var client = await LoginAsync();
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var sequence = Interlocked.Increment(ref _seedSequence);
 
-        // دو پزشک مستقل با پرسنل مجزا
+        // دو پزشک مستقل با پرسنل مجزا و شناسه‌های غیرتکراری در کارخانه مشترک
         var ids = new long[2];
         for (var i = 0; i < 2; i++)
         {
@@ -259,7 +454,7 @@ public class SurveyFlowTests
             {
                 FirstName = "پزشک",
                 LastName = $"تست‌{i + 1}",
-                NationalCode = $"00999000{i:00}1",
+                NationalCode = $"7{sequence * 2 + i:000000000}",
                 Mobile = "09120000001",
                 IsActive = true
             };
@@ -274,8 +469,8 @@ public class SurveyFlowTests
         // بیمار موبایل‌دار — شماره یکتا برای ادعای صف پیامک
         var patient = new Patient
         {
-            MedicalRecordNo = "MRN-SURVEY-01",
-            NationalCode = "0055500011",
+            MedicalRecordNo = $"MRN-SURVEY-{sequence:000000}",
+            NationalCode = $"8{sequence:000000000}",
             FirstName = "سارا",
             LastName = "آزمایشی",
             Mobile = "09129990001",
@@ -286,16 +481,6 @@ public class SurveyFlowTests
         await context.SaveChangesAsync();
 
         return (client, ids[0], ids[1], patient.Id);
-    }
-
-    /// <summary>بذر بیمار دوم — برای پاسخ سوم روی پزشک الف</summary>
-    private async Task<long> SeedSecondPatientAndGetSecondDoctorAsync(HttpClient client)
-    {
-        _ = client;
-        using var scope = _factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
-        var doctorId = await context.Doctors.OrderBy(d => d.Id).Select(d => d.Id).FirstAsync();
-        return doctorId;
     }
 
     /// <summary>ثبت یک پاسخ</summary>
@@ -324,15 +509,92 @@ public class SurveyFlowTests
 
     /* ─── بسته‌های پاسخ ─── */
 
+    private static async Task<string> GetEditVersion(HttpClient client, long id)
+    {
+        var response = await client.GetAsync("/api/v1/surveys");
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(response);
+        return rows.Data.Single(s => s.Id == id).EditVersion;
+    }
+
+    [Fact]
+    public async Task Stale_or_unversioned_survey_editor_cannot_overwrite_newer_changes()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "نسخه اول", questions = "[]" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        var saved = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر اول", questions = "[]", editVersion = version });
+        saved.StatusCode.Should().Be(HttpStatusCode.OK);
+        var stale = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر کهنه", questions = "[]", editVersion = version });
+        stale.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var oldClient = await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "کلاینت قدیمی", questions = "[]" });
+        oldClient.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(await client.GetAsync("/api/v1/surveys"));
+        rows.Data.Single(s => s.Id == id).Title.Should().Be("تغییر اول");
+    }
+
+
+    [Fact]
+    public async Task Unsupported_type_is_rejected_and_omitted_type_does_not_change_existing_type()
+    {
+        var client = await LoginAsync();
+        (await client.PostAsJsonAsync("/api/v1/surveys", new { title = "نوع نامعتبر", surveyType = 99 }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "خدمات", surveyType = 2 });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        (await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر", surveyType = 99, editVersion = version }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await client.PutAsJsonAsync($"/api/v1/surveys/{id}", new { title = "تغییر", editVersion = version }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var survey = await scope.ServiceProvider.GetRequiredService<ClinicProDbContext>().Surveys.SingleAsync(x => x.Id == id);
+        survey.SurveyType.Should().Be(Sahand.ClinicPro.Domain.Enums.SurveyType.Service);
+    }
+
+
+    [Fact]
+    public async Task Stale_toggle_does_not_invert_status_or_repeat()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "تغییر وضعیت امن" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var version = await GetEditVersion(client, id);
+        var first = await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = version, desiredActive = false });
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        var retry = await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = version, desiredActive = false });
+        retry.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var rows = await ReadAsync<ListPacket<SurveyListDto>>(await client.GetAsync("/api/v1/surveys"));
+        rows.Data.Single(x => x.Id == id).IsActive.Should().BeFalse();
+    }
+
+
+    [Fact]
+    public async Task Delete_requires_the_observed_version_and_keeps_response_rows()
+    {
+        var client = await LoginAsync();
+        var created = await client.PostAsJsonAsync("/api/v1/surveys", new { title = "حذف امن" });
+        var id = (await ReadAsync<JsonElementPacket>(created)).Data.GetProperty("surveyId").GetInt64();
+        var old = await GetEditVersion(client, id);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{id}/responses", new { rating = 4 }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync($"/api/v1/surveys/{id}/toggle-active", new { editVersion = old, desiredActive = false }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.DeleteAsync($"/api/v1/surveys/{id}?editVersion={old}")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var current = await GetEditVersion(client, id);
+        (await client.DeleteAsync($"/api/v1/surveys/{id}?editVersion={current}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
+        var stored = await db.Surveys.IgnoreQueryFilters().SingleAsync(x => x.Id == id);
+        stored.IsDeleted.Should().BeTrue();
+        (await db.SurveyResponses.IgnoreQueryFilters().CountAsync(x => x.SurveyId == id)).Should().Be(1);
+    }
+
     private sealed record JsonElementPacket(bool IsSuccess, JsonElement Data);
-
-    private sealed record LoginPacket(bool IsSuccess, LoginData Data);
-
-    private sealed record LoginData(string AccessToken);
 
     private sealed record ListPacket<T>(bool IsSuccess, List<T> Data);
 
-    private sealed record SurveyListDto(long Id, string Title, bool IsActive, int ResponseCount);
+    private sealed record SurveyListDto(long Id, string Title, bool IsActive, int ResponseCount, string EditVersion);
 
     private sealed record ResultsPacket(bool IsSuccess, ResultsData Data);
 

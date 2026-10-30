@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.DTOs.Receptions;
@@ -64,16 +66,39 @@ public class ReceptionsController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>ثبت یا بازپخش پذیرش با شناسه پایدار الزامی.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("receptions.create")]
+    public async Task<IActionResult> CreateIdempotent([FromBody] CreateReceptionDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه درخواست پذیرش الزامی است.", 400));
+        return await Create(dto);
+    }
+
     /// <summary>ثبت پذیرش بیمار</summary>
     /// <param name="dto">داده پذیرش</param>
     [HttpPost]
     [HasPermission("receptions.create")]
     public async Task<IActionResult> Create([FromBody] CreateReceptionDto dto)
     {
-        var result = await _mediator.Send(new CreateReceptionCommand(dto, _currentUser.UserId));
-        if (result.IsSuccess)
-            return CreatedResponse(result, nameof(GetToday), new { }, "پذیرش با موفقیت ثبت شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new CreateReceptionCommand(dto, _currentUser.UserId));
+            if (result.IsFailure && result.Error.Code == "RECEPTION.REQUEST_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            if (result.IsSuccess)
+                return CreatedResponse(result, nameof(GetToday), new { }, "پذیرش با موفقیت ثبت شد");
+            return ToResponse(result);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("نوبت هم‌زمان تغییر کرد؛ پیش از تلاش مجدد صف پذیرش را بررسی کنید.", 409));
+        }
+        catch (DbUpdateException ex) when (RequestIdConflict.IsRequestIdViolation(ex, RequestIdConflict.ReceptionIndex))
+        {
+            return Conflict(ApiResponse<object>.Failure("پذیرشی با همین شناسه هم‌زمان ثبت شده است؛ وضعیت را بررسی و فقط با همان شناسه دوباره تلاش کنید.", 409));
+        }
     }
 
     /// <summary>تغییر وضعیت پذیرش — در صف، در ویزیت، ترخیص</summary>

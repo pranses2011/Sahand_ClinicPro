@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.OphthalmologyView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.OphthalmologyView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -18,20 +18,31 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <materialDesign:PackIcon Kind="EyeCircle" Width="26" Height="26"
-                                     Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-            <TextBlock Text="چشم‌پزشکی" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
-        </StackPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
+            <DockPanel>
+                <Button shortcuts:SaveShortcut.Number="1" DockPanel.Dock="Left" Command="{Binding SaveEyeExamCommand}" IsEnabled="{Binding IsEyeExamEnabled}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Padding="14,7" Content="ذخیره معاینه (Ctrl+Shift+1)" />
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="38" Height="38" CornerRadius="9" Background="#E8F2FD" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="EyeCircle" Width="23" Height="23" Foreground="#176AC2" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="معاینه چشم‌پزشکی" Foreground="#173657" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="رفرکشن، فشار چشم، یافته‌ها و سابقه بیمار" Foreground="#617992" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- محتوای صفحه — عیناً از تب پاراکلینیک سابق (اتصال‌ها بدون تغییر) -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="4,8">
                             <StackPanel>
                                 <!-- ═══ نوار بیمار تب چشم — چرخهٔ بیست‌وهشتم (گزارش هجدهم مالک):
                                      پیش‌تر این تب بیمار خودش را نداشت و باید بیمار در تب
                                      فیزیوتراپی/تصویربرداری جستجو می‌شد؛ اکنون معاینه و سابقه
                                      به پروندهٔ همین بیمار وصل است ═══ -->
-                                <Grid Margin="0,0,0,12">
+                                <Border Background="White" BorderBrush="#D3E2F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12">
+                                <Grid IsEnabled="{Binding CanSelectEyePatient}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2.4*" />
                                         <ColumnDefinition Width="Auto" />
@@ -68,15 +79,24 @@
                                         <materialDesign:PackIcon Kind="CloseCircleOutline" Width="18" Height="18" Foreground="#C62828" />
                                     </Button>
                                 </Grid>
-
+                                </Border>
+                                <TextBlock Text="در حال دریافت سابقهٔ بیمار…" Foreground="#176AC2" Margin="0,0,0,8"
+                                           Visibility="{Binding IsEyeHistoryLoading, Converter={StaticResource BoolToVisibility}}" />
+                                <StackPanel IsEnabled="{Binding IsEyeExamEnabled}">
+                                <TextBlock Text="این فرم برای معاینهٔ جدید است؛ اندازه‌های قبلی خودکار کپی نمی‌شوند. نسخهٔ قبلی را در سابقه بررسی کنید."
+                                           FontSize="10.5" Foreground="#617992" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <Button Command="{Binding CopyPreviousRefractionCommand}" IsEnabled="{Binding HasPreviousRefraction}"
+                                        Content="کپی مقادیر نسخهٔ قبلی پس از بررسی" HorizontalAlignment="Left" Margin="0,0,0,8" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="12" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="0.8*" />
                                     </Grid.ColumnDefinitions>
                                     <!-- OD -->
-                                    <Border Grid.Column="0" CornerRadius="12" Padding="14" Background="#E3F2FD">
+                                    <Border Grid.Column="0" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="چشم راست (OD)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
@@ -87,6 +107,8 @@
                                             </UniformGrid>
                                             <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdVisionIndex}" />
+                                            <TextBlock Text="حدت بینایی با اصلاح (عینک / لنز)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OdCorrectedVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OdIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
@@ -98,7 +120,7 @@
                                         </StackPanel>
                                     </Border>
                                     <!-- OS -->
-                                    <Border Grid.Column="2" CornerRadius="12" Padding="14" Background="#F3E5F5">
+                                    <Border Grid.Column="2" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="چشم چپ (OS)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <UniformGrid Columns="2">
@@ -109,6 +131,8 @@
                                             </UniformGrid>
                                             <TextBlock Text="حدت بینایی بدون اصلاح (Visual Acuity)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsVisionIndex}" />
+                                            <TextBlock Text="حدت بینایی با اصلاح (عینک / لنز)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2" />
+                                            <ComboBox ItemsSource="{Binding VisionOptions}" SelectedIndex="{Binding OsCorrectedVisionIndex}" />
                                             <TextBlock Text="فشار داخل چشم (IOP — mmHg)" FontSize="10.5" Opacity="0.6" Margin="0,8,0,2"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             <TextBox Text="{Binding OsIop, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource App.CodeFont}" />
                                             <Border Width="180" Height="10" CornerRadius="5" HorizontalAlignment="Left" Margin="0,5,0,0"
@@ -117,6 +141,18 @@
                                             </Border>
                                             <TextBlock Text="{Binding OsIopWarning, Mode=OneWay}" Foreground="#C62828" FontWeight="Bold" FontSize="11.5" Margin="0,4,0,0"
                                                        Visibility="{Binding OsIopWarning, Converter={StaticResource StringToVisibility}}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- خلاصهٔ زنده؛ بازتاب ورودی است، نه تأیید یا نسخهٔ چاپ‌شده. -->
+                                    <Border Grid.Column="4" CornerRadius="10" Padding="14" Background="White" BorderBrush="#D3E2F0" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="👓 نسخهٔ عینک زنده" FontWeight="Bold" FontSize="14" Foreground="#173657" />
+                                            <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
+                                                       FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap" Foreground="#173657" />
+                                            <TextBlock Text="خلاصه از ورودی‌های همین فرم ساخته می‌شود؛ برای ثبت در پرونده، معاینه را ذخیره کنید."
+                                                       TextWrapping="Wrap" FontSize="10.5" Margin="0,14,0,0" Foreground="#617992" />
+                                            <Button Content="🖨 چاپ پیش‌نویس نسخه" Click="PrintGlassesPrescription_Click"
+                                                    IsEnabled="{Binding IsEyeExamEnabled}" Margin="0,10,0,0" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -140,17 +176,10 @@
                                         <TextBlock Text="یافته‌ها و تشخیص" FontSize="10.5" Opacity="0.6" />
                                         <TextBox Text="{Binding EyeFindings, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
                                                  TextWrapping="Wrap" Height="60" />
+                                        <TextBlock Text="جزئیات معاینهٔ قبلی در بخش سابقه نمایش داده می‌شوند و خودکار وارد فرم جدید نمی‌شوند."
+                                                   TextWrapping="Wrap" FontSize="10" Opacity="0.7" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Grid>
-
-                                <!-- نسخهٔ عینک زنده — طرح تأییدشدهٔ نسخهٔ ۲ -->
-                                <Border CornerRadius="12" BorderBrush="#9FA8DA" BorderThickness="1.4" Padding="12" Margin="0,12,0,0" Background="#E8EFFF">
-                                    <StackPanel>
-                                        <TextBlock Text="👓 نسخهٔ عینک (زنده — از عددهای رفرکشن بالا)" FontWeight="Bold" FontSize="12.5" Foreground="#1A237E" />
-                                        <TextBlock Text="{Binding GlassesPrescriptionText, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}"
-                                                   FontSize="12" Margin="0,6,0,0" Foreground="#1A237E" />
-                                    </StackPanel>
-                                </Border>
 
                                 <!-- ماژول حرفه‌ای چشم‌پزشکی — طرح تأییدشدهٔ نسخهٔ ۲ -->
                                 <Expander Margin="0,12,0,0" Header="🔬 اسلیت‌لمپ و فوندوس + پاچیمتری">
@@ -180,7 +209,7 @@
                                 </Expander>
                                 <Expander Margin="0,8,0,0" Header="📷 تصویربرداری چشم (OCT، عکس فوندوس، بیومتری)">
                                     <TextBox Text="{Binding ImagingNote, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="44" Margin="0,8,0,0"
-                                             ToolTip="نتیجه و تاریخ OCT/فوندوس/بیومتری — تصاویر از بخش تصویربرداری وصل می‌شوند" />
+                                             ToolTip="یادداشت نتیجه و تاریخ OCT/فوندوس/بیومتری" />
                                 </Expander>
                                 <Expander Margin="0,8,0,0" Header="🩺 تشخیص و برنامهٔ درمان / جراحی / ارجاع">
                                     <StackPanel Margin="0,8,0,0">
@@ -199,17 +228,19 @@
                                              ToolTip="کنترل فشار، تکرار تست‌ها و غربالگری‌های دوره‌ای با تاریخ" />
                                 </Expander>
 
-                                <Button Command="{Binding SaveEyeExamCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
+                                <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SaveEyeExamCommand}" Margin="0,14,0,0" HorizontalAlignment="Left"
                                         Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="💾 ذخیره معاینهٔ چشم در پروندهٔ بیمار" Margin="8,0,0,0" />
+                                        <TextBlock Text="💾 ذخیره معاینهٔ چشم در پروندهٔ بیمار (Ctrl+Shift+2)" Margin="8,0,0,0" />
                                     </StackPanel>
                                 </Button>
 
+                                </StackPanel>
+
                                 <!-- ═══ سابقهٔ معاینه‌های چشم بیمار منتخب — چرخهٔ ۲۸ ═══
                                      با انتخاب بیمار، ۲۰ معاینهٔ آخر او از پرونده خوانده می‌شود؛
-                                     آخرین معاینه در فرم می‌نشیند و بقیه برای مرور روند درمان است -->
+                                     همهٔ معاینه‌ها برای مرورند و به‌صورت خودکار وارد فرم جدید نمی‌شوند -->
                                 <Border CornerRadius="12" BorderBrush="#B39DDB" BorderThickness="1" Padding="12" Margin="0,14,0,0"
                                         Background="#F3E5F5"
                                         Visibility="{Binding EyePatient, Converter={StaticResource NullToVisibility}}">
@@ -241,6 +272,10 @@
                                                                         <Run Text="   OS: " /><Run Text="{Binding OsSummary, Mode=OneWay}" FontFamily="{DynamicResource App.CodeFont}" />
                                                                     </TextBlock>
                                                                 </Grid>
+                                                                <TextBlock Text="{Binding AdditionalDetails}" FontSize="10.5" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding EyewearPrescription}" FontSize="10.5" TextWrapping="Wrap" />
+                                                                <TextBlock Text="{Binding VisualField, StringFormat='میدان بینایی: {0}'}" FontSize="10.5" TextWrapping="Wrap"
+                                                                           Visibility="{Binding VisualField, Converter={StaticResource StringToVisibility}}" />
                                                                 <TextBlock Text="{Binding Findings, Mode=OneWay, TargetNullValue=''}" FontSize="10.5" Opacity="0.7"
                                                                            TextWrapping="Wrap" Margin="0,3,0,0"
                                                                            Visibility="{Binding Findings, Converter={StaticResource StringToVisibility}}"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>

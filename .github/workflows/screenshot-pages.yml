@@ -1,0 +1,167 @@
+name: 📸 اسکرینشات واقعی صفحات (مقایسه با طرح تأییدی)
+
+# رندر واقعی WPF روی ویندوز — همان خروجی ای که کاربر روی مانیتور میبیند.
+# خروجیها روی همان شاخه برگردانده میشوند تا کنار «طرح تأییدی مالک» در
+# docs/design/compare.html قرار گیرند و مغایرتها فرمبهفرم بررسی شوند.
+on:
+  # تگ‌ها هرگز اجرا نمی‌شوند؛ یک نشانگر صریح روی شاخه کاری نیز پشتیبانی
+  # می‌شود تا در اتصال‌های فاقد مجوز dispatch، ثبت تصویر ممکن باشد.
+  push:
+    branches: [ 'arena/**' ]
+    paths: [ 'docs/screenshots/real/.trigger' ]
+  workflow_dispatch:
+    inputs:
+      pages:
+        description: 'کلیدهای صفحات (جدا شده با کاما) — dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
+        required: false
+        default: 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
+      commit_results:
+        description: 'ثبت تصاویر روی همین شاخه (در حالت عادی فقط آرتیفکت ساخته می‌شود)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  real-screenshots:
+    runs-on: windows-latest
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v5
+
+      - name: نصب .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: ساخت کلاینت دسکتاپ
+        run: dotnet build src/Sahand.ClinicPro.Desktop/Sahand.ClinicPro.Desktop.csproj -c Release
+
+      - name: نصب فونت وزیرمتن روی رانر
+        shell: pwsh
+        run: |
+          Get-ChildItem src/Sahand.ClinicPro.Desktop/Assets/Fonts/*.ttf | ForEach-Object {
+            Copy-Item $_.FullName "$env:WINDIR\Fonts\" -Force
+            New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($_.BaseName) (TrueType)" -Value $_.Name -PropertyType String -Force | Out-Null
+          }
+
+      - name: رندر اسکرینشات واقعی صفحات
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter Sahand.ClinicPro.Desktop.exe src/Sahand.ClinicPro.Desktop/bin/Release | Select-Object -First 1
+          if ($null -eq $exe) { throw "exe not found" }
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $pagesRaw = '${{ inputs.pages }}'
+          if ([string]::IsNullOrWhiteSpace($pagesRaw)) {
+            # اجرای نشانگر روی شاخه فقط صفحات چاپ را بازبینی می‌کند؛
+            # اجرای دستی می‌تواند فهرست کامل یا انتخاب دلخواه بدهد.
+            $pagesRaw = 'print-template,print-settings,print-designer'
+          }
+          $pages = $pagesRaw -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          foreach ($page in $pages) {
+            Write-Host "::group::رندر $page"
+            $out = Join-Path $PWD "shots/$page.png"
+            $p = Start-Process -FilePath $exe.FullName -ArgumentList '--screenshot', $page, $out -PassThru -Wait
+            Write-Host "exit=$($p.ExitCode)"
+            if (Test-Path "$out.error.txt") {
+              $detail = (Get-Content "$out.error.txt" -Raw) -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
+              Write-Host "::error::$detail"
+            }
+            if ($p.ExitCode -ne 0) { throw "screenshot failed for $page (exit $($p.ExitCode))" }
+            if (-not (Test-Path $out)) { throw "screenshot missing for $page" }
+            if ($page -eq 'print-designer') {
+              $layoutPath = Join-Path $PWD 'shots/print-designer-layout.png'
+              if (-not (Test-Path $layoutPath)) { throw 'designer reference-size layout missing' }
+              $referencePath = Join-Path $PWD 'docs/design/print-template-new-proposal.png'
+              $reference = [System.Drawing.Image]::FromFile($referencePath)
+              $layout = $null
+              try {
+                $layout = [System.Drawing.Image]::FromFile($layoutPath)
+                if ($layout.Width -ne $reference.Width -or $layout.Height -ne $reference.Height) {
+                  throw "designer layout size $($layout.Width)x$($layout.Height) differs from reference $($reference.Width)x$($reference.Height)"
+                }
+                Write-Host "reference and offscreen layout: $($layout.Width)x$($layout.Height) pixels"
+              } finally {
+                if ($null -ne $layout) { $layout.Dispose() }
+                $reference.Dispose()
+              }
+            }
+            Write-Host "::endgroup::"
+          }
+          Get-ChildItem shots | Format-Table Name, Length
+
+      - name: رندر طرحهای تأییدی HTML (در صورت وجود)
+        shell: pwsh
+        run: |
+          # اگر طرح تأییدی بهصورت فایل HTML در docs/design/approved باشد،
+          # همانجا با مرورگر Edge headless به PNG تبدیل میشود. اندازهٔ
+          # رندر HTML مستقل از اندازهٔ پنجره WPF است؛ خروجی‌ها لزوماً
+          # هم‌اندازه نیستند و به‌تنهایی مقایسه پیکسلی معتبر نمی‌سازند.
+          $dir = "docs/design/approved"
+          $report = @()
+          if (-not (Test-Path $dir)) {
+            Write-Host 'طرح HTMLای وجود ندارد.'
+            Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value 'no approved dir' -Encoding UTF8
+            exit 0
+          }
+          # نکته: متغیر محیطی ProgramFiles(x86) حتماً با ${...} نوشته شود؛
+          # $env:ProgramFiles(x86) بهصورت «$env:ProgramFiles + متن (x86)»
+          # تعبیر میشود و مسیر اشتباهی میسازد (علت ردشدن بیرون اینکه دلیلش دیده شود).
+          $edge = @(
+            "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+            "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+            "${env:LOCALAPPDATA}\Microsoft\Edge\Application\msedge.exe"
+          ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+          if (-not $edge) {
+            $cmd = Get-Command msedge.exe -ErrorAction SilentlyContinue
+            if ($cmd) { $edge = $cmd.Source }
+          }
+          if (-not $edge) {
+            Write-Host '::warning::Edge یافت نشد — رندر HTML رد شد.'
+            Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value 'edge not found' -Encoding UTF8
+            exit 0
+          }
+          Write-Host "edge: $edge"
+          $files = @(Get-ChildItem $dir -Filter *.html)
+          Write-Host "design html files: $($files.Count)"
+          foreach ($f in $files) {
+            $out = Join-Path $PWD "shots/$($f.BaseName)-design.png"
+            $url = "file:///$($f.FullName.Replace('\','/'))"
+            & $edge --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --allow-file-access-from-files --window-size=1030,774 --screenshot="$out" $url 2>&1 | Out-Null
+            $ok = Test-Path $out
+            $size = if ($ok) { (Get-Item $out).Length } else { 0 }
+            Write-Host "design: $($f.Name) -> ok=$ok bytes=$size"
+            $report += "$($f.BaseName) ok=$ok bytes=$size"
+          }
+          Set-Content -Path (Join-Path $PWD 'shots/design-render.log') -Value $report -Encoding UTF8
+          if ($files.Count -gt 0 -and -not (Test-Path (Join-Path $PWD "shots/$($files[0].BaseName)-design.png"))) {
+            throw 'رندر هیچکدام از طرحهای HTML موفق نبود — خروجی PNG ساخته نشد.'
+          }
+
+      - name: بارگذاری آرتیفکت
+        uses: actions/upload-artifact@v6
+        with:
+          name: real-screenshots
+          path: shots/
+          retention-days: 14
+
+      - name: بازگرداندن اسکرینشاتها روی همان شاخه (فقط با درخواست صریح)
+        if: github.event_name == 'workflow_dispatch' && inputs.commit_results && startsWith(github.ref, 'refs/heads/')
+        shell: pwsh
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          New-Item -ItemType Directory -Force docs/screenshots/real | Out-Null
+          Copy-Item shots/* docs/screenshots/real/ -Force
+          # تصاویر رندرشده از طرحهای HTML را کنار همان طرحها هم بگذار تا
+          # صفحهٔ مقایسه (compare.html) بتواند آنها را مستقیم نشان دهد.
+          Get-ChildItem shots -Filter '*-design.png' | ForEach-Object {
+            Copy-Item $_.FullName (Join-Path 'docs/design/approved' $_.Name) -Force
+          }
+          git add docs/screenshots/real docs/design/approved/
+          git add -f docs/design/approved/*-design.png
+          if (git diff --cached --quiet) { Write-Host 'تغییر تازهای برای کامیت نیست.'; exit 0 }
+          git commit -m "اسکرین‌شات واقعی صفحات برای مقایسه طرح" -m "تصاویر رابط WPF ویندوز با داده نمونه و ابعاد ثبت‌شده تولید شدند؛ این تصاویر به معنی تأیید عملکرد یا چاپ فیزیکی نیستند."
+          git push origin HEAD:${{ github.ref_name }}

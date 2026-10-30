@@ -157,6 +157,10 @@ public class RecordInquiryCommandHandler : IRequestHandler<RecordInquiryCommand,
             return Result<InsuranceInquiryResultDto>.Failure(
                 new Error("INSURANCE_NOT_CONTRACTED", "این شرکت بیمه فعال و طرف قرارداد درمانگاه نیست"));
 
+        if (string.IsNullOrWhiteSpace(patient.NationalCode))
+            return Result<InsuranceInquiryResultDto>.Failure(
+                new Error("INSURANCE_NATIONAL_CODE_REQUIRED", "برای استعلام بیمه، کد ملی بیمار الزامی است"));
+
         var eligibility = await _eligibility.CheckAsync(new InsuranceEligibilityRequest(
             dto.PatientId, dto.InsuranceCompanyId, patient.NationalCode, dto.InsuranceNumber),
             cancellationToken);

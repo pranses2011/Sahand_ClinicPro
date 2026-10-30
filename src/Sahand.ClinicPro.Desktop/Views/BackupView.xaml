@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
+﻿<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.BackupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -336,10 +336,10 @@
                                     <CheckBox Content="بارگذاری خودکار به ابر پس از هر پشتیبان موفق" IsChecked="{Binding CloudAutoUpload}" Margin="2,10,2,6" />
 
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
-                                        <Button Command="{Binding SaveCloudConfigCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
+                                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCloudConfigCommand}" Style="{StaticResource MaterialDesignRaisedButton}">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="ContentSave" Width="14" Height="14" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                                <TextBlock Text="ذخیرهٔ تنظیمات ابری" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                                <TextBlock Text="ذخیرهٔ تنظیمات ابری (Ctrl+Shift+1)" Margin="6,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                             </StackPanel>
                                         </Button>
                                         <Button Command="{Binding CloudTestCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
@@ -437,11 +437,11 @@
                             <CheckBox Content="رمزنگاری فایل بکاپ (AES-256)" IsChecked="{Binding EncryptBackup}" Margin="2,12,2,6" />
                             <CheckBox Content="ارسال نوتیفیکیشن در صورت خطا" IsChecked="{Binding NotifyOnError}" Margin="2,6" />
 
-                            <Button Command="{Binding SaveAutoSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                            <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SaveAutoSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                     HorizontalAlignment="Left" Margin="0,12,0,4">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                    <TextBlock Text="💾 ذخیره تنظیمات" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                    <TextBlock Text="💾 ذخیره تنظیمات (Ctrl+Shift+2)" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

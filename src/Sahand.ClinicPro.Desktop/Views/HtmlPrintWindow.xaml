@@ -10,11 +10,13 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="12,10">
             <TextBlock x:Name="TitleText" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock Text="تعداد نسخه را در پنجره چاپ انتخاب کنید" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0" />
                 <Button Click="OnPrintClick" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Printer" Width="15" Height="15" VerticalAlignment="Center" />
@@ -24,7 +26,9 @@
                 <Button Click="OnCloseClick" Style="{StaticResource MaterialDesignOutlinedButton}" Content="بستن" />
             </StackPanel>
         </DockPanel>
-        <Border Grid.Row="1" Margin="12,0,12,12" CornerRadius="10" BorderThickness="1"
+        <TextBlock x:Name="CanvasWarning" Grid.Row="1" Visibility="Collapsed" Margin="16,0,16,8" TextWrapping="Wrap" Foreground="#A3281F" FontWeight="SemiBold"
+                   Text="بررسی سرریز فقط اندازه نمایش فعلی را کنترل می‌کند؛ تمام داده‌ها، جهت، صفحه‌ها و حاشیه چاپگر را در چاپ آزمایشی بررسی کنید."/>
+        <Border Grid.Row="2" Margin="12,0,12,12" CornerRadius="10" BorderThickness="1"
                 BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" ClipToBounds="True">
             <WebBrowser x:Name="Browser" />
         </Border>

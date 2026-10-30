@@ -1,8 +1,8 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 setlocal
 title ساخت بسته نصب درمانگاه سهند
-set "APP_VERSION=2.28.28"
+set "APP_VERSION=2.28.32"
 if not "%CI%"=="" set "CI_MODE=1"
 
 echo ===========================================================
@@ -33,6 +33,8 @@ for %%F in (01-login.png 11-attendance-devices.png 14-license.png install-api-co
 echo [1.5/6] انتشار سبک کلاینت (برای حالت «فقط فایل‌های به‌روزشده» در نصب کامل)...
 dotnet publish src\Sahand.ClinicPro.Desktop\Sahand.ClinicPro.Desktop.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -o publish\desktop-update
 if errorlevel 1 goto :fail
+copy /y publish\desktop\Sahand.ClinicPro.Desktop.deps.json publish\desktop-update\ >nul
+if errorlevel 1 goto :fail
 
 echo [2/6] ساخت EXE نصب کلاینت...
 set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
@@ -55,6 +57,8 @@ robocopy publish\server dist\SahandClinicPro-Server-v%APP_VERSION%\Server /E >nu
 if errorlevel 8 goto :fail
 copy /y installer\Install-Server-Package.bat dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
 copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
+copy /y installer\Enable-RestorePermission.ps1 dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
+copy /y installer\Enable-RestorePermission.bat dist\SahandClinicPro-Server-v%APP_VERSION%\ >nul
 powershell -NoProfile -Command "$guide = (Get-Content 'installer\RELEASE-INSTALL-GUIDE.txt' -Raw).Replace('{VERSION}', '%APP_VERSION%'); Set-Content 'dist\SahandClinicPro-Server-v%APP_VERSION%\RELEASE-INSTALL-GUIDE.txt' $guide -Encoding UTF8"
 if errorlevel 1 goto :fail
 powershell -NoProfile -Command "Compress-Archive -Path 'dist\SahandClinicPro-Server-v%APP_VERSION%\*' -DestinationPath 'dist\SahandClinicPro-Server-v%APP_VERSION%.zip' -Force"
@@ -70,11 +74,14 @@ if errorlevel 1 goto :fail
 if exist dist\SahandClinicPro-ServerUpdate-v%APP_VERSION% rmdir /s /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%
 mkdir dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server
 robocopy publish\server-update dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server /E >nul
-rem فایل‌های میزبان Runtime نباید روی نصب خودبسنده بازنویسی شوند
-del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.runtimeconfig.json 2>nul
-del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.deps.json 2>nul
 if errorlevel 8 goto :fail
+rem runtimeconfig نصب موجود حفظ، ولی deps خودبسنده نسخه جدید جایگزین می‌شود
+del /q dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\Sahand.ClinicPro.API.runtimeconfig.json 2>nul
+copy /y publish\server\Sahand.ClinicPro.API.deps.json dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\Server\ >nul
+if errorlevel 1 goto :fail
 copy /y installer\Install-Server-Package.ps1 dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
+copy /y installer\Enable-RestorePermission.ps1 dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
+copy /y installer\Enable-RestorePermission.bat dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
 copy /y installer\Update-Server-Package.bat dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\ >nul
 powershell -NoProfile -Command "Compress-Archive -Path 'dist\SahandClinicPro-ServerUpdate-v%APP_VERSION%\*' -DestinationPath 'dist\SahandClinicPro-Server-Update-v%APP_VERSION%.zip' -Force"
 if errorlevel 1 goto :fail

@@ -32,7 +32,7 @@ public class WaitlistEntry : AuditableEntity, ISoftDeletable
     /// <summary>وضعیت ردیف</summary>
     public WaitlistStatus Status { get; set; } = WaitlistStatus.Waiting;
 
-    /// <summary>زمان ارسال پیامک پیشنهاد</summary>
+    /// <summary>زمان ثبت پیشنهاد و صف پیامک؛ تأیید تحویل نیست</summary>
     public DateTime? NotifiedAt { get; set; }
 
     /// <summary>نوبتی که برایش پیشنهاد شد — پس از لغو</summary>

@@ -12,6 +12,8 @@ public class ReceptionConfiguration : IEntityTypeConfiguration<Reception>
         builder.ToTable("Receptions", t => t.HasComment("پذیرش - ورود بیمار به جریان ویزیت در روز مراجعه"));
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.RequestFingerprint).HasMaxLength(64).IsUnicode(false);
+        builder.HasIndex(x => x.RequestId).IsUnique().HasDatabaseName("IX_Reception_RequestId").HasFilter("[RequestId] IS NOT NULL");
         builder.Property(x => x.ReceptionNumber).HasMaxLength(20).HasDefaultValueSql("CONCAT('RCP-', RIGHT('000000' + CAST(NEXT VALUE FOR SeqReceptionNumber AS varchar(10)), 6))").HasComment("شماره پذیرش - فرمت RCP-XXXXXXXX");
         builder.Property(x => x.ReceptionDateShamsi).HasMaxLength(200).HasComment("تاریخ شمسی پذیرش");
         builder.Property(x => x.InsuranceApprovalCode).HasMaxLength(50).HasComment("کد تأیید بیمه");

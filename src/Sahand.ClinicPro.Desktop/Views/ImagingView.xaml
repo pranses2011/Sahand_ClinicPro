@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ImagingView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ImagingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -230,7 +230,7 @@
 
                         <!-- درخواست تازه -->
                         <Border Style="{StaticResource Card}">
-                            <StackPanel>
+                            <StackPanel IsEnabled="{Binding CanEditImagingOrder}">
                                 <TextBlock Text="➕ درخواست تصویربرداری تازه" Style="{StaticResource SectionTitle}" />
                                 <!-- فرم فشردهٔ سه‌ستونه — مطابق طرح تأییدی: بیمار | نوع | ناحیه در یک ردیف -->
                                 <Grid>
@@ -261,7 +261,7 @@
                                         <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding ImagingTypes}" SelectedIndex="{Binding ImagingTypeIndex}" materialDesign:HintAssist.Hint="نوع تصویربرداری" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4" VerticalAlignment="Center">
-                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding BodyRegions}" SelectedItem="{Binding ImagingRegion}" IsEditable="True" Text="{Binding ImagingRegion}" materialDesign:HintAssist.Hint="ناحیهٔ بدن" />
+                                        <ComboBox Style="{StaticResource CompactCombo}" ItemsSource="{Binding BodyRegions}" IsEditable="True" Text="{Binding ImagingRegion, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ناحیهٔ بدن" />
                                     </StackPanel>
                                 </Grid>
                                 <Border Background="#E3F2FD" CornerRadius="8" Padding="10,5" Margin="0,6,0,0"
@@ -271,8 +271,8 @@
                                 <TextBox Style="{StaticResource CompactText}" Margin="0,8,0,0" Text="{Binding ImagingClinicalInfo, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="اطلاعات بالینی (علت درخواست، علائم…)" AcceptsReturn="True" TextWrapping="Wrap" Height="38" />
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <CheckBox Content="فوری (STAT)" IsChecked="{Binding ImagingUrgent}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <Button Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0" Height="38" Padding="16,0"
-                                            Style="{StaticResource FlatPrimary}" Content="✅ ثبت درخواست" />
+                                    <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveImagingOrderCommand}" Margin="12,0,0,0" Height="38" Padding="16,0"
+                                            Style="{StaticResource FlatPrimary}" Content="✅ ثبت درخواست (Ctrl+Shift+1)" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -281,7 +281,10 @@
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
                                 <TextBlock Text="📋 صف کار امروز — انتخاب هر ردیف، نمایشگر و فرم گزارش همان مطالعه را بار می‌کند" Style="{StaticResource SectionTitle}" />
-                                <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}"
+                                <TextBlock Text="هشدار: درخواست‌های ثبت‌شده با نسخه‌های پیشین را پیش از انجام با ارجاع اصلی تطبیق دهید؛ نوع MRI/CT و ناحیهٔ تایپ‌شده ممکن است نادرست ثبت شده باشد. اصلاح جدید سوابق قبلی را خودکار تغییر نمی‌دهد."
+                                           Foreground="#8A4B08" Background="#FFF5DE" Padding="8" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                <TextBlock Text="{Binding QueueStatus, Mode=OneWay}" Foreground="#8A4B08" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedImagingOrder}" IsEnabled="{Binding CanEditImagingReport}"
                                           AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="300" MinHeight="110" RowHeight="34"
                                           Style="{StaticResource App.TableDataGrid}" HeadersVisibility="Column">
                                     <DataGrid.Columns>
@@ -300,7 +303,8 @@
                                         <DataGridTemplateColumn Header="اقدام">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="▶ شروع انجام" Style="{StaticResource FlatPrimary}" FontSize="11.5" Height="27" Padding="12,0"
+                                                    <Button shortcuts:SaveShortcut.Number="4" Content="✓ ثبت انجام (Ctrl+Shift+4)" Style="{StaticResource FlatPrimary}" FontSize="11.5" Height="27" Padding="12,0"
+                                                            IsEnabled="{Binding CanMarkPerformed}" ToolTip="پس از انجام واقعی تصویربرداری، وضعیت را انجام‌شده ثبت می‌کند"
                                                             Command="{Binding DataContext.StartStudyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}" />
                                                 </DataTemplate>
@@ -308,7 +312,7 @@
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <TextBlock Text="صف امروز خالی است — با فرم بالا نخستین درخواست را ثبت کنید."
+                                <TextBlock Text="{Binding QueueEmptyMessage, Mode=OneWay}"
                                            FontSize="12" Opacity="0.55" HorizontalAlignment="Center" Margin="0,10,0,2">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -508,7 +512,7 @@
 
             <!-- ═══════════ ۳) گزارش‌نویسی ═══════════ -->
             <TabItem Header="📝 گزارش‌نویسی">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8" IsEnabled="{Binding CanEditImagingReport}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" />
@@ -517,9 +521,10 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
+                            <TextBlock Text="پیش از ویرایش، صف را تازه‌سازی کنید. در صورت تغییر گزارش توسط کاربر دیگر، ثبت رد می‌شود و بررسی مجدد لازم است." Foreground="#9E1F17" Background="#FFF4E0" FontWeight="Bold" Padding="8" Margin="0,0,0,8" TextWrapping="Wrap" />
                             <Border Background="#FFECEA" BorderBrush="#F0B8B2" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,12"
                                     Visibility="{Binding CriticalFinding, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="🚨 یافتهٔ بحرانی فعال است: پس از نهایی‌کردن گزارش، اطلاع‌رسانی به پزشک درخواست‌کننده الزامی و در دفتر شاخص‌ها ثبت می‌شود." Foreground="#9E1F17" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="🚨 یافتهٔ بحرانی فعال است: اطلاع‌رسانی را جداگانه انجام دهید؛ این فرم فقط اطلاعات واردشده را ثبت می‌کند و پیامک یا تماس خودکار ارسال نمی‌کند." Foreground="#9E1F17" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </Border>
                             <Border Background="#FFF4E0" BorderBrush="#F2CE96" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,12"
                                     Visibility="{Binding DoseHigh, Converter={StaticResource BoolToVisibility}}">
@@ -566,8 +571,7 @@
                                             <ComboBox ItemsSource="{Binding ComparisonOptions}" SelectedItem="{Binding ReportComparison}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="وضعیت گزارش" Style="{StaticResource FieldLabel}" />
-                                            <ComboBox ItemsSource="{Binding ReportStatusOptions}" SelectedItem="{Binding ReportStatus}" />
+                                            <TextBlock Text="وضعیت را دکمهٔ ذخیره تعیین می‌کند؛ امضای دیجیتال و الحاقیه پشتیبانی نمی‌شود." TextWrapping="Wrap" FontSize="11" />
                                         </StackPanel>
                                     </Grid>
                                     <Grid>
@@ -598,17 +602,17 @@
                                             <TextBox Text="{Binding CriticalNotifiedTo, UpdateSourceTrigger=PropertyChanged}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="روش اطلاع" Style="{StaticResource FieldLabel}" />
+                                            <TextBlock Text="روش اطلاع (ثبت دستی؛ بدون ارسال خودکار)" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" />
                                             <ComboBox ItemsSource="{Binding CriticalMethodOptions}" SelectedItem="{Binding CriticalMethod}" />
                                         </StackPanel>
                                     </Grid>
 
                                     <WrapPanel Margin="0,14,0,0">
-                                        <Button Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره و امضای نهایی"
+                                        <Button shortcuts:SaveShortcut.Number="2" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیرهٔ گزارش نهایی (Ctrl+Shift+2)"
                                                 Command="{Binding SaveReportCommand}">
                                             <Button.CommandParameter><sys:Boolean>True</sys:Boolean></Button.CommandParameter>
                                         </Button>
-                                        <Button Content="ذخیرهٔ پیش‌نویس" Margin="8,0,0,0" Command="{Binding SaveReportCommand}">
+                                        <Button shortcuts:SaveShortcut.Number="3" Content="ذخیرهٔ پیش‌نویس (Ctrl+Shift+3)" Margin="8,0,0,0" Command="{Binding SaveReportCommand}">
                                             <Button.CommandParameter><sys:Boolean>False</sys:Boolean></Button.CommandParameter>
                                         </Button>
                                         <Button Content="🖨 چاپ گزارش" Margin="8,0,0,0" Click="PrintReport_Click" />
@@ -673,7 +677,7 @@
                                 </ItemsControl>
                                 <TextBlock Text="آمادگی انجام:" FontWeight="SemiBold" Margin="2,8,2,4" />
                                 <ProgressBar Height="10" Minimum="0" Maximum="100" Value="{Binding SafetyProgress, Mode=OneWay}" Foreground="#00897B" Background="#E7F0ED" />
-                                <TextBlock Text="تکمیل همهٔ موارد ایمنی برای شروع انجام الزامی است و همراه گزارش ذخیره می‌شود." Margin="2,6,2,0" FontSize="11.5" TextWrapping="Wrap" />
+                                <TextBlock Text="چک‌لیست کمکی است و فقط هنگام ذخیرهٔ گزارش ثبت می‌شود؛ کنترل مستقل ایمنی مطابق رویهٔ بخش الزامی است." Margin="2,6,2,0" FontSize="11.5" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 
@@ -688,6 +692,7 @@
                                         <DataGridTextColumn Header="سطح مرجع دوز (DRL)" Binding="{Binding Drl, Converter={StaticResource PersianDigits}}" ElementStyle="{StaticResource App.TableCellTextBlock}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <TextBlock Text="مقادیر این جدول نمونه هستند و مرجع درمانگاه محسوب نمی‌شوند؛ هشدار خودکار دوز غیرفعال است. از پروتکل و حدود تأییدشدهٔ مرکز استفاده کنید." FontWeight="Bold" Foreground="#9E1F17" TextWrapping="Wrap" Margin="2,8" />
                                 <TextBlock Text="آمادگی‌های اختصاصی: MRI غربالگری فلز و ضربان‌ساز · CT با کنتراست بررسی کراتینین و حساسیت · سونوگرافی شکم ناشتایی ۶ ساعته · ماموگرافی عدم استفاده از دئودورانت. وضعیت هر مورد در چک‌لیست بیمار ثبت و همراه گزارش در پرونده می‌ماند." FontSize="11.5" Opacity="0.7" TextWrapping="Wrap" Margin="2,10,2,0" />
                             </StackPanel>
                         </Border>
@@ -699,6 +704,7 @@
             <TabItem Header="📊 شاخص‌ها و کیفیت">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4,8">
                     <StackPanel>
+                        <TextBlock Text="این شاخص‌ها فقط از حداکثر ۱۰۰ درخواست بارگذاری‌شدهٔ امروز محاسبه می‌شوند؛ گزارش جامع یا تأیید ارسال اطلاع نیستند." Foreground="#9E1F17" Background="#FFF4E0" Padding="8" Margin="0,0,0,8" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <Border Style="{StaticResource Card}" Margin="0,0,8,0" MinWidth="170">
                                 <StackPanel HorizontalAlignment="Center">
@@ -721,7 +727,7 @@
                             <Border Style="{StaticResource Card}" Margin="0,0,8,0" MinWidth="170">
                                 <StackPanel HorizontalAlignment="Center">
                                     <TextBlock Text="{Binding CriticalLog.Count, Mode=OneWay, Converter={StaticResource PersianDigits}}" FontSize="19" FontWeight="ExtraBold" Foreground="#C62828" HorizontalAlignment="Center" />
-                                    <TextBlock Text="ردیف دفتر اطلاع‌های بحرانی" FontSize="11" Opacity="0.7" />
+                                    <TextBlock Text="گزارش دارای برچسب بحرانی" FontSize="11" Opacity="0.7" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -785,7 +791,7 @@
                             <StackPanel Grid.Column="2">
                                 <Border Background="#0F1F1A" CornerRadius="14" Padding="14" Margin="0,0,0,12">
                                     <StackPanel>
-                                        <TextBlock Text="🚨 دفتر ثبت اطلاع‌رسانی یافته‌های بحرانی" Foreground="#C9E9DC" FontSize="14" FontWeight="Bold" Margin="2,0,2,8" />
+                                        <TextBlock Text="🚨 جزئیات واردشده برای یافته‌های بحرانی (بدون ارسال خودکار)" Foreground="#C9E9DC" FontSize="14" FontWeight="Bold" Margin="2,0,2,8" />
                                         <ItemsControl ItemsSource="{Binding CriticalLog}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>

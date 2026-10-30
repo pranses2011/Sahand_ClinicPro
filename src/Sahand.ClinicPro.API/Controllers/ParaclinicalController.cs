@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Sahand.ClinicPro.API.Filters;
 using Sahand.ClinicPro.Application.Features.Paraclinical;
 using Sahand.ClinicPro.Domain.Interfaces;
+using Sahand.ClinicPro.Domain.Common;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -51,10 +52,10 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.create")]
     public async Task<IActionResult> GetTodayOrders()
     {
-        var today = DateTime.UtcNow.Date;
+        var (todayStart, tomorrowStart) = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.IranDayUtcBounds(DateTime.UtcNow);
         var items = await _unitOfWork.Repository<Domain.Entities.Paraclinical.ImagingOrder>()
             .QueryableNoTracking
-            .Where(o => o.CreatedAt >= today && !o.IsDeleted)
+            .Where(o => o.CreatedAt >= todayStart && o.CreatedAt < tomorrowStart && !o.IsDeleted)
             .OrderByDescending(o => o.Id)
             .Take(100)
             .Select(o => new
@@ -87,8 +88,15 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateImagingOrderStatusCommand command)
     {
-        var result = await _mediator.Send(command);
-        return ToResponse(result, "وضعیت درخواست به‌روز شد");
+        try
+        {
+            var result = await _mediator.Send(command);
+            return ToResponse(result, "وضعیت درخواست به‌روز شد");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("درخواست همزمان تغییر کرده است؛ صف را تازه‌سازی کنید", 409));
+        }
     }
 
     /// <summary>ثبت گزارش رادیولوژی</summary>
@@ -96,8 +104,15 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("imaging.edit")]
     public async Task<IActionResult> SubmitReport([FromBody] ImagingReportDto dto)
     {
-        var result = await _mediator.Send(new SubmitImagingReportCommand(dto));
-        return ToResponse(result, "گزارش ثبت شد");
+        try
+        {
+            var result = await _mediator.Send(new SubmitImagingReportCommand(dto));
+            return ToResponse(result, "گزارش ثبت شد");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("گزارش همزمان تغییر کرده است؛ صف و گزارش را تازه‌سازی کنید", 409));
+        }
     }
 
     /// <summary>ثبت طرح درمان دندانپزشکی</summary>
@@ -105,7 +120,12 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("dental.create")]
     public async Task<IActionResult> CreateDentalPlan([FromBody] CreateDentalPlanCommand command)
     {
-        var result = await _mediator.Send(command);
+        Result<long> result;
+        try { result = await _mediator.Send(command); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پرونده همزمان تغییر کرده است؛ چارت را دوباره بارگذاری و بررسی کنید", 409));
+        }
         if (result.IsSuccess)
             // چرخهٔ سی‌امین — نام اکشن هدف با nameof وصل شد؛ رشتهٔ «GetOrders»
             // وجود نداشت و پس از ثبت موفقِ طرح، اجرای نتیجه با
@@ -148,6 +168,18 @@ public class ParaclinicalController : ApiBaseController
                 note = "چارتی برای این بیمار ثبت نشده است"
             }));
 
+        if (!DentalChartCompatibility.IsConsistent(plan.PlanDetails, plan.TotalCost))
+            return Ok(ApiResponse<object>.Success(new
+            {
+                planId = (long?)plan.Id,
+                canEdit = false,
+                note = DentalChartCompatibility.CanEdit(plan.PlanDetails)
+                    ? $"جمع ثبت‌شده (ریال): {plan.TotalCost} — با جمع اقلام متفاوت است.\n\n{plan.PlanDetails}"
+                    : plan.PlanDetails,
+                teeth = new Dictionary<string, int>(),
+                rows = Array.Empty<object>()
+            }));
+
         // تجزیهٔ JSON ذخیره‌شده در PlanDetails — ساختار:
         // { "teeth": {"11": 2, ...}, "rows": [{"tooth":11,"procedure":"ترمیم","price":1500000,"status":"پیشنهاد"}] }
         var teeth = new Dictionary<string, int>();
@@ -182,6 +214,8 @@ public class ParaclinicalController : ApiBaseController
                         medical = ex.TryGetProperty("medical", out var me) ? me.GetString() : null,
                         prescription = ex.TryGetProperty("prescription", out var rx) ? rx.GetString() : null,
                         radio = ex.TryGetProperty("radio", out var ra) ? ra.GetString() : null,
+                        clinical = ex.TryGetProperty("clinical", out var cl) ? cl.GetString() : null,
+                        isChildChart = ex.TryGetProperty("isChildChart", out var child) && child.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False ? (bool?)child.GetBoolean() : null,
                         consent = ex.TryGetProperty("consent", out var co) && co.ValueKind == System.Text.Json.JsonValueKind.True
                     };
                 }
@@ -201,6 +235,7 @@ public class ParaclinicalController : ApiBaseController
             teeth,
             rows,
             extras,
+            canEdit = true,
             note = (string?)null
         }));
     }
@@ -240,19 +275,55 @@ public class ParaclinicalController : ApiBaseController
             .Select(e => new
             {
                 e.Id,
-                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(e.CreatedAt),
                 e.VisitId,
                 od = new { sphere = e.RightSphere, cylinder = e.RightCylinder, axis = e.RightAxis,
-                           acuity = e.RightVisualAcuity, iop = e.RightIop },
+                           acuity = e.RightVisualAcuity, correctedAcuity = e.RightCorrectedVisualAcuity, iop = e.RightIop },
                 os = new { sphere = e.LeftSphere, cylinder = e.LeftCylinder, axis = e.LeftAxis,
-                           acuity = e.LeftVisualAcuity, iop = e.LeftIop },
+                           acuity = e.LeftVisualAcuity, correctedAcuity = e.LeftCorrectedVisualAcuity, iop = e.LeftIop },
                 pd = e.PupilDistance,
                 colorVision = e.ColorVision,
                 e.Findings,
+                e.VisualField,
                 e.EyewearPrescription
             })
             .ToListAsync();
         return Ok(ApiResponse<object>.Success(exams));
+    }
+
+    /// <summary>ثبت ارجاع مستقل؛ شناسه درخواست از تکرار ناخواسته جلوگیری می‌کند.</summary>
+    [HttpPost("~/api/v1/physiotherapy/referrals")]
+    [HasPermission("visits.create")]
+    public async Task<IActionResult> CreatePhysiotherapyReferral([FromBody] CreatePhysiotherapyReferralCommand command)
+    {
+        try
+        {
+            var result = await _mediator.Send(command);
+            if (result.IsFailure && result.Error.Code == "PHYSIO.REFERRAL_KEY_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            return ToResponse(result, "ارجاع فیزیوتراپی ثبت شد");
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(ApiResponse<object>.Failure("نتیجه ثبت ارجاع نامعلوم است؛ با همان شناسه درخواست دوباره تلاش کنید.", 409));
+        }
+    }
+
+    /// <summary>آخرین ارجاع‌ها؛ این فهرست نشان‌دهنده وضعیت درمان یا نوبت نیست.</summary>
+    [HttpGet("~/api/v1/physiotherapy/referrals")]
+    [HasPermission("physiotherapy.create")]
+    public async Task<IActionResult> GetPhysiotherapyReferrals([FromQuery] long? patientId = null)
+    {
+        if (patientId is <= 0) return BadRequest(ApiResponse<object>.Failure("شناسه بیمار نامعتبر است"));
+        var query = _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapyReferral>().QueryableNoTracking;
+        if (patientId.HasValue) query = query.Where(r => r.PatientId == patientId.Value);
+        var rows = await query.Where(r => r.Patient != null && !r.Patient.IsDeleted)
+            .OrderByDescending(r => r.Id).Take(100)
+            .Select(r => new { r.Id, r.VisitId, r.PatientId, PatientName = r.Patient!.FirstName + " " + r.Patient.LastName,
+                r.Patient.NationalCode, r.Patient.Mobile, Gender = (int)r.Patient.Gender,
+                r.DoctorId, r.Note, r.CreatedAt })
+            .ToListAsync();
+        return Ok(ApiResponse<object>.Success(rows));
     }
 
     /// <summary>ثبت جلسه فیزیوتراپی</summary>
@@ -260,7 +331,12 @@ public class ParaclinicalController : ApiBaseController
     [HasPermission("physiotherapy.create")]
     public async Task<IActionResult> RecordSession([FromBody] RecordPhysioSessionCommand command)
     {
-        var result = await _mediator.Send(command);
+        Result<long> result;
+        try { result = await _mediator.Send(command); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پرونده همزمان تغییر کرده است؛ سابقه جلسات را دوباره بررسی کنید", 409));
+        }
         if (result.IsSuccess)
             // چرخهٔ سی‌امین — «GetOrders» به nameof(GetTodayOrders) اصلاح شد (اکشنی با آن نام وجود نداشت)
             return CreatedResponse(result, nameof(GetTodayOrders), new { }, "جلسه ثبت شد");
@@ -289,7 +365,7 @@ public class ParaclinicalController : ApiBaseController
             .Select(e => new
             {
                 e.Id,
-                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToShamsi(e.CreatedAt),
+                dateShamsi = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(e.CreatedAt),
                 e.SessionNumber,
                 e.PainScore,
                 e.Duration,
@@ -298,7 +374,11 @@ public class ParaclinicalController : ApiBaseController
             })
             .ToListAsync();
         sessions.Reverse();
-        return Ok(ApiResponse<object>.Success(sessions));
+        var maxSession = await _unitOfWork.Repository<Domain.Entities.Paraclinical.PhysiotherapySession>()
+            .QueryableNoTracking.Where(e => e.PatientId == patientId && !e.IsDeleted)
+            .Select(e => (int?)e.SessionNumber).MaxAsync();
+        var nextSessionNumber = maxSession is null or < 1 ? 1 : maxSession == int.MaxValue ? int.MaxValue : maxSession.Value + 1;
+        return Ok(new { isSuccess = true, statusCode = 200, message = "عملیات با موفقیت انجام شد", data = sessions, nextSessionNumber });
     }
 
     // ═══════════════ فایل‌های تصویربرداری — گام R4 ═══════════════

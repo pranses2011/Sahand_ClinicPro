@@ -1,0 +1,1 @@
+Page=physiotherapy Flow=RightToLeft Lang=fa-ir Actual=1024x720 Render=1024x720 Desired=1024x720

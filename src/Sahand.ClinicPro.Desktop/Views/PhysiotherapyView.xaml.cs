@@ -1,11 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Sahand.ClinicPro.Desktop.Helpers;
+using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
 namespace Sahand.ClinicPro.Desktop.Views;
@@ -19,6 +19,7 @@ namespace Sahand.ClinicPro.Desktop.Views;
 public partial class PhysiotherapyView : UserControl
 {
     private readonly Dictionary<string, Rectangle> _zoneRects = new();
+    private readonly HashSet<ValidationError> _numericErrors = new();
     private PhysiotherapyViewModel? _vm;
     private bool _builtFemale;
 
@@ -26,6 +27,7 @@ public partial class PhysiotherapyView : UserControl
     public PhysiotherapyView()
     {
         InitializeComponent();
+        Validation.AddErrorHandler(this, OnNumericValidationError);
         DataContextChanged += OnDataContextChanged;
         Loaded += (_, _) => BuildBodyMap();
     }
@@ -33,10 +35,17 @@ public partial class PhysiotherapyView : UserControl
     /// <summary>با تغییر ویومدل، اشتراک رویداد رنگ‌آمیزی نقشه تازه می‌شود</summary>
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (_vm is not null) _vm.BodyMapChanged -= RepaintBodyMap;
+        if (_vm is not null) { _vm.BodyMapChanged -= RepaintBodyMap; _vm.HasInvalidPhysioInput = false; }
         _vm = e.NewValue as PhysiotherapyViewModel;
-        if (_vm is not null) _vm.BodyMapChanged += RepaintBodyMap;
+        if (_vm is not null) { _vm.BodyMapChanged += RepaintBodyMap; _vm.HasInvalidPhysioInput = _numericErrors.Count != 0; }
         BuildBodyMap();
+    }
+
+    private void OnNumericValidationError(object? sender, ValidationErrorEventArgs e)
+    {
+        if (e.Action == ValidationErrorEventAction.Added) _numericErrors.Add(e.Error);
+        else _numericErrors.Remove(e.Error);
+        if (_vm is not null) _vm.HasInvalidPhysioInput = _numericErrors.Count != 0;
     }
 
     /// <summary>
@@ -120,12 +129,12 @@ public partial class PhysiotherapyView : UserControl
         if (_vm.IsFemale != _builtFemale) { BuildBodyMap(); return; }
         foreach (var (zone, rect) in _zoneRects)
         {
-            var pain = _vm.ZonePain.TryGetValue(zone, out var v) ? v : 0;
+            var measured = _vm.ZonePain.TryGetValue(zone, out var pain);
             var selected = zone == _vm.SelectedZone;
-            if (pain <= 0 && !selected) { rect.Visibility = Visibility.Collapsed; continue; }
+            if (!measured && !selected) { rect.Visibility = Visibility.Collapsed; continue; }
             rect.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(
-                pain > 0 ? (pain <= 2 ? "#66BB6A" : pain <= 5 ? "#FFA726" : "#EF5350") : "#00897B"));
-            rect.Opacity = pain > 0 ? 0.60 : 0.55;
+                measured ? (pain <= 2 ? "#66BB6A" : pain <= 5 ? "#FFA726" : "#EF5350") : "#00897B"));
+            rect.Opacity = measured ? 0.60 : 0.55;
             rect.Visibility = Visibility.Visible;
         }
     }
@@ -146,21 +155,30 @@ public partial class PhysiotherapyView : UserControl
     private void PrintHomeProgram_Click(object sender, RoutedEventArgs e)
     {
         if (_vm is null) return;
-        var dialog = new PrintDialog();
-        if (dialog.ShowDialog() != true) return;
-        var doc = new FlowDocument
-        {
-            PagePadding = new Thickness(48),
-            FlowDirection = FlowDirection.RightToLeft,
-            FontFamily = new FontFamily("pack://application:,,,/Assets/Fonts/#Vazirmatn")
-        };
-        doc.Blocks.Add(new Paragraph(new Run("برنامهٔ تمرین خانگی فیزیوتراپی"))
-        { FontSize = 20, FontWeight = FontWeights.Bold, TextAlignment = TextAlignment.Center });
-        doc.Blocks.Add(new Paragraph(new Run($"بیمار: {_vm.PhysioPatient?.FullName ?? "—"}    پروتکل: {_vm.ActiveProtocolName ?? "—"}"))
-        { FontSize = 13 });
-        doc.Blocks.Add(new Paragraph(new Run(_vm.HomeProgram ?? string.Empty)) { FontSize = 13 });
-        doc.Blocks.Add(new Paragraph(new Run("لطفاً تمرین‌ها را روزانه طبق برنامه انجام دهید و در صورت تشدید درد با درمانگاه تماس بگیرید."))
-        { FontSize = 11 });
-        dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator, "تمرین خانگی فیزیوتراپی");
+        if (!_vm.IsPhysioSessionEnabled || _vm.PhysioPatient is null)
+        { AppDialog.Error("چاپ تمرین خانگی", "ابتدا بیمار و سابقهٔ او را بارگذاری کنید."); return; }
+        if (string.IsNullOrWhiteSpace(_vm.HomeProgram))
+        { AppDialog.Error("چاپ تمرین خانگی", "ابتدا متن برنامهٔ تمرین خانگی را وارد کنید."); return; }
+        PrintPhysioDocument(_vm, _vm.HomeProgram, false);
+    }
+
+    private void PrintReferralReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_vm is null || !_vm.IsPhysioSessionEnabled || _vm.PhysioPatient is null)
+        { AppDialog.Error("چاپ گزارش", "ابتدا بیمار و سابقهٔ او را بارگذاری کنید."); return; }
+        // گزارش بلافاصله از مقادیر فعلی ساخته می‌شود و پس از خطای اعتبار چاپ نمی‌شود.
+        _vm.GenerateReportCommand.Execute(null);
+        if (string.IsNullOrWhiteSpace(_vm.ReferralReport)) return;
+        PrintPhysioDocument(_vm, _vm.ReferralReport, true);
+    }
+
+    private static void PrintPhysioDocument(PhysiotherapyViewModel vm, string? text, bool referral)
+    {
+        if (!PhysioPrintService.TryCreate(vm.PhysioPatient, text, out var data))
+        { AppDialog.Error("چاپ فیزیوتراپی", "مشخصات بیمار یا متن گزارش معتبر نیست."); return; }
+        var key = referral ? "PhysioReferralReport" : "PhysioHomeProgram";
+        var title = referral ? "پیش‌نویس گزارش فیزیوتراپی" : "پیش‌نویس تمرین خانگی فیزیوتراپی";
+        PrintFlow.Print(PhysioPrintService.Build(data!, IranClock.Now, referral), title,
+            PrintJobSettings.PrinterFor(key), jobKey: key);
     }
 }

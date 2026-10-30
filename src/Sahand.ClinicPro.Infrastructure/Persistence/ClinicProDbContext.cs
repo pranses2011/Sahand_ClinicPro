@@ -245,6 +245,9 @@ public class ClinicProDbContext : DbContext
     /// <summary>مجموعه PhysiotherapySessions</summary>
     public DbSet<PhysiotherapySession> PhysiotherapySessions { get; set; }
 
+    /// <summary>ارجاع‌های مستقل فیزیوتراپی</summary>
+    public DbSet<PhysiotherapyReferral> PhysiotherapyReferrals { get; set; }
+
     /// <summary>مجموعه Positions</summary>
     public DbSet<Position> Positions { get; set; }
 
@@ -334,6 +337,9 @@ public class ClinicProDbContext : DbContext
 
     /// <summary>مجموعه Surveys</summary>
     public DbSet<Survey> Surveys { get; set; }
+
+    /// <summary>دعوت‌های یک‌بارمصرف نظرسنجی عمومی.</summary>
+    public DbSet<SurveyInvitation> SurveyInvitations { get; set; }
 
     /// <summary>مجموعه SurveyResponses</summary>
     public DbSet<SurveyResponse> SurveyResponses { get; set; }

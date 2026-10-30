@@ -35,7 +35,7 @@ public static class LabResultPrinter
 
         var orderNo = detail.OrderNumber ?? orderId.ToString();
         return PrintFlow.Print(doc, $"برگهٔ نتیجهٔ آزمایش {orderNo}",
-            PrintJobSettings.PrinterFor("LabResult"));
+            PrintJobSettings.PrinterFor("LabResult"), jobKey: "LabResult");
     }
 
     /// <summary>ساخت سند برگهٔ نتیجه — جدول اقلام با رنگ‌بندی غیرعادی</summary>
@@ -110,7 +110,7 @@ public static class LabResultPrinter
             var row = new TableRow();
             row.Cells.Add(BodyCell(item.TestName, bold: true));
             row.Cells.Add(BodyCell(string.IsNullOrWhiteSpace(item.Result)
-                ? (item.ResultNumeric.HasValue ? Persian(Money.Format(item.ResultNumeric.Value)) : "در انتظار")
+                ? (item.ResultNumeric.HasValue ? LabNumericResult.Format(item.ResultNumeric.Value) : "در انتظار")
                 : Persian(item.Result)));
             row.Cells.Add(BodyCell(item.Unit ?? "—"));
             row.Cells.Add(BodyCell(item.NormalRange ?? "—"));
@@ -118,7 +118,7 @@ public static class LabResultPrinter
                 ? BodyCell("غیرعادی ⚠", background: "#FDECEA", foreground: "#B71C1C")
                 : (string.IsNullOrWhiteSpace(item.Result) && item.ResultNumeric is null
                     ? BodyCell("—")
-                    : BodyCell("نرمال", foreground: "#1B5E20")));
+                    : BodyCell("بدون هشدار ثبت‌شده", foreground: "#546E7A")));
             row.Cells.Add(BodyCell(item.Comment ?? ""));
             body.Rows.Add(row);
         }

@@ -38,6 +38,17 @@ public class MigrationSnapshotComplianceTests
         "AddEmployeeInsuranceFlag",  // گزینهٔ شمول بیمه در پروندهٔ پرسنل
         "PharmacyConsumptionPurchaseCost", // v2.22.4 — عکس‌فوری بهای خرید اقلام مصرفی (سود حقوق درصدی)
         "AddInsuranceContractStatus",      // v2.22.4 — وضعیت «طرف قرارداد» بیمه‌ها (وابستگی: اصلاح oldComment)
+        // مهاجرت‌های دست‌نویس موجود در شاخه که عمداً Designer ندارند؛
+        // ثبت در این فهرست جایگزین بررسی نصب/ارتقای SQL Server نیست.
+        "EyeCorrectedVisualAcuity",
+        "ImagingReportDetails",
+        "PendingRecoveryPassword",
+        "PhysiotherapyReferrals",
+        "SurveyInvitations",
+        "UnidentifiedPatient",
+        "PaymentRequestId",
+        "InvoiceRequestId",
+        "ReceptionRequestId",
     };
 
     /// <summary>همهٔ کلاس‌های مایگریشن اسمبلی زیرساخت</summary>

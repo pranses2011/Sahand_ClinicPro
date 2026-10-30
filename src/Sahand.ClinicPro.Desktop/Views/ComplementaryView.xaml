@@ -1,15 +1,39 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.ComplementaryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:Sahand.ClinicPro.Desktop.ViewModels"
+             xmlns:views="clr-namespace:Sahand.ClinicPro.Desktop.Views"
              mc:Ignorable="d"
              d:DesignHeight="640" d:DesignWidth="1100"
              FlowDirection="RightToLeft">
     <!-- ═══ فرم‌های تکمیلی — گام U19: قالب چاپ + نظرسنجی + همگام‌سازی ═══ -->
-    <Grid Margin="16,12">
+    <!-- ═══════════════════════════════════════════════════════════════
+         لایهبندی «نمای تأییدشده / نمای کامل» — قالب چاپ و طب مکمل
+         لایهٔ نخست همان طرحی است که مالک تأیید کرد (فایل PrintTemplateDesignView.xaml)؛
+         لایهٔ دوم همان محتوای کامل و قدیمی این صفحه است تا هیچ تب، فرم یا
+         تنظیماتی از بین نرود. کلید کوچک «تغییر نما» پایین صفحه جابهجا میکند.
+         پیشفرض = نمای تأییدشده؛ حالت اسکرینشات هم همان را میگیرد.
+         ═══════════════════════════════════════════════════════════════ -->
+    <Grid>
+        <ToggleButton x:Name="DsModeToggle" IsChecked="False" Style="{StaticResource App.PlainToggleButton}" Panel.ZIndex="10"
+                      HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="6,0,0,1"
+                      Padding="2,0" FontSize="8" Opacity="0.55" Cursor="Hand"
+                      Focusable="False" FocusVisualStyle="{x:Null}"
+                      Foreground="#8A9AAE" Content="طرح نمایشی (غیرعملیاتی) ↗">
+            <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                    <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                               FontSize="8" Background="Transparent" />
+                </ControlTemplate>
+            </ToggleButton.Template>
+        </ToggleButton>
+        <Grid Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource BoolToVisibility}}">
+            <views:PrintTemplateDesignView />
+        </Grid>
+    <Grid Margin="16,12" Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource InverseBoolToVisibility}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -29,19 +53,35 @@
 
             <!-- ─── تب ۱: طراح قالب‌های چاپ — چرخه ۱۳ (درخواست ۱-۶) ─── -->
             <TabItem Header="🖨️ طراح قالب چاپ">
-                <Grid Margin="4,8">
+                <DockPanel Margin="4,8">
+                    <Border DockPanel.Dock="Top" CornerRadius="12" Padding="17,12" Margin="0,0,0,12">
+                        <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#173B61" Offset="0"/><GradientStop Color="#087B83" Offset="1"/></LinearGradientBrush></Border.Background>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="مرکز طراحی قالب چاپ" FontSize="17" FontWeight="Bold" Foreground="White" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="انتخاب سند، طراحی و پیش‌نمایش پیش از ذخیره" Foreground="#D3EDF1" FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="باز کردن طراح آزاد" Click="OnFreeTemplateEditor"
+                                    IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" Padding="13,6" />
+                        </Grid>
+                    </Border>
+                <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="272" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="430" />
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="2*" />
                     </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Margin="0,0,10,0" Background="#F6FAFD" BorderBrush="#D8E7F0" BorderThickness="1" CornerRadius="12" />
+                    <Border Grid.Column="1" Margin="0,0,10,0" Background="#F8FBFD" BorderBrush="#D8E7F0" BorderThickness="1" CornerRadius="12" />
 
                     <!-- ستون ۱: فیلتر موجودیت + فهرست قالب‌ها + ساخت جدید -->
-                    <Grid Grid.Column="0" Margin="0,0,10,0">
+                    <Grid Grid.Column="0" Margin="12,12,20,12">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
@@ -96,8 +136,9 @@
                             </Button>
                         </WrapPanel>
                         <!-- طرح‌های آمادهٔ همین سند — چند طرح برای انتخاب (بازطراحی تأییدشده) -->
-                        <StackPanel Grid.Row="3" Margin="0,6,0,0">
+                        <StackPanel Grid.Row="4" Margin="0,6,0,0">
                             <TextBlock Text="🎨 طرح‌های آمادهٔ این سند — با کلیک ساخته می‌شود:" FontSize="10.5" FontWeight="SemiBold" Opacity="0.75" Margin="2,0,0,4" />
+                            <ScrollViewer MaxHeight="90" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding VisiblePresets}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -114,9 +155,10 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            </ScrollViewer>
                         </StackPanel>
-                        <!-- ردیف ۴: عملیات روی قالب انتخابی -->
-                        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4,0,0">
+                        <!-- ردیف ۵: عملیات روی قالب انتخابی -->
+                        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Command="{Binding DuplicateTemplateCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="10.5" Margin="0,0,5,0"
                                     ToolTip="کپی قالب انتخابی به‌عنوان نسخه جدید">
                                 <StackPanel Orientation="Horizontal">
@@ -142,12 +184,13 @@
                     </Grid>
 
                     <!-- ستون ۲: ویرایشگر قالب -->
-                    <Grid Grid.Column="1" Margin="0,0,10,0">
+                    <Grid Grid.Column="1" Margin="12,12,22,12" IsEnabled="{Binding IsTemplateReady}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
@@ -161,7 +204,8 @@
                                  کرد؛ اندازه‌های زیاد و حتی سفارشی باشد» — فهرست کامل
                                  اندازه‌ها + حالت سفارشی (قابل تایپ مثل Custom:100x180
                                  میلی‌متر عرض×ارتفاع)؛ ویرایش‌پذیر است. -->
-                            <ComboBox IsEditable="True" StaysOpenOnEdit="True"
+                            <ComboBox IsEditable="True" StaysOpenOnEdit="True" IsTextSearchEnabled="False"
+                                      IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                       SelectedValuePath="Tag" SelectedValue="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       Text="{Binding SelectedTemplate.PaperSize, Mode=TwoWay}"
                                       FontSize="11.5" Width="112" Margin="0,0,7,5"
@@ -178,31 +222,38 @@
                                 <ComboBoxItem Tag="Custom:100x180" Content="سفارشی ۱۰۰×۱۸۰ میلی‌متر" />
                                 <ComboBoxItem Tag="Custom:210x100" Content="سفارشی ۲۱۰×۱۰۰ میلی‌متر" />
                             </ComboBox>
-                            <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding SelectedTemplate.AccentColor, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                      materialDesign:HintAssist.Hint="رنگ (#16355E)"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="110" FontSize="11" FontFamily="{DynamicResource App.CodeFont}" Margin="0,0,7,5" />
-                            <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding SelectedTemplate.FontSize, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}"
                                      materialDesign:HintAssist.Hint="فونت"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="62" FontSize="11" Margin="0,0,7,5" />
-                            <CheckBox Content="لوگو" IsChecked="{Binding SelectedTemplate.ShowLogo}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
+                            <CheckBox Content="لوگو" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" IsChecked="{Binding SelectedTemplate.ShowLogo}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
                             <CheckBox Content="فعال" IsChecked="{Binding SelectedTemplate.IsActive}" FontSize="11" Margin="0,0,7,4" VerticalAlignment="Center" />
                             <CheckBox Content="پیش‌فرض" IsChecked="{Binding SelectedTemplate.IsDefault}" FontSize="11" Margin="0,0,0,4" VerticalAlignment="Center" />
                         </WrapPanel>
 
                         <!-- عنوان ویرایشگر -->
-                        <TextBlock Grid.Row="1" FontSize="12" FontWeight="Bold" Opacity="0.7" Margin="2,0,0,5"
-                                   Text="بدنه HTML قالب — متغیرها با {{دو آکولاد}}" />
+                        <DockPanel Grid.Row="1" Margin="2,0,0,5">
+                            <Button DockPanel.Dock="Left" Content="طراح ردیفی قدیمی" Click="OnVisualTemplateEditor"
+                                    IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" Padding="12,5" />
+                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="#49647F" TextWrapping="Wrap" VerticalAlignment="Center"
+                                       Text="قالب را بصری طراحی کنید؛ قبض اصلی با موتور داخلی چاپ می‌شود." />
+                        </DockPanel>
 
                         <!-- بدنه -->
-                        <TextBox Grid.Row="2" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
-                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
+                        <Expander Grid.Row="2" Header="ویرایش پیشرفته (HTML)" VerticalAlignment="Top">
+                            <TextBox IsReadOnly="{Binding SelectedTemplate.IsOriginalReceipt}" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" MinHeight="130"
+                                     AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
+                                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
+                        </Expander>
 
                         <!-- پالت متغیرها -->
                         <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"
                                    FontSize="10.5" Opacity="0.6" Margin="2,7,0,3" />
-                        <ItemsControl Grid.Row="4" ItemsSource="{Binding ActiveVariables}">
+                        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding ActiveVariables}" IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel />
@@ -226,6 +277,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        </ScrollViewer>
+                        <WrapPanel Grid.Row="5" Margin="0,8,0,0">
+                            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveTemplateCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="ذخیره قالب (Ctrl+Shift+1)" Margin="0,0,8,0" FontSize="12" />
+                            <Button Command="{Binding DiscardTemplateChangesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Content="انصراف از تغییرات" FontSize="11" />
+                        </WrapPanel>
                     </Grid>
 
                     <!-- ستون ۳: پیش‌نمایش زنده -->
@@ -245,7 +303,7 @@
                         <Border Grid.Row="1" CornerRadius="10" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1" Background="{DynamicResource MaterialDesign.Brush.Background}" ClipToBounds="True">
                             <WebBrowser x:Name="PreviewBrowser" Visibility="Collapsed" />
                         </Border>
-                        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel x:Name="PreviewPlaceholder" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                             <materialDesign:PackIcon Kind="FileFindOutline" Width="44" Height="44" HorizontalAlignment="Center"
                                                      Foreground="#B0BEC5" />
                             <TextBlock Text="پیش‌نمایش اینجا نمایش داده می‌شود" FontSize="11.5" Foreground="#90A4AE"
@@ -255,6 +313,7 @@
                         </StackPanel>
                     </Grid>
                 </Grid>
+                </DockPanel>
             </TabItem>
 
             <!-- ─── تب ۲: نظرسنجی ─── -->
@@ -276,10 +335,10 @@
                         <TextBox materialDesign:HintAssist.Hint="توضیح (اختیاری)"
                                  Text="{Binding NewSurveyDescription, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="240" Margin="0,0,8,6" />
-                        <Button Command="{Binding AddSurveyCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
+                        <Button shortcuts:SaveShortcut.Number="3" Command="{Binding AddSurveyCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,6">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                <TextBlock Text="ثبت نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ثبت نظرسنجی (Ctrl+Shift+3)" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding LoadSurveysCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,6">
@@ -393,11 +452,11 @@
                             <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
                                 <Button Content="➕ افزودن سوال" Command="{Binding AddDesignerQuestionCommand}"
                                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1565C0" Margin="0,0,8,4" />
-                                <Button Command="{Binding SaveSurveyDesignerCommand}"
+                                <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SaveSurveyDesignerCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,4">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
-                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+                                        <TextBlock Text="💾 ذخیرهٔ نظرسنجی (Ctrl+Shift+2)" Margin="7,0,0,0" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Content="بستن طراح" Command="{Binding CancelSurveyDesignerCommand}"
@@ -490,5 +549,6 @@
                 </StackPanel>
             </TabItem>
         </TabControl>
+    </Grid>
     </Grid>
 </UserControl>

@@ -14,5 +14,6 @@ public partial class VisitWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => Close();
+        Closed += (_, _) => viewModel.StopTimers();
     }
 }

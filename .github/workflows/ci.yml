@@ -2,19 +2,22 @@ name: 🔄 CI Build & Test
 
 on:
   push:
-    branches: [ main, 'feature/**' ]
+    # شاخههای کاری آرنا هم پیش از ادغام باید بیلد و تست شوند؛ پیشتر فقط
+    # main/feature پوشش داشتند و اصلاحهای C# روی شاخهٔ کار بیتأیید میماندند.
+    branches: [ main, 'feature/**', 'arena/**' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -43,6 +46,11 @@ jobs:
           done || true
           exit 0
 
+      - name: بررسی انتقال و گزارش نتیجه شکست تست در CI
+        run: |
+          bash scripts/test_core_test_runner.sh
+          python3 scripts/test_annotate_test_failures.py
+
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
         # پروژهٔ تست دسکتاپ net8.0-windows است و WPF روی لینوکس اجرا نمی‌شود
@@ -57,41 +65,17 @@ jobs:
         # کنار گذاشته می‌شود.
         run: |
           set -o pipefail
-          set +e
-          status=0
-          for project in \
-            tests/Sahand.ClinicPro.Domain.UnitTests/Sahand.ClinicPro.Domain.UnitTests.csproj \
-            tests/Sahand.ClinicPro.Application.UnitTests/Sahand.ClinicPro.Application.UnitTests.csproj \
-            tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
-            tests/Sahand.ClinicPro.API.IntegrationTests/Sahand.ClinicPro.API.IntegrationTests.csproj; do
-            echo "::group::$(basename "$project")"
-            dotnet test "$project" --no-build -c Release \
-              --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults || status=1
-            echo "::endgroup::"
-          done 2>&1 | tee test-run.log
-          exit $status
+          # اسکریپت وضعیت تمام پروژه‌ها را برمی‌گرداند؛ pipefail مانع می‌شود
+          # tee شکست تست را به موفقیت تبدیل کند.
+          bash scripts/run_core_tests.sh 2>&1 | tee test-run.log
 
       - name: گزارش تست‌های ناموفق (annotation)
         if: failure()
         shell: bash
         run: |
-          # نام تست‌های ناموفق و پیام خطا از خروجی کنسول dotnet test خوانده
-          # می‌شود (فایل trx هم موجود است ولی این مسیر ساده‌تر و مقاوم‌تر است)
-          if [ ! -f test-run.log ]; then
-            echo "::error::فایل test-run.log یافت نشد"
-            exit 0
-          fi
-          # نکته: گام‌های bash در اکسِن‌ها با -e -o pipefail اجرا می‌شوند؛ بدون
-          # || true، «نبودِ تطابق» یا بستن زودهنگام لوله به دست head (SIGPIPE)
-          # خودِ گام گزارش را قرمز می‌کرد و هیچ annotation منتشر نمی‌شد.
-          {
-            grep -E "^[[:space:]]*Failed |Error Message:|Aborted|Unhandled exception|error [A-Z]+[0-9]+" test-run.log || true
-            echo '─── پایان لاگ (۳۰ خط آخر) ───'
-            tail -30 test-run.log || true
-          } | head -60 | while IFS= read -r line; do
-            echo "::error::${line}"
-          done || true
-          exit 0
+          # نتایج TRX در چند annotation گروه‌بندی می‌شوند تا سقف annotation
+          # گیت‌هاب شکست‌های بعدی را پنهان نکند. اگر TRX نبود، لاگ خوانده می‌شود.
+          python3 scripts/annotate_test_failures.py test-run.log TestResults
 
       - name: خلاصه پوشش
         if: always()
@@ -149,7 +133,7 @@ jobs:
         shell: bash
         run: |
           if [ ! -f openapi.log ]; then
-            echo "::error::فایل openapi.log یافت نشد"
+            echo "سند OpenAPI تولید نشد؛ خطای مرحله پیشین را بررسی کنید."
             exit 0
           fi
           { grep -E "error |Exception|Unhandled|fail:" openapi.log || true; tail -20 openapi.log || true; } \
@@ -157,14 +141,14 @@ jobs:
           exit 0
 
       - name: بارگذاری سند OpenAPI
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: openapi-spec
           path: docs/api/openapi.json
           retention-days: 30
 
       - name: بارگذاری نتایج تست
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: test-results
@@ -179,12 +163,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
+
+      - name: آزمون اجرای به‌روزرسانی خودبسنده با وابستگی جدید
+        shell: pwsh
+        run: ./scripts/test-update-host.ps1
 
       - name: بازیابی و ساخت پروژهٔ تست دسکتاپ
         run: dotnet build tests/Sahand.ClinicPro.Desktop.UnitTests/Sahand.ClinicPro.Desktop.UnitTests.csproj -c Release
@@ -207,7 +195,7 @@ jobs:
           }
 
       - name: بارگذاری نتایج تست دسکتاپ
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: desktop-test-results
@@ -218,7 +206,7 @@ jobs:
   # ═══ چرخه دوازدهم (C2 — بند ۴-۹): E2E سرور لایسنس PHP ═══
   # ═══ چرخهٔ ۶۶ (G-08 «بستن حلقه PHP»): +۱۴ تست بکاپ خودکار/چرخش کلید RSA ═══
   license-e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       mysql:
         image: mysql:8.0
@@ -234,7 +222,7 @@ jobs:
           --health-retries=10
     steps:
       - name: دریافت سورس
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب PHP 8.2 + افزونه‌ها
         uses: shivammathur/setup-php@v2
@@ -270,7 +258,7 @@ jobs:
 
       - name: شکست در صورت خطای تست
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: licsrv-e2e-logs
           path: |

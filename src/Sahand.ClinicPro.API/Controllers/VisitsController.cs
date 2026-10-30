@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Models;
+using Sahand.ClinicPro.Domain.Common;
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
@@ -49,10 +52,29 @@ public class VisitsController : ApiBaseController
     [HasPermission("visits.create")]
     public async Task<IActionResult> Save([FromBody] SaveVisitDto dto)
     {
-        var result = await _mediator.Send(new SaveVisitCommand(dto));
-        if (result.IsSuccess)
-            return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "ویزیت ذخیره شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new SaveVisitCommand(dto));
+            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            if (result.IsFailure) return ToResponse(result);
+            return CreatedResponse(Result<long>.Success(result.Value.Id), nameof(GetById), new { id = result.Value.Id }, "ویزیت ذخیره شد");
+        }
+        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.", 409)); }
+    }
+
+    /// <summary>ذخیره با دریافت نسخهٔ دقیق برای ویرایش بعدی.</summary>
+    [HttpPost("save-versioned")]
+    [HasPermission("visits.create")]
+    public async Task<IActionResult> SaveVersioned([FromBody] SaveVisitDto dto)
+    {
+        try
+        {
+            var result = await _mediator.Send(new SaveVisitCommand(dto));
+            if (result.IsFailure && result.Error.Code == "VISIT.CONFLICT") return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            if (result.IsFailure) return ToResponse(result);
+            return CreatedResponse(result, nameof(GetById), new { id = result.Value.Id }, "ویزیت ذخیره شد");
+        }
+        catch (DbUpdateConcurrencyException) { return Conflict(ApiResponse<object>.Failure("ویزیت همزمان تغییر کرد؛ اطلاعات را دوباره بارگذاری کنید.", 409)); }
     }
 
     /// <summary>صف ویزیت امروز — فعلی + در انتظار + انجام‌شده</summary>

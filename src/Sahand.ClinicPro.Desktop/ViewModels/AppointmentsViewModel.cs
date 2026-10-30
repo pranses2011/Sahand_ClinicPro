@@ -163,6 +163,16 @@ public partial class AppointmentsViewModel : ViewModelBase
     private readonly ISnackbarService _snackbar;
     private readonly INavigationService _navigation;
     private System.Windows.Threading.DispatcherTimer? _debounce;
+    private int _patientSearchVersion;
+    private int _slotLoadVersion;
+    private int _calendarLoadVersion;
+    private bool _bookingResetRequested;
+
+    /// <summary>جلوگیری از تغییر فرم در زمان ثبت نوبت.</summary>
+    [ObservableProperty]
+    private bool _isBooking;
+    public bool CanEditBooking => !IsBooking;
+    partial void OnIsBookingChanged(bool value) => OnPropertyChanged(nameof(CanEditBooking));
 
     /// <summary>عنوان صفحه</summary>
     public override string Title => "نوبت‌دهی";
@@ -180,6 +190,19 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>متن جستجوی بیمار لیست انتظار</summary>
     [ObservableProperty]
     private string _waitlistPatientSearch = string.Empty;
+    private int _waitlistSearchVersion;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditWaitlist))]
+    private bool _isAddingToWaitlist;
+    public bool CanEditWaitlist => !IsAddingToWaitlist;
+
+    partial void OnWaitlistPatientSearchChanged(string value)
+    {
+        _waitlistSearchVersion++;
+        WaitlistPatient = null;
+        WaitlistPatientResults.Clear();
+    }
 
     /// <summary>نتایج جستجوی بیمار لیست انتظار</summary>
     [ObservableProperty]
@@ -347,6 +370,48 @@ public partial class AppointmentsViewModel : ViewModelBase
     [ObservableProperty]
     private int _wizardStep;
 
+    /// <summary>پاک‌سازی فرم نوبت ناتمام؛ در زمان ارسال ثبت مجاز نیست.</summary>
+    [RelayCommand]
+    private void NewAppointment()
+    {
+        if (IsBooking) { _snackbar.Warning("تا پایان ثبت نوبت صبر کنید."); return; }
+        _patientSearchVersion++;
+        _slotLoadVersion++;
+        _calendarLoadVersion++;
+        _bookingResetRequested = true;
+        _debounce?.Stop();
+        _calendarReloadDebounce?.Stop();
+        PatientSearchText = string.Empty;
+        PatientSearchResults.Clear();
+        SelectedPatient = null;
+        SelectedDoctor = null;
+        SelectedDate = IranClock.Today;
+        SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
+        var today = PersianDateHelper.ToJalali(IranClock.Today);
+        DisplayYear = today.Year;
+        DisplayMonth = today.Month;
+        _calendarReloadDebounce?.Stop();
+        MarkedDates = null;
+        DisabledDates = null;
+        DayStats = null;
+        MonthStats = null;
+        _monthStatsKey = string.Empty;
+        CalendarInfo = string.Empty;
+        CalendarStatus = string.Empty;
+        _pinnedSlot = null;
+        DetailSlot = null;
+        SelectedSlot = null;
+        Slots.Clear();
+        SlotGroups.Clear();
+        RefreshSlotStats();
+        SelectedRoom = null;
+        EstimatedFee = 0;
+        SelectedTypeIndex = 0;
+        SelectedPriorityIndex = 0;
+        Notes = string.Empty;
+        WizardStep = 0;
+    }
+
     /// <summary>
     /// رفتن به گام بعد — اعتبارسنجی گام جاری با پیام راهنمای فارسی؛
     /// در گام آخر مخفی است و کار با دکمهٔ «تایید و ثبت نوبت» ادامه می‌یابد
@@ -498,7 +563,7 @@ public partial class AppointmentsViewModel : ViewModelBase
                 if (doctors?.Data is not null)
                     foreach (var d in doctors.Data)
                         Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
-                if (SelectedDoctor is null && Doctors.Count > 0)
+                if (!_bookingResetRequested && SelectedDoctor is null && Doctors.Count > 0)
                     SelectedDoctor = Doctors[0];
             }
             if (SelectedDate is null)
@@ -539,7 +604,7 @@ public partial class AppointmentsViewModel : ViewModelBase
             SelectedDate = IranClock.Today;
             SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
         }
-        if (SelectedDoctor is null && Doctors.Count > 0)
+        if (!_bookingResetRequested && SelectedDoctor is null && Doctors.Count > 0)
             SelectedDoctor = Doctors[0];
         await LoadTodayAppointmentsAsync();
         await SearchListAsync();
@@ -556,10 +621,12 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>تغییر متن جستجو → راه‌اندازی تایمر Debounce</summary>
     partial void OnPatientSearchTextChanged(string value)
     {
+        _patientSearchVersion++;
         _debounce?.Stop();
+        SelectedPatient = null;
+        PatientSearchResults.Clear();
         if (value.Length < 2)
         {
-            PatientSearchResults.Clear();
             return;
         }
         _debounce = new System.Windows.Threading.DispatcherTimer
@@ -575,8 +642,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>جستجوی بیمار از سرور</summary>
     private async Task SearchPatientAsync()
     {
+        var version = ++_patientSearchVersion;
+        var term = PatientSearchText.Trim();
         var response = await _api.GetAsync<PatientSearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(PatientSearchText.Trim())}");
+            $"patients/search?term={Uri.EscapeDataString(term)}");
+        if (version != _patientSearchVersion) return;
         PatientSearchResults.Clear();
         if (response?.Data is null) return;
         foreach (var p in response.Data.Take(10))
@@ -591,9 +661,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         if (param is QuickPatient patient)
         {
-            SelectedPatient = patient;
             PatientSearchText = patient.FullName;
+            _debounce?.Stop();
+            _patientSearchVersion++;
             PatientSearchResults.Clear();
+            SelectedPatient = patient;
         }
     }
 
@@ -652,11 +724,16 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// </summary>
     private async Task LoadCalendarAsync()
     {
+        var version = ++_calendarLoadVersion;
         if (SelectedDoctor is null) return;
+        var doctorId = SelectedDoctor.Id;
+        var year = DisplayYear;
+        var month = DisplayMonth;
         try
         {
         var response = await _api.GetAsync<CalendarSummaryResponse>(
-            $"doctors/{SelectedDoctor.Id}/calendar-summary?year={DisplayYear}&month={DisplayMonth}");
+            $"doctors/{doctorId}/calendar-summary?year={year}&month={month}");
+        if (version != _calendarLoadVersion || SelectedDoctor?.Id != doctorId || DisplayYear != year || DisplayMonth != month) return;
         if (response?.Data?.Days is null)
         {
             CalendarStatus = "برنامهٔ پزشک از سرور دریافت نشد — اتصال سرور را بررسی کنید و دوباره تلاش کنید.";
@@ -698,6 +775,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            if (version != _calendarLoadVersion || SelectedDoctor?.Id != doctorId || DisplayYear != year || DisplayMonth != month) return;
             System.Diagnostics.Debug.WriteLine($"LoadCalendar failed: {ex.Message}");
             MarkedDates ??= new Dictionary<DateTime, int>();
             DayStats ??= new Dictionary<DateTime, CalendarDayStat>();
@@ -764,16 +842,21 @@ public partial class AppointmentsViewModel : ViewModelBase
     /// <summary>بارگذاری اسلات‌های روز انتخابی</summary>
     private async Task LoadSlotsAsync()
     {
+        var version = ++_slotLoadVersion;
         Slots.Clear();
         SlotGroups.Clear();
         _pinnedSlot = null;
         DetailSlot = null;
         SelectedSlot = null;
         if (SelectedDoctor is null || SelectedDate is null) return;
+        var doctorId = SelectedDoctor.Id;
+        var date = SelectedDate;
+        var shamsi = SelectedDateShamsi;
         try
         {
         var response = await _api.GetAsync<SlotsResponse>(
-            $"appointments/doctor/{SelectedDoctor.Id}/available-slots?date={Uri.EscapeDataString(SelectedDateShamsi)}");
+            $"appointments/doctor/{doctorId}/available-slots?date={Uri.EscapeDataString(shamsi)}");
+        if (version != _slotLoadVersion || SelectedDoctor?.Id != doctorId || SelectedDate != date || SelectedDateShamsi != shamsi) return;
         if (response?.Data is null) return;
         var isToday = SelectedDate?.Date == IranClock.Today;
         var nowTime = TimeOnly.FromDateTime(IranClock.Now);
@@ -916,12 +999,19 @@ public partial class AppointmentsViewModel : ViewModelBase
         if (SelectedDoctor is null) { _snackbar.Error("ابتدا پزشک را انتخاب کنید"); return; }
         if (SelectedSlot is null) { _snackbar.Error("ابتدا ساعت نوبت را انتخاب کنید"); return; }
 
+        // اسلات‌ها ممکن است به‌صورت ناهمگام تازه‌سازی و انتخاب جاری پاک شود؛
+        // همه داده‌های چاپ و درخواست را پیش از انتظار از یک انتخاب بگیرید.
+        var patient = SelectedPatient;
+        var doctor = SelectedDoctor;
+        var slot = SelectedSlot;
+        var ticketDate = SelectedDateShamsi;
+        var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
         var body = new
         {
-            patientId = SelectedPatient.Id,
-            doctorId = SelectedDoctor.Id,
-            dateShamsi = SelectedDateShamsi,
-            time = SelectedSlot.Time,
+            patientId = patient.Id,
+            doctorId = doctor.Id,
+            dateShamsi = ticketDate,
+            time = slot.Time,
             type = SelectedTypeIndex + 1,
             source = 1,
             // ═══ چرخهٔ ۷۸ — اولویت انتخابی کاربر ارسال می‌شود ═══
@@ -933,12 +1023,22 @@ public partial class AppointmentsViewModel : ViewModelBase
         };
 
         IsBusy = true;
-        var response = await _api.PostAsync<BookResponse>("appointments", body);
-        IsBusy = false;
+        IsBooking = true;
+        BookResponse? response;
+        try { response = await _api.PostAsync<BookResponse>("appointments", body); }
+        catch
+        {
+            _snackbar.Error("پاسخ ثبت نوبت دریافت نشد؛ پیش از تلاش مجدد فهرست نوبت‌ها را بررسی کنید.");
+            IsBooking = false;
+            return;
+        }
+        finally { IsBusy = false; }
 
         if (response?.Data is null)
         {
-            _snackbar.Error(_api.LastError ?? (response is null ? "ثبت نوبت ناموفق بود" : "این ساعت رزرو شده است"));
+            IsBooking = false;
+            var error = _api.LastError ?? (response is null ? "پاسخ ثبت نوبت دریافت نشد" : "ثبت نوبت ناموفق بود");
+            _snackbar.Error($"{error} — پیش از تلاش مجدد فهرست نوبت‌ها را بررسی کنید.");
             return;
         }
 
@@ -951,21 +1051,14 @@ public partial class AppointmentsViewModel : ViewModelBase
         // چاپگر نوبت‌دهی انتخاب‌شده چاپ می‌شود (بدون هیچ دیالوگی). نام چاپگر و
         // پرچم خودکار در ذخیره‌گاه محلی هم آینه می‌شوند تا بدون درخواست اضافهٔ
         // شبکه در دسترس باشند.
-        var ticketPatient = SelectedPatient.FullName;
-        var ticketDoctor = SelectedDoctor.Name;
-        var ticketDate = SelectedDateShamsi;
-        var ticketTime = SelectedSlot?.Time ?? string.Empty;
-        var ticketType = VisitTypes.ElementAtOrDefault(Math.Clamp(SelectedTypeIndex, 0, VisitTypes.Length - 1));
-        if (LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket"))
-        {
-            var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
-            var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
-                ? clinic : "درمانگاه سهند";
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                Services.AppointmentTicketPrinter.Print(
-                    ticketPrinter, clinicTitle, code, ticketPatient, ticketDoctor,
-                    ticketDate, ticketTime, $"نوبت {ticketType}"));
-        }
+        var ticketPatient = patient.FullName;
+        var ticketDoctor = doctor.Name;
+        var ticketTime = slot.Time;
+        var autoPrintTicket = LocalSettingsStore.Get("Printer.AutoPrintTicket") == "true" || PrintJobSettings.AutoFor("AppointmentTicket");
+        var ticketData = new AppointmentTicketData(
+            response.Data.PatientName ?? ticketPatient, ticketDoctor,
+            response.Data.DateShamsi ?? ticketDate, response.Data.Time ?? ticketTime,
+            code, response.Data.QueueNumber);
 
         SelectedPatient = null;
         PatientSearchText = string.Empty;
@@ -974,8 +1067,31 @@ public partial class AppointmentsViewModel : ViewModelBase
         foreach (var s in Slots) s.IsSelected = false;
         // چرخهٔ ۷۶ — ویزارد برای نوبت بعدی به گام نخست بازمی‌گردد
         WizardStep = 0;
+        IsBooking = false;
         await LoadSlotsAsync();
         await LoadTodayAppointmentsAsync();
+        if (autoPrintTicket)
+        {
+            try
+            {
+                var ticketPrinter = PrintJobSettings.PrinterFor("AppointmentTicket");
+                var clinicTitle = LocalSettingsStore.Get("Printer.ClinicName") is { Length: > 0 } clinic
+                    ? clinic : "درمانگاه سهند";
+                var (outcome, usedFallback) = await AppointmentTicketTemplatePrint.PrintAsync(ticketData,
+                    vars => TemplatedPrintService.TryPrintAsync(_api, "AppointmentTicket", vars, $"قبض نوبت {code}"),
+                    () => AppointmentTicketPrinter.Print(ticketPrinter, clinicTitle, code,
+                        ticketData.PatientName, ticketData.DoctorName, ticketData.Date, ticketData.Time, $"نوبت {ticketType}"));
+                if (usedFallback) _snackbar.Warning("قالب نوبت دریافت نشد؛ از طرح داخلی استفاده شد.");
+                if (outcome == TemplatePrintOutcome.Printed) _snackbar.Success("قبض نوبت به چاپگر ارسال شد");
+                else if (outcome == TemplatePrintOutcome.NotPrinted) _snackbar.Info("قبض نوبت به چاپگر ارسال نشد");
+                else _snackbar.Info("پنجره چاپ قالب بسته شد؛ نتیجه چاپ مرورگر قابل تأیید نیست");
+            }
+            catch (Exception)
+            {
+                // رزرو قبلاً ثبت شده است؛ اجرای مجدد چاپ می‌تواند قبض تکراری بسازد.
+                _snackbar.Error("نوبت ثبت شد، اما اجرای چاپ قبض ناموفق بود؛ پیش از چاپ مجدد خروجی چاپگر را بررسی کنید.");
+            }
+        }
     }
 
     /// <summary>بارگذاری نوبت‌های امروز — جدول پایین تب رزرو</summary>
@@ -1198,6 +1314,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string? AppointmentCode { get; set; }
+        public string? PatientName { get; set; }
+        public string? DoctorName { get; set; }
+        public string? DateShamsi { get; set; }
+        public string? Time { get; set; }
+        public int? QueueNumber { get; set; }
     }
 
     public sealed class TodayResponse
@@ -1230,6 +1351,8 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         public long Id { get; set; }
         public string? AppointmentCode { get; set; }
+        public long? PatientId { get; set; }
+        public long? DoctorId { get; set; }
         public string PatientName { get; set; } = string.Empty;
         public string? PatientMobile { get; set; }
         public string DoctorName { get; set; } = string.Empty;
@@ -1288,8 +1411,11 @@ public partial class AppointmentsViewModel : ViewModelBase
             WaitlistPatientResults.Clear();
             return;
         }
+        var version = ++_waitlistSearchVersion;
+        var term = WaitlistPatientSearch.Trim();
         var response = await _api.GetAsync<PatientSearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(WaitlistPatientSearch.Trim())}");
+            $"patients/search?term={Uri.EscapeDataString(term)}");
+        if (version != _waitlistSearchVersion) return;
         WaitlistPatientResults.Clear();
         if (response?.Data is null) return;
         foreach (var p in response.Data.Take(10))
@@ -1302,14 +1428,18 @@ public partial class AppointmentsViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddToWaitlistAsync()
     {
-        if (WaitlistPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید"); return; }
+        if (IsAddingToWaitlist) return;
+        if (WaitlistPatient is not { } patient) { _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید"); return; }
         if (WaitlistFromDate is not { } from || WaitlistToDate is not { } to)
         { _snackbar.Error("بازه تاریخ دلخواه را کامل کنید"); return; }
         if (to < from) { _snackbar.Error("تاریخ پایان قبل از شروع است"); return; }
 
+        IsAddingToWaitlist = true;
+        try
+        {
         var ok = await _api.PostAsync("appointments/waitlist", new
         {
-            patientId = WaitlistPatient.Id,
+            patientId = patient.Id,
             doctorId = WaitlistDoctorIndex >= 0 && WaitlistDoctorIndex < Doctors.Count
                 ? Doctors[WaitlistDoctorIndex].Id
                 : (long?)null,
@@ -1327,14 +1457,24 @@ public partial class AppointmentsViewModel : ViewModelBase
 
         if (ok)
         {
-            _snackbar.Success($"«{WaitlistPatient.FullName}» در لیست انتظار ثبت شد");
-            WaitlistPatient = null;
-            WaitlistPatientSearch = string.Empty;
-            WaitlistPatientResults.Clear();
-            WaitlistNotes = null;
-            await LoadWaitlistAsync();
+            _snackbar.Success($"«{patient.FullName}» در لیست انتظار ثبت شد");
+            if (ReferenceEquals(WaitlistPatient, patient))
+            {
+                WaitlistPatient = null;
+                WaitlistPatientSearch = string.Empty;
+                WaitlistPatientResults.Clear();
+                WaitlistNotes = null;
+            }
+            try { await LoadWaitlistAsync(); }
+            catch (Exception) { _snackbar.Warning("ثبت لیست انتظار انجام شد، اما تازه‌سازی فهرست ناموفق بود؛ دوباره ثبت نکنید."); }
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت در لیست انتظار ناموفق بود");
+        else _snackbar.Error((_api.LastError ?? "پاسخ ثبت در لیست انتظار دریافت نشد") + "؛ پیش از تلاش مجدد فهرست انتظار را بررسی کنید.");
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("پاسخ ثبت در لیست انتظار دریافت نشد؛ پیش از تلاش مجدد فهرست انتظار را بررسی کنید.");
+        }
+        finally { IsAddingToWaitlist = false; }
     }
 
     /// <summary>لغو ردیف لیست انتظار</summary>
@@ -1353,9 +1493,10 @@ public partial class AppointmentsViewModel : ViewModelBase
     {
         if (param is QuickPatient patient)
         {
-            WaitlistPatient = patient;
-            WaitlistPatientResults.Clear();
             WaitlistPatientSearch = patient.FullName;
+            _waitlistSearchVersion++;
+            WaitlistPatientResults.Clear();
+            WaitlistPatient = patient;
         }
     }
 

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Domain.Common;
+using Sahand.ClinicPro.Application.Common.Helpers;
 using Sahand.ClinicPro.Domain.Entities.Pharmacy;
 using Sahand.ClinicPro.Domain.Entities.Scheduling;
 using Sahand.ClinicPro.Domain.Enums;
@@ -50,7 +51,7 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
     public async Task<Result<List<ConsumableOptionDto>>> Handle(GetConsumablesQuery request,
         CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
         var search = request.Search?.Trim();
 
         // فقط بچ‌های دارای موجودی و سالم (تهی یا آیندهٔ انقضا)؛ بچ منقضی هرگز
@@ -59,7 +60,7 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
             .QueryableNoTracking
             .Include(i => i.Medication)
             .Where(i => i.Quantity > 0
-                && !i.IsDeleted
+                && !i.IsDeleted && i.IsActive
                 && (i.ExpiryDate == null || i.ExpiryDate >= today)
                 && i.Medication != null
                 && i.Medication.ItemKind == MedicationItemKind.Consumable
@@ -71,9 +72,12 @@ public class GetConsumablesQueryHandler : IRequestHandler<GetConsumablesQuery, R
                 (i.Medication!.GenericNameFa != null && i.Medication.GenericNameFa.Contains(search)) ||
                 i.Medication!.GenericName.Contains(search));
 
-        var rows = await query
+        // سقف بر تعداد قلم است، نه تعداد بچ؛ همهٔ بچ‌های هر قلم منتخب باید جمع شوند.
+        var selectedIds = await query.Select(i => new { i.MedicationId, Name = i.Medication!.GenericNameFa ?? i.Medication.GenericName })
+            .Distinct().OrderBy(x => x.Name).ThenBy(x => x.MedicationId).Take(200)
+            .Select(x => x.MedicationId).ToListAsync(cancellationToken);
+        var rows = await query.Where(i => selectedIds.Contains(i.MedicationId))
             .OrderBy(i => i.Medication!.GenericNameFa ?? i.Medication.GenericName)
-            .Take(200)
             .Select(i => new
             {
                 i.MedicationId,
@@ -166,9 +170,15 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.EMPTY",
                 "فهرست اقلام مصرفی خالی است"));
 
-        if (request.Items.Any(i => i.Quantity <= 0))
+        // موجودی و تراکنش هر دو decimal(10,2) هستند؛ گرد شدن ضمنی SQL
+        // نباید باعث برداشت یا فاکتور با مقدار متفاوت از درخواست شود.
+        if (request.Items.Any(i => i.Quantity <= 0 || i.Quantity > 99999999.99m ||
+                decimal.Round(i.Quantity, 2) != i.Quantity))
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.QTY",
-                "تعداد هر قلم مصرفی باید بیشتر از صفر باشد"));
+                "تعداد هر قلم باید مثبت و حداکثر با دو رقم اعشار و در محدوده مجاز باشد."));
+
+        if (request.Items.GroupBy(i => i.MedicationId).Any(g => g.Count() > 1))
+            return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.DUPLICATE", "هر قلم مصرفی فقط یک بار در درخواست مجاز است."));
 
         // پذیرش باید واقعی باشد — منشأ تراکنش‌ها به آن گره می‌خورد
         var reception = await _unitOfWork.Repository<Reception>()
@@ -177,43 +187,56 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
         if (reception is null)
             return Result<ConsumeStockResultDto>.Failure(Error.NotFound("پذیرش", request.ReceptionId));
 
+        if (reception.Status == ReceptionStatus.Cancelled)
+            return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.CANCELLED", "مصرف برای پذیرش لغوشده مجاز نیست."));
         var now = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(PersianDateHelper.IranNow());
         var resultItems = new List<ConsumeResultItemDto>();
         // ═══ چرخهٔ ۶۷ — جمع بهای تمام‌شدهٔ اقلام مصرفی (قیمت خرید × تعداد) ═══
-        // مبنای سند حسابداری هزینه؛ قیمت فروش (taken) فقط برای نمایش خروجی است.
+        // مبنای سند حسابداری هزینه؛ قیمت فروش واقعی هر بچ در خروجی حفظ می‌شود.
         var totalCost = 0m;
 
+        // پیش از تغییر هر بچ همه اقلام و موجودی آنها بررسی شوند؛ شکست قلم
+        // بعدی نباید تغییر ردیابی‌شده قلم قبلی را در واحد کار باقی بگذارد.
+        var plans = new List<(ConsumeItemDto Item, Domain.Entities.Clinical.Medication Medication, List<PharmacyInventory> Batches)>();
         foreach (var item in request.Items)
         {
-            // نام قلم برای پیام خطا و خروجی
             var medication = await _unitOfWork.Repository<Domain.Entities.Clinical.Medication>()
                 .QueryableNoTracking
-                .FirstOrDefaultAsync(m => m.Id == item.MedicationId && !m.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(m => m.Id == item.MedicationId && !m.IsDeleted && m.IsActive &&
+                    m.ItemKind == MedicationItemKind.Consumable, cancellationToken);
             if (medication is null)
                 return Result<ConsumeStockResultDto>.Failure(
-                    Error.NotFound("قلم مصرفی", item.MedicationId));
+                    new Error("PHARMACY.CONSUME.ITEM", "قلم انتخاب‌شده مصرفیِ فعال و معتبر نیست."));
 
-            // بچ‌های سالم این قلم به ترتیب نزدیک‌ترین انقضا (FEFO)
             var batches = await _unitOfWork.Repository<PharmacyInventory>()
                 .QueryableTracking
                 .Where(inv => inv.MedicationId == item.MedicationId
-                           && inv.Quantity > 0
-                           && !inv.IsDeleted
-                           && (inv.ExpiryDate == null || inv.ExpiryDate >= DateOnly.FromDateTime(now)))
-                .OrderBy(inv => inv.ExpiryDate)
+                           && inv.Quantity > 0 && !inv.IsDeleted && inv.IsActive
+                           && (inv.ExpiryDate == null || inv.ExpiryDate >= today))
+                .OrderBy(inv => inv.ExpiryDate == null).ThenBy(inv => inv.ExpiryDate).ThenBy(inv => inv.Id)
                 .ToListAsync(cancellationToken);
+            var available = batches.Sum(b => b.Quantity);
+            if (available < item.Quantity)
+                return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.STOCK",
+                    $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {item.Quantity - available} عدد کمبود دارد؛ ابتدا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید"));
+            plans.Add((item, medication, batches));
+        }
 
+        foreach (var (item, medication, batches) in plans)
+        {
             var remaining = item.Quantity;
-            var taken = 0m; // جمع هزینهٔ واقعی این قلم از بچ‌ها
+            var priceGroups = new Dictionary<decimal, decimal>(); // تعداد واقعی به تفکیک قیمت فروش
 
             foreach (var batch in batches)
             {
                 if (remaining <= 0) break;
+                if (batch.Quantity <= 0) continue;
 
                 var take = Math.Min(batch.Quantity, remaining);
                 batch.Quantity -= take;
                 remaining -= take;
-                taken += take * batch.SellPrice;
+                priceGroups[batch.SellPrice] = priceGroups.GetValueOrDefault(batch.SellPrice) + take;
                 // چرخهٔ ۶۷: بهای تمام‌شده (خرید) — نه قیمت فروش؛ حسابداری هزینه
                 // باید به مبنای خرید باشد تا سود خالص واقعی باشد
                 totalCost += take * batch.PurchasePrice;
@@ -247,12 +270,12 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
                 return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.STOCK",
                     $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {remaining} عدد کمبود دارد؛ ابتدا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید"));
 
-            resultItems.Add(new ConsumeResultItemDto(
-                medication.Id,
-                medication.GenericNameFa ?? medication.GenericName,
-                item.Quantity,
-                item.Quantity > 0 ? taken / item.Quantity : 0m,
-                taken));
+            // میانگین قیمت بچ‌ها می‌تواند کسری ریال شود و در ستون قیمت فاکتور
+            // قابل ذخیره نباشد. هر قیمت واقعی جدا می‌ماند؛ بچ‌های هم‌قیمت ادغام می‌شوند.
+            foreach (var (price, quantity) in priceGroups)
+                resultItems.Add(new ConsumeResultItemDto(
+                    medication.Id, medication.GenericNameFa ?? medication.GenericName,
+                    quantity, price, quantity * price));
         }
 
         // ═══ چرخهٔ ۶۷ (گزارش مالک: «در تب سود و زیان مبلغ هزینه‌ها صفر است») ═══

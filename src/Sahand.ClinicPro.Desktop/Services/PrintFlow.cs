@@ -37,6 +37,10 @@ public static class PrintFlow
 {
     /// <summary>کلید ذخیرهٔ محلی پرچم پیش‌نمایش — آینهٔ تنظیم سرورِ Printer.ShowPreview</summary>
     public const string PreviewSettingKey = "Printer.ShowPreview";
+    /// <summary>رفتار بستن پیش‌نمایش داخلی پس از ارسال موفق به چاپگر.</summary>
+    public const string ClosePreviewSettingKey = "Printer.ClosePreviewAfterPrint";
+    public static bool ClosePreviewAfterPrint => ResolveClosePreview(LocalSettingsStore.Get(ClosePreviewSettingKey));
+    public static bool ResolveClosePreview(string? value) => !string.Equals(value, "false", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// پرچم «پیش‌نمایش قبل از چاپ» — خوانده‌شده از ذخیرهٔ محلی؛
@@ -53,14 +57,21 @@ public static class PrintFlow
     /// <param name="printerName">چاپگر مقصد از تنظیمات — تهی یعنی پیش‌فرض ویندوز</param>
     /// <param name="pageWidth">عرض کاغذ (پیکسل ۹۶dpi) — فقط برای مسیر چاپ مستقیم؛ تهی = خودکار چاپگر</param>
     /// <param name="pageHeight">ارتفاع کاغذ (پیکسل ۹۶dpi) — تهی = خودکار چاپگر</param>
-    /// <returns>true اگر چاپ (یا پیش‌نمایشِ منتهی به چاپ) انجام شد</returns>
+    /// <param name="showPreview">پیش‌نمایش اختصاصی؛ تهی یعنی تنظیم عمومی</param>
+    /// <param name="copies">تعداد نسخه؛ تهی یعنی تنظیم سند یا یک نسخه</param>
+    /// <param name="jobKey">کلید سند برای دریافت تنظیمات اختصاصی</param>
+    /// <returns>true اگر سند به چاپگر ارسال شد</returns>
     public static bool Print(FlowDocument document, string title, string? printerName = null,
-        double? pageWidth = null, double? pageHeight = null)
+        double? pageWidth = null, double? pageHeight = null, bool? showPreview = null, int? copies = null,
+        string? jobKey = null)
     {
-        if (PreviewEnabled)
+        var effectiveCopies = NormalizeCopies(copies ?? (jobKey is null ? 1 : PrintJobSettings.CopiesFor(jobKey)));
+        var effectivePreview = showPreview ?? (jobKey is null ? null : PrintJobSettings.PreviewFor(jobKey));
+        if (ResolvePreview(effectivePreview, PreviewEnabled))
         {
             // پیش‌نمایش — مالکیت پنجره با پنجرهٔ فعال برنامه؛ کاربر از همان‌جا چاپ می‌کند
-            var preview = new PrintPreviewWindow(document, title, printerName)
+            var preview = new PrintPreviewWindow(document, title, printerName,
+                pageWidth: pageWidth, pageHeight: pageHeight, copies: effectiveCopies)
             {
                 Owner = System.Windows.Application.Current?.Windows
                     .Cast<Window>().FirstOrDefault(w => w.IsActive)
@@ -71,8 +82,14 @@ public static class PrintFlow
         }
 
         // چاپ مستقیم — بدون هیچ پنجره‌ای (رفتار پیشین)
-        return PrintDirect(document, title, printerName, pageWidth, pageHeight);
+        return PrintDirect(document, title, printerName, pageWidth, pageHeight, effectiveCopies);
     }
+
+    /// <summary>پیش‌نمایش اختصاصی در صورت وجود بر تنظیم عمومی مقدم است.</summary>
+    public static bool ResolvePreview(bool? specific, bool global) => specific ?? global;
+
+    /// <summary>تعداد نسخه در محدودهٔ پشتیبانی‌شدهٔ تنظیمات.</summary>
+    public static int NormalizeCopies(int copies) => Math.Clamp(copies, 1, 9);
 
     /// <summary>
     /// ارسال مستقیم به چاپگر — بدون پیش‌نمایش؛ چاپگر مقصد از تنظیمات یا
@@ -83,9 +100,10 @@ public static class PrintFlow
     /// <param name="printerName">چاپگر مقصد — تهی یعنی پیش‌فرض</param>
     /// <param name="pageWidth">عرض کاغذ (پیکسل ۹۶dpi) — تهی = خودکار چاپگر</param>
     /// <param name="pageHeight">ارتفاع کاغذ (پیکسل ۹۶dpi) — تهی = خودکار چاپگر</param>
+    /// <param name="copies">تعداد نسخهٔ درخواستی از درایور</param>
     /// <returns>true اگر ارسال موفق بود</returns>
     public static bool PrintDirect(FlowDocument document, string title, string? printerName = null,
-        double? pageWidth = null, double? pageHeight = null)
+        double? pageWidth = null, double? pageHeight = null, int copies = 1)
     {
         try
         {
@@ -109,6 +127,7 @@ public static class PrintFlow
             // اندازهٔ کاغذ سفارشی — فیش‌پرینترهای حرارتی (۸۰ میلی) و سایر غیر-A4
             if (pageWidth is { } w && pageHeight is { } h)
                 dialog.PrintTicket.PageMediaSize = new PageMediaSize(w, h);
+            dialog.PrintTicket.CopyCount = NormalizeCopies(copies);
 
             if (document is IDocumentPaginatorSource src)
                 dialog.PrintDocument(src.DocumentPaginator, title);

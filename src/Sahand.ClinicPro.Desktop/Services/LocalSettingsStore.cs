@@ -42,21 +42,20 @@ public static class LocalSettingsStore
     /// <summary>حذف یک کلید — برای حذف پریست تم (چرخه ۲۴)</summary>
     public static void Remove(string key)
     {
-        try
+        lock (WriteLock)
         {
-            if (!File.Exists(SettingsPath))
-                return;
-            var json = File.ReadAllText(SettingsPath);
-            var doc = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-            if (doc is null || !doc.Remove(key))
-                return;
-            File.WriteAllText(SettingsPath,
-                System.Text.Json.JsonSerializer.Serialize(doc,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-        }
-        catch
-        {
-            // حذف ناموفق هرگز نباید جریان را متوقف کند
+            try
+            {
+                if (!File.Exists(SettingsPath)) return;
+                var json = File.ReadAllText(SettingsPath);
+                var doc = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                if (doc is null || !doc.Remove(key)) return;
+                LocalSettingsFile.Replace(SettingsPath, doc);
+            }
+            catch
+            {
+                // حذف ناموفق هرگز نباید جریان را متوقف کند
+            }
         }
     }
 
@@ -77,22 +76,20 @@ public static class LocalSettingsStore
         }
     }
 
+    private static readonly object WriteLock = new();
+
+    /// <summary>ثبت گروهی با اعلان خطا؛ تغییرات فرایند جاری با Set هم‌زمان نمی‌شوند.</summary>
+    public static void SetManyRequired(IReadOnlyDictionary<string, string> values)
+    {
+        lock (WriteLock) LocalSettingsFile.MergeAndWrite(SettingsPath, values);
+    }
+
     /// <summary>نوشتن یک مقدار رشته‌ای — فایل کامل بازنویسی می‌شود</summary>
     public static void Set(string key, string value)
     {
         try
         {
-            var doc = new Dictionary<string, string>();
-            if (File.Exists(SettingsPath))
-            {
-                var json = File.ReadAllText(SettingsPath);
-                var existing = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-                if (existing is not null)
-                    doc = existing;
-            }
-            doc[key] = value;
-            File.WriteAllText(SettingsPath,
-                JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true }));
+            SetManyRequired(new Dictionary<string, string> { [key] = value });
         }
         catch
         {

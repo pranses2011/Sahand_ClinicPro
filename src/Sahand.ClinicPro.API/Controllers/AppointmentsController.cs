@@ -11,6 +11,8 @@ using Sahand.ClinicPro.Application.Features.Appointments.Commands.SendAppointmen
 using Sahand.ClinicPro.Application.Features.Appointments.Queries.GetAvailableSlots;
 using Sahand.ClinicPro.Application.Features.Appointments.Queries.SearchAppointments;
 using Sahand.ClinicPro.Application.Features.Appointments.Waitlist;
+using Sahand.ClinicPro.Application.Common.Helpers;
+using Sahand.ClinicPro.Application.Interfaces;
 
 namespace Sahand.ClinicPro.API.Controllers;
 
@@ -24,9 +26,14 @@ namespace Sahand.ClinicPro.API.Controllers;
 public class AppointmentsController : ApiBaseController
 {
     private readonly IMediator _mediator;
+    private readonly IDateTimeService _clock;
 
-    /// <summary>سازنده با تزریق میانجی</summary>
-    public AppointmentsController(IMediator mediator) => _mediator = mediator;
+    /// <summary>سازنده با تزریق میانجی و ساعت درمانگاه</summary>
+    public AppointmentsController(IMediator mediator, IDateTimeService clock)
+    {
+        _mediator = mediator;
+        _clock = clock;
+    }
 
     /// <summary>نوبت‌های یک تاریخ — با فیلتر پزشک و وضعیت</summary>
     /// <param name="date">تاریخ شمسی — تهی یعنی امروز</param>
@@ -149,12 +156,17 @@ public class AppointmentsController : ApiBaseController
     public async Task<IActionResult> OfferFreedSlot([FromQuery] long doctorId,
         [FromQuery] string? date = null, [FromQuery] string time = "10:00")
     {
-        var g = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToGregorian(date);
-        var dateOnly = g is { } gdate ? DateOnly.FromDateTime(gdate) : DateOnly.FromDateTime(DateTime.UtcNow);
-        var timeOnly = TimeOnly.TryParse(time, out var t) ? t : new TimeOnly(10, 0);
+        if (doctorId <= 0)
+            return ToResponse(Result<long>.Failure(new Error("WAITLIST.DOCTOR", "شناسه پزشک نامعتبر است")));
+        var g = PersianDateHelper.ToGregorian(date);
+        if (!string.IsNullOrWhiteSpace(date) && g is null)
+            return ToResponse(Result<long>.Failure(new Error("WAITLIST.DATE", "تاریخ شمسی نوبت نامعتبر است")));
+        if (string.IsNullOrWhiteSpace(time) || !TimeOnly.TryParse(PersianDateHelper.ToLatinDigits(time), out var timeOnly))
+            return ToResponse(Result<long>.Failure(new Error("WAITLIST.TIME", "ساعت نوبت نامعتبر است")));
+        var dateOnly = g is { } gdate ? DateOnly.FromDateTime(gdate) : _clock.TodayIran;
         var result = await _mediator.Send(new NotifyWaitlistForFreedSlotCommand(0, doctorId, dateOnly, timeOnly));
         return ToResponse(result, result.IsSuccess && result.Value > 0
-            ? "پیامک پیشنهاد نوبت به بیمار منتظر ارسال شد"
+            ? "پیشنهاد نوبت برای بیمار در صف ارسال پیامک ثبت شد"
             : "بیمار منتظرِ واجد شرایطی برای این پزشک/تاریخ نیست");
     }
 }

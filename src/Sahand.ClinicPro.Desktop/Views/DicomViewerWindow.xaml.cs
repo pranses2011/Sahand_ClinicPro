@@ -18,9 +18,6 @@ public partial class DicomViewerWindow : Window
     /// <summary>تصویر تجزیه‌شده فعلی</summary>
     private DicomImage? _image;
 
-    /// <summary>مسیر فایل فعلی</summary>
-    private string? _filePath;
-
     /// <summary>سازنده — می‌توان مسیر فایل را مستقیم داد</summary>
     public DicomViewerWindow(string? filePath = null)
     {
@@ -43,14 +40,27 @@ public partial class DicomViewerWindow : Window
     }
 
     /// <summary>بارگذاری و تجزیه فایل DICOM</summary>
-    public void LoadFile(string path)
+    public void LoadFile(string path) => LoadImage(() => DicomFileReader.Load(path), Path.GetFileName(path));
+
+    /// <summary>بارگذاری دادهٔ دریافتی در حافظه، بدون ایجاد فایل موقت حاوی اطلاعات بیمار.</summary>
+    public void LoadBytes(byte[] bytes, string displayName) => LoadImage(() =>
     {
+        using var stream = new MemoryStream(bytes, writable: false);
+        return DicomFileReader.Load(stream);
+    }, displayName);
+
+    private void LoadImage(Func<DicomImage> readImage, string displayName)
+    {
+        // در صورت خطای فایل جدید، تصویر و مشخصات بیمار قبلی باقی نماند.
+        _image = null;
+        ImageHost.Source = null;
+        FileTitle.Text = displayName;
+        DimensionsText.Text = DepthText.Text = KindText.Text = "—";
+        MetadataPanel.Children.Clear();
         try
         {
-            _image = DicomFileReader.Load(path);
-            _filePath = path;
-
-            FileTitle.Text = Path.GetFileName(path);
+            _image = readImage();
+            FileTitle.Text = displayName;
             DimensionsText.Text = $"{_image.Width}×{_image.Height}";
             DepthText.Text = $"{_image.BitsAllocated} بیت{(_image.IsSigned ? " (علامت‌دار)" : "")}";
             KindText.Text = _image.Rgb24 is not null ? "رنگی RGB" : "خاکستری";

@@ -1,0 +1,167 @@
+using System.Text.Json;
+using FluentAssertions;
+using Sahand.ClinicPro.Desktop.ViewModels;
+using Xunit;
+
+namespace Sahand.ClinicPro.Desktop.UnitTests;
+
+public class VisitEditSafetyTests
+{
+    [Fact]
+    public async Task Saving_new_visit_twice_reuses_created_id()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("id").ValueKind.Should().Be(JsonValueKind.Null);
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        JsonSerializer.SerializeToElement(api.LastBody).GetProperty("id").GetInt64().Should().Be(42);
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Next_patient_does_not_close_when_new_visit_result_is_unknown()
+    {
+        var api = new FakeApiClient();
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        var closed = false;
+        vm.CloseRequested += (_, _) => closed = true;
+        await vm.NextPatientCommand.ExecuteAsync(null);
+        closed.Should().BeFalse();
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned").Should().Be(1);
+        vm.StopTimers();
+    }
+    [Fact]
+    public async Task Existing_visit_preserves_physical_exam_soap_and_legacy_secondary_diagnoses()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, receptionId = 9L,
+            status = 4, editVersion = "version-42", physicalExamination = "یافته اصلی", soapSubjective = "شرح مستقل", soapObjective = "معاینه مستقل",
+            soapAssessment = "ارزیابی مستقل", soapPlan = "برنامه مستقل", secondaryDiagnoses = "قالب قدیمی" } };
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
+        vm.PhysicalExamText.Should().Be("یافته اصلی");
+        vm.HeadNeckNormal.Should().BeFalse();
+        vm.ChiefComplaint = "شرح جدید";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody);
+        body.GetProperty("receptionId").GetInt64().Should().Be(9);
+        body.GetProperty("physicalExamination").GetString().Should().Be("یافته اصلی");
+        body.GetProperty("soapSubjective").GetString().Should().Be("شرح مستقل");
+        body.GetProperty("soapObjective").GetString().Should().Be("معاینه مستقل");
+        body.GetProperty("secondaryDiagnoses").GetString().Should().Be("قالب قدیمی");
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Completed_visit_is_not_saved_or_reopened()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/42"] = new { data = new { id = 42L, patientId = 7L, doctorId = 8L, status = 3 } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 42);
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned");
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Vital_numbers_are_validated_and_persian_digits_are_preserved()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.BpText = "۱۲۰/۸۰";
+        vm.HrText = "۷۲";
+        vm.TempText = "۳۷٫۵";
+        vm.Spo2Text = "۹۸";
+        vm.HeightText = "۱۷۰";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        var body = JsonSerializer.SerializeToElement(api.LastBody, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }).GetProperty("vitalSigns");
+        body.GetProperty("bloodPressureSystolic").GetInt32().Should().Be(120);
+        body.GetProperty("heartRate").GetInt32().Should().Be(72);
+        body.GetProperty("temperature").GetDecimal().Should().Be(37.5m);
+        body.GetProperty("height").GetDecimal().Should().Be(170m);
+        vm.Spo2Text = "۱۰۱";
+        await vm.SaveDraftCommand.ExecuteAsync(null);
+        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "visits/save-versioned").Should().Be(1);
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public void Vital_cards_do_not_claim_clinical_normality_or_divide_by_tiny_height()
+    {
+        var vm = new VisitEditViewModel(new FakeApiClient(), new FakeSnackbar(), 7, 8);
+        vm.HrText = "۷۲";
+        vm.WeightText = "۷۰";
+        vm.HeightText = "۰٫۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۱";
+        vm.VitalCards.Single(x => x.Title == "HR").StatusText.Should().Contain("نیازمند ارزیابی");
+        vm.BmiDisplay.Should().BeNull();
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Diagnosis_search_discards_late_results_after_the_text_changes()
+    {
+        var api = new FakeApiClient();
+        var pending = new TaskCompletionSource<object?>();
+        api.PendingGetResponses["lookups/diagnoses?search=old&take=12"] = pending.Task;
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.DiagnosisSearch = "old";
+        vm.DiagnosisSearch = "x";
+        pending.SetResult(new { data = new[] { new { id = 1L, code = "A", title = "قدیمی" } } });
+        await Task.Delay(100);
+        vm.DiagnosisResults.Should().BeEmpty();
+        vm.SelectDiagnosisCommand.Execute(new DiagnosisOption(1, "A", "قدیمی"));
+        vm.PrimaryDiagnosis.Should().BeNull();
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Referrals_require_explicit_imaging_choices_and_do_not_create_fake_physio_sessions()
+    {
+        var api = new FakeApiClient();
+        var snack = new FakeSnackbar();
+        var vm = new VisitEditViewModel(api, snack, 7, 8);
+        await vm.SendToImagingCommand.ExecuteAsync(null);
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
+        api.Calls.Should().NotContain(c => c.Endpoint == "imaging/orders" || c.Endpoint == "physiotherapy/sessions");
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Lab_order_is_linked_to_successfully_saved_visit()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8);
+        vm.LabTests.Add(new LabTestOptionRow { Id = 17, Name = "آزمون", IsSelected = true });
+        await vm.SendToLabCommand.ExecuteAsync(null);
+        api.Calls.Should().ContainSingle(c => c.Endpoint == "lab/orders");
+        var json = JsonSerializer.SerializeToElement(api.LastBody);
+        json.GetProperty("visitId").GetInt64().Should().Be(42);
+        vm.StopTimers();
+    }
+
+    [Fact]
+    public async Task Unknown_physio_referral_result_retries_the_identical_request()
+    {
+        var api = new FakeApiClient();
+        api.CannedResponses["visits/save-versioned"] = new { data = new { id = 42L, editVersion = "version-42" } };
+        var vm = new VisitEditViewModel(api, new FakeSnackbar(), 7, 8) { PhysioReferralNote = "درمان زانو" };
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
+        var first = JsonSerializer.SerializeToElement(api.LastBody);
+        vm.CanEditPhysioReferral.Should().BeFalse();
+        api.CannedResponses["physiotherapy/referrals"] = new { data = 55L };
+        await vm.SendToPhysioCommand.ExecuteAsync(null);
+        var second = JsonSerializer.SerializeToElement(api.LastBody);
+        second.GetProperty("RequestId").GetGuid().Should().Be(first.GetProperty("RequestId").GetGuid());
+        second.GetProperty("VisitId").GetInt64().Should().Be(42);
+        vm.PhysioReferralNote.Should().BeNull();
+        vm.CanEditPhysioReferral.Should().BeTrue();
+        api.Calls.Should().NotContain(c => c.Endpoint == "physiotherapy/sessions");
+        vm.StopTimers();
+    }
+
+}

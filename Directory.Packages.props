@@ -28,6 +28,7 @@
     <PackageVersion Include="Riok.Mapperly" Version="3.6.0" />
     <!-- چرخهٔ ۶۹ (فاز ۳ / F-01): تولید QR برای چاپ نسخه و برچسب نمونه -->
     <PackageVersion Include="QRCoder" Version="1.4.3" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <!-- انتزاع‌های DI برای کلاس‌های کتابخانه‌ای -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
@@ -39,6 +40,8 @@
     <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <!-- پاک‌سازی قطعات HTML داده‌های چاپ؛ مجوز MIT -->
+    <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
     <!-- خروجی اکسل گزارش‌ها (چرخه دهم) — مجوز MIT کاملاً رایگان -->
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <!-- خروجی PDF گزارش‌ها با سربرگ درمانگاه (چرخه سیزدهم، D6) — مجوز Community رایگان -->

@@ -18,7 +18,10 @@ namespace Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit;
 /// فرمان ذخیره یا تکمیل ویزیت — ذخیره تدریجی SOAP و ثبت تشخیص ICD-10
 /// </summary>
 /// <param name="Dto">داده ویزیت</param>
-public record SaveVisitCommand(SaveVisitDto Dto) : IRequest<Result<long>>;
+public record SaveVisitCommand(SaveVisitDto Dto) : IRequest<Result<VisitSaveResult>>;
+
+/// <summary>شناسه و نسخهٔ دقیق ذخیره‌شده در تراکنش.</summary>
+public record VisitSaveResult(long Id, string EditVersion);
 
 /// <summary>اعتبارسنج ویزیت</summary>
 public class SaveVisitCommandValidator : AbstractValidator<SaveVisitCommand>
@@ -40,7 +43,7 @@ public class SaveVisitCommandValidator : AbstractValidator<SaveVisitCommand>
 }
 
 /// <summary>گرداننده ذخیره ویزیت — ساخت جدید یا ویرایش پیش‌نویس و انتشار رویداد تکمیل</summary>
-public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<long>>
+public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<VisitSaveResult>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<SaveVisitCommandHandler> _logger;
@@ -53,21 +56,44 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
     }
 
     /// <summary>اجرای ذخیره ویزیت</summary>
-    public async Task<Result<long>> Handle(SaveVisitCommand request, CancellationToken cancellationToken)
+    public async Task<Result<VisitSaveResult>> Handle(SaveVisitCommand request, CancellationToken cancellationToken)
     {
         var dto = request.Dto;
+        if (!VisitVitalsSafety.IsValid(dto.VitalSigns))
+            return Result<VisitSaveResult>.Failure(new Error("VISIT.VITALS_INVALID", "مقادیر علائم حیاتی نامعتبر یا خارج از دقت قابل ذخیره‌اند."));
         var repo = _unitOfWork.Repository<Domain.Entities.Clinical.Visit>();
+        var patient = await _unitOfWork.Repository<Patient>().GetByIdAsync(dto.PatientId, cancellationToken);
+        if (patient is null || patient.IsDeleted)
+            return Result<VisitSaveResult>.Failure(Error.NotFound("بیمار", dto.PatientId));
+        var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId, cancellationToken);
+        if (doctor is null || doctor.IsDeleted)
+            return Result<VisitSaveResult>.Failure(Error.NotFound("پزشک", dto.DoctorId));
+        if (dto.ReceptionId is long receptionId)
+        {
+            var reception = await _unitOfWork.Repository<Reception>().QueryableNoTracking
+                .FirstOrDefaultAsync(r => r.Id == receptionId && !r.IsDeleted, cancellationToken);
+            if (reception is null) return Result<VisitSaveResult>.Failure(Error.NotFound("پذیرش", receptionId));
+            if (reception.PatientId != dto.PatientId || reception.DoctorId != dto.DoctorId || reception.Status == ReceptionStatus.Cancelled)
+                return Result<VisitSaveResult>.Failure(new Error("VISIT.RECEPTION_MISMATCH", "پذیرش با بیمار یا پزشک ویزیت مطابقت ندارد یا لغو شده است."));
+        }
 
         Domain.Entities.Clinical.Visit visit;
         if (dto.Id.HasValue)
         {
             visit = (await repo.GetByIdAsync(dto.Id.Value, cancellationToken))!;
-            if (visit is null)
-                return Result<long>.Failure(Error.NotFound("ویزیت", dto.Id.Value));
+            if (visit is null || visit.IsDeleted)
+                return Result<VisitSaveResult>.Failure(Error.NotFound("ویزیت", dto.Id.Value));
+            if (visit.PatientId != dto.PatientId || visit.DoctorId != dto.DoctorId || (dto.ReceptionId.HasValue && visit.ReceptionId != dto.ReceptionId))
+                return Result<VisitSaveResult>.Failure(new Error("VISIT.IDENTITY_MISMATCH", "بیمار، پزشک یا پذیرش با ویزیت موجود مطابقت ندارد."));
+            if (visit.Status == VisitStatus.Completed)
+                return Result<VisitSaveResult>.Failure(new Error("VISIT.COMPLETED", "ویرایش ویزیت تکمیل‌شده بدون سازوکار اصلاحیه مجاز نیست."));
+            var currentVitals = await _unitOfWork.Repository<VitalSign>().QueryableNoTracking
+                .Where(x => x.VisitId == visit.Id).OrderByDescending(x => x.Id).FirstOrDefaultAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(dto.EditVersion) || dto.EditVersion != VisitEditVersion.Create(visit, currentVitals))
+                return Result<VisitSaveResult>.Failure(new Error("VISIT.CONFLICT", "ویزیت تغییر کرده یا نسخه موجود نیست؛ اطلاعات را دوباره بارگذاری کنید."));
         }
         else
         {
-            var doctor = await _unitOfWork.Repository<Doctor>().GetByIdAsync(dto.DoctorId, cancellationToken);
             visit = new Domain.Entities.Clinical.Visit
             {
                 PatientId = dto.PatientId,
@@ -78,9 +104,17 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
                 VisitType = dto.Type,
                 Status = VisitStatus.Started,
                 StartTime = DateTime.UtcNow,
-                VisitFee = doctor?.ConsultationFee ?? 0
+                VisitFee = doctor.ConsultationFee
             };
             await repo.AddAsync(visit, cancellationToken);
+        }
+
+        // حتی اگر فقط علائم حیاتی تغییر کند، ردیف والد باید در SQL Server با
+        // rowversion به‌روزرسانی شود تا دو درج همزمان علائم، هردو پذیرفته نشوند.
+        if (dto.Id.HasValue)
+        {
+            visit.UpdatedAt = DateTime.UtcNow;
+            repo.MarkPropertyModified(visit, x => x.UpdatedAt);
         }
 
         // اعمال فیلدهای بالینی
@@ -103,18 +137,17 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
         // علائم حیاتی — تب ۲ فرم ۱۱: upsert در هر ذخیره
         if (dto.VitalSigns is { } vitals)
         {
-            var existingVitals = await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>()
-                .QueryableTracking
-                .Where(v => v.VisitId == visit.Id)
-                .OrderByDescending(v => v.Id)
-                .FirstOrDefaultAsync(cancellationToken);
+            var existingVitals = dto.Id.HasValue
+                ? await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>().QueryableTracking
+                    .Where(v => v.VisitId == visit.Id).OrderByDescending(v => v.Id).FirstOrDefaultAsync(cancellationToken)
+                : null;
             if (existingVitals is null)
             {
                 await _unitOfWork.Repository<Domain.Entities.Clinical.VitalSign>().AddAsync(
                     new Domain.Entities.Clinical.VitalSign
                     {
-                        VisitId = visit.Id,
-                        PatientId = dto.PatientId,
+                        Visit = visit,
+                        PatientId = visit.PatientId,
                         MeasuredAt = DateTime.UtcNow,
                         BloodPressureSystolic = vitals.BloodPressureSystolic,
                         BloodPressureDiastolic = vitals.BloodPressureDiastolic,
@@ -147,9 +180,8 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
             }
         }
 
-        if (dto.FollowUpDateShamsi is not null
-            && PersianDateHelper.ToGregorian(dto.FollowUpDateShamsi) is { } followUp)
-            visit.FollowUpDate = DateOnly.FromDateTime(followUp);
+        visit.FollowUpDate = PersianDateHelper.ToGregorian(dto.FollowUpDateShamsi) is { } followUp
+            ? DateOnly.FromDateTime(followUp) : null;
 
         if (dto.Complete)
         {
@@ -167,12 +199,7 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
             }
 
             // به‌روزرسانی آخرین مراجعه بیمار
-            var patient = await _unitOfWork.Repository<Patient>()
-                .GetByIdAsync(dto.PatientId, cancellationToken);
-            if (patient is not null)
-                patient.LastVisitDate = DateTime.UtcNow;
-
-            visit.AddDomainEvent(new VisitCompletedEvent(visit.Id, dto.PatientId, dto.DoctorId));
+            patient.LastVisitDate = DateTime.UtcNow;
         }
         else
         {
@@ -180,9 +207,17 @@ public class SaveVisitCommandHandler : IRequestHandler<SaveVisitCommand, Result<
         }
 
         await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        if (dto.Complete)
+        {
+            // شناسهٔ SQL Identity پس از ذخیره قابل استفاده در رویداد است.
+            visit.AddDomainEvent(new VisitCompletedEvent(visit.Id, visit.PatientId, visit.DoctorId));
+            await _unitOfWork.SaveEntitiesAsync(cancellationToken);
+        }
 
         _logger.LogInformation("ویزیت {Code} ذخیره شد — وضعیت {Status}",
             visit.VisitCode, visit.Status);
-        return Result<long>.Success(visit.Id);
+        var savedVitals = await _unitOfWork.Repository<VitalSign>().QueryableNoTracking
+            .Where(x => x.VisitId == visit.Id).OrderByDescending(x => x.Id).FirstOrDefaultAsync(cancellationToken);
+        return Result<VisitSaveResult>.Success(new VisitSaveResult(visit.Id, VisitEditVersion.Create(visit, savedVitals)));
     }
 }

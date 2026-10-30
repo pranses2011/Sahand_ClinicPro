@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.DoctorFormWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.DoctorFormWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -422,11 +422,11 @@
                     </DataGrid>
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="2,10,0,0">
-                        <Button Command="{Binding SaveScheduleCommand}"
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveScheduleCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                <TextBlock Text="ذخیره فقط برنامه کاری" Margin="7,0,0,0" />
+                                <TextBlock Text="ذخیره فقط برنامه کاری (Ctrl+Shift+1)" Margin="7,0,0,0" />
                             </StackPanel>
                         </Button>
                         <TextBlock Text="ساعت‌ها با کلیک از انتخابگر انتخاب می‌شوند — استراحت اختیاری است و با دکمهٔ «پاک کردن» حذف می‌شود"
@@ -484,11 +484,11 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Text="{Binding NewAbsenceReason, UpdateSourceTrigger=PropertyChanged}"
                                          materialDesign:HintAssist.Hint="دلیل غیبت (اختیاری)" Margin="0,0,8,0" />
-                                <Button Grid.Column="1" Command="{Binding AddAbsenceCommand}"
+                                <Button shortcuts:SaveShortcut.Number="3" Grid.Column="1" Command="{Binding AddAbsenceCommand}"
                                         Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
-                                        <TextBlock Text="ثبت غیبت" Margin="7,0,0,0" />
+                                        <TextBlock Text="ثبت غیبت (Ctrl+Shift+3)" Margin="7,0,0,0" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -549,12 +549,12 @@
 
         <!-- نوار پایین -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Left">
-            <Button Command="{Binding SaveCommand}"
+            <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SaveCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
                     Width="170" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="ContentSaveCheck" Width="17" Height="17" VerticalAlignment="Center" />
-                    <TextBlock Text="ذخیره پزشک و برنامه" Margin="8,0,0,0" />
+                    <TextBlock Text="ذخیره پزشک و برنامه (Ctrl+Shift+2)" Margin="8,0,0,0" />
                 </StackPanel>
             </Button>
             <ProgressBar IsIndeterminate="True" Width="26" Height="18" Margin="10,0,0,0"

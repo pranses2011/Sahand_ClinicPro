@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Sahand.ClinicPro.Application.Common.Models;
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
@@ -23,19 +25,38 @@ public class PaymentsController : ApiBaseController
     /// <summary>سازنده با تزریق میانجی</summary>
     public PaymentsController(IMediator mediator) => _mediator = mediator;
 
+    /// <summary>ثبت یا بازخوانی ایمن همان درخواست؛ این مسیر شناسه پایدار را الزامی می‌کند.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("payments.create")]
+    public async Task<IActionResult> RecordIdempotent([FromBody] RecordPaymentDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه پایدار درخواست پرداخت الزامی است.", 400));
+        return await Record(dto);
+    }
+
     /// <summary>ثبت پرداخت — نقدی یا کارتی یا آنلاین</summary>
     [HttpPost]
     [HasPermission("payments.create")]
     public async Task<IActionResult> Record([FromBody] RecordPaymentDto dto)
     {
-        var result = await _mediator.Send(new RecordPaymentCommand(dto));
-        if (result.IsSuccess)
-            // چرخهٔ سی‌امین — نام اکشن «GetAll» در این کنترلر وجود ندارد؛
-            // در نتیجه هر ثبتِ موفقِ پرداخت پس از ذخیره با «No route matches
-            // the supplied values» فرو می‌ریخت و کلاینت ۵۰۰ می‌گرفت. هدف
-            // طبیعی، فهرست تراکنش‌های امروز همان صندوق است.
-            return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new RecordPaymentCommand(dto));
+            if (result.IsFailure && result.Error.Code == "PAYMENT.REQUEST_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            if (result.IsSuccess)
+                return CreatedResponse(result, nameof(GetTodayTransactions), new { }, "پرداخت با موفقیت ثبت شد");
+            return ToResponse(result);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("فاکتور همزمان تغییر کرد؛ پیش از تلاش مجدد وضعیت پرداخت و مانده را بررسی کنید.", 409));
+        }
+        catch (DbUpdateException ex) when (RequestIdConflict.IsRequestIdViolation(ex, RequestIdConflict.PaymentIndex))
+        {
+            return Conflict(ApiResponse<object>.Failure("پرداختی با همین شناسه هم‌زمان ثبت شده است؛ وضعیت را بررسی و فقط با همان شناسه دوباره تلاش کنید.", 409));
+        }
     }
 
     /// <summary>خلاصه صندوق امروز — کارت‌های آماری فرم ۱۴</summary>

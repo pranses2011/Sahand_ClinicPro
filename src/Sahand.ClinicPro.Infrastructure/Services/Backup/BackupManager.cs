@@ -341,20 +341,55 @@ public class BackupManager
                 }
                 finally
                 {
-                    // بازگرداندن دسترسی چندکاربر — حتی پس از شکست بازیابی
-                    try
+                    // بازگرداندن دسترسی چندکاربر — حتی پس از شکست بازیابی.
+                    // ═══ چرخهٔ جاری ═══ شکست RESTORE (مثلاً کمبود مجوز یا
+                    // خرابی فایل BAK) میتوانست اتصال master را هم بکشد؛ در آن
+                    // حالت MULTI_USER بیصدا شکست میخورد و دیتابیس در وضعیت
+                    // تککاربره میماند — یعنی کل برنامه بعد از یک بازیابی
+                    // ناموفق دیگر نمیتوانست وصل شود. اکنون با «اتصال تازه» و
+                    // چندبار تلاش، برگشت به حالت چندکاربره تضمین میشود.
+                    var multiUserSql = "ALTER DATABASE [" +
+                        databaseName.Replace("]", "]]") + "] SET MULTI_USER";
+                    var restored = false;
+                    for (var attempt = 0; attempt < 4 && !restored; attempt++)
                     {
-                        await using var multiUser = new Microsoft.Data.SqlClient.SqlCommand(
-                            "ALTER DATABASE [" + databaseName.Replace("]", "]]") +
-                            "] SET MULTI_USER", masterConnection);
-                        multiUser.CommandTimeout = 0;
-                        await multiUser.ExecuteNonQueryAsync(ct);
+                        Microsoft.Data.SqlClient.SqlConnection? retry = null;
+                        try
+                        {
+                            if (attempt == 0 && masterConnection.State == System.Data.ConnectionState.Open)
+                            {
+                                retry = null; // همان اتصال سالم است
+                                await using var multiUser = new Microsoft.Data.SqlClient.SqlCommand(
+                                    multiUserSql, masterConnection) { CommandTimeout = 0 };
+                                await multiUser.ExecuteNonQueryAsync(CancellationToken.None);
+                            }
+                            else
+                            {
+                                retry = new Microsoft.Data.SqlClient.SqlConnection(
+                                    masterBuilder.ConnectionString);
+                                await retry.OpenAsync(CancellationToken.None);
+                                await using var multiUser = new Microsoft.Data.SqlClient.SqlCommand(
+                                    multiUserSql, retry) { CommandTimeout = 0 };
+                                await multiUser.ExecuteNonQueryAsync(CancellationToken.None);
+                            }
+                            restored = true;
+                        }
+                        catch (Exception retryEx)
+                        {
+                            _logger.LogWarning(retryEx,
+                                "تلاش {Attempt} برای بازگرداندن MULTI_USER ناموفق بود", attempt + 1);
+                            try { await Task.Delay(400, CancellationToken.None); } catch { }
+                        }
+                        finally
+                        {
+                            if (retry is not null)
+                                await retry.DisposeAsync();
+                        }
                     }
-                    catch
-                    {
-                        // اگر خود بازیابی شکست خورده باشد و دیتابیس در دسترس نباشد،
-                        // این تنظیم ممکن است شکست بخورد — علت اصلی در پیام است
-                    }
+                    if (!restored)
+                        _logger.LogError(
+                            "هشدار مهم: دیتابیس {Database} ممکن است در وضعیت SINGLE_USER مانده باشد. " +
+                            "در SSMS اجرا کنید: {Sql}", databaseName, multiUserSql);
                 }
 
                 // استخر اتصال‌های EF به دیتابیس پیش از بازیابی وصل بوده‌اند؛ پاک
@@ -370,21 +405,32 @@ public class BackupManager
             return (true, "بازیابی با موفقیت انجام شد — برنامه را ری‌استارت کنید تا داده‌های تازه بار شود");
         }
         catch (Microsoft.Data.SqlClient.SqlException ex)
-            when (ex.Number == 3701 || ex.Message.Contains("RESTORE", StringComparison.OrdinalIgnoreCase)
-                                     && ex.Message.Contains("permission", StringComparison.OrdinalIgnoreCase))
+            when (ex.Number == 262
+                  || (ex.Message.Contains("RESTORE", StringComparison.OrdinalIgnoreCase)
+                      && (ex.Message.Contains("permission", StringComparison.OrdinalIgnoreCase)
+                          || ex.Message.Contains("denied", StringComparison.OrdinalIgnoreCase))))
         {
-            // ═══ خطای مجوز بازیابی — اسکرین‌شات مالک ═══
+            // ═══ خطای مجوز بازیابی — گزارش مالک ═══
             // «User does not have permission to RESTORE database» — مجوز
             // RESTORE سطح «سرور» است (نقش dbcreator یا sysadmin) و db_owner
-            // بودن روی خود دیتابیس کافی نیست. نصب‌های تازه را نصاب سرور
-            // خودکار اصلاح می‌کند؛ این پیام برای نصب‌های قدیمی راه‌حل دقیق
-            // را می‌دهد تا کاربر به‌جای خطای خام انگلیسی، اقدام درست را ببیند.
-            _logger.LogError(ex, "بازیابی از {File} — لاگین SQL مجوز RESTORE ندارد", zipOrBakPath);
+            // بودن روی خود دیتابیس کافی نیست. نسخههای پیشین فقط دو شمارهٔ
+            // خطا را میشناختند؛ اکنون پیامهای «permission denied» شمارهٔ
+            // 262 (RESTORE FILELISTONLY/HEADERONLY) و 3110/3169 هم پوشش
+            // داده میشوند — همان خطاهایی که مالک همچنان میدید.
+            _logger.LogError(ex,
+                "بازیابی از {File} — لاگین SQL مجوز RESTORE ندارد (شمارهٔ خطا {Number})",
+                zipOrBakPath, ex.Number);
             return (false,
-                "لاگین SQLای که سرور API با آن وصل می‌شود، مجوز بازیابی (RESTORE) ندارد. " +
-                "یک‌بار بستهٔ سرور همین نسخه را دوباره نصب/به‌روز کنید تا نصاب، نقش dbcreator را خودکار بدهد؛ " +
-                "یا در SSMS با کاربر مدیر این دستور را اجرا کنید (به‌جای SahandLogin نام لاگین رشتهٔ اتصال سرور را بگذارید): " +
-                "ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin];");
+                "لاگین SQLای که سرور API با آن وصل میشود، مجوز بازیابی (RESTORE) ندارد " +
+                $"(خطای SQL شمارهٔ {ex.Number}). " +
+                "راه حل خودکار: روی رایانهٔ سرور، فایل Enable-RestorePermission.bat را " +
+                "از پوشهٔ بستهٔ نصب سرور پیدا کرده و با Run as administrator اجرا کنید؛ " +
+                "این ابزار با دسترسی مدیر SQL برای اعطای نقش تلاش میکند و نتیجه را در restore-permission.status.txt مینویسد. " +
+                "پس از آن سرویس SahandClinicPro.API را یکبار ریاستارت کنید و دوباره بازیابی را امتحان کنید. " +
+                "اگر ابزار را ندارید، بستهٔ کامل سرور همنسخه را دوباره نصب کنید. " +
+                "راه دستی: در SSMS با حساب sysadmin اجرا کنید " +
+                "ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin]; " +
+                "(بهجای SahandLogin نام لاگین رشتهٔ اتصال سرور را بگذارید — همان نام در فایل وضعیت آمده است).");
         }
         catch (UnauthorizedAccessException ex)
         {

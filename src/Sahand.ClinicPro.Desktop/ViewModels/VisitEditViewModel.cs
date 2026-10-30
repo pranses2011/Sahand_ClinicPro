@@ -27,7 +27,18 @@ public partial class VisitEditViewModel : ObservableObject
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
-    private readonly long? _visitId;
+    private long? _visitId;
+    private bool _creationResultUnknown;
+    private bool _labResultUnknown;
+    private bool _imagingResultUnknown;
+    private string? _editVersion;
+    private readonly bool _openedExisting;
+    private bool _existingVisitLoaded;
+    private bool _visitEditable = true;
+    private bool _hasExistingVitals;
+    private string? _soapSubjective, _soapObjective, _soapAssessment, _soapPlan;
+    private string? _originalSecondaryDiagnoses, _initialSecondaryRepresentation;
+    private System.Windows.Threading.DispatcherTimer? _clock;
     private long _patientId;
     private long _doctorId;
     private long? _receptionId;
@@ -132,13 +143,14 @@ public partial class VisitEditViewModel : ObservableObject
     public ObservableCollection<string> VitalWarnings { get; } = new();
 
     /* ═══════════ تب ۳: معاینه فیزیکی ═══════════ */
-    [ObservableProperty] private bool _headNeckNormal = true;
+    [ObservableProperty] private string? _physicalExamText;
+    [ObservableProperty] private bool _headNeckNormal;
     [ObservableProperty] private string? _headNeckFindings;
-    [ObservableProperty] private bool _chestNormal = true;
+    [ObservableProperty] private bool _chestNormal;
     [ObservableProperty] private string? _chestFindings;
-    [ObservableProperty] private bool _abdomenNormal = true;
+    [ObservableProperty] private bool _abdomenNormal;
     [ObservableProperty] private string? _abdomenFindings;
-    [ObservableProperty] private bool _limbsNormal = true;
+    [ObservableProperty] private bool _limbsNormal;
     [ObservableProperty] private string? _limbsFindings;
 
     /* ═══════════ تب ۴: تشخیص ═══════════ */
@@ -187,6 +199,7 @@ public partial class VisitEditViewModel : ObservableObject
         _api = api;
         _snackbar = snackbar;
         _visitId = visitId;
+        _openedExisting = true;
         FormTitle = "ادامه ویزیت";
         _ = LoadAsync();
         // چرخهٔ ۴۸ — فهرست آزمایش‌های مرجع برای تب ارسال به آزمایشگاه
@@ -221,6 +234,14 @@ public partial class VisitEditViewModel : ObservableObject
         _patientId = v.PatientId;
         _doctorId = v.DoctorId;
         _receptionId = v.ReceptionId;
+        _editVersion = v.EditVersion;
+        _visitEditable = v.Status is 1 or 2 or 4 && !string.IsNullOrWhiteSpace(v.EditVersion);
+        _soapSubjective = v.SoapSubjective;
+        _soapObjective = v.SoapObjective;
+        _soapAssessment = v.SoapAssessment;
+        _soapPlan = v.SoapPlan;
+        PhysicalExamText = v.PhysicalExamination;
+        _originalSecondaryDiagnoses = v.SecondaryDiagnoses;
 
         // فیلدهای SOAP
         ChiefComplaint = v.ChiefComplaint;
@@ -232,17 +253,19 @@ public partial class VisitEditViewModel : ObservableObject
         TreatmentPlan = v.TreatmentPlan;
         FollowUpInstructions = v.FollowUpInstructions;
         FillTags(SecondaryDiagnoses, v.SecondaryDiagnoses);
+        _initialSecondaryRepresentation = JsonSerializer.Serialize(SecondaryDiagnoses.ToList());
         if (v.FollowUpDateShamsi is not null) FollowUpDateShamsi = v.FollowUpDateShamsi;
         // ═══ چرخهٔ ۷۸ — ریشهٔ «پایان ویزیت همیشه خطا می‌دهد» ═══
         // پیش‌تر فقط Code خوانده می‌شد و جای‌نگهدارِ «Id=0» ساخته می‌شد؛ در ذخیره،
         // Id=0 به تهی ترجمه می‌شد و اعتبارسنجِ سرورِ «تشخیص اصلی الزامی است»
         // هر بار پایانِ ویزیتِ ویرایش‌شده را رد می‌کرد — هرچند تشخیص روی صفحه بود!
         // اکنون «شناسهٔ واقعی» از DTO خوانده می‌شود و عنوان کامل هم نمایش داده می‌شود.
-        if (v.PrimaryDiagnosisCode is not null && v.PrimaryDiagnosisId is { } diagId)
-            PrimaryDiagnosis = new DiagnosisOption(diagId, v.PrimaryDiagnosisCode,
-                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode);
+        if (v.PrimaryDiagnosisId is { } diagId)
+            PrimaryDiagnosis = new DiagnosisOption(diagId, v.PrimaryDiagnosisCode ?? "",
+                v.PrimaryDiagnosisTitle ?? v.PrimaryDiagnosisCode ?? "تشخیص ثبت‌شده");
         if (v.VitalSigns is { } vit)
         {
+            _hasExistingVitals = true;
             BpText = vit.BloodPressureSystolic.HasValue ? $"{vit.BloodPressureSystolic}/{vit.BloodPressureDiastolic}" : null;
             HrText = vit.HeartRate?.ToString();
             TempText = vit.Temperature?.ToString();
@@ -253,8 +276,9 @@ public partial class VisitEditViewModel : ObservableObject
         }
         RebuildVitalCards();
 
+        _existingVisitLoaded = true;
         await LoadPatientContextAsync();
-        FormTitle = $"🩺 ویزیت بیمار: {v.Patient?.FullName ?? ""} [🔴 در حال ضبط]";
+        FormTitle = _visitEditable ? $"🩺 ویزیت بیمار: {v.Patient?.FullName ?? ""} [🔴 در حال ضبط]" : "ویزیت تکمیل‌شده — فقط خواندنی";
         PatientName = v.Patient?.FullName ?? PatientName;
         IsBusy = false;
         StartTimers();
@@ -370,18 +394,26 @@ public partial class VisitEditViewModel : ObservableObject
     /// <summary>راه‌اندازی AutoSave و Stopwatch</summary>
     private void StartTimers()
     {
-        if (_autoSave is not null) return;
+        if (_autoSave is not null || !_visitEditable) return;
         _stopwatch.Start();
 
         // نمایش مدت — هر ثانیه
-        var clock = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        clock.Tick += (_, _) => ElapsedText = _stopwatch.Elapsed.ToString(@"mm\:ss");
-        clock.Start();
+        _clock = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _clock.Tick += (_, _) => ElapsedText = _stopwatch.Elapsed.ToString(@"mm\:ss");
+        _clock.Start();
 
         // AutoSave بی‌صدا هر ۶۰ ثانیه — طبق فرم ۱۱
         _autoSave = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
         _autoSave.Tick += async (_, _) => await SaveCoreAsync(silent: true);
         _autoSave.Start();
+    }
+
+    /// <summary>توقف ذخیره خودکار و ساعت پس از بسته شدن فرم.</summary>
+    public void StopTimers()
+    {
+        _autoSave?.Stop();
+        _clock?.Stop();
+        _stopwatch.Stop();
     }
 
     /* ═══════════ تب ۲: محاسبه کارت‌های حیاتی ═══════════ */
@@ -399,134 +431,85 @@ public partial class VisitEditViewModel : ObservableObject
     private void RebuildVitalCards()
     {
         VitalWarnings.Clear();
+        static VitalCard Card(string key, string title, string? value, string unit) =>
+            new(key, title, value, unit, value is null ? "—" : "ثبت‌شده؛ نیازمند ارزیابی", "#546E7A");
         var cards = new List<VitalCard>();
-
-        // فشار خون
-        var (bp, bpColor) = ("—", "#78909C");
-        if (BpText is not null && BpText.Contains('/'))
+        var bpParts = (BpText ?? "").Split('/');
+        var validBp = bpParts.Length == 2 && TryInt(bpParts[0], out var systolic) && systolic is not null &&
+                      TryInt(bpParts[1], out _);
+        cards.Add(Card("BP", "فشار خون", validBp ? BpText : null, "mmHg"));
+        cards.Add(Card("HR", "ضربان قلب", TryInt(HrText, out var hr) ? hr?.ToString() : null, "bpm"));
+        cards.Add(Card("Temp", "دمای بدن", TryDecimal(TempText, out var temp) ? temp?.ToString() : null, "°C"));
+        cards.Add(Card("SpO2", "اکسیژن خون", TryInt(Spo2Text, out var spo2) ? spo2?.ToString() : null, "%"));
+        var hasWeight = TryDecimal(WeightText, out var weight);
+        var hasHeight = TryDecimal(HeightText, out var height);
+        cards.Add(Card("Weight", "وزن", hasWeight ? weight?.ToString() : null, "kg"));
+        cards.Add(Card("Height", "قد", hasHeight ? height?.ToString() : null, "cm"));
+        BmiDisplay = null;
+        if (hasWeight && hasHeight && weight is > 0 and <= 999.99m && height is >= 0.01m and <= 999.99m)
         {
-            var sys = ParseInt(BpText.Split('/')[0]);
-            if (sys > 0)
-            {
-                var (t, c) = sys < 90 ? ("🔴 پایین", "#C62828") :
-                    sys <= 120 ? ("🟢 طبیعی", "#2E7D32") :
-                    sys <= 130 ? ("🟡 بالا", "#F57C00") : ("🔴 خطر", "#C62828");
-                bp = BpText; bpColor = c;
-                if (sys > 140) VitalWarnings.Add("⚠️ هشدار: فشار خون بالاتر از حد نرمال");
-            }
-        }
-        cards.Add(new VitalCard("BP", "فشار خون", bp == "—" ? null : bp, "mmHg", t0(bpColor), bpColor));
-
-        // ضربان
-        var hr = ParseInt(HrText);
-        var (hrS, hrC) = hr == 0 ? ("—", "#78909C") : hr is < 60 or > 100 ? ("🟡 غیرطبیعی", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        cards.Add(new VitalCard("HR", "ضربان قلب", hr == 0 ? null : hr.ToString(), "bpm", hrS, hrC));
-
-        // دما
-        var temp = ParseDec(TempText);
-        var (tS, tC) = temp == 0 ? ("—", "#78909C") : temp > 37.5m ? ("🟡 تب", "#F57C00") : temp < 35m ? ("🟡 پایین", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        if (temp > 38) { tS = "🔴 تب بالا"; tC = "#C62828"; VitalWarnings.Add("⚠️ هشدار: تب بالاتر از حد نرمال"); }
-        cards.Add(new VitalCard("Temp", "دمای بدن", temp == 0 ? null : temp.ToString(), "°C", tS, tC));
-
-        // اکسیژن
-        var spo2 = ParseInt(Spo2Text);
-        var (oS, oC) = spo2 == 0 ? ("—", "#78909C") : spo2 < 92 ? ("🔴 خطر", "#C62828") : spo2 < 95 ? ("🟡 پایین", "#F57C00") : ("🟢 طبیعی", "#2E7D32");
-        if (spo2 is > 0 and < 92) VitalWarnings.Add("⚠️ هشدار: اشباع اکسیژن پایین‌تر از حد نرمال");
-        cards.Add(new VitalCard("SpO2", "اکسیژن خون", spo2 == 0 ? null : spo2.ToString(), "%", oS, oC));
-
-        // وزن و قد و BMI
-        var w = ParseDec(WeightText);
-        var h = ParseDec(HeightText);
-        cards.Add(new VitalCard("Weight", "وزن", w == 0 ? null : w.ToString(), "kg", "", "#78909C"));
-        cards.Add(new VitalCard("Height", "قد", h == 0 ? null : h.ToString(), "cm", "", "#78909C"));
-
-        if (w > 0 && h > 0)
-        {
-            var bmi = Math.Round(w / (h / 100m * (h / 100m)), 1);
+            var bmi = Math.Round(weight.Value / (height.Value / 100m) / (height.Value / 100m), 1);
             BmiDisplay = bmi.ToString("0.0");
-            var (bS, bC) = bmi < 18.5m ? ("🟡 کمبود وزن", "#F57C00") :
-                bmi < 25 ? ("🟢 طبیعی", "#2E7D32") :
-                bmi < 30 ? ("🟡 اضافه وزن", "#F57C00") : ("🔴 چاقی", "#C62828");
-            if (bmi >= 25) VitalWarnings.Add("⚠️ هشدار: BMI در محدوده اضافه وزن یا بالاتر");
-            cards.Add(new VitalCard("BMI", "شاخص توده", BmiDisplay, "kg/m²", bS, bC));
         }
-        else
-        {
-            BmiDisplay = null;
-            cards.Add(new VitalCard("BMI", "شاخص توده", null, "kg/m²", "—", "#78909C"));
-        }
-
-        // قند خون
-        var bs = ParseInt(BsText);
-        var (sS, sC) = bs == 0 ? ("—", "#78909C") : bs is >= 70 and <= 110 ? ("🟢 نرمال", "#2E7D32") : bs is > 110 and <= 140 ? ("🟡 بالا", "#F57C00") : ("🔴 خطر", "#C62828");
-        if (bs > 140) VitalWarnings.Add("⚠️ هشدار: قند خون بالاتر از حد نرمال");
-        cards.Add(new VitalCard("BS", "قند خون", bs == 0 ? null : bs.ToString(), "mg/dL", sS, sC));
-
+        cards.Add(Card("BMI", "شاخص توده", BmiDisplay, "kg/m²"));
+        cards.Add(Card("BS", "قند خون", TryInt(BsText, out var sugar) ? sugar?.ToString() : null, "mg/dL"));
         VitalCards = new ObservableCollection<VitalCard>(cards);
     }
 
-    private static string t0(string color) => color switch
+    private static bool TryDecimal(string? text, out decimal? value)
     {
-        "#2E7D32" => "🟢 طبیعی", "#F57C00" => "🟡 هشدار", "#C62828" => "🔴 خطر", _ => "—"
-    };
+        value = null;
+        if (string.IsNullOrWhiteSpace(text)) return true;
+        if (!Sahand.ClinicPro.Desktop.Helpers.PlainNumber.TryParse(text, out var parsed)) return false;
+        value = parsed;
+        return true;
+    }
 
-    private static int ParseInt(string? text) =>
-        int.TryParse(new string((text ?? "").Where(char.IsDigit).ToArray()), out var v) ? v : 0;
-
-    /// <summary>
-    /// پارس عدد اعشاری ورودی علائم حیاتی — چرخهٔ ۷۹ (گزارش مالک: «وقتی دما را
-    /// می‌نویسم، مانند بقیه علائم وضعیتش در پایین صفحه نمی‌افتد»).
-    /// ریشه: دما «تنها» علامت حیاتی اعشاری است و decimal.TryParse با فرهنگ
-    /// جاری fa-IR اجرا می‌شد که جداکنندهٔ اعشارش «٫» (U+066B) است — «37.5»
-    /// رد می‌شد (نتیجه ۰ ⇒ بدون وضعیت و بدون ذخیره) و «۳۷٫۵» هم بعد از پالایش
-    /// کاراکترها به «۳۷۵» تبدیل می‌شد! اکنون ارقام فارسی/عربی و جداکننده‌های
-    /// «٫» و «،» و «/» همه به قالب خنثی نرمال‌سازی و با InvariantCulture
-    /// پارس می‌شوند — هر دو مسیر «کارت وضعیت زنده» و «ذخیرهٔ ویزیت» سالم‌اند.
-    /// </summary>
-    private static decimal ParseDec(string? text)
+    private static bool TryInt(string? text, out int? value)
     {
-        // گام ۱: ارقام فارسی/عربی → لاتین (پارس خنثی فقط ارقام ASCII می‌پذیرد)
-        var latin = Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToLatinDigits(text ?? string.Empty);
-        // گام ۲: نگه‌داشتن ارقام و همهٔ جداکننده‌های اعشاری رایج + یکسان‌سازی‌شان
-        var cleaned = new string(latin
-            .Where(c => char.IsDigit(c) || c is '.' or '٫' or ',' or '/' or '٬')
-            .ToArray())
-            .Replace('٫', '.').Replace('٬', '.').Replace(',', '.').Replace('/', '.');
-        // گام ۳: فقط نخستین نقطه اعشار می‌ماند — بقیه حذف (ورودی مثل ۳۷.۵.۲)
-        var firstDot = cleaned.IndexOf('.');
-        if (firstDot >= 0)
-            cleaned = cleaned[..(firstDot + 1)] + cleaned[(firstDot + 1)..].Replace(".", "");
-        return decimal.TryParse(cleaned, System.Globalization.NumberStyles.Number,
-            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+        value = null;
+        if (!TryDecimal(text, out var parsed)) return false;
+        if (parsed is null) return true;
+        if (parsed != decimal.Truncate(parsed.Value) || parsed < int.MinValue || parsed > int.MaxValue) return false;
+        value = (int)parsed.Value;
+        return true;
     }
 
     /* ═══════════ تب ۴: جستجوی تشخیص ═══════════ */
 
     /// <summary>جستجوی ICD-10 با Debounce</summary>
+    private int _diagnosisSearchVersion;
     partial void OnDiagnosisSearchChanged(string value)
     {
-        if (value.Length < 2) { DiagnosisResults.Clear(); return; }
-        _ = SearchDiagnosesAsync(value);
+        var version = ++_diagnosisSearchVersion;
+        DiagnosisResults.Clear();
+        if (value.Length < 2) return;
+        _ = SearchDiagnosesAsync(value, version);
     }
 
-    /// <summary>جستجوی تشخیص از داده مرجع</summary>
-    private async Task SearchDiagnosesAsync(string term)
+    /// <summary>جستجوی تشخیص از داده مرجع؛ پاسخ قدیمی نمایش داده نمی‌شود.</summary>
+    private async Task SearchDiagnosesAsync(string term, int version)
     {
-        var response = await _api.GetAsync<DiagnosesResponse>(
-            $"lookups/diagnoses?search={Uri.EscapeDataString(term)}&take=12");
-        DiagnosisResults.Clear();
-        if (response?.Data is null) return;
-        foreach (var d in response.Data)
-            DiagnosisResults.Add(new DiagnosisOption(d.Id, d.Code, d.Title));
+        try
+        {
+            var response = await _api.GetAsync<DiagnosesResponse>(
+                $"lookups/diagnoses?search={Uri.EscapeDataString(term)}&take=12");
+            if (version != _diagnosisSearchVersion) return;
+            if (response?.Data is null) { _snackbar.Error("دریافت نتایج تشخیص ناموفق بود."); return; }
+            foreach (var d in response.Data)
+                DiagnosisResults.Add(new DiagnosisOption(d.Id, d.Code, d.Title));
+        }
+        catch (Exception) { if (version == _diagnosisSearchVersion) _snackbar.Error("دریافت نتایج تشخیص ناموفق بود."); }
     }
 
     /// <summary>انتخاب تشخیص اصلی</summary>
     [RelayCommand]
     private void SelectDiagnosis(object? param)
     {
-        if (param is not DiagnosisOption option) return;
+        if (param is not DiagnosisOption option || !DiagnosisResults.Contains(option)) return;
         PrimaryDiagnosis = option;
         DiagnosisSearch = option.Code;
+        _diagnosisSearchVersion++;
         DiagnosisResults.Clear();
     }
 
@@ -534,7 +517,7 @@ public partial class VisitEditViewModel : ObservableObject
     [RelayCommand]
     private void AddSecondaryDiagnosis(object? param)
     {
-        if (param is DiagnosisOption option && !SecondaryDiagnoses.Contains(option.Title))
+        if (param is DiagnosisOption option && DiagnosisResults.Contains(option) && !SecondaryDiagnoses.Contains(option.Title))
             SecondaryDiagnoses.Add(option.Title);
     }
 
@@ -572,8 +555,7 @@ public partial class VisitEditViewModel : ObservableObject
     [RelayCommand]
     private async Task NextPatientAsync()
     {
-        await SaveCoreAsync(silent: false);
-        CloseRequested?.Invoke(this, EventArgs.Empty);
+        if (await SaveCoreAsync(silent: false)) CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
     /* ═════════════════════════════════════════════════════════════════
@@ -653,8 +635,12 @@ public partial class VisitEditViewModel : ObservableObject
             return;
         }
 
+        if (IsBusy || _labResultUnknown)
+        { _snackbar.Error("نتیجه درخواست قبلی نامعلوم است یا عملیاتی در جریان است؛ پیش از ارسال مجدد فهرست آزمایشگاه را بررسی کنید."); return; }
+        if (!await SaveCoreAsync(silent: false)) return;
         IsBusy = true;
-        var ok = await _api.PostAsync("lab/orders", new
+        bool ok;
+        try { ok = await _api.PostAsync("lab/orders", new
         {
             patientId = _patientId,
             doctorId = _doctorId > 0 ? _doctorId : (long?)null,
@@ -662,8 +648,10 @@ public partial class VisitEditViewModel : ObservableObject
             testIds = selected,
             priority = LabPriorityIndex + 1, // هم‌ترتیب با enum سرور: ۱ اورژانس، ۲ بالا، ۳ عادی
             clinicalInfo = string.IsNullOrWhiteSpace(LabClinicalInfo) ? null : LabClinicalInfo.Trim()
-        });
-        IsBusy = false;
+        }); }
+        catch (Exception) { ok = false; }
+        finally { IsBusy = false; }
+        if (!ok) _labResultUnknown = true;
 
         if (ok)
         {
@@ -673,7 +661,7 @@ public partial class VisitEditViewModel : ObservableObject
             LabClinicalInfo = null;
         }
         else
-            _snackbar.Error(_api.LastError ?? "ارسال درخواست آزمایش ناموفق بود");
+            _snackbar.Error("نتیجه درخواست آزمایش نامعلوم است؛ پیش از تلاش مجدد فهرست آزمایشگاه را بررسی کنید. " + _api.LastError);
     }
 
     /* ─── تب ۶: ارسال به تصویربرداری ─── */
@@ -684,7 +672,7 @@ public partial class VisitEditViewModel : ObservableObject
 
     /// <summary>نمایهٔ مودالیتهٔ منتخب</summary>
     [ObservableProperty]
-    private int _imagingModalityIndex;
+    private int _imagingModalityIndex = -1;
 
     /// <summary>نواحی بدن — همان گزینه‌های پیشنهادی صفحهٔ تصویربرداری</summary>
     public string[] ImagingBodyParts { get; } =
@@ -692,7 +680,7 @@ public partial class VisitEditViewModel : ObservableObject
 
     /// <summary>نمایهٔ ناحیهٔ بدن</summary>
     [ObservableProperty]
-    private int _imagingBodyPartIndex;
+    private int _imagingBodyPartIndex = -1;
 
     /// <summary>درخواست فوری است؟ — اولویت اورژانس به سرور می‌رود</summary>
     [ObservableProperty]
@@ -712,8 +700,15 @@ public partial class VisitEditViewModel : ObservableObject
             return;
         }
 
+        if (IsBusy || _imagingResultUnknown)
+        { _snackbar.Error("نتیجه درخواست قبلی نامعلوم است یا عملیاتی در جریان است؛ پیش از ارسال مجدد فهرست تصویربرداری را بررسی کنید."); return; }
+        if (ImagingModalityIndex < 0 || ImagingModalityIndex >= ImagingModalities.Length ||
+            ImagingBodyPartIndex < 0 || ImagingBodyPartIndex >= ImagingBodyParts.Length)
+        { _snackbar.Error("نوع تصویربرداری و ناحیه بدن را صریحاً انتخاب کنید."); return; }
+        if (!await SaveCoreAsync(silent: false)) return;
         IsBusy = true;
-        var ok = await _api.PostAsync("imaging/orders", new
+        bool ok;
+        try { ok = await _api.PostAsync("imaging/orders", new
         {
             patientId = _patientId,
             referringDoctorId = _doctorId > 0 ? _doctorId : (long?)null,
@@ -721,8 +716,10 @@ public partial class VisitEditViewModel : ObservableObject
             bodyPart = ImagingBodyParts[ImagingBodyPartIndex],
             priority = ImagingUrgent ? 1 : 3, // ۱ اورژانس، ۳ عادی
             clinicalInfo = string.IsNullOrWhiteSpace(ImagingClinicalInfo) ? null : ImagingClinicalInfo.Trim()
-        });
-        IsBusy = false;
+        }); }
+        catch (Exception) { ok = false; }
+        finally { IsBusy = false; }
+        if (!ok) _imagingResultUnknown = true;
 
         if (ok)
         {
@@ -731,7 +728,7 @@ public partial class VisitEditViewModel : ObservableObject
             ImagingUrgent = false;
         }
         else
-            _snackbar.Error(_api.LastError ?? "ارسال درخواست تصویربرداری ناموفق بود");
+            _snackbar.Error("نتیجه درخواست تصویربرداری نامعلوم است؛ پیش از تلاش مجدد فهرست تصویربرداری را بررسی کنید. " + _api.LastError);
     }
 
     /* ─── تب فیزیوتراپی: ارسال به فیزیوتراپی ─── */
@@ -740,43 +737,46 @@ public partial class VisitEditViewModel : ObservableObject
     [ObservableProperty]
     private string? _physioReferralNote;
 
-    /// <summary>
-    /// ارسال به فیزیوتراپی — چرخهٔ ۴۸: قرارداد فعلی سرور جلسه‌محور است
-    /// (RecordPhysioSessionCommand)؛ ارجاع به‌صورت نخستین جلسهٔ «ارجاعی» با
-    /// درمانگر تهی و برچسب واضح ثبت می‌شود تا در فهرست جلساتِ بخش فیزیوتراپی
-    /// دیده شود و درمانگر جلسات بعدی را با شمارهٔ ۲ به بعد ادامه دهد.
-    /// </summary>
+    private Sahand.ClinicPro.Application.Features.Paraclinical.CreatePhysiotherapyReferralCommand? _pendingPhysioReferral;
+    public bool CanEditPhysioReferral => _pendingPhysioReferral is null && !IsBusy;
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanEditPhysioReferral));
+
+    /// <summary>ارسال ارجاع واقعی مستقل از جلسات؛ تلاش مجدد همان شناسه را استفاده می‌کند.</summary>
     [RelayCommand]
     private async Task SendToPhysioAsync()
     {
-        if (_patientId <= 0)
-        {
-            _snackbar.Error("بیمار ویزیت مشخص نیست — ابتدا ویزیت را ذخیره کنید");
-            return;
-        }
-
+        if (IsBusy) return;
         IsBusy = true;
-        var ok = await _api.PostAsync("physiotherapy/sessions", new
+        try
         {
-            patientId = _patientId,
-            therapistId = (long?)null, // درمانگر هنوز مشخص نیست — ارجاع است نه جلسهٔ درمان
-            sessionNumber = 1,
-            treatments = string.IsNullOrWhiteSpace(PhysioReferralNote)
-                ? "ارجاع به فیزیوتراپی از ویزیت پزشک"
-                : $"ارجاع به فیزیوتراپی از ویزیت پزشک — {PhysioReferralNote.Trim()}",
-            duration = (int?)null,
-            painScore = (byte?)null
-        });
-        IsBusy = false;
-
-        if (ok)
-        {
-            _snackbar.Success("ارجاع به فیزیوتراپی ثبت شد — در فهرست جلسات بخش فیزیوتراپی دیده می‌شود");
+            if (_pendingPhysioReferral is null)
+            {
+                var note = PhysioReferralNote?.Trim();
+                if (string.IsNullOrWhiteSpace(note) || note.Length > 2000)
+                { _snackbar.Error("شرح ارجاع را با حداکثر ۲۰۰۰ نویسه وارد کنید."); return; }
+                if (!await SaveCoreAsync(silent: false) || _visitId is null) return;
+                _pendingPhysioReferral = new(Guid.NewGuid(), _visitId.Value, _patientId, _doctorId, note);
+                OnPropertyChanged(nameof(CanEditPhysioReferral));
+            }
+            var response = await _api.PostAsync<PhysioReferralSaveResponse>("physiotherapy/referrals", _pendingPhysioReferral);
+            if (response?.Data is not > 0)
+            {
+                _snackbar.Error("نتیجه ارجاع نامعلوم است؛ با همین دکمه دوباره تلاش کنید یا فهرست ارجاعات را بررسی کنید. " + _api.LastError);
+                return;
+            }
+            _pendingPhysioReferral = null;
             PhysioReferralNote = null;
+            OnPropertyChanged(nameof(CanEditPhysioReferral));
+            _snackbar.Success("ارجاع مستقل فیزیوتراپی ثبت شد؛ جلسه درمان ثبت نشده است.");
         }
-        else
-            _snackbar.Error(_api.LastError ?? "ارسال به فیزیوتراپی ناموفق بود");
+        catch (Exception)
+        {
+            _snackbar.Error("نتیجه ارجاع نامعلوم است؛ با همین دکمه دوباره تلاش کنید یا فهرست ارجاعات را بررسی کنید.");
+        }
+        finally { IsBusy = false; }
     }
+
+    public sealed class PhysioReferralSaveResponse { public long? Data { get; set; } }
 
     /* ─── تب ۵: گشودن نسخه‌نویسی با زمینهٔ ویزیت ─── */
 
@@ -796,7 +796,7 @@ public partial class VisitEditViewModel : ObservableObject
         }
 
         // ویزیتِ در جریان ذخیره شود تا نسخه در پرونده به زمینهٔ کامل وصل باشد
-        await SaveCoreAsync(silent: true);
+        if (!await SaveCoreAsync(silent: false)) return;
 
         // پزشکان برای انتخاب صادرکننده — همان الگوی صفحهٔ نسخه‌ها
         var doctors = new ObservableCollection<DoctorOption>();
@@ -818,13 +818,28 @@ public partial class VisitEditViewModel : ObservableObject
     /// <summary>هسته ذخیره — ساخت DTO و POST</summary>
     private async Task<bool> SaveCoreAsync(bool silent, bool complete = false)
     {
-        if (_suppressAutoSave) return true;
+        if (_suppressAutoSave)
+        { if (!silent) _snackbar.Info("ذخیره قبلی هنوز در حال انجام است؛ پس از پایان دوباره تلاش کنید."); return false; }
+        if (_creationResultUnknown)
+        { if (!silent) _snackbar.Error("نتیجه ساخت ویزیت نامعلوم است؛ پیش از تکرار پرونده بیمار را بررسی کنید."); return false; }
+        if (!_visitEditable || (_openedExisting && !_existingVisitLoaded))
+        { if (!silent) _snackbar.Error("ویزیت کامل بارگذاری نشده یا تکمیل‌شده و فقط خواندنی است."); return false; }
+        if (_patientId <= 0 || _doctorId <= 0)
+        { if (!silent) _snackbar.Error("اطلاعات بیمار یا پزشک ویزیت آماده نیست؛ ذخیره انجام نشد."); return false; }
+        if (!TryBuildVitals(out var vitals))
+        {
+            ErrorMessage = "علائم حیاتی نامعتبر است؛ اعداد و فشار خون را بررسی کنید.";
+            SaveStateText = "⚠️ علائم حیاتی ذخیره نشد";
+            if (!silent) _snackbar.Error(ErrorMessage);
+            return false;
+        }
         _suppressAutoSave = true;
         try
         {
             var body = new
             {
                 id = _visitId,
+                editVersion = _editVersion,
                 patientId = _patientId,
                 doctorId = _doctorId,
                 receptionId = _receptionId,
@@ -832,10 +847,10 @@ public partial class VisitEditViewModel : ObservableObject
                 historyOfPresentIllness = Hpi,
                 pastMedicalHistory = Pmh,
                 physicalExamination = BuildExamText(),
-                soapSubjective = ChiefComplaint,
-                soapObjective = BuildExamText(),
-                soapAssessment = PrimaryDiagnosis?.Title,
-                soapPlan = TreatmentPlan,
+                soapSubjective = _existingVisitLoaded ? _soapSubjective : ChiefComplaint,
+                soapObjective = _existingVisitLoaded ? _soapObjective : BuildExamText(),
+                soapAssessment = _existingVisitLoaded ? _soapAssessment : PrimaryDiagnosis?.Title,
+                soapPlan = _existingVisitLoaded ? _soapPlan : TreatmentPlan,
                 primaryDiagnosisId = PrimaryDiagnosis?.Id == 0 ? null : PrimaryDiagnosis?.Id,
                 treatmentPlan = TreatmentPlan,
                 followUpDateShamsi = string.IsNullOrWhiteSpace(FollowUpDateShamsi) ? null : FollowUpDateShamsi.Trim(),
@@ -843,28 +858,40 @@ public partial class VisitEditViewModel : ObservableObject
                 familyHistory = FamilyHistory,
                 socialHistory = SocialHistory,
                 reviewOfSystems = ReviewOfSystems,
-                secondaryDiagnoses = JsonSerializer.Serialize(SecondaryDiagnoses.ToList()),
+                secondaryDiagnoses = _existingVisitLoaded && JsonSerializer.Serialize(SecondaryDiagnoses.ToList()) == _initialSecondaryRepresentation
+                    ? _originalSecondaryDiagnoses : JsonSerializer.Serialize(SecondaryDiagnoses.ToList()),
                 followUpInstructions = FollowUpInstructions,
-                vitalSigns = BuildVitals()
+                vitalSigns = vitals
             };
 
-            var response = await _api.PostAsync<SaveVisitResponse>("visits", body);
-            if (response?.Data is null or 0)
+            var response = await _api.PostAsync<SaveVisitResponse>("visits/save-versioned", body);
+            if (response?.Data is null || response.Data.Id <= 0 || string.IsNullOrWhiteSpace(response.Data.EditVersion))
             {
-                if (!silent)
-                {
-                    ErrorMessage = _api.LastError ?? "ذخیره ویزیت ناموفق بود";
-                    _snackbar.Error(ErrorMessage);
-                }
+                if (_visitId is null) _creationResultUnknown = true;
+                ErrorMessage = (_api.LastError ?? "پاسخ ذخیره ویزیت دریافت نشد") +
+                    (_creationResultUnknown ? "؛ پیش از تکرار، وجود ویزیت را در پرونده بررسی کنید." : "؛ پیش از تکرار وضعیت ویزیت را بررسی کنید.");
+                SaveStateText = "⚠️ نتیجه ذخیره نامعلوم یا ناموفق";
+                _snackbar.Error(ErrorMessage);
                 return false;
             }
 
+            _visitId = response.Data.Id;
+            _editVersion = response.Data.EditVersion;
+            if (vitals is not null) _hasExistingVitals = true;
             SaveStateText = complete
                 ? $"✅ تکمیل شد — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}"
                 : $"💾 ذخیره خودکار — {Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.ToClockFa(IranClock.Now)}";
             if (!silent && !complete)
                 _snackbar.Success("ویزیت ذخیره شد");
             return true;
+        }
+        catch (Exception)
+        {
+            if (_visitId is null) _creationResultUnknown = true;
+            ErrorMessage = "پاسخ ذخیره ویزیت دریافت نشد؛ پیش از تکرار پرونده بیمار را بررسی کنید.";
+            SaveStateText = "⚠️ نتیجه ذخیره نامعلوم";
+            _snackbar.Error(ErrorMessage);
+            return false;
         }
         finally
         {
@@ -876,6 +903,7 @@ public partial class VisitEditViewModel : ObservableObject
     private string? BuildExamText()
     {
         var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(PhysicalExamText)) parts.Add(PhysicalExamText);
         if (!HeadNeckNormal && !string.IsNullOrWhiteSpace(HeadNeckFindings)) parts.Add($"سر و گردن: {HeadNeckFindings}");
         else if (HeadNeckNormal) parts.Add("سر و گردن: نرمال");
         if (!ChestNormal && !string.IsNullOrWhiteSpace(ChestFindings)) parts.Add($"قفسه سینه: {ChestFindings}");
@@ -887,45 +915,24 @@ public partial class VisitEditViewModel : ObservableObject
         return parts.Count == 0 ? null : string.Join("؛ ", parts);
     }
 
-    /// <summary>ساخت DTO علائم حیاتی</summary>
-    private object? BuildVitals()
+    /// <summary>دریافت بدون گردکردن یا حذف خاموش نویسه‌ها.</summary>
+    private bool TryBuildVitals(out Sahand.ClinicPro.Application.DTOs.Visits.VitalSignsInputDto? vitals)
     {
-        var hasAny = !string.IsNullOrWhiteSpace(BpText) || !string.IsNullOrWhiteSpace(HrText) ||
-                     !string.IsNullOrWhiteSpace(TempText) || !string.IsNullOrWhiteSpace(Spo2Text) ||
-                     !string.IsNullOrWhiteSpace(WeightText) || !string.IsNullOrWhiteSpace(BsText);
-        if (!hasAny) return null;
-
+        vitals = null;
         int? sys = null, dia = null;
-        if (BpText is not null && BpText.Contains('/'))
+        if (!string.IsNullOrWhiteSpace(BpText))
         {
-            sys = ParseInt(BpText.Split('/')[0]);
-            var d = ParseInt(BpText.Split('/')[1]);
-            dia = d > 0 ? d : null;
-            if (sys == 0) sys = null;
+            var parts = BpText.Split('/');
+            if (parts.Length != 2 || !TryInt(parts[0], out sys) || !TryInt(parts[1], out dia) || sys is null) return false;
         }
-        return new
-        {
-            bloodPressureSystolic = sys,
-            bloodPressureDiastolic = dia,
-            heartRate = ParseNullable(HrText),
-            temperature = ParseNullableDec(TempText),
-            oxygenSaturation = ParseNullable(Spo2Text),
-            weight = ParseNullableDec(WeightText),
-            height = ParseNullableDec(HeightText),
-            bloodSugar = ParseNullable(BsText)
-        };
-    }
-
-    private static int? ParseNullable(string? text)
-    {
-        var v = ParseInt(text);
-        return v == 0 ? null : v;
-    }
-
-    private static decimal? ParseNullableDec(string? text)
-    {
-        var v = ParseDec(text);
-        return v == 0 ? null : v;
+        if (!TryInt(HrText, out var hr) || !TryDecimal(TempText, out var temp) ||
+            !TryInt(Spo2Text, out var spo2) || !TryDecimal(WeightText, out var weight) ||
+            !TryDecimal(HeightText, out var height) || !TryInt(BsText, out var sugar)) return false;
+        if (!_hasExistingVitals && sys is null && dia is null && hr is null && temp is null && spo2 is null && weight is null && height is null && sugar is null) return true;
+        var result = new Sahand.ClinicPro.Application.DTOs.Visits.VitalSignsInputDto(sys, dia, hr, temp, spo2, weight, height, sugar);
+        if (!Sahand.ClinicPro.Application.Features.Visits.Commands.SaveVisit.VisitVitalsSafety.IsValid(result)) return false;
+        vitals = result;
+        return true;
     }
 
     /// <summary>پر کردن مجموعه تگ از JSON</summary>
@@ -959,6 +966,13 @@ public partial class VisitEditViewModel : ObservableObject
         public long PatientId { get; set; }
         public long DoctorId { get; set; }
         public long? ReceptionId { get; set; }
+        public int Status { get; set; }
+        public string? EditVersion { get; set; }
+        public string? PhysicalExamination { get; set; }
+        public string? SoapSubjective { get; set; }
+        public string? SoapObjective { get; set; }
+        public string? SoapAssessment { get; set; }
+        public string? SoapPlan { get; set; }
         public string? ChiefComplaint { get; set; }
         public string? HistoryOfPresentIllness { get; set; }
         public string? PastMedicalHistory { get; set; }
@@ -1036,7 +1050,12 @@ public partial class VisitEditViewModel : ObservableObject
     public sealed class SaveVisitResponse
     {
         public bool IsSuccess { get; set; }
-        public long? Data { get; set; }
+        public SavedVisit? Data { get; set; }
+    }
+    public sealed class SavedVisit
+    {
+        public long Id { get; set; }
+        public string? EditVersion { get; set; }
     }
 }
 

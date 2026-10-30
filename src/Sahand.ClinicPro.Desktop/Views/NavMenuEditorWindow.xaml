@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.NavMenuEditorWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.NavMenuEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -150,11 +150,11 @@
 
         <!-- دکمه‌های پایانی -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="2,14,2,0">
-            <Button x:Name="SaveButton" Click="OnSave" Style="{StaticResource MaterialDesignRaisedButton}"
+            <Button shortcuts:SaveShortcut.Number="1" x:Name="SaveButton" Click="OnSave" Style="{StaticResource MaterialDesignRaisedButton}"
                     FontSize="12.5" MinWidth="150">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="ContentSave" Width="16" Height="16" VerticalAlignment="Center" />
-                    <TextBlock Text="ذخیره و اعمال منو" Margin="8,0,0,0" />
+                    <TextBlock Text="ذخیره و اعمال منو (Ctrl+Shift+1)" Margin="8,0,0,0" />
                 </StackPanel>
             </Button>
             <Button x:Name="ResetButton" Click="OnReset" Style="{StaticResource MaterialDesignOutlinedButton}"

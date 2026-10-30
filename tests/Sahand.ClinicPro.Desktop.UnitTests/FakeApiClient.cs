@@ -19,8 +19,20 @@ public sealed class FakeApiClient : IApiClient
     /// <summary>پاسخ‌های آماده — کلید: endpoint، مقدار: شیء سریال‌شونده</summary>
     public Dictionary<string, object> CannedResponses { get; } = new();
 
+    /// <summary>پاسخ GET معوق برای آزمون ترتیب درخواست‌ها.</summary>
+    public Dictionary<string, Task<object?>> PendingGetResponses { get; } = new();
+    /// <summary>پاسخ دانلود معوق برای آزمون تعویض فایل.</summary>
+    public Dictionary<string, Task<byte[]?>> PendingDownloads { get; } = new();
+
     /// <summary>پاسخ بولی آماده برای فراخوانی‌های بدون داده خروجی</summary>
     public bool NextBoolResult { get; set; } = true;
+
+    /// <summary>پاسخ معوق PUT برای آزمون عملیات هم‌زمان.</summary>
+    public Task<bool>? PendingPutResult { get; set; }
+    public Task<bool>? PendingBoolPostResult { get; set; }
+
+    /// <summary>پاسخ معوق POST برای آزمون درخواست ثبت نوبت.</summary>
+    public Task<object?>? PendingPostResult { get; set; }
 
     /// <summary>خطای تنظیم‌شده برای LastError</summary>
     public string? FakeError { get; set; }
@@ -65,18 +77,23 @@ public sealed class FakeApiClient : IApiClient
     }
 
     /// <summary>GET عمومی</summary>
-    public Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default)
+    public async Task<T?> GetAsync<T>(string endpoint, CancellationToken ct = default)
     {
         Calls.Add(("GET", endpoint));
-        return Task.FromResult(Resolve<T>(endpoint));
+        if (!PendingGetResponses.TryGetValue(endpoint, out var pending)) return Resolve<T>(endpoint);
+        var response = await pending;
+        return response is null ? default : JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response, JsonOptions), JsonOptions);
     }
 
     /// <summary>POST عمومی</summary>
-    public Task<T?> PostAsync<T>(string endpoint, object? body, CancellationToken ct = default)
+    public async Task<T?> PostAsync<T>(string endpoint, object? body, CancellationToken ct = default)
     {
         Calls.Add(("POST", endpoint));
         LastBody = body;
-        return Task.FromResult(Resolve<T>(endpoint));
+        if (PendingPostResult is null) return Resolve<T>(endpoint);
+        var response = await PendingPostResult;
+        if (response is null) return default;
+        return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(response, JsonOptions), JsonOptions);
     }
 
     /// <summary>PUT عمومی</summary>
@@ -106,7 +123,7 @@ public sealed class FakeApiClient : IApiClient
     {
         Calls.Add(("POST-bool", endpoint));
         LastBody = body;
-        return Task.FromResult(NextBoolResult);
+        return PendingBoolPostResult ?? Task.FromResult(NextBoolResult);
     }
 
     /// <summary>POST ناشناس با نتیجه بولی — چرخه هجدهم (فعال‌سازی لایسنس پیش از ورود)</summary>
@@ -122,7 +139,7 @@ public sealed class FakeApiClient : IApiClient
     {
         Calls.Add(("PUT-bool", endpoint));
         LastBody = body;
-        return Task.FromResult(NextBoolResult);
+        return PendingPutResult ?? Task.FromResult(NextBoolResult);
     }
 
     /// <summary>PUT ناشناس با نتیجه بولی — چرخه هجدهم (تنظیمات سرور لایسنس پیش از ورود)</summary>
@@ -147,7 +164,8 @@ public sealed class FakeApiClient : IApiClient
 
     /// <summary>دانلود فایل — در تست استفاده نمی‌شود</summary>
     public Task<byte[]?> DownloadFileAsync(string endpoint, CancellationToken ct = default)
-        => throw new NotSupportedException("دانلود در تست ViewModel پشتیبانی نمی‌شود");
+        => PendingDownloads.TryGetValue(endpoint, out var pending)
+            ? pending : throw new NotSupportedException("دانلود در تست ViewModel پشتیبانی نمی‌شود");
 
     /// <summary>دانلود POST — خروجی PDF گزارش‌ها (چرخه ۱۳، D6) — در تست استفاده نمی‌شود</summary>
     public Task<byte[]?> PostDownloadAsync(string endpoint, object? body, CancellationToken ct = default)

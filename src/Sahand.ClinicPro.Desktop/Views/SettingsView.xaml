@@ -1,9 +1,10 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.SettingsView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:views="clr-namespace:Sahand.ClinicPro.Desktop.Views"
              mc:Ignorable="d"
              d:DesignHeight="680" d:DesignWidth="1080"
              FlowDirection="RightToLeft">
@@ -22,7 +23,30 @@
          به درخواست مالک) → چرخهٔ ۷۹ (سایدبار حرفه‌ای دوباره — با چیدمان
          کارت‌محور و سربرگ قهرمان؛ خواستهٔ صریح بازطراحی شکیل).
          ═══════════════════════════════════════════════════════════════ -->
-    <Grid Margin="16,12">
+    <!-- ═══════════════════════════════════════════════════════════════
+         لایهبندی «نمای تأییدشده / نمای کامل» — تنظیمات چاپگر و چاپ
+         لایهٔ نخست همان طرحی است که مالک تأیید کرد (فایل PrintSettingsDesignView.xaml)؛
+         لایهٔ دوم همان محتوای کامل و قدیمی این صفحه است تا هیچ تب، فرم یا
+         تنظیماتی از بین نرود. کلید کوچک «تغییر نما» پایین صفحه جابهجا میکند.
+         پیشفرض = نمای تأییدشده؛ حالت اسکرینشات هم همان را میگیرد.
+         ═══════════════════════════════════════════════════════════════ -->
+    <Grid>
+        <ToggleButton x:Name="DsModeToggle" IsChecked="False" Style="{StaticResource App.PlainToggleButton}" Panel.ZIndex="10"
+                      HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="6,0,0,1"
+                      Padding="2,0" FontSize="8" Opacity="0.55" Cursor="Hand"
+                      Focusable="False" FocusVisualStyle="{x:Null}"
+                      Foreground="#8A9AAE" Content="طرح نمایشی (غیرعملیاتی) ↗">
+            <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                    <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                               FontSize="8" Background="Transparent" />
+                </ControlTemplate>
+            </ToggleButton.Template>
+        </ToggleButton>
+        <Grid Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource BoolToVisibility}}">
+            <views:PrintSettingsDesignView />
+        </Grid>
+    <Grid Margin="16,12" Visibility="{Binding IsChecked, ElementName=DsModeToggle, Converter={StaticResource InverseBoolToVisibility}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -414,11 +438,11 @@
                                                          Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" />
                                             </Grid>
-                                            <Button Grid.Row="3" Grid.ColumnSpan="2"
+                                            <Button shortcuts:SaveShortcut.Number="1" Grid.Row="3" Grid.ColumnSpan="2"
                                                     Command="{Binding DataContext.SaveGovSystemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه" />
+                                                    HorizontalAlignment="Left" Margin="0,10,0,0" Content="💾 ذخیره این سامانه (Ctrl+Shift+1)" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -429,56 +453,64 @@
 
                 <!-- ─── بخش ۳: چاپگر و چاپ ─── -->
                 <TabItem>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,6,0" MaxWidth="560" HorizontalAlignment="Stretch">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,2,6,0" HorizontalAlignment="Stretch">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <materialDesign:PackIcon Kind="Printer" Width="17" Height="17"
-                                                             Foreground="{DynamicResource MaterialDesign.Brush.Primary}" VerticalAlignment="Center" />
-                                    <TextBlock Text="چاپگرها و رفتار چاپ" FontSize="14" FontWeight="Bold"
-                                               Margin="8,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <Border CornerRadius="12" Padding="18,16" Margin="0,0,0,16">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#143B61" Offset="0" />
+                                            <GradientStop Color="#087B83" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Background="#2FFFFFFF" CornerRadius="12" Padding="11" Margin="0,0,14,0">
+                                            <materialDesign:PackIcon Kind="Printer" Width="24" Height="24" Foreground="White" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="مرکز چاپ و چاپگرها" FontSize="18" FontWeight="Bold" Foreground="White" />
+                                            <TextBlock Text="انتخاب چاپگر، پیش‌نمایش و رفتار چاپ اسناد درمانگاه" Foreground="#D3EDF1" FontSize="11.5" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
 
                                 <!-- ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — «فیلدهای چاپگرها
                                      خالی هستند و نمی‌شود چاپگر انتخاب کرد» ═══ چاپگرهای نصب‌شدهٔ
                                      ویندوز در ComboBox قابل انتخاب‌اند (ویرایش‌پذیر برای نام‌های
                                      دستی/شبکه)؛ «چاپگر نوبت‌دهی» برای قبض‌های نوبت اضافه شد. -->
-                                <!-- ═══ مرکز چاپ (بازطراحی تأییدشدهٔ مالک) ═══
-                                     هر سند چاپی برنامه با عنوان خودش این‌جا ردیف دارد و
-                                     چاپگر/کاغذ/نسخه/پیش‌نمایش/چاپ خودکار اختصاصی خودش را
-                                     می‌گیرد؛ چاپگر خالی یعنی پیش‌فرض ویندوز. این فهرست از
-                                     PrintJobSettings خوانده می‌شود و همهٔ چاپگرهای برنامه
-                                     (قبض، نوبت، آزمایش، برچسب و…) از همان کاتالوگ می‌خوانند -->
-                                <TextBlock Text="🖨️ مرکز چاپ — چاپگر اختصاصی هر سند" FontSize="12.5" FontWeight="Bold" Margin="2,2,0,4" />
-                                <TextBlock Text="برای هر سند، چاپگر جدا انتخاب کنید؛ خالی = پیش‌فرض ویندوز. دکمهٔ «تست» با همان چاپگر سند چاپ آزمایشی می‌گیرد."
+                                <!-- مرکز چاپ: فقط کنترل‌های متصل فعال‌اند؛ تنظیمات کاغذ و
+                                     چاپ خودکار اختصاصی تا اتصال واقعی غیرفعال می‌مانند. -->
+                                <TextBlock Text="چاپگر اختصاصی اسناد" Foreground="#173B5B" FontSize="15" FontWeight="Bold" Margin="2,2,0,4" />
+                                <TextBlock Text="کنترل‌های خاکستری هنوز به چاپ آن سند متصل نیستند. نسخه و پیش‌نمایش برای سندهای متصل فعال است؛ قبض HTML از دیالوگ مرورگر استفاده می‌کند. چاپگر خالی ابتدا تنظیمات قدیمی و سپس پیش‌فرض ویندوز را به کار می‌برد."
                                            FontSize="10.5" Opacity="0.65" TextWrapping="Wrap" Margin="2,0,0,8" />
-                                <ItemsControl ItemsSource="{Binding PrintJobs}" Margin="0,0,0,6">
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding PrintJobs}" MinWidth="620" Width="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}" Margin="0,0,0,6">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="10" Padding="10,7" Margin="0,0,0,6"
-                                                    Background="#F8FAFC" BorderBrush="#E1EAF3" BorderThickness="1">
+                                            <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,8"
+                                                    Background="#F6FAFD" BorderBrush="#D8E7F0" BorderThickness="1">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="170" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="86" />
-                                                        <ColumnDefinition Width="52" />
+                                                        <ColumnDefinition Width="145" />
+                                                        <ColumnDefinition Width="*" MinWidth="130" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="45" />
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                        <TextBlock FontSize="12" FontWeight="SemiBold">
+                                                        <TextBlock FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
                                                             <Run Text="{Binding Icon, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding Title, Mode=OneWay}" />
                                                         </TextBlock>
                                                         <TextBlock Text="{Binding Description, Mode=OneWay}" FontSize="9.5" Opacity="0.6" TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
-                                                    <ComboBox Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    <ComboBox Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsPrinter}"
                                                               ItemsSource="{Binding DataContext.PrinterNames, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                               IsEditable="True" StaysOpenOnEdit="True"
                                                               Text="{Binding Printer, UpdateSourceTrigger=PropertyChanged}"
                                                               materialDesign:HintAssist.Hint="چاپگر این سند" FontSize="11" />
-                                                    <ComboBox Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    <ComboBox Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="False" ToolTip="اندازه کاغذ اختصاصی هنوز به این مسیر متصل نشده است"
                                                               SelectedItem="{Binding Paper}" FontSize="11"
                                                               materialDesign:HintAssist.Hint="کاغذ">
                                                         <ComboBox.Items>
@@ -490,14 +522,16 @@
                                                             <ComboBoxItem Content="برچسب ۴۰×۳۰" />
                                                         </ComboBox.Items>
                                                     </ComboBox>
-                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center"
-                                                             Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged}"
+                                                    <TextBox Grid.Column="3" Margin="8,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsCopies}" ToolTip="برای مسیر داخلی؛ در نسخه پزشک مقدار اولیه دیالوگ چاپ است و پشتیبانی درایور لازم است"
+                                                             Text="{Binding CopiesInput, UpdateSourceTrigger=PropertyChanged}"
                                                              materialDesign:HintAssist.Hint="نسخه" FontSize="11" />
-                                                    <CheckBox Grid.Column="4" Content="پیش‌نمایش" IsChecked="{Binding Preview}"
+                                                    <CheckBox Grid.Column="4" Content="پیش‌نمایش" IsChecked="{Binding Preview}" IsThreeState="True"
+                                                              IsEnabled="{Binding SupportsFlowOptions}" ToolTip="برای مسیر داخلی این سند؛ حالت سوم یعنی استفاده از تنظیم عمومی"
                                                               FontSize="10.5" Margin="10,0,0,0" VerticalAlignment="Center" />
-                                                    <CheckBox Grid.Column="5" Content="خودکار" IsChecked="{Binding AutoPrint}"
+                                                    <CheckBox Grid.Column="5" Content="خودکار" IsChecked="{Binding AutoPrint}" IsEnabled="False"
+                                                              ToolTip="این گزینه هنوز به چاپ خودکار اختصاصی سند متصل نیست"
                                                               FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                                    <Button Grid.Column="6" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                    <Button Grid.Column="6" Margin="10,0,0,0" VerticalAlignment="Center" IsEnabled="{Binding SupportsPrinter}"
                                                             Command="{Binding DataContext.TestPrintJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -507,21 +541,24 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                </ScrollViewer>
 
-                                <Border CornerRadius="10" Padding="10,7" Background="#F1F8E9" Margin="0,2,0,4">
+                                <Border CornerRadius="10" Padding="16,13" Background="#EAF7F5" BorderBrush="#BFE6DE" BorderThickness="1" Margin="0,8,0,4">
                                     <StackPanel>
-                                        <TextBlock Text="⚙️ رفتار عمومی چاپ (همهٔ سندها)" FontSize="12" FontWeight="Bold" Margin="0,0,0,4" />
+                                        <TextBlock Text="تنظیمات عمومی چاپ" FontSize="14" Foreground="#155C5C" FontWeight="Bold" Margin="0,0,0,4" />
                                         <CheckBox Content="نمایش پیش‌نمایش قبل از چاپ (پیش‌فرض عمومی)" IsChecked="{Binding ShowPreview}" Margin="2,3" FontSize="11.5" />
-                                        <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور" IsChecked="{Binding AutoPrintInvoice}" Margin="2,3" FontSize="11.5" />
+                                        <CheckBox Content="بستن پیش‌نمایش داخلی پس از ارسال موفق به چاپگر" IsChecked="{Binding ClosePreviewAfterPrint}" Margin="2,3" FontSize="11.5" />
+                                        <TextBlock Text="در چاپ HTML مرورگر نتیجهٔ چاپ یا انصراف را اعلام نمی‌کند؛ پیش‌نمایش آن برای جلوگیری از بستن ناخواسته باز می‌ماند." TextWrapping="Wrap" FontSize="10.5" Opacity="0.7" Margin="22,1,0,4" />
+                                        <CheckBox Content="چاپ خودکار بعد از ثبت فاکتور (هنوز متصل نیست)" IsChecked="{Binding AutoPrintInvoice}" IsEnabled="False" Margin="2,3" FontSize="11.5" />
                                         <CheckBox Content="چاپ خودکار قبض نوبت پس از ثبت" IsChecked="{Binding AutoPrintTicket}" Margin="2,3" FontSize="11.5" />
                                     </StackPanel>
                                 </Border>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                    <Button Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
+                                    <Button shortcuts:SaveShortcut.Number="2" Command="{Binding SavePrinterSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,8,0">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                            <TextBlock Text="ذخیره" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="ذخیره (Ctrl+Shift+2)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
                                     <Button Command="{Binding TestPrintCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
@@ -724,9 +761,9 @@
                                                  Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}"
                                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                                  Width="200" VerticalAlignment="Center" />
-                                        <Button Command="{Binding SaveThemePresetCommand}"
+                                        <Button shortcuts:SaveShortcut.Number="3" Command="{Binding SaveThemePresetCommand}"
                                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                                Content="💾 ذخیرهٔ پریست" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                Content="💾 ذخیرهٔ پریست (Ctrl+Shift+3)" Padding="12,6" Margin="8,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <ComboBox ItemsSource="{Binding ThemePresets}"
@@ -745,7 +782,7 @@
 
                             <StackPanel Orientation="Horizontal" Margin="2,2,0,0">
                                 <Button Command="{Binding ApplyThemeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" Content="👁️ پیش‌نمایش فوری" />
-                                <Button Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره" />
+                                <Button shortcuts:SaveShortcut.Number="4" Command="{Binding SaveThemeSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Content="💾 ذخیره (Ctrl+Shift+4)" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
@@ -787,11 +824,11 @@
                                 </StackPanel>
                                 <CheckBox Content="ثبت Audit Log برای همه عملیات" IsChecked="{Binding AuditLogEnabled}" Margin="2,10" />
                                 <CheckBox Content="رمزنگاری داده‌های حساس بیمار" IsChecked="True" IsEnabled="False" Margin="2,8" />
-                                <Button Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                <Button shortcuts:SaveShortcut.Number="5" Command="{Binding SaveSecuritySettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         HorizontalAlignment="Left" Margin="0,14,0,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="💾 ذخیره تنظیمات امنیت" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="💾 ذخیره تنظیمات امنیت (Ctrl+Shift+5)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -816,11 +853,11 @@
                                           IsChecked="{Binding ApplyInsuranceToDoctorVisits}" Margin="2,8" />
                                 <CheckBox Content="اعمال سهم بیمه برای خدمات درمانی"
                                           IsChecked="{Binding ApplyInsuranceToMedicalServices}" Margin="2,8" />
-                                <Button Command="{Binding SaveInsuranceSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                <Button shortcuts:SaveShortcut.Number="6" Command="{Binding SaveInsuranceSettingsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
                                         HorizontalAlignment="Left" Margin="0,14,0,0">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ContentSave" Width="15" Height="15" VerticalAlignment="Center" />
-                                        <TextBlock Text="ذخیره تنظیمات بیمه" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="ذخیره تنظیمات بیمه (Ctrl+Shift+6)" Margin="7,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -849,5 +886,6 @@
                 </TabItem>
             </TabControl>
         </Grid>
+    </Grid>
     </Grid>
 </UserControl>

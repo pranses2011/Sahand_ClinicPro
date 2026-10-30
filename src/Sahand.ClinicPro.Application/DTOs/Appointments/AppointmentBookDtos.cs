@@ -84,4 +84,6 @@ public record AppointmentSearchItemDto(
     // اولویت نوبت (۱ اورژانس/۲ فوری/۳ معمولی) — چرخهٔ ۷۵: نمایش رنگی در
     // فهرست نوبت‌ها (گزارش مالک: «اولویت در لیست نیست؛ اولویت رو هم با رنگ
     // خودش در لیست نشون بده»)
-    int Priority = 3);
+    int Priority = 3,
+    long? PatientId = null,
+    long? DoctorId = null);

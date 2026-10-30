@@ -12,6 +12,8 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.ToTable("Invoices", t => t.HasComment("فاکتور - صورت‌حساب خدمات ارائه‌شده به بیمار"));
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.RequestFingerprint).HasMaxLength(64).IsUnicode(false);
+        builder.HasIndex(x => x.RequestId).IsUnique().HasDatabaseName("IX_Invoice_RequestId").HasFilter("[RequestId] IS NOT NULL");
         builder.Property(x => x.InvoiceNumber).HasMaxLength(20).HasDefaultValueSql("CONCAT('INV-', RIGHT('000000' + CAST(NEXT VALUE FOR SeqInvoiceNumber AS varchar(10)), 6))").HasComment("شماره فاکتور - یکتا");
         builder.Property(x => x.InvoiceDateShamsi).HasMaxLength(200).HasComment("تاریخ شمسی فاکتور");
         builder.Property(x => x.InvoiceType).HasConversion<byte>().HasComment("نوع فاکتور");

@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.LabResultWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.LabResultWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -46,19 +46,19 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <!-- ═══ چرخهٔ ۶۹: مسیر اصلی ثبت = دابل‌کلیک؛ دکمهٔ قدیمی برای عادت‌های قبلی می‌ماند ═══ -->
-            <Button Command="{Binding OpenItemEntryCommand}"
+            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding OpenItemEntryCommand}"
                     Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,12,0"
                     ToolTip="یا روی سطر آزمایش دابل‌کلیک کنید">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="Pencil" Width="15" Height="15" VerticalAlignment="Center" />
-                    <TextBlock Text="ثبت نتیجه در فرم اختصاصی" Margin="7,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="ثبت نتیجه در فرم اختصاصی (Ctrl+Shift+1)" Margin="7,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <!-- ═══ چرخهٔ ۶۷ (گزارش مالک: «امکان چاپ هم داشته باشه») ═══
                  چاپ برگهٔ نتیجهٔ همین درخواست — سند فارسی از LabResultPrinter
                  ساخته می‌شود و از دروازهٔ PrintFlow می‌گذرد (پیش‌نمایش اختیاری).
                  فقط وقتی نمایان است که دست‌کم یک قلم نتیجه داشته باشد. -->
-            <Button Command="{Binding PrintSheetCommand}"
+            <Button Command="{Binding PrintSheetCommand}" ToolTip="فقط نتیجه‌های ذخیره‌شده در سرور چاپ می‌شوند؛ تغییرات ثبت‌نشده را ابتدا ذخیره کنید."
                     Visibility="{Binding HasAnyResult, Converter={StaticResource BoolToVis}}"
                     Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,12,0">
                 <StackPanel Orientation="Horizontal">

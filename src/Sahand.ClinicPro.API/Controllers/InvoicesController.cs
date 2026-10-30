@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sahand.ClinicPro.API.Filters;
@@ -46,14 +47,43 @@ public class InvoicesController : ApiBaseController
         return ToResponse(result);
     }
 
+    /// <summary>پیش‌نمایش فقط‌خواندنی با نسخه قابل تطبیق هنگام صدور.</summary>
+    [HttpPost("preview")]
+    [HasPermission("invoices.create")]
+    public async Task<IActionResult> Preview([FromBody] CreateInvoiceDto dto)
+        => ToResponse(await _mediator.Send(new PreviewInvoiceQuery(dto)));
+
+    /// <summary>صدور یا بازپخش همان درخواست با شناسه الزامی.</summary>
+    [HttpPost("idempotent")]
+    [HasPermission("invoices.create")]
+    public async Task<IActionResult> CreateIdempotent([FromBody] CreateInvoiceDto dto)
+    {
+        if (!dto.RequestId.HasValue || dto.RequestId == Guid.Empty)
+            return BadRequest(ApiResponse<object>.Failure("شناسه پایدار درخواست فاکتور الزامی است.", 400));
+        return await Create(dto);
+    }
+
     /// <summary>صدور فاکتور جدید — سهم بیمه محاسبه و سند حسابداری تولید می‌شود</summary>
     [HttpPost]
     [HasPermission("invoices.create")]
     public async Task<IActionResult> Create([FromBody] CreateInvoiceDto dto)
     {
-        var result = await _mediator.Send(new CreateInvoiceCommand(dto));
-        if (result.IsSuccess)
-            return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");
-        return ToResponse(result);
+        try
+        {
+            var result = await _mediator.Send(new CreateInvoiceCommand(dto));
+            if (result.IsFailure && result.Error.Code is "BILLING.QUOTE_CHANGED" or "BILLING.REQUEST_CONFLICT")
+                return Conflict(ApiResponse<object>.Failure(result.Error.Message, 409));
+            if (result.IsSuccess)
+                return CreatedResponse(result, nameof(GetById), new { id = result.Value }, "فاکتور صادر شد");
+            return ToResponse(result);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(ApiResponse<object>.Failure("پذیرش همزمان تغییر کرد؛ پیش از تلاش مجدد فاکتورهای آن را بررسی کنید.", 409));
+        }
+        catch (DbUpdateException ex) when (RequestIdConflict.IsRequestIdViolation(ex, RequestIdConflict.InvoiceIndex))
+        {
+            return Conflict(ApiResponse<object>.Failure("فاکتوری با همین شناسه هم‌زمان ثبت شده است؛ وضعیت را بررسی و فقط با همان شناسه دوباره تلاش کنید.", 409));
+        }
     }
 }

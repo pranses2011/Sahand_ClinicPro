@@ -33,24 +33,44 @@ public partial class PhysioAssessmentRow : ObservableObject
     public string Name { get; init; } = string.Empty;
     /// <summary>بیشینهٔ مقیاس شاخص</summary>
     public double Max { get; init; } = 100;
+    /// <summary>سقف صریح مقیاس استاندارد؛ تهی یعنی صرفاً سقف نمودار است.</summary>
+    public double? ScaleMaximum { get; init; }
+    public bool IsValueValid(double? value) => value is null ||
+        (double.IsFinite(value.Value) && value.Value >= 0 && (ScaleMaximum is null || value.Value <= ScaleMaximum));
     /// <summary>معکوس است؟ (بیشتر = بهتر)</summary>
     public bool Reverse { get; init; }
     /// <summary>مقدار شروع دوره</summary>
-    [ObservableProperty] private double _baseValue;
+    [ObservableProperty] private double? _baseValue;
     /// <summary>مقدار امروز</summary>
-    [ObservableProperty] private double _nowValue;
+    [ObservableProperty] private double? _nowValue;
+    /// <summary>آخرین اندازه‌گیری پیشین، فقط برای اطلاع؛ مقدار جلسهٔ جاری نیست.</summary>
+    [ObservableProperty] private double? _lastValue;
+    [ObservableProperty] private string? _lastDate;
+    public string PreviousMeasurementText => LastValue is { } value
+        ? $"آخرین ثبت: {value} ({LastDate ?? "تاریخ نامشخص"})" : "اندازه‌گیری پیشین موجود نیست";
+    partial void OnLastValueChanged(double? value) => OnPropertyChanged(nameof(PreviousMeasurementText));
+    partial void OnLastDateChanged(string? value) => OnPropertyChanged(nameof(PreviousMeasurementText));
 
-    /// <summary>درصد بهبود این شاخص</summary>
-    public double Improvement => BaseValue == 0 ? 0 : (Reverse ? (NowValue - BaseValue) / BaseValue * 100 : (BaseValue - NowValue) / BaseValue * 100);
+    /// <summary>درصد بهبود فقط در صورت وجود هر دو مقدار و شروع غیرصفر.</summary>
+    public double? Improvement
+    {
+        get
+        {
+            if (BaseValue is not { } baseline || baseline <= 0 || NowValue is not { } current ||
+                !IsValueValid(baseline) || !IsValueValid(current)) return null;
+            var result = Reverse ? (current - baseline) / baseline * 100 : (baseline - current) / baseline * 100;
+            return double.IsFinite(result) ? result : null;
+        }
+    }
     /// <summary>متن درصد بهبود</summary>
-    public string ImprovementText => $"{Math.Round(Improvement)}٪";
+    public string ImprovementText => Improvement is { } value ? $"{Math.Round(value)}٪" : "—";
     /// <summary>پهنای میلهٔ شروع (پیکسل، از ۲۰۰)</summary>
-    public double BaseBar => Math.Min(200, BaseValue / Max * 200);
+    public double BaseBar => Math.Clamp((BaseValue ?? 0) / Max * 200, 0, 200);
     /// <summary>پهنای میلهٔ امروز (پیکسل، از ۲۰۰)</summary>
-    public double NowBar => Math.Min(200, NowValue / Max * 200);
+    public double NowBar => Math.Clamp((NowValue ?? 0) / Max * 200, 0, 200);
 
-    partial void OnBaseValueChanged(double value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(BaseBar)); }
-    partial void OnNowValueChanged(double value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(NowBar)); }
+    partial void OnBaseValueChanged(double? value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(BaseBar)); }
+    partial void OnNowValueChanged(double? value) { OnPropertyChanged(nameof(Improvement)); OnPropertyChanged(nameof(ImprovementText)); OnPropertyChanged(nameof(NowBar)); }
 }
 
 /// <summary>یک میلهٔ دامنهٔ حرکت / قدرت در پنل ارزیابی</summary>
@@ -93,6 +113,28 @@ public partial class PhysiotherapyViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmPatientChange;
+    private int _patientVersion;
+    private int? _nextSessionNumber;
+    private readonly Dictionary<string, int> _defaultTechniqueMinutes = new();
+    [ObservableProperty] private bool _isHistoryLoading;
+    [ObservableProperty] private bool _isHistoryReady;
+    [ObservableProperty] private bool _isPhysioSaving;
+    public bool CanSelectPhysioPatient => !IsPhysioSaving;
+    /// <summary>ثبت جلسه تنها پس از دریافت موفق سابقهٔ بیمار مجاز است.</summary>
+    public bool CanEditPhysioSession => PhysioPatient is not null && IsHistoryReady && !IsHistoryLoading && !IsPhysioSaving;
+    /// <summary>خطای تبدیل عدد در نمای WPF باید پیش از ثبت رفع شود.</summary>
+    [ObservableProperty] private bool _hasInvalidPhysioInput;
+    public bool IsPhysioSessionEnabled => CanEditPhysioSession && !HasInvalidPhysioInput;
+    partial void OnHasInvalidPhysioInputChanged(bool value) => OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+    partial void OnIsPhysioSavingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanSelectPhysioPatient));
+        OnPropertyChanged(nameof(CanEditPhysioSession));
+        OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+    }
+    partial void OnIsHistoryLoadingChanged(bool value) { OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled)); }
+    partial void OnIsHistoryReadyChanged(bool value) { OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled)); }
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "فیزیوتراپی";
@@ -106,13 +148,16 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     /// <summary>بیمار منتخب</summary>
     [ObservableProperty] private QuickPatient? _physioPatient;
     /// <summary>مجموع جلسه‌های دوره</summary>
-    [ObservableProperty] private int _totalSessions = 12;
+    [ObservableProperty] private int _totalSessions;
+    partial void OnTotalSessionsChanged(int value) { ReferralReport = null; OnPropertyChanged(nameof(CourseProgress)); }
     /// <summary>شمارهٔ این جلسه</summary>
-    public int SessionNumber => History.Count + 1;
+    public int SessionNumber => _nextSessionNumber ?? (History.Count == 0 ? 1 :
+        History.Max(s => s.SessionNumber) == int.MaxValue ? int.MaxValue : History.Max(s => s.SessionNumber) + 1);
     /// <summary>درصد پیشرفت دوره</summary>
-    public double CourseProgress => TotalSessions <= 0 ? 0 : Math.Min(100, (double)History.Count / TotalSessions * 100);
+    public double CourseProgress => TotalSessions <= 0 ? 0 : Math.Min(100, (double)(SessionNumber - 1) / TotalSessions * 100);
     /// <summary>پروتکل فعال</summary>
     [ObservableProperty] private string? _activeProtocolName;
+    partial void OnActiveProtocolNameChanged(string? value) => ReferralReport = null;
     /// <summary>هدف پروتکل فعال</summary>
     [ObservableProperty] private string? _protocolGoal;
 
@@ -138,12 +183,14 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     public int[] PainScale { get; } = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     /// <summary>درد ناحیهٔ انتخابی</summary>
     public int SelectedZonePain => ZonePain.TryGetValue(SelectedZone, out var v) ? v : 0;
+    /// <summary>نمایش صریح ناحیهٔ بدون اندازه‌گیری، به جای فرض درد صفر.</summary>
+    public string SelectedZonePainText => ZonePain.TryGetValue(SelectedZone, out var v) ? v.ToString() : "ثبت نشده";
 
     /// <summary>انتخاب ناحیه از روی نقشه (فراخوانی از کدِ نما)</summary>
     public void SelectZone(string zone)
     {
         SelectedZone = zone;
-        OnPropertyChanged(nameof(SelectedZonePain));
+        OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText));
         BodyMapChanged?.Invoke();
     }
 
@@ -151,9 +198,11 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [RelayCommand]
     private void SetZonePain(int value)
     {
+        if (value is < 0 or > 10) return;
         ZonePain[SelectedZone] = value;
         PainScore = value;
-        OnPropertyChanged(nameof(SelectedZonePain));
+        RecordPainScore = true;
+        OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText));
         BodyMapChanged?.Invoke();
     }
 
@@ -187,13 +236,18 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private string? _physioOtherTechnique;
     /// <summary>نمرهٔ درد کلی ۰ تا ۱۰</summary>
     [ObservableProperty] private int _painScore;
+    /// <summary>آیا درد این جلسه واقعاً سنجیده شده است؟</summary>
+    [ObservableProperty] private bool _recordPainScore;
+    /// <summary>نمایش درد ثبت‌نشده بدون انتساب مقدار صفر به بیمار.</summary>
+    public string PainScoreDisplay => RecordPainScore ? PainScore.ToString() : "ثبت نشده";
+    partial void OnRecordPainScoreChanged(bool value) => OnPropertyChanged(nameof(PainScoreDisplay));
     /// <summary>یادداشت جلسه</summary>
     [ObservableProperty] private string? _physioNotes;
     /// <summary>رنگ نمرهٔ درد — سبز/زرد/قرمز</summary>
     public string PainColor => PainScore <= 3 ? "#43A047" : PainScore <= 6 ? "#F9A825" : "#E53935";
-    partial void OnPainScoreChanged(int value) => OnPropertyChanged(nameof(PainColor));
+    partial void OnPainScoreChanged(int value) { OnPropertyChanged(nameof(PainColor)); OnPropertyChanged(nameof(PainScoreDisplay)); }
     /// <summary>مدت کل جلسه (مجموع مدت تکنیک‌های منتخب)</summary>
-    public int TotalDuration => TechniqueItems.Where(t => t.IsSelected).Sum(t => t.Minutes);
+    public long TotalDuration => TechniqueItems.Where(t => t.IsSelected).Sum(t => (long)t.Minutes);
 
     /// <summary>پرچم‌های قرمز غربالگری</summary>
     public ObservableCollection<PhysioCheckItem> RedFlags { get; } = new()
@@ -259,17 +313,18 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     /// <summary>ردیف‌های ارزیابی دوره</summary>
     public ObservableCollection<PhysioAssessmentRow> Assessments { get; } = new()
     {
-        new() { Name = "مقیاس درد (VAS)", Max = 10, BaseValue = 8, NowValue = 8 },
-        new() { Name = "ناتوانی — Oswestry ‏(٪)", Max = 100, BaseValue = 46, NowValue = 46 },
-        new() { Name = "خم‌شدن کمر (درجه)", Max = 90, Reverse = true, BaseValue = 40, NowValue = 40 },
-        new() { Name = "بلندکردن پای صاف SLR (درجه)", Max = 90, Reverse = true, BaseValue = 45, NowValue = 45 },
-        new() { Name = "پلانک (ثانیه)", Max = 60, Reverse = true, BaseValue = 10, NowValue = 10 },
-        new() { Name = "تعادل برگ Berg (از ۵۶)", Max = 56, Reverse = true, BaseValue = 48, NowValue = 48 },
+        new() { Name = "مقیاس درد (VAS)", Max = 10, ScaleMaximum = 10 },
+        new() { Name = "ناتوانی — Oswestry ‏(٪)", Max = 100, ScaleMaximum = 100 },
+        new() { Name = "خم‌شدن کمر (درجه)", Max = 90, Reverse = true },
+        new() { Name = "بلندکردن پای صاف SLR (درجه)", Max = 90, Reverse = true },
+        new() { Name = "پلانک (ثانیه)", Max = 60, Reverse = true },
+        new() { Name = "تعادل برگ Berg (از ۵۶)", Max = 56, ScaleMaximum = 56, Reverse = true },
     };
     /// <summary>میانگین بهبود همهٔ شاخص‌ها</summary>
-    public double TotalImprovement => Assessments.Count == 0 ? 0 : Assessments.Average(a => a.Improvement);
+    public double? TotalImprovement => Assessments.Any(a => a.Improvement.HasValue)
+        ? Assessments.Where(a => a.Improvement.HasValue).Average(a => a.Improvement!.Value) : null;
     /// <summary>متن میانگین بهبود</summary>
-    public string TotalImprovementText => $"{Math.Round(TotalImprovement)}٪";
+    public string TotalImprovementText => TotalImprovement is { } value ? $"{Math.Round(value)}٪" : "—";
 
     /// <summary>میله‌های دامنهٔ حرکت مفصل درگیر (از روی ارزیابی زنده)</summary>
     public ObservableCollection<PhysioBar> RomBars { get; } = new();
@@ -281,9 +336,9 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         var flex = Assessments[2];
         var slr = Assessments[3];
         var plank = Assessments[4];
-        RomBars.Add(new() { Label = "فلکشن کمر", BarPx = Math.Min(200, flex.NowValue / 90 * 200), Text = $"{flex.NowValue}° از ۹۰°" });
-        RomBars.Add(new() { Label = "بلندکردن پای صاف (SLR)", BarPx = Math.Min(200, slr.NowValue / 90 * 200), Text = $"{slr.NowValue}° از ۹۰°" });
-        RomBars.Add(new() { Label = "استقامت عضلات مرکزی (پلانک)", BarPx = Math.Min(200, plank.NowValue / 60 * 200), Text = $"{plank.NowValue} ثانیه از ۶۰" });
+        RomBars.Add(new() { Label = "فلکشن کمر", BarPx = Math.Clamp((flex.NowValue ?? 0) / 90 * 200, 0, 200), Text = flex.NowValue is { } f ? $"{f}° از ۹۰°" : "ثبت نشده" });
+        RomBars.Add(new() { Label = "بلندکردن پای صاف (SLR)", BarPx = Math.Clamp((slr.NowValue ?? 0) / 90 * 200, 0, 200), Text = slr.NowValue is { } s ? $"{s}° از ۹۰°" : "ثبت نشده" });
+        RomBars.Add(new() { Label = "استقامت عضلات مرکزی (پلانک)", BarPx = Math.Clamp((plank.NowValue ?? 0) / 60 * 200, 0, 200), Text = plank.NowValue is { } p ? $"{p} ثانیه از ۶۰" : "ثبت نشده" });
     }
 
     /// <summary>تمرین خانگی بیمار</summary>
@@ -308,18 +363,70 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [RelayCommand]
     private void GenerateReport()
     {
-        var name = PhysioPatient?.FullName ?? "بیمار";
+        if (!IsPhysioSessionEnabled) { _snackbar.Error("ابتدا بیمار و سابقهٔ او را بارگذاری کنید"); return; }
+        if (Assessments.Any(a => !a.IsValueValid(a.BaseValue) || !a.IsValueValid(a.NowValue)))
+        { ReferralReport = null; _snackbar.Error("مقادیر ارزیابی باید متناهی و غیرمنفی باشند و از سقف مقیاس‌های VAS، Oswestry و Berg تجاوز نکنند"); return; }
+        var name = PhysioPatient!.FullName;
         var pain = Assessments[0];
         var osw = Assessments[1];
         var flex = Assessments[2];
         ReferralReport =
             $"گزارش پیشرفت فیزیوتراپی — {name}" + Environment.NewLine +
-            $"پروتکل فعال: {ActiveProtocolName ?? "—"} · جلسهٔ {SessionNumber} از {TotalSessions}" + Environment.NewLine +
-            $"درد (VAS): از {pain.BaseValue} به {pain.NowValue} ({pain.ImprovementText} بهبود)" + Environment.NewLine +
-            $"ناتوانی Oswestry: از {osw.BaseValue}٪ به {osw.NowValue}٪ ({osw.ImprovementText} بهبود)" + Environment.NewLine +
-            $"خم‌شدن کمر: از {flex.BaseValue}° به {flex.NowValue}° ({flex.ImprovementText} بهبود)" + Environment.NewLine +
-            $"میانگین بهبود دوره: {TotalImprovementText}" + Environment.NewLine +
-            "پیشنهاد: ادامهٔ پروتکل تا پایان دوره و ارزیابی پایانی در جلسهٔ آخر.";
+            $"پروتکل فعال: {ActiveProtocolName ?? "—"} · جلسهٔ {SessionNumber} از {(TotalSessions > 0 ? TotalSessions.ToString() : "تعداد نامشخص")}" + Environment.NewLine +
+            $"درد (VAS): از {pain.BaseValue?.ToString() ?? "ثبت نشده"} به {pain.NowValue?.ToString() ?? "ثبت نشده"} ({pain.ImprovementText} بهبود)" + Environment.NewLine +
+            $"ناتوانی Oswestry: از {osw.BaseValue?.ToString() ?? "ثبت نشده"} به {osw.NowValue?.ToString() ?? "ثبت نشده"} ({osw.ImprovementText} بهبود)" + Environment.NewLine +
+            $"خم‌شدن کمر: از {flex.BaseValue?.ToString() ?? "ثبت نشده"} به {flex.NowValue?.ToString() ?? "ثبت نشده"} ({flex.ImprovementText} بهبود)" + Environment.NewLine +
+            "مبنا از حداکثر ۲۰ جلسهٔ اخیر یا ورودی فرم است؛ مقادیر این جلسه ممکن است ذخیره نشده باشند." + Environment.NewLine +
+            "درصدها محاسبهٔ نسبی‌اند و این گزارش نیازمند بررسی و تأیید درمانگر است.";
+    }
+
+    /// <summary>آخرین ارجاع‌های پزشکان؛ این فهرست وضعیت نوبت یا درمان نیست.</summary>
+    public ObservableCollection<PhysioReferralRow> Referrals { get; } = new();
+    [ObservableProperty] private bool _isLoadingReferrals;
+    [ObservableProperty] private string _referralListCaption = "برای دریافت ارجاع‌ها تازه‌سازی را بزنید.";
+    private int _referralListVersion;
+
+    [RelayCommand]
+    private Task LoadRecentReferralsAsync() => LoadReferralsAsync(null);
+
+    [RelayCommand]
+    private Task LoadPatientReferralsAsync()
+    {
+        if (PhysioPatient is null) { _snackbar.Error("ابتدا بیمار را انتخاب کنید."); return Task.CompletedTask; }
+        return LoadReferralsAsync(PhysioPatient.Id);
+    }
+
+    private async Task LoadReferralsAsync(long? patientId)
+    {
+        var version = ++_referralListVersion;
+        IsLoadingReferrals = true;
+        try
+        {
+            var path = patientId.HasValue ? $"physiotherapy/referrals?patientId={patientId.Value}" : "physiotherapy/referrals";
+            var response = await _api.GetAsync<PhysioReferralsResponse>(path);
+            if (version != _referralListVersion) return;
+            if (response?.Data is null)
+            { ReferralListCaption = "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."; _snackbar.Error(_api.LastError ?? "دریافت ارجاع‌ها ناموفق بود."); return; }
+            Referrals.Clear();
+            foreach (var row in response.Data) Referrals.Add(row);
+            ReferralListCaption = patientId.HasValue ? "آخرین ۱۰۰ ارجاع بیمار انتخاب‌شده" : "آخرین ۱۰۰ ارجاع همه بیماران";
+        }
+        catch (Exception)
+        {
+            if (version == _referralListVersion) { ReferralListCaption = "دریافت فهرست ناموفق بود؛ فهرست قبلی ممکن است قدیمی باشد."; _snackbar.Error("دریافت ارجاع‌ها ناموفق بود."); }
+        }
+        finally { if (version == _referralListVersion) IsLoadingReferrals = false; }
+    }
+
+    [RelayCommand]
+    private async Task SelectReferralPatientAsync(PhysioReferralRow? referral)
+    {
+        if (referral is null || IsPhysioSaving || referral.PatientId <= 0) return;
+        if (PhysioPatient?.Id == referral.PatientId) return;
+        if (PhysioPatient is not null && !_confirmPatientChange()) return;
+        PhysioPatient = new QuickPatient(referral.PatientId, referral.PatientName ?? "", referral.NationalCode ?? "",
+            referral.Mobile ?? "", null, null, null, null, referral.Gender);
+        await LoadReferralsAsync(referral.PatientId);
     }
 
     // ─────────────── سابقه و نمودار روند ───────────────
@@ -333,49 +440,95 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [ObservableProperty] private string? _trendSummary;
 
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public PhysiotherapyViewModel(IApiClient api, ISnackbarService snackbar)
+    public PhysiotherapyViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmPatientChange = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmPatientChange = confirmPatientChange ?? (() => Views.AppDialog.Confirm(
+            "تغییر بیمار", "اطلاعات فرم بیمار فعلی پاک می‌شود؛ موارد ذخیره‌نشده از دست می‌روند. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
         foreach (var row in Assessments)
-            row.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(TotalImprovement)); OnPropertyChanged(nameof(TotalImprovementText)); RefreshRomBars(); };
+            row.PropertyChanged += (_, _) => { ReferralReport = null; OnPropertyChanged(nameof(TotalImprovement)); OnPropertyChanged(nameof(TotalImprovementText)); RefreshRomBars(); };
         RefreshRomBars();
         foreach (var t in TechniqueItems)
+        {
+            _defaultTechniqueMinutes[t.Name] = t.Minutes;
             t.PropertyChanged += (_, _) => OnPropertyChanged(nameof(TotalDuration));
+        }
         foreach (var f in RedFlags)
             f.PropertyChanged += (_, _) => OnPropertyChanged(nameof(HasRedFlag));
     }
 
     partial void OnPhysioPatientChanged(QuickPatient? value)
     {
-        if (value is not null && value.Gender > 0)
-            IsFemale = value.Gender == 2;
-        _ = LoadHistoryAsync();
+        _patientVersion++;
+        _referralListVersion++;
+        IsLoadingReferrals = false;
+        Referrals.Clear();
+        ReferralListCaption = "برای دریافت ارجاع‌ها تازه‌سازی را بزنید.";
+        _nextSessionNumber = null;
+        IsHistoryReady = false;
+        IsHistoryLoading = false;
+        History.Clear(); PainTrendPoints = new(); RomTrendPoints = new(); TrendSummary = null;
+        ZonePain.Clear(); SelectedZone = "کمر (لومبار)"; PainScore = 0; RecordPainScore = false;
+        PhysioOtherTechnique = PhysioNotes = HomeProgram = ReferralReport = null;
+        ActiveProtocolName = ProtocolGoal = null; TotalSessions = 0;
+        foreach (var item in TechniqueItems)
+        {
+            item.IsSelected = false;
+            if (_defaultTechniqueMinutes.TryGetValue(item.Name, out var minutes)) item.Minutes = minutes;
+        }
+        foreach (var item in RedFlags.Concat(IcfGoals).Concat(DischargeCriteria)) item.IsChecked = false;
+        foreach (var row in Assessments) { row.BaseValue = null; row.NowValue = null; row.LastValue = null; row.LastDate = null; }
+        IsFemale = value?.Gender == 2;
+        OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText)); OnPropertyChanged(nameof(SessionNumber));
+        OnPropertyChanged(nameof(CourseProgress)); OnPropertyChanged(nameof(CanEditPhysioSession)); OnPropertyChanged(nameof(IsPhysioSessionEnabled));
+        BodyMapChanged?.Invoke();
+        if (value is not null) _ = LoadHistoryAsync();
     }
 
     /// <summary>جستجوی بیمار فیزیوتراپی</summary>
     [RelayCommand]
     private async Task SearchPhysioPatientAsync()
     {
+        if (IsPhysioSaving) return;
+        if (PhysioPatient is not null && !_confirmPatientChange()) return;
+        PhysioPatient = null;
+        var version = ++_patientVersion;
         var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, PhysioPatientSearch);
-        if (patient is not null) PhysioPatient = patient;
+        if (patient is not null && version == _patientVersion) PhysioPatient = patient;
     }
 
     /// <summary>بارگذاری سابقهٔ جلسات و ساخت نمودار روند واقعی</summary>
     private async Task LoadHistoryAsync()
     {
-        History.Clear();
-        PainTrendPoints = new();
-        RomTrendPoints = new();
-        TrendSummary = null;
-        OnPropertyChanged(nameof(SessionNumber));
-        OnPropertyChanged(nameof(CourseProgress));
         if (PhysioPatient is null) return;
-
-        var response = await _api.GetAsync<PhysioSessionsResponse>($"physiotherapy/sessions?patientId={PhysioPatient.Id}");
+        var patientId = PhysioPatient.Id;
+        var version = _patientVersion;
+        IsHistoryReady = false;
+        IsHistoryLoading = true;
+        PhysioSessionsResponse? response;
+        try { response = await _api.GetAsync<PhysioSessionsResponse>($"physiotherapy/sessions?patientId={patientId}"); }
+        catch (Exception)
+        {
+            if (version == _patientVersion) _snackbar.Error("دریافت سابقه ناموفق بود؛ برای ثبت جلسه دوباره بیمار را جستجو کنید");
+            return;
+        }
+        finally { if (version == _patientVersion) IsHistoryLoading = false; }
+        if (version != _patientVersion || PhysioPatient?.Id != patientId) return;
         var sessions = response?.Data;
-        if (sessions is null || sessions.Count == 0) return;
-        foreach (var s in sessions) History.Add(s);
+        if (sessions is null)
+        {
+            _snackbar.Error(_api.LastError ?? "دریافت سابقه ناموفق بود؛ برای ثبت جلسه دوباره بیمار را جستجو کنید");
+            return;
+        }
+        ReferralReport = null;
+        History.Clear(); PainTrendPoints = new(); RomTrendPoints = new(); TrendSummary = null;
+        foreach (var session in sessions) History.Add(session);
+        _nextSessionNumber = response?.NextSessionNumber;
+        IsHistoryReady = true;
+        OnPropertyChanged(nameof(SessionNumber)); OnPropertyChanged(nameof(CourseProgress));
+        if (sessions.Count == 0) return;
 
         // نمودار درد از PainScore واقعی جلسات (محور: ۰ تا ۱۰ ← ۲۰۰ تا ۲۰)
         var painPts = new System.Windows.Media.PointCollection();
@@ -383,23 +536,23 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         for (var i = 0; i < sessions.Count; i++)
         {
             var x = sessions.Count == 1 ? 300 : 40 + i * (520.0 / Math.Max(1, sessions.Count - 1));
-            var pain = sessions[i].PainScore ?? 0;
-            painPts.Add(new System.Windows.Point(x, 200 - pain * 18));
+            if (sessions[i].PainScore is { } pain)
+                painPts.Add(new System.Windows.Point(x, 200 - pain * 18));
             var flex = ExtractFlexion(sessions[i].ProgressNote);
             if (flex is not null)
                 romPts.Add(new System.Windows.Point(x, 200 - flex.Value * 2));
         }
         PainTrendPoints = painPts;
         RomTrendPoints = romPts;
-        var first = sessions[0].PainScore ?? 0;
-        var last = sessions[^1].PainScore ?? 0;
-        TrendSummary = sessions.Count > 1
-            ? $"درد از {first} به {last} رسیده است ({sessions.Count} جلسهٔ ثبت‌شده)."
-            : "پس از ثبت جلسهٔ دوم، روند دوره اینجا نمایش داده می‌شود.";
+        var measured = sessions.Where(x => x.PainScore.HasValue).ToList();
+        TrendSummary = measured.Count > 1
+            ? $"درد از {measured[0].PainScore} به {measured[^1].PainScore} رسیده است ({measured.Count} اندازه‌گیری موجود)."
+            : "برای نمایش روند، حداقل دو اندازه‌گیری درد لازم است.";
 
-        // ارزیابی: شروع از نخستین جلسه، امروز از آخرین جلسه
-        ApplyAssessmentsFrom(sessions[0].ProgressNote, baseSide: true);
-        ApplyAssessmentsFrom(sessions[^1].ProgressNote, baseSide: false);
+        // مبنا از اولین مقدار قابل استفاده در حداکثر ۲۰ جلسهٔ دریافتی؛
+        // آخرین مقدار فقط برای مشاهده است و هرگز به عنوان اندازه‌گیری امروز کپی نمی‌شود.
+        foreach (var row in Assessments) { row.BaseValue = null; row.LastValue = null; row.LastDate = null; }
+        foreach (var session in sessions) ApplyAssessmentsFrom(session.ProgressNote, session.DateShamsi);
         OnPropertyChanged(nameof(SessionNumber));
         OnPropertyChanged(nameof(CourseProgress));
     }
@@ -411,27 +564,29 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         try
         {
             using var doc = JsonDocument.Parse(progressNote);
-            if (doc.RootElement.TryGetProperty("flexion", out var f) && f.TryGetDouble(out var v)) return v;
+            if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("flexion", out var f) && f.ValueKind == JsonValueKind.Number && f.TryGetDouble(out var v)) return v;
         }
         catch (JsonException) { /* یادداشت‌های قدیمی متن آزاد بوده‌اند */ }
         return null;
     }
 
-    /// <summary>نشاندن ارزیابی‌های ذخیره‌شده روی جدول (سمت شروع یا امروز)</summary>
-    private void ApplyAssessmentsFrom(string? progressNote, bool baseSide)
+    /// <summary>استخراج مبنا و آخرین مقدار پیشین بدون پرکردن اندازه‌گیری جلسهٔ جاری.</summary>
+    private void ApplyAssessmentsFrom(string? progressNote, string? date)
     {
         if (string.IsNullOrWhiteSpace(progressNote)) return;
         try
         {
             using var doc = JsonDocument.Parse(progressNote);
-            if (!doc.RootElement.TryGetProperty("assessments", out var arr)) return;
+            if (doc.RootElement.ValueKind != JsonValueKind.Object || !doc.RootElement.TryGetProperty("assessments", out var arr) || arr.ValueKind != JsonValueKind.Array) return;
             foreach (var item in arr.EnumerateArray())
             {
-                if (!item.TryGetProperty("name", out var n)) continue;
+                if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("name", out var n) || n.ValueKind != JsonValueKind.String) continue;
                 var row = Assessments.FirstOrDefault(a => a.Name == n.GetString());
                 if (row is null) continue;
-                if (baseSide && item.TryGetProperty("base", out var b) && b.TryGetDouble(out var bv)) row.BaseValue = bv;
-                if (!baseSide && item.TryGetProperty("now", out var w) && w.TryGetDouble(out var wv)) row.NowValue = wv;
+                double? baseline = item.TryGetProperty("base", out var b) && b.ValueKind == JsonValueKind.Number && b.TryGetDouble(out var bv) && row.IsValueValid(bv) ? bv : null;
+                double? measured = item.TryGetProperty("now", out var w) && w.ValueKind == JsonValueKind.Number && w.TryGetDouble(out var wv) && row.IsValueValid(wv) ? wv : null;
+                row.BaseValue ??= baseline ?? measured;
+                if (measured is not null) { row.LastValue = measured; row.LastDate = date; }
             }
         }
         catch (JsonException) { /* سازگاری با سابقهٔ قدیمی */ }
@@ -441,7 +596,15 @@ public partial class PhysiotherapyViewModel : ViewModelBase
     [RelayCommand]
     private async Task SavePhysioSessionAsync()
     {
-        if (PhysioPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
+        if (!IsPhysioSessionEnabled || PhysioPatient is null) { _snackbar.Error("ابتدا بیمار و سابقهٔ او را بارگذاری کنید"); return; }
+        if (TechniqueItems.Any(t => t.IsSelected && (t.Minutes is < 1 or > 1440)) || TotalDuration > 1440)
+        { _snackbar.Error("مدت تکنیک‌های انتخاب‌شده باید مثبت و مجموع آن‌ها حداکثر ۱۴۴۰ دقیقه باشد"); return; }
+        if (Assessments.Any(a => !a.IsValueValid(a.BaseValue) || !a.IsValueValid(a.NowValue)))
+        { _snackbar.Error("مقادیر ارزیابی باید متناهی و غیرمنفی باشند و از سقف مقیاس‌های VAS، Oswestry و Berg تجاوز نکنند"); return; }
+        if (RecordPainScore && (PainScore is < 0 or > 10))
+        { _snackbar.Error("شدت درد باید بین صفر و ده باشد"); return; }
+        var patient = PhysioPatient;
+        var version = _patientVersion;
         if (HasRedFlag)
             _snackbar.Error("توجه: پرچم قرمز فعال است — پیش از ادامهٔ درمان، ارجاع پزشکی را بررسی کنید");
 
@@ -453,7 +616,7 @@ public partial class PhysiotherapyViewModel : ViewModelBase
 
         var details = new
         {
-            bodyMap = ZonePain.Where(z => z.Value > 0).ToDictionary(z => z.Key, z => z.Value),
+            bodyMap = ZonePain.ToDictionary(z => z.Key, z => z.Value),
             redFlags = RedFlags.Where(f => f.IsChecked).Select(f => f.Text).ToArray(),
             assessments = Assessments.Select(a => new { name = a.Name, @base = a.BaseValue, now = a.NowValue }).ToArray(),
             flexion = Assessments[2].NowValue,
@@ -465,23 +628,44 @@ public partial class PhysiotherapyViewModel : ViewModelBase
         };
         var progressNote = JsonSerializer.Serialize(details);
 
-        var ok = await _api.PostAsync("physiotherapy/sessions", new
+        IsPhysioSaving = true;
+        try
         {
-            patientId = PhysioPatient.Id,
+        bool ok;
+        try { ok = await _api.PostAsync("physiotherapy/sessions", new
+        {
+            patientId = patient.Id,
             therapistId = (long?)null,
             sessionNumber = SessionNumber,
             treatments,
-            duration = TotalDuration > 0 ? TotalDuration : (int?)null,
-            painScore = (byte)Math.Clamp(PainScore, 0, 10),
+            duration = TotalDuration > 0 ? (int)TotalDuration : (int?)null,
+            painScore = RecordPainScore ? (byte?)Math.Clamp(PainScore, 0, 10) : null,
             progressNote
-        });
+        }); }
+        catch
+        {
+            _snackbar.Error("پاسخ ثبت جلسه دریافت نشد؛ پیش از تلاش مجدد سابقهٔ بیمار را بررسی کنید.");
+            return;
+        }
         if (ok)
         {
             _snackbar.Success("جلسه فیزیوتراپی با نقشهٔ بدن و ارزیابی ساخت‌یافته ثبت شد");
-            PhysioNotes = null;
-            await LoadHistoryAsync();
+            if (version == _patientVersion && PhysioPatient?.Id == patient.Id)
+            {
+                // جلسهٔ بعدی نباید اندازه‌گیری‌ها یا اقدامات جلسهٔ قبل را بی‌صدا تکرار کند.
+                PhysioNotes = PhysioOtherTechnique = ReferralReport = null;
+                ZonePain.Clear(); PainScore = 0; RecordPainScore = false;
+                foreach (var item in TechniqueItems) item.IsSelected = false;
+                foreach (var flag in RedFlags) flag.IsChecked = false;
+                foreach (var row in Assessments) row.NowValue = null;
+                OnPropertyChanged(nameof(SelectedZonePain)); OnPropertyChanged(nameof(SelectedZonePainText));
+                BodyMapChanged?.Invoke();
+                await LoadHistoryAsync();
+            }
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت جلسه ناموفق بود");
+        else _snackbar.Error((_api.LastError ?? "ثبت جلسه ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد سابقه را بررسی کنید.");
+        }
+        finally { IsPhysioSaving = false; }
     }
 }
 
@@ -490,6 +674,8 @@ public sealed class PhysioSessionsResponse
 {
     /// <summary>موفقیت پاسخ</summary>
     public bool IsSuccess { get; set; }
+    /// <summary>شماره بعدی از کل جلسات، مستقل از بیست ردیف نمایش‌داده‌شده.</summary>
+    public int? NextSessionNumber { get; set; }
     /// <summary>فهرست جلسات</summary>
     public List<PhysioSessionDto>? Data { get; set; }
 }
@@ -512,3 +698,20 @@ public sealed class PhysioSessionDto
     /// <summary>یادداشت ساخت‌یافته (JSON)</summary>
     public string? ProgressNote { get; set; }
 }
+
+/// <summary>ارجاع مستقل پزشک به فیزیوتراپی.</summary>
+public sealed class PhysioReferralRow
+{
+    public long Id { get; set; }
+    public long VisitId { get; set; }
+    public long PatientId { get; set; }
+    public string? PatientName { get; set; }
+    public string? NationalCode { get; set; }
+    public string? Mobile { get; set; }
+    public int Gender { get; set; }
+    public long DoctorId { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string DateShamsi => Sahand.ClinicPro.Application.Common.Helpers.PersianDateHelper.StoredUtcToIranShamsi(CreatedAt);
+}
+public sealed class PhysioReferralsResponse { public List<PhysioReferralRow>? Data { get; set; } }

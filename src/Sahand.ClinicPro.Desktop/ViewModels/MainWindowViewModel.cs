@@ -793,35 +793,6 @@ public partial class MainWindowViewModel : ObservableObject
             // مدیریت سامانه است و دیگر نباید به‌صورت آیتم جدا به منو برگردد
             LocalSettingsStore.Set(ServiceCatalogMigrationKey, "done");
             return false;
-            if (LocalSettingsStore.Get(ServiceCatalogMigrationKey) == "done")
-                return false;
-
-            var alreadyHas = items.Any(i => i.PageKey == "service-catalog" ||
-                (i.HasChildren && i.Children.Any(c => c.PageKey == "service-catalog")));
-            if (alreadyHas)
-            {
-                LocalSettingsStore.Set(ServiceCatalogMigrationKey, "done");
-                return false;
-            }
-
-            var entry = Helpers.PageCatalog.Find("service-catalog");
-            if (entry is null)
-                return false;
-
-            var newItem = new NavItem { Title = entry.Title, PageKey = entry.Key, Icon = entry.Icon };
-            var adminGroup = items.FirstOrDefault(i => i.HasChildren &&
-                i.Children.Any(c => c.PageKey is "admin" or "settings" or "roles"));
-            if (adminGroup is not null)
-            {
-                var adminIndex = adminGroup.Children.ToList().FindIndex(c => c.PageKey == "admin");
-                adminGroup.Children.Insert(adminIndex >= 0 ? adminIndex + 1 : 0, newItem);
-            }
-            else
-            {
-                items.Add(newItem);
-            }
-
-            return true;
         }
         catch
         {

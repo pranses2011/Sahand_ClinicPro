@@ -40,6 +40,11 @@ public sealed record ReceptionReceiptItem(string Name, decimal Quantity, decimal
 /// <param name="PaymentMethod">روش پرداخت — ۱ نقدی، ۲ کارتخوان</param>
 /// <param name="ReferenceNumber">شمارهٔ پیگیری کارتخوان</param>
 /// <param name="CardNumber">چهار رقم آخر کارت</param>
+/// <param name="ClinicName">نام درمانگاه</param>
+/// <param name="ReceptionNumberText">شماره پذیرش نمایشی</param>
+/// <param name="InvoiceNumbersText">شماره‌های فاکتور نمایشی</param>
+/// <param name="Discount">تخفیف ثبت‌شده</param>
+/// <param name="Tax">مالیات ثبت‌شده</param>
 public sealed record ReceptionReceipt(
     long QueueNumber,
     long InvoiceNumber,
@@ -62,7 +67,24 @@ public sealed record ReceptionReceipt(
     string? ReferenceNumber,
     string? CardNumber,
     // نام درمانگاه از سرور لایسنس (تنظیم ClinicInfo) — عنوان قبض؛ نه نام نرم‌افزار
-    string? ClinicName = null);
+    string? ClinicName = null,
+    string? ReceptionNumberText = null,
+    string? InvoiceNumbersText = null,
+    decimal Discount = 0,
+    decimal Tax = 0)
+{
+    /// <summary>شماره‌های ثبت‌شده بدون تبدیل و حذف پیشوندها.</summary>
+    public string DisplayReceptionNumber => ReceptionNumberText ?? QueueNumber.ToString();
+    /// <summary>شماره‌های کامل فاکتورهای مرتبط.</summary>
+    public string DisplayInvoiceNumbers => InvoiceNumbersText ?? InvoiceNumber.ToString();
+
+    /// <summary>عنوان واقعی روش پرداخت؛ صفر یعنی پرداختی ثبت نشده است.</summary>
+    public string PaymentMethodText => PaymentMethod switch
+    {
+        1 => "نقدی", 2 => "کارتخوان", 3 => "آنلاین", 4 => "چک",
+        5 => "انتقال بانکی", 6 => "بیمه", 7 => "چند روش پرداخت", _ => "ثبت نشده"
+    };
+}
 
 /// <summary>
 /// چاپ قبض پذیرش و پرداخت — چرخهٔ ۸۲ (گزارش مالک):
@@ -109,12 +131,8 @@ public static class ReceptionReceiptPrinter
     /// <returns>true اگر چاپ (یا پیش‌نمایشِ منتهی به چاپ) انجام شد</returns>
     public static bool Print(ReceptionReceipt receipt)
     {
-        var doc = BuildReceipt(receipt);
-
-        // ارتفاع بر اساس محتوا — هر قلم ≈ ۱۸px؛ کف و سقف امن برای درایورها
-        var height = Math.Clamp(ReceiptBaseHeight + receipt.Items.Count * 18d, 620d, 1400d);
-        doc.PageWidth = ReceiptWidth;
-        doc.PageHeight = height;
+        var doc = CreateDocument(receipt);
+        var height = doc.PageHeight;
 
         // چاپگر مقصد — اختصاصی رسید، وگرنه چاپگر قبض نوبت، وگرنه پیش‌فرض ویندوز
         // (Get هرگز null نمی‌دهد؛ رشتهٔ خالی یعنی تنظیم‌نشده)
@@ -124,8 +142,23 @@ public static class ReceptionReceiptPrinter
             ? receiptPrinter
             : !string.IsNullOrWhiteSpace(ticketPrinter) ? ticketPrinter : null;
 
-        return PrintFlow.Print(doc, $"قبض پذیرش {receipt.QueueNumber}", printerName,
-            ReceiptWidth, height);
+        return PrintFlow.Print(doc, $"قبض پذیرش {receipt.DisplayReceptionNumber}", printerName,
+            ReceiptWidth, height, PrintJobSettings.PreviewFor("ReceptionReceipt"),
+            PrintJobSettings.CopiesFor("ReceptionReceipt"));
+    }
+
+    /// <summary>سند نمونه با همان موتور و ابعاد چاپ واقعی؛ اطلاعات ساختگی است.</summary>
+    public static FlowDocument CreateSamplePreviewDocument() => CreateDocument(new ReceptionReceipt(
+        0, 0, "نمونه — فاقد اعتبار", null, null, "پزشک نمونه", "خدمت نمونه", null,
+        "آزاد", "۱۴۰۵/۰۱/۰۱", "۱۰:۰۰", new[] { new ReceptionReceiptItem("خدمت نمونه", 1, 100000) },
+        100000, 0, 100000, 100000, 100000, 1, null, null, "پیش‌نمایش نمونه — فاقد اعتبار"));
+
+    private static FlowDocument CreateDocument(ReceptionReceipt receipt)
+    {
+        var doc = BuildReceipt(receipt);
+        doc.PageWidth = ReceiptWidth;
+        doc.PageHeight = Math.Clamp(ReceiptBaseHeight + receipt.Items.Count * 18d, 620d, 1400d);
+        return doc;
     }
 
     /// <summary>ساخت سند قبض — راست‌چین، ارقام فارسی، فونت چاپ جاسازی‌شده</summary>
@@ -163,7 +196,7 @@ public static class ReceptionReceiptPrinter
             Margin = new Thickness(0, 3, 0, 5),
         };
         queue.Inlines.Add(new Run("شمارهٔ صف  ") { FontSize = 11, Foreground = Brush("#37474F") });
-        queue.Inlines.Add(new Run(Persian(r.QueueNumber.ToString()))
+        queue.Inlines.Add(new Run(Persian(r.DisplayReceptionNumber))
         {
             FontSize = 22,
             FontWeight = FontWeights.Bold,
@@ -209,6 +242,10 @@ public static class ReceptionReceiptPrinter
         totals.Columns.Add(new TableColumn { Width = new GridLength(134) });
         var totalsRows = new TableRowGroup();
         AddTotalRow(totalsRows, "جمع اقلام", Money.FormatWithUnit(r.ItemsTotal));
+        if (r.Discount > 0m)
+            AddTotalRow(totalsRows, "تخفیف", Money.FormatWithUnit(r.Discount));
+        if (r.Tax > 0m)
+            AddTotalRow(totalsRows, "مالیات", Money.FormatWithUnit(r.Tax));
         if (r.InsuranceShare > 0m)
             AddTotalRow(totalsRows, "سهم بیمه", Money.FormatWithUnit(r.InsuranceShare));
         if (r.PatientShare > 0m)
@@ -246,7 +283,7 @@ public static class ReceptionReceiptPrinter
 
         var method = new Paragraph { Margin = new Thickness(0, 1, 0, 1) };
         method.Inlines.Add(new Run("روش پرداخت: ") { FontWeight = FontWeights.Bold });
-        method.Inlines.Add(new Run(r.PaymentMethod == 2 ? "کارتخوان (POS)" : "نقدی"));
+        method.Inlines.Add(new Run(r.PaymentMethodText));
         doc.Blocks.Add(method);
 
         if (r.PaymentMethod == 2)
@@ -257,12 +294,12 @@ public static class ReceptionReceiptPrinter
                 doc.Blocks.Add(Line("کارت", $"**** {Persian(r.CardNumber!)}"));
         }
 
-        doc.Blocks.Add(Line("شمارهٔ فاکتور", Persian(r.InvoiceNumber.ToString())));
+        doc.Blocks.Add(Line("شمارهٔ فاکتور", Persian(r.DisplayInvoiceNumbers)));
         doc.Blocks.Add(Divider());
 
         // ─── پانوشت ───
-        doc.Blocks.Add(Center("از پرداخت شما سپاسگزاریم", 10.5, FontWeights.SemiBold, "#37474F"));
-        doc.Blocks.Add(Center("این قبض سند دریافت وجه است — آن را تا پایان مراجعه نگه دارید",
+        doc.Blocks.Add(Center("از مراجعه شما سپاسگزاریم", 10.5, FontWeights.SemiBold, "#37474F"));
+        doc.Blocks.Add(Center("این قبض را تا پایان مراجعه نگه دارید",
             8.5, FontWeights.Normal, "#78909C"));
         doc.Blocks.Add(Center($"چاپ: {PersianDateHelper.ToShamsiFa(IranClock.Now)} — " +
                               PersianDateHelper.ToClockFa(IranClock.Now, withSeconds: false),

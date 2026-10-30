@@ -51,6 +51,13 @@
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             Width="38" Height="38" Padding="0" ToolTip="بزرگ‌نمایی"
                             Content="+" FontSize="16" FontWeight="Bold" Margin="0,0,14,0" />
+                    <TextBlock x:Name="CopiesLabel" Text="تعداد نسخه:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <ComboBox x:Name="CopiesBox" Width="65" Height="38" Margin="0,0,12,0"
+                              ToolTip="تعداد نسخه درخواستی از چاپگر؛ پشتیبانی به درایور بستگی دارد">
+                        <ComboBoxItem Content="۱" /><ComboBoxItem Content="۲" /><ComboBoxItem Content="۳" />
+                        <ComboBoxItem Content="۴" /><ComboBoxItem Content="۵" /><ComboBoxItem Content="۶" />
+                        <ComboBoxItem Content="۷" /><ComboBoxItem Content="۸" /><ComboBoxItem Content="۹" />
+                    </ComboBox>
                     <!-- چاپ — ارسال به چاپگر مقصدِ تنظیمات -->
                     <Button x:Name="PrintButton" Click="OnPrintClick"
                             Style="{StaticResource MaterialDesignRaisedButton}"

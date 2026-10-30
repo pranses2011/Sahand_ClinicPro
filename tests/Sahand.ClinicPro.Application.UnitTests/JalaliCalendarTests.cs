@@ -136,4 +136,25 @@ public class JalaliCalendarTests
             JalaliCalendar.ToGregorian(jy, jm, jd).Should().Be(date.Date);
         }
     }
+    [Fact]
+    public void Iran_day_bounds_include_iran_midnight_and_exclude_the_next_midnight()
+    {
+        var instant = new DateTime(2026, 1, 1, 21, 0, 0, DateTimeKind.Utc);
+        var (start, end) = PersianDateHelper.IranDayUtcBounds(instant);
+        start.Should().Be(new DateTime(2026, 1, 1, 20, 30, 0, DateTimeKind.Utc));
+        end.Should().Be(new DateTime(2026, 1, 2, 20, 30, 0, DateTimeKind.Utc));
+        PersianDateHelper.IranDayUtcBounds(start.AddTicks(-1)).End.Should().Be(start);
+        PersianDateHelper.IranDayUtcBounds(end).Start.Should().Be(end);
+    }
+
+    [Fact]
+    public void Stored_utc_dates_use_iran_day_even_when_sql_loses_datetime_kind()
+    {
+        var beforeMidnight = new DateTime(2026, 3, 20, 20, 29, 0, DateTimeKind.Unspecified);
+        var afterMidnight = new DateTime(2026, 3, 20, 20, 30, 0, DateTimeKind.Unspecified);
+        PersianDateHelper.StoredUtcToIranShamsi(beforeMidnight).Should().Be("1404/12/29");
+        PersianDateHelper.StoredUtcToIranShamsi(afterMidnight).Should().Be("1405/01/01");
+        PersianDateHelper.IranTimeFromStoredUtc(afterMidnight).Date.Should().Be(new DateTime(2026, 3, 21));
+    }
+
 }

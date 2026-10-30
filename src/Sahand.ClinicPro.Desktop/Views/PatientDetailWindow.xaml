@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.PatientDetailWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -127,9 +127,9 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Button Command="{Binding SaveTagsCommand}"
+                            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveTagsCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}" FontSize="10.5"
-                                    Padding="8,4" Margin="6,0,0,0" Content="ذخیره" />
+                                    Padding="8,4" Margin="6,0,0,0" Content="ذخیره (Ctrl+Shift+1)" />
                         </StackPanel>
                     </StackPanel>
 
@@ -303,9 +303,9 @@
                                      Visibility="{Binding IsSavingNote, Converter={StaticResource BoolToVisibility}}" />
                     </DockPanel>
                     <DockPanel Margin="0,6,0,0">
-                        <Button Command="{Binding AddQuickNoteCommand}" DockPanel.Dock="Left"
+                        <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AddQuickNoteCommand}" DockPanel.Dock="Left"
                                 Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11"
-                                Padding="10,4" Content="ثبت" Margin="6,0,0,0" />
+                                Padding="10,4" Content="ثبت (Ctrl+Shift+2)" Margin="6,0,0,0" />
                         <TextBox Text="{Binding QuickNoteText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="11.5" Padding="6,5"
                                  materialDesign:HintAssist.Hint="مثال: تماس تلفنی — قند ناشتا بهتر شد، پیگیری هفتهٔ بعد" />

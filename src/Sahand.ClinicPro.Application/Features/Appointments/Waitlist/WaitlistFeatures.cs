@@ -108,7 +108,7 @@ public class AddToWaitlistCommandHandler : IRequestHandler<AddToWaitlistCommand,
                 .Where(x => x.Id == did && x.Employee != null)
                 .Select(x => x.Employee!.FirstName + " " + x.Employee.LastName)
                 .FirstOrDefaultAsync(ct);
-            if (d is not null) doctorName = $"دکتر {d}";
+            doctorName = d is not null ? $"دکتر {d}" : "پزشک نامشخص";
         }
         else if (e.SpecialtyId is { } sid)
         {
@@ -116,7 +116,7 @@ public class AddToWaitlistCommandHandler : IRequestHandler<AddToWaitlistCommand,
                 .Where(s => s.Id == sid)
                 .Select(s => s.Name)
                 .FirstOrDefaultAsync(ct);
-            if (spec is not null) doctorName = $"تخصص {spec}";
+            doctorName = spec is not null ? $"تخصص {spec}" : "تخصص نامشخص";
         }
 
         return ToRow(e, patient is null
@@ -131,7 +131,7 @@ public class AddToWaitlistCommandHandler : IRequestHandler<AddToWaitlistCommand,
         var (statusText, statusColor) = e.Status switch
         {
             WaitlistStatus.Waiting => ("⏳ در انتظار", "#1565C0"),
-            WaitlistStatus.Notified => ("📨 پیامک شد", "#F9A825"),
+            WaitlistStatus.Notified => ("📨 پیشنهاد ثبت شد", "#F9A825"),
             WaitlistStatus.Confirmed => ("✅ تأیید بیمار", "#2E7D32"),
             WaitlistStatus.Expired => ("⌛ منقضی", "#9E9E9E"),
             WaitlistStatus.Cancelled => ("✖️ لغوشده", "#C62828"),
@@ -191,6 +191,8 @@ public class GetWaitlistQueryHandler : IRequestHandler<GetWaitlistQuery, Result<
         // نام بیماران و پزشکان دسته‌ای
         var patientIds = entries.Select(e => e.PatientId).Distinct().ToList();
         var doctorIds = entries.Where(e => e.DoctorId is not null).Select(e => e.DoctorId!.Value).Distinct().ToList();
+        var specialtyIds = entries.Where(e => e.DoctorId is null && e.SpecialtyId is not null)
+            .Select(e => e.SpecialtyId!.Value).Distinct().ToList();
         var patients = await _unitOfWork.Repository<Domain.Entities.People.Patient>().QueryableNoTracking
             .Where(p => patientIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, p => new { Name = $"{p.FirstName} {p.LastName}".Trim(), p.Mobile }, cancellationToken);
@@ -211,13 +213,20 @@ public class GetWaitlistQueryHandler : IRequestHandler<GetWaitlistQuery, Result<
                 .Select(d => new { d.Id, Name = (d.Employee!.FirstName + " " + d.Employee.LastName).Trim() })
                 .ToListAsync(cancellationToken))
             .ToDictionary(x => x.Id, x => x.Name);
+        var specialties = (await _unitOfWork.Repository<Domain.Entities.People.Specialty>().QueryableNoTracking
+                .Where(s => specialtyIds.Contains(s.Id))
+                .Select(s => new { s.Id, s.Name })
+                .ToListAsync(cancellationToken))
+            .ToDictionary(x => x.Id, x => x.Name);
 
         var rows = entries.Select(e =>
         {
             var p = patients.GetValueOrDefault(e.PatientId);
-            var doctorName = "هر پزشک";
-            if (e.DoctorId is { } did && doctors.TryGetValue(did, out var dn))
-                doctorName = $"دکتر {dn}";
+            var doctorName = e.DoctorId is { } did
+                ? doctors.TryGetValue(did, out var dn) ? $"دکتر {dn}" : "پزشک نامشخص"
+                : e.SpecialtyId is { } sid
+                    ? specialties.TryGetValue(sid, out var sn) ? $"تخصص {sn}" : "تخصص نامشخص"
+                    : "هر پزشک";
             return AddToWaitlistCommandHandler.ToRow(e, p?.Name ?? "؟", p?.Mobile ?? e.ContactMobile ?? "—", doctorName);
         }).ToList();
 
@@ -256,12 +265,15 @@ public class NotifyWaitlistForFreedSlotCommandHandler
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly Interfaces.ISmsService _sms;
+    private readonly Interfaces.IDateTimeService _clock;
 
     /// <summary>سازنده</summary>
-    public NotifyWaitlistForFreedSlotCommandHandler(IUnitOfWork unitOfWork, Interfaces.ISmsService sms)
+    public NotifyWaitlistForFreedSlotCommandHandler(IUnitOfWork unitOfWork, Interfaces.ISmsService sms,
+        Interfaces.IDateTimeService clock)
     {
         _unitOfWork = unitOfWork;
         _sms = sms;
+        _clock = clock;
     }
 
     /// <summary>اجرا — شناسه ردیف برنده یا صفر</summary>
@@ -269,21 +281,55 @@ public class NotifyWaitlistForFreedSlotCommandHandler
         CancellationToken cancellationToken)
     {
         var date = request.AppointmentDate;
+        if (date.ToDateTime(request.AppointmentTime) <= _clock.NowIran)
+        {
+            // ممکن است زمان بین بررسی لغو و اجرای فرمان داخلی از موعد عبور
+            // کند؛ در این حالت خودِ لغو نباید ناموفق شود، اما پیامکی هم نرود.
+            return request.CancelledAppointmentId > 0
+                ? Result<long>.Success(0)
+                : Result<long>.Failure(new Error("WAITLIST.SLOT_PAST", "زمان نوبت پیشنهادی باید در آینده باشد"));
+        }
 
-        // منتظران واجد شرایط: همان پزشک یا تخصص مرتبط، بازه شامل تاریخ نوبت، وضعیت Waiting
-        var candidates = await _unitOfWork.Repository<WaitlistEntry>().QueryableTracking
+        // «هر پزشک» فقط وقتی واقعاً عمومی است که تخصص هم انتخاب نشده باشد؛
+        // منتظر تخصص دیگر نباید پیشنهاد نوبت نامرتبط دریافت کند.
+        var doctor = await _unitOfWork.Repository<Domain.Entities.People.Doctor>().QueryableNoTracking
+            .Where(d => d.Id == request.DoctorId && !d.IsDeleted && d.IsActive)
+            .Select(d => new { d.SpecialtyId, d.SubSpecialtyId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (doctor is null)
+            return request.CancelledAppointmentId > 0
+                ? Result<long>.Success(0) // لغو نوبت پزشک غیرفعال همچنان مجاز است.
+                : Result<long>.Failure(new Error("WAITLIST.DOCTOR", "پزشک فعال برای نوبت پیشنهادشده یافت نشد"));
+        var specialtyId = doctor.SpecialtyId;
+        var subSpecialtyId = doctor.SubSpecialtyId;
+        var candidates = _unitOfWork.Repository<WaitlistEntry>().QueryableTracking
             .Where(w => !w.IsDeleted && w.Status == WaitlistStatus.Waiting &&
                         w.PreferredFrom <= date && w.PreferredTo >= date &&
-                        (w.DoctorId == request.DoctorId || w.DoctorId == null))
-            .OrderBy(w => w.Priority) // اورژانس=۱ < فوری=۲ < عادی=۳ — کوچک‌تر اولویت بالاتر
-            .ThenBy(w => w.CreatedAt)
-            .Take(10)
-            .ToListAsync(cancellationToken);
+                        // مرز صبح/عصر/شب هنوز قاعدهٔ مصوب ندارد؛ تا تعیین آن،
+                        // فقط «هر ساعت» یا ترجیح تهی پیشنهاد خودکار می‌گیرد.
+                        (w.PreferredTimeOfDay == null || w.PreferredTimeOfDay.Trim() == "" ||
+                         w.PreferredTimeOfDay.Trim() == "هر ساعت" || w.PreferredTimeOfDay.Trim() == "هر ساعتی") &&
+                        (w.DoctorId == request.DoctorId ||
+                         (w.DoctorId == null && (w.SpecialtyId == null ||
+                          (specialtyId != null && w.SpecialtyId == specialtyId) ||
+                          (subSpecialtyId != null && w.SpecialtyId == subSpecialtyId)))) &&
+                        w.ContactMobile != null && w.ContactMobile.Length == 11 && w.ContactMobile.StartsWith("09"))
+            .OrderBy(w => w.Priority)
+            .ThenBy(w => w.CreatedAt).ThenBy(w => w.Id);
 
-        if (candidates.Count == 0)
-            return Result<long>.Success(0);
+        // خواندن ترتیبی تا نخستین شماره معتبر: محدودکردن به ده ردیف نخست
+        // می‌توانست پس از چند شماره خراب، منتظران قابل تماس را نادیده بگیرد.
+        WaitlistEntry? winner = null;
+        await foreach (var candidate in candidates.AsAsyncEnumerable().WithCancellation(cancellationToken))
+        {
+            if (candidate.ContactMobile!.All(c => c is >= '0' and <= '9'))
+            {
+                winner = candidate;
+                break;
+            }
+        }
+        if (winner is null) return Result<long>.Success(0);
 
-        var winner = candidates[0];
         winner.Status = WaitlistStatus.Notified;
         winner.NotifiedAt = DateTime.UtcNow;
         winner.OfferedAppointmentId = request.CancelledAppointmentId;
@@ -294,17 +340,11 @@ public class NotifyWaitlistForFreedSlotCommandHandler
         var message =
             $"«درمانگاه سهند» سلام 🌿\n" +
             $"به دلیل لغو نوبت، جای خالی روز {dateText} ساعت {request.AppointmentTime:hh\\:mm} پیش شماست.\n" +
-            $"برای تأیید و رزرو نهایی با شماره ۰۴۱-۳۳۳۳۴۴۴ تماس بگیرید.";
-        try
-        {
-            var mobile = winner.ContactMobile ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(mobile))
-                await _sms.SendAsync(mobile, message, cancellationToken);
-        }
-        catch
-        {
-            // خطای ارسال پیامک نباید تراکنش لغو نوبت را بلامحل کند — وضعیت Notified می‌ماند و اپراتور پیگیری تلفنی می‌کند
-        }
+            "برای تأیید و رزرو نهایی با درمانگاه تماس بگیرید.";
+        // صف پیامک از همان DbContext و تراکنش استفاده می‌کند؛ ارسال مستقیم
+        // قبل از commit می‌توانست پیامِ جای خالیِ لغونشده را به بیمار برساند.
+        // شکست صف‌کردن عمداً بلعیده نمی‌شود تا کل تغییرات عقب برگردند.
+        await _sms.EnqueueRawAsync(winner.ContactMobile!, message, ct: cancellationToken);
 
         return Result<long>.Success(winner.Id);
     }

@@ -121,7 +121,7 @@ public partial class PatientDetailWindow : Window
         doc.PageWidth = 793.7;   // A4 — 210 میلی‌متر در ۹۶dpi
         doc.PageHeight = 1122.5; // A4 — 297 میلی‌متر
         Services.PrintFlow.Print(doc, $"کارت بیمار: {vm.FullName}",
-            Services.PrintJobSettings.PrinterFor("PatientCard"));
+            Services.PrintJobSettings.PrinterFor("PatientCard"), jobKey: "PatientCard");
     }
 
     /// <summary>سلول «برچسب + مقدار» با قاب خاکستری — یک سلول از جدول کارت</summary>

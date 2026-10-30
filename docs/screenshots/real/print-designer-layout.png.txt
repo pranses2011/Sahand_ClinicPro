@@ -1,0 +1,1 @@
+Offscreen WPF layout 1568 x approximately 885.46 DIP, rendered at 2720x1536 pixels to match the reference image size; horizontally corrected for RTL. Not an on-screen screenshot; DPI and rendering can differ.

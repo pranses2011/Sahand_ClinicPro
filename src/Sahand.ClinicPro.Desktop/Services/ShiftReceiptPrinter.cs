@@ -77,7 +77,7 @@ public static class ShiftReceiptPrinter
 
         // ═══ چرخهٔ ۶۷ — گذر از دروازهٔ یکپارچهٔ چاپ (پیش‌نمایش اختیاری) ═══
         return PrintFlow.Print(document, $"رسید بستن شیفت {receipt.ReceiptNumber}",
-            printerName, TicketWidth, TicketHeight);
+            printerName, TicketWidth, TicketHeight, jobKey: "ShiftReceipt");
     }
 
     /// <summary>ساخت سند رسید — ستون‌بندی دوسویهٔ راست‌چین با ارقام فارسی</summary>

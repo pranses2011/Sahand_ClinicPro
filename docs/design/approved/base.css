@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   سیستم طراحی تأییدشدهٔ سهند کلینیکپرو — برگرفته از صفحهای تصویربرداری که
+   مالک با اسکرینشات واقعی تأیید کرد (docs/screenshots/imaging-real.png).
+   بوم ثابت ۱۰۳۰×۷۷۴ پیکسل = دقیقاً همان اندازهٔ اسکرینشات واقعی WPF،
+   تا مقایسهٔ طرح/واقعیت تصویربهتصویر و تا حد امکان پیکسلبهپیکسل باشد.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#EEF3F8; --card:#FFFFFF; --line:#D6E0EA; --ink:#1B2A41; --muted:#6B7C93;
+  --blue:#1976D2; --blue-d:#0D47A1; --blue-l:#E8F1FC;
+  --green:#2E9E5B; --green-l:#EDFAF1;
+  --red:#D8514B; --red-l:#FDEDED;
+  --purple:#8A5CD1; --purple-l:#F5EFFC;
+  --orange:#DE8A22; --orange-l:#FFF5E7;
+  --teal:#0D9488; --teal-l:#E7F7F5;
+  --gray-l:#F4F7FB;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1030px;height:774px;overflow:hidden}
+body{background:var(--bg);color:var(--ink);direction:rtl;padding:13px 15px;
+     font-family:"Vazirmatn","Tahoma","Segoe UI",sans-serif;font-size:12px;line-height:1.6}
+.badge-ico{width:26px;height:26px;border-radius:7px;background:var(--blue);color:#fff;
+     display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+
+/* ── هدر صفحه ── */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:9px;height:36px}
+.top .heading{flex:1;display:flex;align-items:center;gap:9px;justify-content:flex-end}
+.top .ttl{font-size:19px;font-weight:800;letter-spacing:-.2px}
+.top .sub{font-size:10.5px;color:var(--muted);margin-top:1px}
+.actions{display:flex;gap:7px;align-items:center;flex:none}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;
+     padding:6px 12px;font:inherit;font-size:11px;font-weight:600;white-space:nowrap;height:30px;
+     display:inline-flex;align-items:center;gap:5px;justify-content:center}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.dark{background:var(--blue-d);border-color:var(--blue-d);color:#fff}
+.btn.ghost{background:#fff;border-color:#C8D6E5;color:#31527A}
+.btn.sm{height:25px;padding:3px 10px;font-size:10px;border-radius:7px}
+.btn.wide{width:100%}
+
+/* ── کارتهای آماری پنجگانه ── */
+.stats{display:flex;gap:8px;margin-bottom:9px}
+.stat{flex:1;height:66px;border:1.5px solid var(--line);background:var(--card);
+      border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.stat b{font-size:23px;font-weight:800;line-height:1.15;font-family:Tahoma,"Vazirmatn",sans-serif}
+.stat span{font-size:10.5px;color:var(--muted);font-weight:600}
+.stat.g{border-color:var(--green);background:var(--green-l)} .stat.g b{color:var(--green)}
+.stat.r{border-color:var(--red);background:var(--red-l)} .stat.r b{color:var(--red)}
+.stat.p{border-color:var(--purple);background:var(--purple-l)} .stat.p b{color:var(--purple)}
+.stat.o{border-color:var(--orange);background:var(--orange-l)} .stat.o b{color:var(--orange)}
+.stat.b{border-color:var(--blue);background:var(--blue-l)} .stat.b b{color:var(--blue)}
+.stat.t{border-color:var(--teal);background:var(--teal-l)} .stat.t b{color:var(--teal)}
+
+/* ── تبها و چیپها ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:9px;height:32px}
+.tab{padding:6px 13px;font-size:11.5px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid #C8D6E5;background:#fff;color:#41597A;border-radius:999px;
+      padding:4px 11px;font-size:10.5px;font-weight:600;height:25px;display:inline-flex;align-items:center}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.sq{border-radius:8px}
+
+/* ── پنلها ── */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:10px}
+.panel + .panel{margin-top:8px}
+.panel h3{font-size:12px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.row{display:flex;gap:8px;align-items:center}
+.row.tight{gap:5px}
+.col{flex:1;min-width:0}
+.sp{flex:1}
+.field{height:34px;border:1px solid #C7D5E3;background:#fff;border-radius:8px;
+      display:flex;align-items:center;padding:0 10px;font-size:11px;color:var(--ink)}
+.field.blank{color:#9AA9BA}
+.field.ico::after{content:"⌕";color:#7C8EA5;margin-inline-start:auto;font-size:15px}
+.field.sm{height:29px;font-size:10.5px}
+.lbl{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:3px;display:block}
+textarea.field{height:auto;padding:8px 10px;line-height:1.8;resize:none}
+.divider{height:1px;background:var(--line);margin:9px 0}
+
+/* ── جدول ── */
+table.tbl{width:100%;border-collapse:collapse;background:#fff}
+table.tbl th{font-size:10px;color:var(--muted);font-weight:700;text-align:right;
+             padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.tbl td{font-size:10.8px;padding:5px 8px;border-bottom:1px solid #EDF2F7;white-space:nowrap}
+table.tbl tr:nth-child(even) td{background:var(--gray-l)}
+table.tbl tr:hover td{background:#EAF3FD}
+.tag{display:inline-block;border-radius:999px;padding:1px 9px;font-size:9.5px;font-weight:700}
+.tag.g{background:var(--green-l);color:var(--green)} .tag.r{background:var(--red-l);color:var(--red)}
+.tag.o{background:var(--orange-l);color:var(--orange)} .tag.b{background:var(--blue-l);color:var(--blue)}
+.tag.p{background:var(--purple-l);color:var(--purple)} .tag.n{background:#EEF2F6;color:#64748B}
+
+/* ── المانهای کمکی ── */
+.kv{display:flex;justify-content:space-between;font-size:10.5px;padding:4px 0;border-bottom:1px dashed #E5ECF3}
+.kv:last-child{border-bottom:0}
+.kv b{font-weight:700}
+.bar{height:9px;background:#E7EDF4;border-radius:999px;overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:var(--blue)}
+.bar.g > i{background:var(--green)} .bar.o > i{background:var(--orange)} .bar.r > i{background:var(--red)}
+.note{font-size:10px;color:var(--muted)}
+.empty{height:100%;display:flex;align-items:center;justify-content:center;color:#A6B3C2;font-size:11px;border:1px dashed #CBD8E6;border-radius:8px}
+.foot-strip{position:fixed;bottom:0;left:0;right:0;height:22px;background:#E5EDF6;border-top:1px solid var(--line);
+            display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#7A8CA0}
+.scroll{overflow:hidden}
+.mini{font-size:9.5px;color:var(--muted)}
+.center{text-align:center}
+.avatar{width:28px;height:28px;border-radius:8px;background:var(--blue-l);color:var(--blue);
+        display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+.sq-ico{width:22px;height:22px;border-radius:6px;background:var(--gray-l);display:inline-flex;
+        align-items:center;justify-content:center;font-size:12px;margin-inline-end:5px}

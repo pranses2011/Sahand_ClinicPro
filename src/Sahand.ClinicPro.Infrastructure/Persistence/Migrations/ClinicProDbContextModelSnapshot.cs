@@ -1251,6 +1251,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("decimal(18,0)")
                         .HasComment("مانده حساب");
 
+                    b.Property<string>("RequestFingerprint")
+                        .IsUnicode(false)
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1298,6 +1306,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InvoiceDate")
                         .HasDatabaseName("IX_Invoice_InvoiceDate");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoice_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("InvoiceNumber")
                         .IsUnique()
@@ -1526,6 +1539,9 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasComment("شماره ارجاع تراکنش");
 
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1559,6 +1575,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_Payment_InvoiceId");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payment_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("PaymentNumber")
                         .IsUnique()
@@ -3552,6 +3573,21 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyInvitation", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    b.Property<long>("SurveyId").HasColumnType("bigint");
+                    b.Property<string>("TokenHash").IsRequired().HasMaxLength(64).HasColumnType("nvarchar(64)");
+                    b.Property<DateTime>("ExpiresAt").HasColumnType("datetime2");
+                    b.Property<DateTime?>("UsedAt").IsConcurrencyToken().HasColumnType("datetime2");
+                    b.HasKey("Id");
+                    b.HasIndex("TokenHash").IsUnique();
+                    b.HasIndex("ExpiresAt");
+                    b.HasIndex("SurveyId");
+                    b.ToTable("SurveyInvitations");
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyResponse", b =>
                 {
                     b.Property<long>("Id")
@@ -5433,6 +5469,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Property<int?>("LeftAxis")
                         .HasColumnType("int");
 
+                    b.Property<string>("LeftCorrectedVisualAcuity")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("حدت بینایی چپ با اصلاح");
+
                     b.Property<decimal?>("LeftCylinder")
                         .HasPrecision(4, 2)
                         .HasColumnType("decimal(4,2)")
@@ -5461,6 +5502,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("RightAxis")
                         .HasColumnType("int");
+
+                    b.Property<string>("RightCorrectedVisualAcuity")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("حدت بینایی راست با اصلاح");
 
                     b.Property<decimal?>("RightCylinder")
                         .HasPrecision(4, 2)
@@ -6047,6 +6093,24 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         {
                             t.HasComment("آزمایش - کاتالوگ تست‌های آزمایشگاهی");
                         });
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapyReferral", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<long>("DoctorId").HasColumnType("bigint");
+                    b.Property<string>("Note").IsRequired().HasMaxLength(2000).HasColumnType("nvarchar(2000)");
+                    b.Property<long>("PatientId").HasColumnType("bigint");
+                    b.Property<Guid>("RequestId").HasColumnType("uniqueidentifier");
+                    b.Property<long>("VisitId").HasColumnType("bigint");
+                    b.HasKey("Id");
+                    b.HasIndex("DoctorId");
+                    b.HasIndex("PatientId", "Id");
+                    b.HasIndex("RequestId").IsUnique();
+                    b.HasIndex("VisitId");
+                    b.ToTable("PhysiotherapyReferrals");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession", b =>
@@ -9521,6 +9585,14 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasComment("اتاق انجام خدمت — پذیرش خدمتی چرخهٔ ۳۹ (ویزیت پزشک: اتاق از برنامهٔ کاری خود پزشک)");
 
+                    b.Property<string>("RequestFingerprint")
+                        .IsUnicode(false)
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -9564,6 +9636,11 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_Reception_PatientId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Reception_RequestId")
+                        .HasFilter("[RequestId] IS NOT NULL");
 
                     b.HasIndex("ReceptionNumber")
                         .IsUnique()
@@ -10858,6 +10935,15 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("Template");
                 });
 
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyInvitation", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Communication.Survey", null)
+                        .WithMany()
+                        .HasForeignKey("SurveyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Communication.SurveyResponse", b =>
                 {
                     b.HasOne("Sahand.ClinicPro.Domain.Entities.Communication.Survey", "Survey")
@@ -11059,6 +11145,16 @@ namespace Sahand.ClinicPro.Infrastructure.Persistence.Migrations
                     b.Navigation("LabOrder");
 
                     b.Navigation("Test");
+                });
+
+            modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapyReferral", b =>
+                {
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Doctor", "Doctor").WithMany().HasForeignKey("DoctorId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.People.Patient", "Patient").WithMany().HasForeignKey("PatientId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.HasOne("Sahand.ClinicPro.Domain.Entities.Clinical.Visit", "Visit").WithMany().HasForeignKey("VisitId").OnDelete(DeleteBehavior.NoAction).IsRequired();
+                    b.Navigation("Doctor");
+                    b.Navigation("Patient");
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("Sahand.ClinicPro.Domain.Entities.Paraclinical.PhysiotherapySession", b =>

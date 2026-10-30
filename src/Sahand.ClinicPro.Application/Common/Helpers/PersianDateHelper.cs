@@ -48,6 +48,23 @@ public static class PersianDateHelper
     public static DateTime IranNow()
         => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Iran Standard Time");
 
+    /// <summary>تبدیل زمان UTC ذخیره‌شده به وقت ایران؛ datetime2 معمولاً Kind را حفظ نمی‌کند.</summary>
+    public static DateTime IranTimeFromStoredUtc(DateTime storedUtc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc),
+            TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time"));
+
+    /// <summary>تاریخ شمسی به وقت ایران از مهر زمانی UTC ذخیره‌شده.</summary>
+    public static string StoredUtcToIranShamsi(DateTime storedUtc) => ToShamsi(IranTimeFromStoredUtc(storedUtc));
+
+    /// <summary>ابتدا و انتهای روز ایران به UTC، برای فیلتر ستون‌های زمان UTC.</summary>
+    public static (DateTime Start, DateTime End) IranDayUtcBounds(DateTime utcInstant)
+    {
+        if (utcInstant.Kind != DateTimeKind.Utc) throw new ArgumentException("زمان ورودی باید UTC باشد", nameof(utcInstant));
+        var zone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+        var localDate = TimeZoneInfo.ConvertTimeFromUtc(utcInstant, zone).Date;
+        return (TimeZoneInfo.ConvertTimeToUtc(localDate, zone), TimeZoneInfo.ConvertTimeToUtc(localDate.AddDays(1), zone));
+    }
+
     /// <summary>
     /// ساعت لحظه‌ای با ارقام فارسی — فرمت ۱۴:۳۵:۰۵ یا ۱۴:۳۵ (ثانیه‌دار وقتی ثانیه صفر نباشد).
     /// ساعت به وقت رسمی ایران تبدیل می‌شود تا با تقویم شمسی هماهنگ باشد.

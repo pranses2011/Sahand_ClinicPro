@@ -49,6 +49,8 @@ public partial class ImagingViewModel : ViewModelBase
 {
     private readonly IApiClient _api;
     private readonly ISnackbarService _snackbar;
+    private readonly Func<bool> _confirmReportDiscard;
+    private string? _reportBaseline;
 
     /// <summary>عنوان صفحه در هدر و منو</summary>
     public override string Title => "تصویربرداری";
@@ -61,7 +63,7 @@ public partial class ImagingViewModel : ViewModelBase
     // ─────────────── ثبت درخواست تازه ───────────────
     /// <summary>انواع مودالیتهٔ تصویربرداری</summary>
     public ObservableCollection<string> ImagingTypes { get; } =
-        new() { "سونوگرافی", "رادیوگرافی", "MRI", "CT Scan", "ماموگرافی", "آنژیوگرافی" };
+        new() { "سونوگرافی", "رادیوگرافی", "MRI", "CT Scan", "ماموگرافی" };
     /// <summary>نمایهٔ نوع تصویربرداری</summary>
     [ObservableProperty] private int _imagingTypeIndex;
     /// <summary>ناحیهٔ بدن (متن آزاد)</summary>
@@ -74,6 +76,13 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private string _imagingPatientSearch = string.Empty;
     /// <summary>بیمار منتخب</summary>
     [ObservableProperty] private QuickPatient? _imagingPatient;
+    [ObservableProperty] private bool _isSavingImagingOrder;
+    [ObservableProperty] private bool _isSearchingImagingPatient;
+    /// <summary>فرم هنگام جستجوی بیمار یا ثبت درخواست قفل می‌شود.</summary>
+    public bool CanEditImagingOrder => !IsSavingImagingOrder && !IsSearchingImagingPatient;
+    partial void OnIsSavingImagingOrderChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingOrder));
+    partial void OnIsSearchingImagingPatientChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingOrder));
+
     /// <summary>ناحیه‌های بدن — گزینه‌های پیشنهادی</summary>
     public string[] BodyRegions { get; } =
         { "سر و گردن", "قفسه سینه", "شکم و لگن", "ستون فقرات", "اندام فوقانی", "اندام تحتانی", "مفصل شانه", "مفصل زانو", "تروماتیک" };
@@ -83,6 +92,16 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<ImagingOrderRow> _imagingOrders = new();
     /// <summary>درخواست‌های پس از فیلتر/جست‌وجو — صف نمایشی</summary>
     public ObservableCollection<ImagingOrderRow> FilteredOrders { get; } = new();
+    private int _queueRequestVersion;
+    private int _fileRequestVersion;
+    private int _imageRequestVersion;
+    private bool _queueLoaded;
+    [ObservableProperty] private string _queueStatus = "صف هنوز دریافت نشده است.";
+    partial void OnQueueStatusChanged(string value) => OnPropertyChanged(nameof(QueueEmptyMessage));
+    /// <summary>پیام دقیق حالت خالی یا خطای دریافت صف.</summary>
+    public string QueueEmptyMessage => !_queueLoaded || !string.IsNullOrEmpty(QueueStatus)
+        ? QueueStatus : ImagingOrders.Count == 0 ? "صف امروز خالی است." : "درخواستی با فیلترهای انتخاب‌شده پیدا نشد.";
+
     /// <summary>فیلتر آماری فعال: all/wait/rep/stat/done</summary>
     [ObservableProperty] private string _workFilter = "all";
     /// <summary>فیلتر مدالیته (نام فارسی یا all)</summary>
@@ -130,6 +149,7 @@ public partial class ImagingViewModel : ViewModelBase
                 && !(o.PatientName + o.BodyPart + o.ModalityFa).Contains(WorkSearch.Trim())) ok = false;
             if (ok) FilteredOrders.Add(o);
         }
+        OnPropertyChanged(nameof(QueueEmptyMessage));
     }
 
     private void RaiseStats()
@@ -144,11 +164,33 @@ public partial class ImagingViewModel : ViewModelBase
 
     // ─────────────── درخواست انتخاب‌شده و گزارش ───────────────
     /// <summary>درخواست انتخاب‌شده</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedImagingOrder))]
     private ImagingOrderRow? _selectedImagingOrder;
+    public ImagingOrderRow? SelectedImagingOrder
+    {
+        get => _selectedImagingOrder;
+        set
+        {
+            if (ReferenceEquals(_selectedImagingOrder, value)) return;
+            if (_selectedImagingOrder is not null && !IsSavingImagingReport && _reportBaseline is not null &&
+                _reportBaseline != ReportSnapshot() && !_confirmReportDiscard())
+            {
+                OnPropertyChanged(nameof(SelectedImagingOrder));
+                return;
+            }
+            _selectedImagingOrder = value;
+            OnPropertyChanged(nameof(SelectedImagingOrder));
+            OnPropertyChanged(nameof(HasSelectedImagingOrder));
+            OnSelectedImagingOrderChanged(value);
+        }
+    }
     /// <summary>آیا درخواستی انتخاب شده</summary>
     public bool HasSelectedImagingOrder => SelectedImagingOrder is not null;
+
+    [ObservableProperty] private bool _hasUnsupportedReportDetails;
+    [ObservableProperty] private bool _isSavingImagingReport;
+    /// <summary>زمان ثبت گزارش، ویرایش و انتخاب از صف قفل می‌شود.</summary>
+    public bool CanEditImagingReport => !IsSavingImagingReport;
+    partial void OnIsSavingImagingReportChanged(bool value) => OnPropertyChanged(nameof(CanEditImagingReport));
 
     /// <summary>شرح حال بالینی مطالعهٔ انتخابی</summary>
     [ObservableProperty] private string? _reportClinicalInfo;
@@ -174,10 +216,10 @@ public partial class ImagingViewModel : ViewModelBase
     [ObservableProperty] private string? _doseCtdi;
     /// <summary>دوز DLP (mGy·cm)</summary>
     [ObservableProperty] private string? _doseDlp;
-    /// <summary>سطح مرجع دوز مدالیتهٔ جاری (mGy) — برای CT مغز ۵۵</summary>
-    public double CurrentDrl => SelectedImagingOrder?.Modality switch { "CT" => 55, "Mammography" => 2.5, _ => 0 };
-    /// <summary>دوز بالاتر از سطح مرجع است؟</summary>
-    public bool DoseHigh => CurrentDrl > 0 && double.TryParse((DoseCtdi ?? "").Replace('/', '.'), out var v) && v > CurrentDrl;
+    /// <summary>مرجع بالینی تنظیم‌شده در این نسخه موجود نیست.</summary>
+    public double CurrentDrl => 0;
+    /// <summary>هشدار خودکار تا تعریف مرجع معتبر برای پروتکل و بیمار غیرفعال است.</summary>
+    public bool DoseHigh => false;
     partial void OnDoseCtdiChanged(string? value) => OnPropertyChanged(nameof(DoseHigh));
     /// <summary>یافتهٔ بحرانی فعال است؟</summary>
     [ObservableProperty] private bool _criticalFinding;
@@ -327,8 +369,6 @@ public partial class ImagingViewModel : ViewModelBase
             if (crit is not null)
                 CriticalLog.Add($"{o.PatientName} — {o.ModalityFa} {o.BodyPart}: {crit}");
         }
-        if (CriticalLog.Count == 0)
-            CriticalLog.Add("امروز یافتهٔ بحرانی ثبت نشده است.");
     }
 
     private static double? ParseDose(ImagingOrderRow row)
@@ -337,7 +377,8 @@ public partial class ImagingViewModel : ViewModelBase
         try
         {
             using var doc = JsonDocument.Parse(row.ReportDetails);
-            if (doc.RootElement.TryGetProperty("ctdi", out var c) && c.TryGetDouble(out var v)) return v;
+            if (doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("ctdi", out var c) &&
+                c.ValueKind == JsonValueKind.Number && c.TryGetDouble(out var v) && double.IsFinite(v) && v >= 0) return v;
         }
         catch (JsonException) { }
         return null;
@@ -350,10 +391,10 @@ public partial class ImagingViewModel : ViewModelBase
         {
             using var doc = JsonDocument.Parse(details);
             var root = doc.RootElement;
-            if (root.TryGetProperty("critical", out var c) && c.ValueKind == JsonValueKind.True)
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("critical", out var c) && c.ValueKind == JsonValueKind.True)
             {
-                var to = root.TryGetProperty("criticalTo", out var t) ? t.GetString() : "";
-                var method = root.TryGetProperty("criticalMethod", out var m) ? m.GetString() : "";
+                var to = root.TryGetProperty("criticalTo", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "—";
+                var method = root.TryGetProperty("criticalMethod", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : "—";
                 return $"یافتهٔ بحرانی ← {to} · {method}";
             }
         }
@@ -439,10 +480,13 @@ public partial class ImagingViewModel : ViewModelBase
 
     // ─────────────── سازنده و بارگذاری ───────────────
     /// <summary>سازنده با تزریق سرویس‌ها</summary>
-    public ImagingViewModel(IApiClient api, ISnackbarService snackbar)
+    public ImagingViewModel(IApiClient api, ISnackbarService snackbar, Func<bool>? confirmReportDiscard = null)
     {
         _api = api;
         _snackbar = snackbar;
+        _confirmReportDiscard = confirmReportDiscard ?? (() => Views.AppDialog.Confirm(
+            "تغییر مطالعه", "تغییرات ذخیره‌نشدهٔ گزارش و چک‌لیست پاک می‌شود. ادامه می‌دهید؟",
+            Views.AppDialogIcon.Warning) == true);
         // بارگذاری خودکار سازنده حذف شده است (چرخهٔ ۷۹) — داده در اولین
         // ناوبری با RefreshCommand بی‌صدا تازه می‌شود.
     }
@@ -451,32 +495,50 @@ public partial class ImagingViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveImagingOrderAsync()
     {
+        if (!CanEditImagingOrder) return;
         if (ImagingPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو کنید"); return; }
-        var ok = await _api.PostAsync("imaging/orders", new
+        // ترتیب فهرست رابط با مقادیر enum یکسان نیست: MRI = ۴ و CT = ۳.
+        var modality = ImagingTypeIndex switch { 0 => 1, 1 => 2, 2 => 4, 3 => 3, 4 => 5, _ => 0 };
+        if (modality == 0) { _snackbar.Error("نوع تصویربرداری معتبر را انتخاب کنید"); return; }
+        var bodyPart = ImagingRegion?.Trim();
+        if (string.IsNullOrWhiteSpace(bodyPart) || bodyPart.Length > 200)
+        { _snackbar.Error("ناحیهٔ بدن الزامی و حداکثر ۲۰۰ نویسه است"); return; }
+        var patient = ImagingPatient;
+        var request = new
         {
-            patientId = ImagingPatient.Id,
-            referringDoctorId = (long?)null,
-            modality = ImagingTypeIndex + 1,
-            bodyPart = BodyRegions[Math.Clamp(System.Array.IndexOf(BodyRegions, ImagingRegion ?? "سر و گردن"), 0, 8)],
-            priority = ImagingUrgent ? 1 : 3,
-            clinicalInfo = ImagingClinicalInfo
-        });
-        if (ok)
+            patientId = patient.Id, referringDoctorId = (long?)null, modality, bodyPart,
+            priority = ImagingUrgent ? 1 : 3, clinicalInfo = ImagingClinicalInfo
+        };
+        IsSavingImagingOrder = true;
+        try
         {
-            _snackbar.Success("درخواست تصویربرداری ثبت شد");
-            ImagingClinicalInfo = null;
-            ImagingUrgent = false;
-            await LoadImagingOrdersCoreAsync(notifyWhenEmpty: false);
+            bool ok;
+            try { ok = await _api.PostAsync("imaging/orders", request); }
+            catch
+            { _snackbar.Error("پاسخ ثبت دریافت نشد؛ پیش از تلاش مجدد صف تصویربرداری را بررسی کنید."); return; }
+            if (ok)
+            {
+                _snackbar.Success("درخواست تصویربرداری ثبت شد");
+                if (ImagingPatient?.Id == patient.Id) { ImagingClinicalInfo = null; ImagingUrgent = false; }
+                await LoadImagingOrdersCoreAsync(notifyWhenEmpty: false);
+            }
+            else _snackbar.Error((_api.LastError ?? "ثبت درخواست ناموفق بود") + "؛ در صورت قطع ارتباط، پیش از تلاش مجدد صف را بررسی کنید.");
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت درخواست ناموفق بود");
+        finally { IsSavingImagingOrder = false; }
     }
 
-    /// <summary>جستجوی بیمار تصویربرداری</summary>
+    /// <summary>جستجوی بیمار تصویربرداری؛ نتیجهٔ قدیمی پس از جستجوی ناموفق انتخاب نمی‌ماند.</summary>
     [RelayCommand]
     private async Task SearchImagingPatientAsync()
     {
-        var patient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, ImagingPatientSearch);
-        if (patient is not null) ImagingPatient = patient;
+        if (!CanEditImagingOrder) return;
+        if (ImagingPatient is not null && (!string.IsNullOrWhiteSpace(ImagingClinicalInfo) || ImagingUrgent) &&
+            Views.AppDialog.Confirm("تغییر بیمار", "اطلاعات بالینی و اولویتِ ثبت‌نشده برای بیمار فعلی پاک می‌شود. ادامه می‌دهید؟", Views.AppDialogIcon.Warning) != true) return;
+        if (ImagingPatient is not null) { ImagingClinicalInfo = null; ImagingUrgent = false; }
+        ImagingPatient = null;
+        IsSearchingImagingPatient = true;
+        try { ImagingPatient = await Helpers.PatientQuickSearch.FindAsync(_api, _snackbar, ImagingPatientSearch); }
+        finally { IsSearchingImagingPatient = false; }
     }
 
     /* ── بخش فایل‌های DICOM — گام R4 (حفظ‌شده) ── */
@@ -516,6 +578,8 @@ public partial class ImagingViewModel : ViewModelBase
         public string? BodyPart { get; }
         /// <summary>وضعیت عددی (ImagingOrderStatus)</summary>
         public int Status { get; set; }
+        /// <summary>فقط درخواست منتظر یا زمان‌بندی‌شده قابل ثبت به‌عنوان انجام‌شده است.</summary>
+        public bool CanMarkPerformed => Status is 1 or 2;
         /// <summary>متن وضعیت</summary>
         public string StatusText => Status switch
         {
@@ -531,19 +595,19 @@ public partial class ImagingViewModel : ViewModelBase
         /// <summary>اطلاعات بالینی</summary>
         public string? ClinicalInfo { get; }
         /// <summary>تکنیک</summary>
-        public string? Technique { get; }
+        public string? Technique { get; set; }
         /// <summary>یافته‌ها</summary>
-        public string? Findings { get; }
+        public string? Findings { get; set; }
         /// <summary>نتیجه‌گیری</summary>
-        public string? Impression { get; }
+        public string? Impression { get; set; }
         /// <summary>توصیه</summary>
-        public string? Recommendation { get; }
+        public string? Recommendation { get; set; }
         /// <summary>جزئیات ساخت‌یافته (JSON)</summary>
         public string? ReportDetails { get; set; }
         /// <summary>زمان ثبت</summary>
         public DateTime CreatedAt { get; }
         /// <summary>ساعت ثبت نمایشی</summary>
-        public string TimeText => CreatedAt.ToLocalTime().ToString("HH:mm");
+        public string TimeText => IranClock.FromUtc(CreatedAt).ToString("HH:mm");
         /// <summary>زمان انجام</summary>
         public DateTime? PerformedAt { get; set; }
         /// <summary>زمان گزارش</summary>
@@ -590,30 +654,36 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بارگذاری فهرست درخواست‌های تصویر امروز</summary>
     private async Task LoadImagingOrdersCoreAsync(bool notifyWhenEmpty)
     {
+        var version = ++_queueRequestVersion;
+        QueueStatus = "در حال دریافت صف؛ اطلاعات قبلی ممکن است به‌روز نباشند.";
         try
         {
-            await LoadImagingOrdersCoreInnerAsync(notifyWhenEmpty);
+            var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
+            if (version != _queueRequestVersion) return;
+            if (response?.Data is null)
+            {
+                QueueStatus = "دریافت صف ناموفق بود؛ اطلاعات قبلی ممکن است قدیمی باشند. دوباره تلاش کنید.";
+                _snackbar.Error(_api.LastError ?? "دریافت صف تصویربرداری ناموفق بود");
+                return;
+            }
+            ImagingOrders = new ObservableCollection<ImagingOrderRow>(response.Data
+                .Select(o => new ImagingOrderRow(o.Id, o.PatientId, o.PatientName, o.Modality, o.BodyPart,
+                    o.Status, o.Priority, o.ClinicalInfo, o.Technique, o.Findings, o.Impression,
+                    o.Recommendation, o.ReportDetails, o.CreatedAt, o.PerformedAt, o.ReportedAt,
+                    o.PatientGender, o.PatientBirthShamsi)));
+            _queueLoaded = true;
+            QueueStatus = response.Data.Count >= 100 ? "حداکثر ۱۰۰ درخواست آخر امروز نمایش داده می‌شود؛ آمار مربوط به همین فهرست است." : string.Empty;
+            ApplyWorkFilter();
+            RaiseStats();
+            if (notifyWhenEmpty && ImagingOrders.Count == 0)
+                _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // بارگذاری صف تصویربرداری نباید برنامه را ببندد (گزارش مالک)
-            _snackbar.Error("بارگذاری صف تصویربرداری ناموفق بود: " + ex.Message);
+            if (version != _queueRequestVersion) return;
+            QueueStatus = "دریافت صف ناموفق بود؛ اطلاعات قبلی ممکن است قدیمی باشند. دوباره تلاش کنید.";
+            _snackbar.Error("بارگذاری صف تصویربرداری ناموفق بود؛ اتصال سرور را بررسی کنید.");
         }
-    }
-
-    /// <summary>هستهٔ بارگذاری صف — خطاهایش در پوشش بالا گرفته می‌شود</summary>
-    private async Task LoadImagingOrdersCoreInnerAsync(bool notifyWhenEmpty)
-    {
-        var response = await _api.GetAsync<ImagingOrdersResponse>("imaging/orders");
-        ImagingOrders = new ObservableCollection<ImagingOrderRow>((response?.Data ?? new List<ImagingOrderDto>())
-            .Select(o => new ImagingOrderRow(o.Id, o.PatientId, o.PatientName, o.Modality, o.BodyPart,
-                o.Status, o.Priority, o.ClinicalInfo, o.Technique, o.Findings, o.Impression,
-                o.Recommendation, o.ReportDetails, o.CreatedAt, o.PerformedAt, o.ReportedAt,
-                o.PatientGender, o.PatientBirthShamsi)));
-        ApplyWorkFilter();
-        RaiseStats();
-        if (notifyWhenEmpty && ImagingOrders.Count == 0)
-            _snackbar.Info("درخواست تصویربرداری برای امروز ثبت نشده است");
     }
 
     /// <summary>نوسازی بی‌صدا — فرمان استاندارد پوسته پس از هر ناوبری</summary>
@@ -624,11 +694,14 @@ public partial class ImagingViewModel : ViewModelBase
     [RelayCommand]
     private Task LoadImagingOrdersAsync() => LoadImagingOrdersCoreAsync(notifyWhenEmpty: true);
 
-    /// <summary>شروع انجام مطالعه (گردش وضعیت صف کار)</summary>
+    /// <summary>ثبت انجام‌شدن مطالعه، نه صرفاً آغاز آن.</summary>
     [RelayCommand]
     private async Task StartStudyAsync(ImagingOrderRow? row)
     {
-        if (row is null) return;
+        if (row is null || !row.CanMarkPerformed) return;
+        if (Views.AppDialog.Confirm("ثبت انجام تصویربرداری",
+                $"آیا تصویربرداری {row.ModalityFa} برای {row.PatientName} واقعاً انجام شده است؟ وضعیت به «انجام‌شده» تغییر می‌کند.",
+                Views.AppDialogIcon.Warning) != true) return;
         if (await _api.PostAsync("imaging/orders/status", new { orderId = row.Id, status = 3 }))
         {
             row.Status = 3;
@@ -641,9 +714,16 @@ public partial class ImagingViewModel : ViewModelBase
     }
 
     /// <summary>بازخورد انتخاب درخواست — پرکردن گزارش، ایمنی و فایل‌ها</summary>
-    partial void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
+    private void OnSelectedImagingOrderChanged(ImagingOrderRow? value)
     {
-        if (value is null) return;
+        _fileRequestVersion++;
+        _imageRequestVersion++;
+        ImagingFiles = new ObservableCollection<ImagingFileRow>();
+        SelectedImagingFile = null;
+        CurrentImageBytes = null;
+        CurrentImageName = null;
+        ImageSourceChanged?.Invoke();
+        if (value is null) { _reportBaseline = null; ViewerMessage = "مطالعه‌ای انتخاب نشده است."; return; }
         try
         {
             OnSelectedImagingOrderChangedCore(value);
@@ -663,14 +743,21 @@ public partial class ImagingViewModel : ViewModelBase
         ReportImpression = value.Impression;
         ReportRecommendation = value.Recommendation;
         DoseCtdi = null; DoseDlp = null; CriticalFinding = false;
-        CriticalNotifiedTo = null; ReportComparison = ComparisonOptions[0];
+        CriticalNotifiedTo = null; CriticalMethod = CriticalMethodOptions[0]; ReportComparison = ComparisonOptions[0];
         ReportStatus = "نهایی و امضاشده"; Measurements.Clear();
-        if (!string.IsNullOrWhiteSpace(value.ReportDetails))
+        HasUnsupportedReportDetails = !SupportedReportDetails(value.ReportDetails);
+        ReportMessage = HasUnsupportedReportDetails
+            ? "جزئیات گزارش با این نسخه سازگار نیست؛ برای جلوگیری از حذف اطلاعات، ذخیره غیرفعال است."
+            : value.Status is 4 or 5 ? "گزارش نهایی یا لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود." : string.Empty;
+        // هر مطالعه چک‌لیست مستقل دارد؛ علامت‌های بیمار قبلی نباید منتقل شود.
+        BuildSafety();
+        if (!HasUnsupportedReportDetails && !string.IsNullOrWhiteSpace(value.ReportDetails))
         {
             try
             {
                 using var doc = JsonDocument.Parse(value.ReportDetails);
                 var r = doc.RootElement;
+                if (r.TryGetProperty("clinicalInfo", out var ci)) ReportClinicalInfo = ci.GetString();
                 if (r.TryGetProperty("ctdi", out var c) && c.ValueKind != JsonValueKind.Null) DoseCtdi = c.ToString();
                 if (r.TryGetProperty("dlp", out var d) && d.ValueKind != JsonValueKind.Null) DoseDlp = d.ToString();
                 if (r.TryGetProperty("comparison", out var cmp) && cmp.GetString() is { } cs && ComparisonOptions.Contains(cs)) ReportComparison = cs;
@@ -685,26 +772,89 @@ public partial class ImagingViewModel : ViewModelBase
                 {
                     // چک‌لیست پس از ساخته‌شدن بر اساس مدالیته علامت می‌خورد
                     var done = saf.EnumerateArray().Select(e => e.GetString()).ToHashSet();
-                    BuildSafety();
                     foreach (var item in SafetyItems) item.IsChecked = done.Contains(item.Text);
                 }
             }
             catch (JsonException) { /* گزارش‌های قدیمی بدون جزئیات ساخت‌یافته */ }
         }
-        if (SafetyItems.Count == 0) BuildSafety();
         OnPropertyChanged(nameof(CurrentDrl));
         OnPropertyChanged(nameof(DoseHigh));
         ViewerMessage = $"{value.ModalityFa} {value.BodyPart} — {value.PatientName}";
+        _reportBaseline = ReportSnapshot();
         _ = LoadImagingFilesAsync();
+    }
+
+    private string ReportSnapshot() => JsonSerializer.Serialize(new
+    {
+        ReportClinicalInfo, ReportTechnique, ReportFindings, ReportImpression, ReportRecommendation,
+        DoseCtdi, DoseDlp, ReportComparison, CriticalFinding, CriticalNotifiedTo, CriticalMethod,
+        measurements = Measurements.ToArray(), safety = SafetyItems.Where(x => x.IsChecked).Select(x => x.Text).ToArray()
+    });
+
+    // از بازنویسی دادهٔ نسخه‌های دیگر که این ویرایشگر قادر به نگهداری آن
+    // نیست جلوگیری می‌کند؛ گزارش اصلی و چک‌لیست همچنان قابل مشاهده‌اند.
+    private bool SupportedReportDetails(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return true;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object) return false;
+            var properties = doc.RootElement.EnumerateObject().ToList();
+            if (properties.Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != properties.Count) return false;
+            foreach (var p in properties)
+            {
+                var v = p.Value;
+                switch (p.Name)
+                {
+                    case "ctdi": case "dlp":
+                        if (v.ValueKind is not (JsonValueKind.Number or JsonValueKind.Null)) return false;
+                        break;
+                    case "comparison":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String || !ComparisonOptions.Contains(v.GetString()))) return false;
+                        break;
+                    case "status":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String ||
+                            (v.GetString() != "نهایی" && !ReportStatusOptions.Contains(v.GetString())))) return false;
+                        break;
+                    case "clinicalInfo": case "criticalTo":
+                        if (v.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return false;
+                        break;
+                    case "criticalMethod":
+                        if (v.ValueKind != JsonValueKind.Null && (v.ValueKind != JsonValueKind.String || !CriticalMethodOptions.Contains(v.GetString()))) return false;
+                        break;
+                    case "critical":
+                        if (v.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return false;
+                        break;
+                    case "measurements": case "safety":
+                        if (v.ValueKind != JsonValueKind.Array || v.EnumerateArray().Any(x => x.ValueKind != JsonValueKind.String)) return false;
+                        if (p.Name == "safety" && v.EnumerateArray().Any(x => !SafetyFor(SelectedImagingOrder?.Modality).Contains(x.GetString()))) return false;
+                        break;
+                    default: return false;
+                }
+            }
+            return true;
+        }
+        catch (JsonException) { return false; }
     }
 
     /// <summary>بارگذاری فایل‌های درخواست انتخاب‌شده</summary>
     private async Task LoadImagingFilesAsync()
     {
         if (SelectedImagingOrder is null) return;
-        var response = await _api.GetAsync<ImagingFilesResponse>(
-            $"imaging/files?orderId={SelectedImagingOrder.Id}");
-        ImagingFiles = new ObservableCollection<ImagingFileRow>((response?.Data ?? new List<ImagingFileDto>())
+        var orderId = SelectedImagingOrder.Id;
+        var version = ++_fileRequestVersion;
+        ImagingFilesResponse? response;
+        try { response = await _api.GetAsync<ImagingFilesResponse>($"imaging/files?orderId={orderId}"); }
+        catch
+        {
+            if (version == _fileRequestVersion && SelectedImagingOrder?.Id == orderId)
+                ViewerMessage = "دریافت فایل‌های مطالعه ناموفق بود.";
+            return;
+        }
+        if (version != _fileRequestVersion || SelectedImagingOrder?.Id != orderId) return;
+        if (response?.Data is null) { ViewerMessage = _api.LastError ?? "دریافت فایل‌های مطالعه ناموفق بود."; return; }
+        ImagingFiles = new ObservableCollection<ImagingFileRow>(response.Data
             .Select(f => new ImagingFileRow(f.Id, f.FileName, f.IsDicom, f.FileSize, f.UploadedAt)));
         SelectedImagingFile = ImagingFiles.FirstOrDefault();
         if (ImagingFiles.Count == 0)
@@ -714,24 +864,31 @@ public partial class ImagingViewModel : ViewModelBase
     /// <summary>بازخورد انتخاب فایل — بارگذاری تصویر در نمایشگر</summary>
     partial void OnSelectedImagingFileChanged(ImagingFileRow? value)
     {
-        if (value is null) return;
-        _ = LoadCurrentImageAsync(value);
+        var version = ++_imageRequestVersion;
+        CurrentImageBytes = null;
+        CurrentImageName = value?.FileName;
+        ImageSourceChanged?.Invoke();
+        if (value is not null) _ = LoadCurrentImageAsync(value, version);
     }
 
-    private async Task LoadCurrentImageAsync(ImagingFileRow file)
+    private async Task LoadCurrentImageAsync(ImagingFileRow file, int version)
     {
-        CurrentImageName = file.FileName;
         if (file.IsDicom)
         {
-            CurrentImageBytes = null;
             ViewerMessage = "فایل DICOM است — برای مشاهده با پنجره/سطح واقعی، دکمهٔ «نمایش DICOM» را بزنید.";
-            ImageSourceChanged?.Invoke();
             return;
         }
-        var bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content");
+        byte[]? bytes;
+        try { bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content"); }
+        catch
+        {
+            if (version == _imageRequestVersion && SelectedImagingFile?.Id == file.Id)
+                ViewerMessage = "دریافت تصویر ناموفق بود.";
+            return;
+        }
+        if (version != _imageRequestVersion || SelectedImagingFile?.Id != file.Id) return;
         if (bytes is null || bytes.Length == 0)
         {
-            CurrentImageBytes = null;
             ViewerMessage = _api.LastError ?? "دریافت فایل ناموفق بود";
         }
         else
@@ -742,61 +899,81 @@ public partial class ImagingViewModel : ViewModelBase
         ImageSourceChanged?.Invoke();
     }
 
-    /// <summary>ذخیره و امضای گزارش (یا پیش‌نویس) — همراه جزئیات ساخت‌یافته</summary>
+    /// <summary>ذخیره گزارش نهایی یا پیش‌نویس؛ این مسیر امضای دیجیتال ندارد.</summary>
     [RelayCommand]
     private async Task SaveReportAsync(bool isFinal)
     {
-        if (SelectedImagingOrder is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
+        if (!CanEditImagingReport) return;
+        var order = SelectedImagingOrder;
+        if (order is null) { _snackbar.Error("ابتدا مطالعه‌ای از صف کار انتخاب کنید"); return; }
+        if (HasUnsupportedReportDetails) { _snackbar.Error("ساختار جزئیات گزارش پشتیبانی نمی‌شود؛ ذخیره برای حفاظت از داده متوقف شد."); return; }
+        if (order.Status is 4 or 5) { _snackbar.Error("گزارش نهایی یا درخواست لغوشده قابل بازنویسی نیست؛ الحاقیه هنوز پشتیبانی نمی‌شود."); return; }
+        if (isFinal && order.Status != 3) { _snackbar.Error("پیش از نهایی‌کردن گزارش، انجام مطالعه را در صف ثبت کنید"); return; }
+        if (isFinal && string.IsNullOrWhiteSpace(ReportFindings) && string.IsNullOrWhiteSpace(ReportImpression))
+        { _snackbar.Error("برای نهایی‌کردن گزارش، یافته یا نتیجه‌گیری لازم است"); return; }
         if (isFinal && CriticalFinding && string.IsNullOrWhiteSpace(CriticalNotifiedTo))
+        { _snackbar.Error("یافتهٔ بحرانی: گیرندهٔ اطلاع‌رسانی را وارد کنید"); return; }
+        decimal? ctdi = null, dlp = null;
+        if (!string.IsNullOrWhiteSpace(DoseCtdi))
         {
-            _snackbar.Error("یافتهٔ بحرانی: گیرندهٔ اطلاع‌رسانی را وارد کنید");
-            return;
+            if (!Helpers.PlainNumber.TryParse(DoseCtdi, out var c) || c < 0)
+            { _snackbar.Error("دوز CTDIvol باید عدد غیرمنفی باشد"); return; }
+            ctdi = c;
+        }
+        if (!string.IsNullOrWhiteSpace(DoseDlp))
+        {
+            if (!Helpers.PlainNumber.TryParse(DoseDlp, out var d) || d < 0)
+            { _snackbar.Error("دوز DLP باید عدد غیرمنفی باشد"); return; }
+            dlp = d;
         }
         var details = new
         {
-            ctdi = double.TryParse((DoseCtdi ?? "").Replace('/', '.'), out var c) ? c : (double?)null,
-            dlp = double.TryParse((DoseDlp ?? "").Replace('/', '.'), out var d) ? d : (double?)null,
+            ctdi,
+            dlp,
+            clinicalInfo = ReportClinicalInfo,
             comparison = ReportComparison,
-            status = isFinal ? ReportStatus : "پیش‌نویس",
+            status = isFinal ? "نهایی" : "پیش‌نویس",
             critical = CriticalFinding,
             criticalTo = CriticalFinding ? CriticalNotifiedTo : null,
             criticalMethod = CriticalFinding ? CriticalMethod : null,
             measurements = Measurements.ToArray(),
             safety = SafetyItems.Where(i => i.IsChecked).Select(i => i.Text).ToArray(),
         };
-        var ok = await _api.PutAsync("imaging/reports", new
+        var request = new
         {
-            orderId = SelectedImagingOrder.Id,
-            technique = ReportTechnique,
-            findings = ReportFindings,
-            impression = ReportImpression,
-            recommendation = ReportRecommendation,
-            reportDetails = JsonSerializer.Serialize(details),
-            isFinal
-        });
-        if (ok)
+            orderId = order.Id, technique = ReportTechnique, findings = ReportFindings,
+            impression = ReportImpression, recommendation = ReportRecommendation,
+            reportDetails = JsonSerializer.Serialize(details), isFinal,
+            expectedState = new { status = order.Status, technique = order.Technique, findings = order.Findings,
+                impression = order.Impression, recommendation = order.Recommendation, reportDetails = order.ReportDetails }
+        };
+        var savedSnapshot = ReportSnapshot();
+        IsSavingImagingReport = true;
+        try
         {
-            SelectedImagingOrder.ReportDetails = JsonSerializer.Serialize(details);
-            if (isFinal)
+            bool ok;
+            try { ok = await _api.PutAsync("imaging/reports", request); }
+            catch { _snackbar.Error("پاسخ ثبت گزارش دریافت نشد؛ پیش از تلاش مجدد وضعیت مطالعه را بررسی کنید."); return; }
+            if (!ok) { _snackbar.Error((_api.LastError ?? "ثبت گزارش ناموفق بود") + "؛ در صورت قطع ارتباط وضعیت مطالعه را بررسی کنید."); return; }
+            order.Technique = request.technique;
+            order.Findings = request.findings;
+            order.Impression = request.impression;
+            order.Recommendation = request.recommendation;
+            order.ReportDetails = request.reportDetails;
+            if (isFinal) { order.Status = 4; order.ReportedAt = DateTime.UtcNow; }
+            if (SelectedImagingOrder?.Id == order.Id)
             {
-                SelectedImagingOrder.Status = 4;
-                SelectedImagingOrder.ReportedAt = DateTime.UtcNow;
-                ReportMessage = CriticalFinding
-                    ? "گزارش نهایی امضا شد و اطلاع یافتهٔ بحرانی در دفتر شاخص‌ها ثبت گردید."
-                    : "گزارش نهایی امضا و در پروندهٔ بیمار ثبت شد.";
-                _snackbar.Success("گزارش تصویربرداری نهایی شد");
+                _reportBaseline = savedSnapshot;
+                DraftStamp = isFinal ? "گزارش نهایی ذخیره شد" : "پیش‌نویس ذخیره شد";
+                ReportMessage = isFinal
+                    ? "گزارش نهایی ذخیره شد؛ امضای دیجیتال و اطلاع‌رسانی خودکار انجام نشده است."
+                    : "پیش‌نویس ذخیره شد؛ گزارش هنوز نهایی نیست.";
             }
-            else
-            {
-                if (SelectedImagingOrder.Status is 1 or 2) SelectedImagingOrder.Status = 3;
-                DraftStamp = "پیش‌نویس ذخیره شد";
-                ReportMessage = "پیش‌نویس ذخیره شد؛ گزارش هنوز نهایی نیست.";
-                _snackbar.Success("پیش‌نویس گزارش ذخیره شد");
-            }
+            _snackbar.Success(isFinal ? "گزارش تصویربرداری نهایی شد" : "پیش‌نویس گزارش ذخیره شد");
             ApplyWorkFilter();
             RaiseStats();
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت گزارش ناموفق بود");
+        finally { IsSavingImagingReport = false; }
     }
 
     /// <summary>آپلود فایل تصویر برای درخواست انتخاب‌شده — انتخاب از دیسک</summary>
@@ -809,6 +986,7 @@ public partial class ImagingViewModel : ViewModelBase
             return;
         }
 
+        var orderId = SelectedImagingOrder.Id;
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "انتخاب فایل تصویر یا DICOM",
@@ -819,12 +997,12 @@ public partial class ImagingViewModel : ViewModelBase
         var bytes = await System.IO.File.ReadAllBytesAsync(dialog.FileName);
         var uploadResponse = await _api.PostFileAsync<UploadAck>("imaging/files",
             System.IO.Path.GetFileName(dialog.FileName), bytes,
-            new Dictionary<string, string> { ["orderId"] = SelectedImagingOrder.Id.ToString() });
+            new Dictionary<string, string> { ["orderId"] = orderId.ToString() });
 
         if (uploadResponse?.IsSuccess == true)
         {
             _snackbar.Success(uploadResponse.Message ?? "فایل بارگذاری شد");
-            await LoadImagingFilesAsync();
+            if (SelectedImagingOrder?.Id == orderId) await LoadImagingFilesAsync();
         }
         else
         {
@@ -842,21 +1020,22 @@ public partial class ImagingViewModel : ViewModelBase
             return;
         }
 
-        var bytes = await _api.DownloadFileAsync($"imaging/files/{SelectedImagingFile.Id}/content");
+        var file = SelectedImagingFile;
+        var orderId = SelectedImagingOrder?.Id;
+        var version = _imageRequestVersion;
+        var bytes = await _api.DownloadFileAsync($"imaging/files/{file.Id}/content");
+        if (version != _imageRequestVersion || SelectedImagingFile?.Id != file.Id || SelectedImagingOrder?.Id != orderId) return;
         if (bytes is null || bytes.Length == 0)
         {
             _snackbar.Error(_api.LastError ?? "دریافت فایل ناموفق بود");
             return;
         }
 
-        var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
-            $"sahand-dicom-{SelectedImagingFile.Id}.dcm");
-        await System.IO.File.WriteAllBytesAsync(tempPath, bytes);
-
-        var viewer = new Views.DicomViewerWindow(tempPath)
+        var viewer = new Views.DicomViewerWindow
         {
             Owner = System.Windows.Application.Current?.MainWindow
         };
+        viewer.LoadBytes(bytes, file.FileName);
         viewer.Show();
     }
 

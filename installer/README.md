@@ -19,6 +19,9 @@
 
 > درمانگاه نیازی به .NET SDK، ابزار `dotnet-ef`، Visual Studio یا اجرای دستی migration ندارد. دیتابیس ساخته و تغییرات schema هنگام نصب سرور خودکار اعمال می‌شوند. اگر SQL در دسترس نباشد یا مجوز ساخت دیتابیس نداشته باشد، نصب متوقف می‌شود تا سرویس با اسکیمای ناقص بالا نیاید.
 
+### مجوز بازیابی پشتیبان
+نصاب برای اعطای نقش `dbcreator` از حساب اتصال API، حساب ویندوزی جاری یا حساب مدیر SQL استفاده می‌کند. این کار مستلزم دسترسی مدیریتی SQL است؛ مدیر ویندوز لزوماً مدیر SQL نیست. نتیجه در `C:\SahandClinicPro\Server\restore-permission.status.txt` ثبت می‌شود. برای تلاش مجدد فایل `Enable-RestorePermission.bat` را از پوشهٔ بستهٔ سرور با دسترسی مدیر اجرا کنید. SQL Server خودکار متوقف یا راه‌اندازی مجدد نمی‌شود. برای SQL راه‌دور هویت سرویس و مجوز باید توسط مدیر SQL بررسی شود.
+
 ## ساخت بسته‌ها از سورس
 
 روی Windows 10/11 به .NET 8 SDK و Inno Setup 6 نیاز دارید. اجرای `BUILD-INSTALLER.bat` خروجی زیر را می‌سازد:
@@ -35,6 +38,7 @@
 | `BUILD-INSTALLER.bat` | انتشار خودبسندهٔ WPF و API، سپس بسته‌بندی EXE و ZIP سرور |
 | `SahandClinicPro.iss` | تنظیمات Inno Setup، زبان فارسی و میانبرهای راهنما |
 | `Install-Server-Package.bat/.ps1` | نصب سرور بسته‌بندی‌شده، ساخت خودکار DB و راه‌اندازی Windows Service |
+| `Enable-RestorePermission.bat/.ps1` | تلاش برای اعطای نقش `dbcreator` — در نصب تازه و همچنین تعمیر مستقل نصب قدیمی |
 | `INSTALL-SERVER.bat` | انتشار و نصب سرور از سورس برای تیم فنی |
 | `appsettings.client.example.json` | نمونهٔ نشانی API برای کلاینت |
 | `RELEASE-INSTALL-GUIDE.txt` | راهنمای کوتاه نصب برای درمانگاه |

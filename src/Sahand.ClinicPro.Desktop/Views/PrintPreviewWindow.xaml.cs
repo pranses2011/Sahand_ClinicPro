@@ -18,6 +18,8 @@ public partial class PrintPreviewWindow : Window
     private readonly FlowDocument _document;
     private readonly string _printTitle;
     private readonly string? _printerName;
+    private readonly double? _pageWidth;
+    private readonly double? _pageHeight;
 
     /// <summary>آیا کاربر از این پنجره چاپ کرد؟ (بستن بدون چاپ = false)</summary>
     public bool Printed { get; private set; }
@@ -26,13 +28,25 @@ public partial class PrintPreviewWindow : Window
     /// سازنده — سند باید PageWidth/PageHeight از قبل گرفته باشد (مسیرهای
     /// چاپ برنامه همهً این کار را می‌کنند؛ قبض نوبت عرض ۸۰ میلی، بقیه A4).
     /// </summary>
-    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName)
+    public PrintPreviewWindow(FlowDocument document, string printTitle, string? printerName, bool allowPrint = true,
+        double? pageWidth = null, double? pageHeight = null, int copies = 1)
     {
         _document = document;
         _printTitle = printTitle;
         _printerName = printerName;
+        _pageWidth = pageWidth;
+        _pageHeight = pageHeight;
         InitializeComponent();
+        CopiesBox.SelectedIndex = PrintFlow.NormalizeCopies(copies) - 1;
+        CopiesBox.Visibility = CopiesLabel.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
 
+        PrintButton.Visibility = allowPrint ? Visibility.Visible : Visibility.Collapsed;
+        // دکمه/میانبر داخلی نمایشگر نباید از تنظیمات چاپگر، اندازه و نسخه
+        // عبور کند؛ در نمونهٔ طراح هم هیچ مسیر چاپی باز نمی‌گذاریم.
+        DocViewer.CommandBindings.Add(new System.Windows.Input.CommandBinding(
+            System.Windows.Input.ApplicationCommands.Print,
+            (_, e) => { if (allowPrint) OnPrintClick(this, new RoutedEventArgs()); e.Handled = true; },
+            (_, e) => { e.CanExecute = allowPrint; e.Handled = true; }));
         HeaderTitle.Text = "پیش‌نمایش چاپ — " + printTitle;
 
         // نمایشگر با همان سند مشترک — صفحه‌بندی FlowDocumentPageViewer
@@ -62,10 +76,15 @@ public partial class PrintPreviewWindow : Window
     /// <summary>چاپ به چاپگر مقصد تنظیمات — بدون دیالوگ ویندوز (تجربهٔ یکدست)</summary>
     private void OnPrintClick(object sender, RoutedEventArgs e)
     {
-        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName))
+        if (CopiesBox.SelectedIndex is < 0 or > 8)
+        {
+            AppDialog.Error("تعداد نسخه", "تعداد نسخه را بین ۱ تا ۹ انتخاب کنید.");
+            return;
+        }
+        if (PrintFlow.PrintDirect(_document, _printTitle, _printerName, _pageWidth, _pageHeight, CopiesBox.SelectedIndex + 1))
         {
             Printed = true;
-            Close();
+            if (PrintFlow.ClosePreviewAfterPrint) Close();
         }
         // شکست چاپ: پیام فارسی درون PrintDirect نشان داده شد؛ پنجره باز می‌ماند
         // تا کاربر بتواند چاپگر را وصل کند و دوباره امتحان کند

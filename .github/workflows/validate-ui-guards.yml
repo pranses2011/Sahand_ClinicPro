@@ -1,0 +1,94 @@
+name: 🧪 نگهبانهای نصاب و رابط
+
+# راستیآزمایی خودکار دو اصلاح اخیر:
+#   ۱) اسکریپت نصب سرور (PowerShell 5.1) از نظر نحوی و مؤلفههای اعطای
+#      نقش dbcreator — خطای «بازیابی اطلاعات از فایل پشتیبان»؛
+#   ۲) XAML پوشش بارگذاری — تپش پیوستهٔ قلب همگام با خط نوار قلب.
+on:
+  push:
+    paths:
+      - 'installer/Install-Server-Package.ps1'
+      - 'installer/Enable-RestorePermission.ps1'
+      - 'installer/Enable-RestorePermission.bat'
+      - 'src/Sahand.ClinicPro.Desktop/ViewModels/EmployeeFormViewModel.cs'
+      - 'src/Sahand.ClinicPro.Desktop/Helpers/LookupName.cs'
+      - 'src/Sahand.ClinicPro.Application/Features/HR/**'
+      - 'src/Sahand.ClinicPro.Desktop/MainWindow.xaml'
+      - 'scripts/validate_ui_guards.py'
+      - '.github/workflows/validate-ui-guards.yml'
+  pull_request:
+    paths:
+      - 'installer/Install-Server-Package.ps1'
+      - 'installer/Enable-RestorePermission.ps1'
+      - 'installer/Enable-RestorePermission.bat'
+      - 'src/Sahand.ClinicPro.Desktop/ViewModels/EmployeeFormViewModel.cs'
+      - 'src/Sahand.ClinicPro.Desktop/Helpers/LookupName.cs'
+      - 'src/Sahand.ClinicPro.Application/Features/HR/**'
+      - 'src/Sahand.ClinicPro.Desktop/MainWindow.xaml'
+      - 'scripts/validate_ui_guards.py'
+      - '.github/workflows/validate-ui-guards.yml'
+  workflow_dispatch:
+
+jobs:
+  guards:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: دریافت سورس
+        uses: actions/checkout@v4
+
+      - name: تجزیهٔ نحوی اسکریپت نصب سرور (Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          foreach ($rel in @('installer/Install-Server-Package.ps1', 'installer/Enable-RestorePermission.ps1')) {
+            $path = (Resolve-Path $rel).Path
+            $bytes = [System.IO.File]::ReadAllBytes($path)
+            if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
+              throw "$rel must be UTF-8 with BOM for Windows PowerShell 5.1."
+            }
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "$rel — $($_.Message)" }
+              exit 1
+            }
+          }
+          Write-Host '✅ نحو اسکریپت نصب سرور سالم است.'
+
+      - name: بارگذاری عملی کتابخانهٔ مجوز بازیابی (dot-source)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./installer/Enable-RestorePermission.ps1 -AsLibrary
+          foreach ($fn in @('Invoke-ClinicProRestorePermission', 'Invoke-CpRestoreGrant',
+                            'Write-CpManualSql')) {
+            if (-not (Get-Command $fn -ErrorAction SilentlyContinue)) {
+              throw "تابع $fn هنگام dot-source تعریف نشد."
+            }
+          }
+          if (-not $script:CpGrantSql -or $script:CpGrantSql.Length -lt 100) {
+            throw 'فرمان SQL اعطای dbcreator بارگذاری نشد.'
+          }
+          Write-Host '✅ کتابخانهٔ مجوز بازیابی بیدرنگ و بیمانی بارگذاری شد.'
+
+      - name: نگهبانهای رگرسیون (قلب + dbcreator) و سلامت XML
+        run: |
+          python3 scripts/validate_ui_guards.py
+          python3 scripts/validate_xaml.py
+  windows-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: بررسی نحو با Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          foreach ($rel in @('installer/Install-Server-Package.ps1', 'installer/Enable-RestorePermission.ps1')) {
+            $path = (Resolve-Path $rel).Path
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+            foreach ($e in $errors) {
+              Write-Output "::error file=$rel,line=$($e.Extent.StartLineNumber)::$($e.Message)"
+            }
+            if ($errors.Count -gt 0) { exit 1 }
+          }

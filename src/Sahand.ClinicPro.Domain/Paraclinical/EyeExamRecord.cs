@@ -35,6 +35,12 @@ public class EyeExamRecord : AuditableEntity, ISoftDeletable
     /// <summary>حدت بینایی چپ</summary>
     public string? LeftVisualAcuity { get; set; }
 
+    /// <summary>حدت بینایی راست با اصلاح (عینک/لنز)؛ سابقهٔ قدیمی ممکن است تهی باشد.</summary>
+    public string? RightCorrectedVisualAcuity { get; set; }
+
+    /// <summary>حدت بینایی چپ با اصلاح (عینک/لنز).</summary>
+    public string? LeftCorrectedVisualAcuity { get; set; }
+
     /// <summary>فشار داخل چشم راست</summary>
     public int? RightIop { get; set; }
 

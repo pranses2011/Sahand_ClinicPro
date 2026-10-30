@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.AdvancedEmrView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.AdvancedEmrView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -129,8 +129,8 @@
                         <TextBox materialDesign:HintAssist.Hint="محیط سر (cm)" MinWidth="105"
                                  Text="{Binding NewHeadCirc, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
-                        <Button Command="{Binding AddGrowthCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
-                                Content="➕ ثبت اندازه‌گیری" />
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding AddGrowthCommand}" Style="{StaticResource MaterialDesignRaisedButton}"
+                                Content="➕ ثبت اندازه‌گیری (Ctrl+Shift+1)" />
                     </WrapPanel>
 
                     <!-- جدول اندازه‌گیری‌ها با z-score -->
@@ -193,8 +193,8 @@
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
                         <CheckBox Content="ارثی/ژنتیک" IsChecked="{Binding IsGenetic}" VerticalAlignment="Center" Margin="0,0,10,0" />
                         <CheckBox Content="فوت‌شده" IsChecked="{Binding IsDeceased}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <Button Command="{Binding AddFamilyHistoryCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت سابقه" />
+                        <Button shortcuts:SaveShortcut.Number="2" Command="{Binding AddFamilyHistoryCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت سابقه (Ctrl+Shift+2)" />
                     </WrapPanel>
 
                     <!-- فهرست -->
@@ -254,8 +254,8 @@
                         <TextBox materialDesign:HintAssist.Hint="اهداف درمانی" MinWidth="150"
                                  Text="{Binding Goals, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" />
-                        <Button Command="{Binding AddCarePlanCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت طرح" />
+                        <Button shortcuts:SaveShortcut.Number="3" Command="{Binding AddCarePlanCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Content="➕ ثبت طرح (Ctrl+Shift+3)" />
                     </WrapPanel>
 
                     <!-- فهرست طرح‌ها -->

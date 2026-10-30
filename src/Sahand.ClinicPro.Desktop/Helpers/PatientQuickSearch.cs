@@ -17,8 +17,8 @@ namespace Sahand.ClinicPro.Desktop.Helpers;
 public static class PatientQuickSearch
 {
     /// <summary>
-    /// جستجوی بیمار با کد ملی/موبایل/نام — نخستین نتیجه؛ پیام‌های فارسی
-    /// توست خودِ هلپر نمایش می‌دهد (همان رفتار پیشین پاراکلینیک).
+    /// جستجوی بیمار با کد ملی/موبایل/نام — فقط نتیجهٔ یکتا پذیرفته می‌شود؛
+    /// در نتیجهٔ مبهم کاربر باید عبارت دقیق‌تری وارد کند.
     /// </summary>
     /// <param name="api">کلاینت HTTP برنامه</param>
     /// <param name="snackbar">سرویس پیام شناور</param>
@@ -32,15 +32,33 @@ public static class PatientQuickSearch
             return null;
         }
 
-        var response = await api.GetAsync<ViewModels.PatientFormViewModel.SearchResponse>(
-            $"patients/search?term={Uri.EscapeDataString(term.Trim())}");
-        var p = response?.Data?.FirstOrDefault();
-        if (p is null)
+        ViewModels.PatientFormViewModel.SearchResponse? response;
+        try
+        {
+            response = await api.GetAsync<ViewModels.PatientFormViewModel.SearchResponse>(
+                $"patients/search?term={Uri.EscapeDataString(term.Trim())}");
+        }
+        catch
+        {
+            snackbar.Error("جستجوی بیمار ناموفق بود؛ اتصال به سرور را بررسی کنید");
+            return null;
+        }
+        if (response?.Data is null)
+        {
+            snackbar.Error(api.LastError ?? "دریافت نتیجهٔ جستجوی بیمار ناموفق بود");
+            return null;
+        }
+        if (response.Data.Count == 0)
         {
             snackbar.Error("بیمار یافت نشد");
             return null;
         }
-
+        if (response.Data.Count != 1 || response.Data[0].Id <= 0)
+        {
+            snackbar.Error("نتیجهٔ جستجو مبهم است؛ کد ملی یا شمارهٔ پروندهٔ دقیق بیمار را وارد کنید");
+            return null;
+        }
+        var p = response.Data[0];
         var patient = new QuickPatient(p.Id, $"{p.FirstName} {p.LastName}", p.NationalCode, p.Mobile,
             p.InsuranceName, p.Allergies, null, null, p.Gender);
         snackbar.Success($"بیمار: {p.FirstName} {p.LastName}");

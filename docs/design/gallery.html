@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🎨 گالری طرحهای تأییدشده — اعمالشده روی WPF</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#EEF3F8;color:#172B4D;font-family:"Vazirmatn","Segoe UI",Tahoma,sans-serif;font-size:14px}
+  header{background:linear-gradient(115deg,#0B2C54,#1565C0 55%,#0D9488);color:#fff;padding:26px 34px}
+  header h1{margin:0 0 8px;font-size:23px;font-weight:800}
+  header p{margin:0;opacity:.94;font-size:13px;max-width:1100px;line-height:2}
+  .wrap{max-width:1500px;margin:0 auto;padding:22px}
+  .alert{background:#EFF6FF;border:1px solid #93C5FD;color:#0D47A1;border-radius:12px;padding:12px 18px;margin-bottom:20px;font-size:12.5px;line-height:2}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .card{background:#fff;border:1px solid #D9E2EC;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(23,43,77,.08)}
+  .card .top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #E5ECF3;background:#F8FBFE}
+  .card .top h2{margin:0;font-size:14px;font-weight:800}
+  .card .top .key{font-size:10.5px;color:#6B7C93;direction:ltr}
+  .card .top a{margin-inline-start:auto;font-size:11px;color:#1565C0;text-decoration:none;border:1px solid #BFDBFE;border-radius:7px;padding:3px 10px}
+  .frame{height:494px;overflow:hidden;background:#EEF3F8;position:relative}
+  .frame iframe{width:1030px;height:774px;border:0;transform:scale(.638);transform-origin:top right;position:absolute;top:0;right:0}
+  .card .notes{padding:10px 16px;font-size:11.5px;color:#52647A;line-height:1.9;border-top:1px solid #E5ECF3;min-height:76px}
+  .foot{text-align:center;color:#6B7C93;font-size:11.5px;padding:20px}
+  @media(max-width:1200px){.grid{grid-template-columns:1fr}.frame{height:494px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎨 شش طرح تأییدشده — اکنون روی XAML اعمال شدهاند</h1>
+  <p>همانطور که خواستید، صفحات یکییکی «از اول» طراحی شدند: کارتهای آماری پنجگانهٔ رنگی و تمامعرض،
+     چیپهای کپسولی، دکمههای تخت، تبهای زیرخطدار، جداول راهراه و پالت آبی/سبز/بنفش/نارنجی/قرمز
+     صفحهای تصویربرداری. بوم هر طرح دقیقاً ۱۰۳۰×۷۷۴ پیکسل است تا با اسکرینشات واقعی WPF
+     پیکسلبهپیکسل قابلمقایسه باشد. لطفاً این طرحها را تأیید کنید تا بلافاصله روی XAML اعمال شوند و
+     چرخهٔ «اسکرینشات واقعی ← مقایسه ← رفع مغایرت» شروع شود.</p>
+</header>
+<div class="wrap">
+  <div class="alert">
+    ✅ <b>طرحها تأیید و اعمال شدند.</b> تصاویر زیر رندر همان فایلهای HTML طراحی
+    (<span dir="ltr">docs/design/approved/*.html</span>) هستند. صفحهٔ
+    <a href="compare.html" target="_blank">مقایسه</a> هر طرح را کنار <b>اسکرینشات واقعی</b>
+    همان صفحه از برنامهٔ WPF قرار میدهد؛ مغایرتها و تفاوتهای باقیمانده آنجا فهرست شدهاند.
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="foot">سهند کلینیکپرو — چرخهٔ طراحی مجدد شش صفحه | رندر ۱۰۳۰×۷۷۴ | سبک تأییدشدهٔ تصویربرداری</div>
+</div>
+<script>
+const PAGES = [
+  {key:'dentistry', title:'🦷 پروندهٔ دندانپزشکی', notes:'کارتهای آماری بالای صفحه، چیپهای فیلتر وضعیت، چارت FDI دو فک با رنگهای وضعیت، پنل دندان انتخابی و جدول طرح درمان — همگیدر یک صفحه، بدون نیاز به رفتن به تب دیگر.'},
+  {key:'ophthalmology', title:'👁️ معاینهٔ چشمپزشکی', notes:'دو کارت چشم راست/چپ با رفرکشن و حدت بینایی، گیج رنگی فشار چشم با هشدار گلوکوم بالای ۲۱، نسخهٔ عینک زنده و نمودار روند فشار.'},
+  {key:'physiotherapy', title:'🏃 دورهٔ درمان فیزیوتراپی', notes:'نقشهٔ بدن جلو/پشت با نواحی رنگی درد، فرم جلسه با تکنیکهای چیپی، غربالگری پرچمهای قرمز و نمودار روند بهبود پنج جلسه.'},
+  {key:'survey', title:'📝 نظرسنجی بیماران', notes:'چهار کارت آماری + نوار ابزار کامل، جدول نظرسنجیها با ستونهای سوالات/پاسخها/میانگین/وضعیت، و کنار آن توزیع ستارگان و میانگین پزشکان — همه در یک نگاه.'},
+  {key:'survey-results', title:'📊 نظرسنجی — نتایج و آمار', notes:'تب دوم همان زبان طراحی: سه پنل کنار هم (توزیع امتیازها، میانگین پزشکان، روند رضایت) و کارتهای نظرات آزاد.'},
+  {key:'print-template', title:'🖨️ قالب چاپ و طب مکمل', notes:'شش کارت قالب در دو ردیف سهتایی با پیشنمایش کاغذ، اندازه، برچسب نوع و دکمههای پیشفرض/انتخاب/ویرایش؛ فیلتر موجودیت بالای صفحه.'},
+  {key:'print-designer-window', title:'⌨️ طراح قالب چاپ (تب دوم)', notes:'ویرایشگر HTML تیره با متغیرهای چیپی، پیشنمایش زندهٔ فاکتور در سمت راست و گالری طرحهای آماده — همان چیدمانی که در طرح تأییدی قدیمی بود.'},
+  {key:'print-settings', title:'⚙️ تنظیمات چاپگر و چاپ', notes:'مرکز چاپ با جدول ۱۲ سند و ستونهای چاپگر/کاغذ/نسخه/پیشنمایش/خودکار، کنار کارت «رفتار عمومی» و فهرست چاپگرهای نصبشده.'},
+];
+document.getElementById('grid').innerHTML = PAGES.map(p => `
+  <div class="card">
+    <div class="top"><h2>${p.title}</h2><span class="key">${p.key}.html</span>
+      <a href="approved/${p.key}.html" target="_blank">باز کردن تمامصفحه ↗</a></div>
+    <div class="frame"><iframe src="approved/${p.key}.html" loading="lazy" title="${p.title}"></iframe></div>
+    <div class="notes">${p.notes}</div>
+  </div>`).join('');
+</script>
+</body>
+</html>

@@ -41,6 +41,9 @@ public interface IRepository<T> where T : BaseEntity
     /// <summary>ثبت موجودیت برای ویرایش</summary>
     void Update(T entity);
 
+    /// <summary>علامت‌گذاری یک فیلد مشخص بدون ویرایش سایر فیلدها یا پیمایش روابط.</summary>
+    void MarkPropertyModified<TProperty>(T entity, Expression<Func<T, TProperty>> property);
+
     /// <summary>ثبت موجودیت برای حذف نرم (توسط اینترسپتور انجام می‌شود)</summary>
     void Remove(T entity);
 }

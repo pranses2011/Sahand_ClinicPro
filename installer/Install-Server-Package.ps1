@@ -1,4 +1,13 @@
-﻿param([switch]$UpdateMode)
+﻿param(
+    [switch]$UpdateMode,
+    [switch]$NoSqlSingleUserElevation,
+    [switch]$NoPrompt,
+    [string]$SqlAdminUser,
+    [string]$SqlAdminPassword
+)
+# امکان نصب بیتعامل (اسکریپت/راه دور) با حساب مدیر SQL از متغیرهای محیطی
+if (-not $SqlAdminUser -and $env:CLINICPRO_SQL_ADMIN_USER) { $SqlAdminUser = $env:CLINICPRO_SQL_ADMIN_USER }
+if (-not $SqlAdminPassword -and $env:CLINICPRO_SQL_ADMIN_PASSWORD) { $SqlAdminPassword = $env:CLINICPRO_SQL_ADMIN_PASSWORD }
 $ErrorActionPreference = 'Stop'
 $serviceName = 'SahandClinicPro.API'
 $target = 'C:\SahandClinicPro\Server'
@@ -8,9 +17,25 @@ if (-not (Test-Path (Join-Path $source 'Sahand.ClinicPro.API.exe'))) {
     throw "فایل‌های سرور در پوشه '$source' پیدا نشد. ZIP کامل نسخه را استخراج کنید."
 }
 
+# هر بستهٔ تازه باید manifest خودبسندهٔ همین نسخه را همراه داشته باشد؛
+# در نبود آن قبل از متوقف‌کردن سرویس ادامه ندهید.
+if (-not (Test-Path (Join-Path $source 'Sahand.ClinicPro.API.deps.json'))) {
+    throw 'فهرست وابستگی‌های نسخهٔ جدید در بسته موجود نیست. بسته را دوباره دانلود کنید یا نصب کامل همین نسخه را اجرا کنید.'
+}
+
 Write-Host 'نصب سرور درمانگاه سهند' -ForegroundColor Cyan
 
 # نصب مجدد، تنظیمات و دیتابیس را دست‌نخورده نگه می‌دارد.
+# ═══ چرخهٔ جاری: حساب سرویس نصب قبلی پیش از حذف ثبت میشود تا مجوز
+# dbcreator دقیقاً به همان لاگینی داده شود که API با آن به SQL وصل میشود.
+$existingServiceAccounts = @()
+try {
+    $existingSvc = Get-CimInstance Win32_Service -Filter "Name='$serviceName'" -ErrorAction SilentlyContinue
+    if ($existingSvc -and $existingSvc.StartName) {
+        $existingServiceAccounts = @([string]$existingSvc.StartName)
+    }
+} catch { }
+
 if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
     Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
     $svc = Get-Service -Name $serviceName
@@ -59,11 +84,9 @@ if (-not $UpdateMode -and $installedVersion) {
 }
 if ($effectiveUpdate) {
     # ═══ قانون طلایی به‌روزرسانی کم‌حجم ═══
-    # runtimeconfig.json و deps.json نصب خودبسنده هرگز بازنویسی نمی‌شوند؛
-    # بازنویسی runtimeconfig با نسخهٔ وابسته به فریم‌ورک همان چیزی بود که در
-    # آپدیت ۲.۲۸.۲ سرور را با خطای «No frameworks were found» از کار انداخت.
-    # Runtime موجود (hostfxr/coreclr و همراهانش) میزبان فایل‌های تازه است.
-    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json Sahand.ClinicPro.API.runtimeconfig.json Sahand.ClinicPro.API.deps.json /XD Logs /NFL /NDL /NJH /NJS
+    # runtimeconfig نصب موجود حفظ می‌شود؛ deps خودبسندهٔ نسخهٔ جدید
+    # همراه بسته است و باید جایگزین شود تا وابستگی‌های تازه شناسایی شوند.
+    & robocopy $source $target /E /COPY:DAT /R:2 /W:2 /XF appsettings.json Sahand.ClinicPro.API.runtimeconfig.json /XD Logs /NFL /NDL /NJH /NJS
 
     # ترمیم نصب‌هایی که با آپدیت خراب ۲.۲۸.۲ آسیب دیده‌اند: اگر runtimeconfig
     # فعلی «وابسته به فریم‌ورک» شده باشد، نسخهٔ خودبسندهٔ حداقلی برگردانده
@@ -138,45 +161,46 @@ if ($settings.PSObject.Properties.Name -notcontains 'Urls') {
 }
 $settings | ConvertTo-Json -Depth 100 | Set-Content -Path $settingsPath -Encoding UTF8
 
-# ═══ مجوز بازیابی پشتیبان برای لاگین سرور API (گزارش مالک با اسکرین‌شات) ═══
-# RESTORE DATABASE مجوز «سطح سرور» می‌خواهد (نقش dbcreator یا sysadmin) و
-# db_owner بودن روی دیتابیس کافی نیست؛ بدون آن، بازیابی از داخل برنامه با
-# «User does not have permission to RESTORE database» شکست می‌خورد. نصاب با
-# دسترسی مدیر ویندوز اجرا می‌شود و معمولاً روی SQL Server مدیر است، پس نقش
-# dbcreator را همین‌جا به لاگین رشتهٔ اتصال می‌دهد:
-#   - اتصال SQL Login → همان نام کاربری رشتهٔ اتصال
-#   - اتصال ویندوزی (Trusted) → حساب اجرای سرویس یعنی NT AUTHORITY\SYSTEM
-# خطا در این گام نصب را متوقف نمی‌کند (برنامه بدون بازیابی هم کار می‌کند)؛
-# فقط هشدار فارسی + دستور دستی SSMS چاپ می‌شود.
+# ═══════════════════════════════════════════════════════════════════════════
+#  اعطای خودکار نقش سروری dbcreator — «بازیابی اطلاعات از فایل پشتیبان»
+# ═══════════════════════════════════════════════════════════════════════════
+#  برای اعطای نقش از اتصال API، حساب ویندوزی یا حساب مدیر SQL استفاده می‌شود.
+#  در صورت نداشتن مجوز مدیریتی SQL، وضعیت ناموفق گزارش می‌شود.
+$restoreModule = Join-Path $PSScriptRoot 'Enable-RestorePermission.ps1'
+if (-not (Test-Path $restoreModule)) {
+    throw 'فایل Enable-RestorePermission.ps1 کنار نصاب پیدا نشد. بستهٔ کامل سرور همنسخه را دوباره استخراج کنید.'
+}
+# پارامترهای کتابخانه هنگام dot-source در همین scope مقداردهی می‌شوند.
+$savedAdminUser = $SqlAdminUser
+$savedAdminPassword = $SqlAdminPassword
+$savedNoPrompt = $NoPrompt
+. $restoreModule -AsLibrary
+$SqlAdminUser = $savedAdminUser
+$SqlAdminPassword = $savedAdminPassword
+$NoPrompt = $savedNoPrompt
+
+$promptAllowed = -not $NoPrompt
+$elevationAllowed = -not $NoSqlSingleUserElevation
+$restoreResult = $null
 try {
-    $csBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder([string]$settings.ConnectionStrings.DefaultConnection)
-    $sqlLogin = if ($csBuilder.UserID) { [string]$csBuilder.UserID } else { 'NT AUTHORITY\SYSTEM' }
-    $grantBuilder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
-    $grantBuilder.DataSource = $csBuilder.DataSource
-    $grantBuilder.InitialCatalog = 'master'
-    $grantBuilder.IntegratedSecurity = $true
-    $grantBuilder.TrustServerCertificate = $true
-    $grantBuilder.ConnectTimeout = 15
-    $loginLiteral = $sqlLogin.Replace("'", "''")
-    $loginBracket = $sqlLogin.Replace(']', ']]')
-    $grantSql = @"
-IF IS_SRVROLEMEMBER(N'dbcreator', N'$loginLiteral') <> 1
-BEGIN
-    ALTER SERVER ROLE [dbcreator] ADD MEMBER [$loginBracket];
-END
-"@
-    $grantConn = New-Object System.Data.SqlClient.SqlConnection($grantBuilder.ConnectionString)
-    try {
-        $grantConn.Open()
-        $grantCmd = $grantConn.CreateCommand()
-        $grantCmd.CommandText = $grantSql
-        [void]$grantCmd.ExecuteNonQuery()
-        Write-Host "مجوز بازیابی پشتیبان (نقش dbcreator) برای لاگین «$sqlLogin» برقرار شد." -ForegroundColor Green
-    } finally { $grantConn.Close() }
+    $restoreResult = Invoke-ClinicProRestorePermission `
+        -ConnectionString ([string]$settings.ConnectionStrings.DefaultConnection) `
+        -ReportDir $target -AdminUser $SqlAdminUser -AdminPassword $SqlAdminPassword `
+        -ExtraTargets $existingServiceAccounts -AllowPrompt:$promptAllowed `
+        -AllowSingleUserElevation:$elevationAllowed
 } catch {
-    Write-Host "هشدار: اعطای خودکار مجوز بازیابی (dbcreator) موفق نشد: $($_.Exception.Message)" -ForegroundColor Yellow
-    Write-Host 'برای فعال شدن «بازیابی از فایل پشتیبان» داخل برنامه، در SSMS با کاربر مدیر این دستور را یک‌بار اجرا کنید (نام لاگین رشتهٔ اتصال سرور را جایگزین کنید):' -ForegroundColor Yellow
-    Write-Host '  ALTER SERVER ROLE [dbcreator] ADD MEMBER [SahandLogin];' -ForegroundColor Yellow
+    Write-Host "هشدار: پردازش خودکار مجوز بازیابی (dbcreator) با خطا روبهرو شد: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host 'میتوانید بعداً فایل Enable-RestorePermission.bat را کنار سرور با Run as administrator اجرا کنید.' -ForegroundColor Yellow
+}
+$restoreGranted = $false
+$restoreTargets = @()
+$primaryRestoreTarget = ''
+$lastGrantError = ''
+if ($restoreResult) {
+    $restoreGranted = [bool]$restoreResult.Granted
+    $restoreTargets = @($restoreResult.Targets)
+    $primaryRestoreTarget = [string]$restoreResult.Primary
+    $lastGrantError = [string]$restoreResult.LastError
 }
 
 # این مرحله همان تمام تغییرهای schema را خودکار اعمال می‌کند؛ نیازی به نصب SDK،
@@ -194,7 +218,7 @@ try {
         throw ("اعمال خودکار ساختار دیتابیس شکست خورد (کد $LASTEXITCODE). " +
                "علت دقیق در خطاهای بالا و فایل‌های C:\SahandClinicPro\Server\Logs آمده است. " +
                "اگر خطا درباره «MS_Description»، «Invalid column name» یا «migration» بود، مشکل از " +
-               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور (v2.28.23) را نصب کنید.")
+               "رشته اتصال یا مجوز CREATE DATABASE نیست؛ آخرین بستهٔ سرور همین نسخه را نصب کنید.")
     }
 }
 finally { Pop-Location }
@@ -324,5 +348,33 @@ try {
     $newVersion = (Get-Item (Join-Path $target 'Sahand.ClinicPro.API.exe')).VersionInfo.ProductVersion
     if ($newVersion) { Set-Content -Path (Join-Path $target 'version.txt') -Value $newVersion -Encoding ASCII }
 } catch { }
+# ═══ تأیید نهایی مجوز بازیابی پس از نصب و بالا آمدن سرویس ═══
+# اگر SQL Server هنگام نصب در حال راهاندازی بوده یا حساب سرویس تازه ساخته
+# شده باشد، این بار دوم همان اعطا را دوباره امتحان میکند؛ نتیجهٔ نهایی
+# در فایل وضعیت نوشته میشود.
+if (-not $restoreGranted -and $restoreResult -and $restoreResult.Attempts.Count -gt 0 -and $restoreTargets.Count -gt 0) {
+    try {
+        foreach ($attempt in $restoreResult.Attempts) {
+            try {
+                if (Invoke-CpRestoreGrant -ConnectionString $attempt.ConnectionString `
+                        -Targets $restoreTargets -Primary $primaryRestoreTarget `
+                        -Sql $script:CpGrantSql -Report $null) {
+                    $restoreGranted = $true
+                    Write-Host 'مجوز بازیابی پشتیبان (dbcreator) در تأیید نهایی پس از نصب سرویس برقرار شد.' -ForegroundColor Green
+                    break
+                }
+            } catch { }
+        }
+        $permReport = @(
+            "وضعیت مجوز بازیابی (dbcreator) — تأیید نهایی — $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')",
+            "نتیجه: $(if ($restoreGranted) { 'اعطای خودکار موفق' } else { 'نیازمند اجرای دستی Grant-RestorePermission.sql' })",
+            "لاگین هدف اصلی: $primaryRestoreTarget",
+            "همهٔ لاگینهای هدف: $($restoreTargets -join '، ')",
+            "آخرین خطا: $lastGrantError"
+        )
+        Set-Content -Path (Join-Path $target 'restore-permission.status.txt') -Value $permReport -Encoding UTF8
+    } catch { }
+}
+
 Write-Host "سرور آماده است: http://localhost:5000/health/ready" -ForegroundColor Green
 Write-Host 'برای کلاینت‌های دیگر، نشانی سرور را در appsettings.json کلاینت به‌صورت http://<IP-سرور>:5000/api/v1 وارد کنید.'

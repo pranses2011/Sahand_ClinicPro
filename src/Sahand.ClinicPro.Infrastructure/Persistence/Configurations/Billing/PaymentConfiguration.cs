@@ -22,6 +22,8 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.TraceNumber).HasMaxLength(50).HasComment("شماره پیگیری");
         builder.Property(x => x.Status).HasConversion<byte>().HasComment("وضعیت پرداخت");
 
+        // حتی حذف نرم نیز نباید امکان استفاده مجدد از شناسه درخواست را فراهم کند.
+        builder.HasIndex(x => x.RequestId).IsUnique().HasDatabaseName("IX_Payment_RequestId").HasFilter("[RequestId] IS NOT NULL");
         builder.HasIndex(x => new { x.PaymentNumber }).IsUnique().HasDatabaseName("IX_Payment_PaymentNumber").HasFilter("[IsDeleted] = 0");
         builder.HasIndex(x => new { x.InvoiceId }).HasDatabaseName("IX_Payment_InvoiceId");
     }

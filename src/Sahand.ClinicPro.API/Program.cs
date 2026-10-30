@@ -275,6 +275,18 @@ try
                     QueueLimit = 0
                 }));
 
+        // صفحهٔ عمومی نظرسنجی به‌صورت مستقل از سقف کل API محدود می‌شود.
+        // پشت reverse proxy، راه‌انداز باید محدودیت متناظر را در لبه نیز اعمال کند.
+        options.AddPolicy("public-survey", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }));
+
         // ═══ چرخهٔ ۴۹ (BUG-01 / مرور AllowAnonymous): سیاست لایسنس ═══
         // اندپوینت‌های فعال‌سازی/تنظیم لایسنس به‌ناچار پیش از ورود عمومی‌اند
         // (پنجرهٔ فعال‌سازی دسکتاپ، پیش از وجود توکن)؛ برای مقاوم‌سازی در برابر

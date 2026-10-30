@@ -1,4 +1,4 @@
-<UserControl x:Class="Sahand.ClinicPro.Desktop.Views.InsuranceView"
+<UserControl xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.InsuranceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -339,10 +339,10 @@
                         <!-- چرخه بیست‌ویکم: جداکنندهٔ زندهٔ ۳ رقمی هنگام تایپ -->
                         <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding RuleNominal, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="140" FontSize="11.5" Margin="0,0,7,4" IsEnabled="{Binding RuleIsNominal}"><materialDesign:HintAssist.Hint><TextBlock><Run Text="مبلغ اسمی (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
                         <TextBox behaviors:MoneyInput.IsEnabled="True" behaviors:MoneyInput.NumericValue="{Binding RuleFranchise, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="135" FontSize="11.5" Margin="0,0,7,4"><materialDesign:HintAssist.Hint><TextBlock><Run Text="فرانشیز (" /><Run Text="{DynamicResource App.CurrencyLabel}" /><Run Text=")" /></TextBlock></materialDesign:HintAssist.Hint></TextBox>
-                        <Button Command="{Binding AddRuleCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,6,4">
+                        <Button shortcuts:SaveShortcut.Number="1" Command="{Binding AddRuleCommand}" Style="{StaticResource MaterialDesignRaisedButton}" FontSize="11" Margin="0,0,6,4">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="13" Height="13" VerticalAlignment="Center" />
-                                <TextBlock Text="ثبت قاعده" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                <TextBlock Text="ثبت قاعده (Ctrl+Shift+1)" Margin="6,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding LoadRulesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" FontSize="11" Margin="0,0,0,4">

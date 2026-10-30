@@ -1,4 +1,4 @@
-<Window x:Class="Sahand.ClinicPro.Desktop.Views.PaymentWindow"
+<Window xmlns:shortcuts="clr-namespace:Sahand.ClinicPro.Desktop.Services" x:Class="Sahand.ClinicPro.Desktop.Views.PaymentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -28,6 +28,7 @@
             <Run Text=" " /><Run Text="{DynamicResource App.CurrencyLabel}" />
         </TextBlock>
 
+        <StackPanel IsEnabled="{Binding CanEditPayment}">
         <!-- چرخه بیستم: کادر مبلغ با جداکنندهٔ زندهٔ ۳ رقمی — چرخهٔ بیست‌وهفتم: واحد پول پویا (پیشوند + بدون هاردکد) -->
         <TextBox behaviors:MoneyInput.IsEnabled="True"
                  behaviors:MoneyInput.NumericValue="{Binding Amount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyRial}}"
@@ -57,18 +58,27 @@
                  MaxLength="4"
                  Margin="0,0,0,16" />
 
+        </StackPanel>
+
         <TextBlock Text="{Binding ErrorMessage}"
                    Foreground="{DynamicResource MaterialDesign.Brush.ValidationError}"
                    FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <UniformGrid Columns="2">
-            <Button Command="{Binding SaveCommand}"
+            <Button shortcuts:SaveShortcut.Number="1" Command="{Binding SaveCommand}" IsEnabled="{Binding CanEditPayment}"
                     Style="{StaticResource MaterialDesignRaisedButton}"
-                    Content="ثبت پرداخت" Height="42" Margin="4" />
+                    Content="ثبت پرداخت (Ctrl+Shift+1)" Height="42" Margin="4" />
             <Button Command="{Binding CancelCommand}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     Content="انصراف" Height="42" Margin="4" />
         </UniformGrid>
+
+        <Button Command="{Binding RetryPaymentCommand}" IsEnabled="{Binding CanRetryPayment}"
+                Visibility="{Binding IsPaymentOutcomeUnknown, Converter={StaticResource BoolToVis}}"
+                Style="{StaticResource MaterialDesignOutlinedButton}" Content="ارسال دوباره همان درخواست" Height="42" Margin="4" />
+        <TextBlock Visibility="{Binding IsPaymentOutcomeUnknown, Converter={StaticResource BoolToVis}}"
+                   Text="ارسال دوباره ممکن است در صورت ثبت‌نشدن درخواست قبلی، پرداخت را ثبت کند؛ ابتدا دریافت وجه و سوابق را بررسی کنید. بازیابی فقط روی همین رایانه و حساب ویندوز است."
+                   TextWrapping="Wrap" Foreground="#B00020" Margin="4" />
 
         <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />

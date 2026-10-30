@@ -1,5 +1,9 @@
+﻿using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Ganss.Xss;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 
 namespace Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates;
 
@@ -12,20 +16,65 @@ public static class PrintTemplateRenderer
     private static readonly Regex VarPattern = new(@"\{\{\s*([\w\.آ-ی]+)\s*\}\}",
         RegexOptions.Compiled);
 
+    // فقط این سه متغیر قطعه HTML هستند؛ بقیه حتی با پسوند _html متن ساده‌اند.
+    // قطعات جدول از کلاینت می‌آیند و نباید بتوانند اسکریپت، رویداد، تصویر
+    // خارجی یا CSS قابل اجرا را به پیش‌نمایش حاوی اطلاعات بیمار تزریق کنند.
+    private static readonly HashSet<string> TableVariables = new(StringComparer.Ordinal)
+        { "items_html", "tests_html", "results_html" };
+    private static readonly HtmlSanitizer TableSanitizer = CreateTableSanitizer();
+
+    private static HtmlSanitizer CreateTableSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Clear();
+        foreach (var tag in new[] { "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "colgroup", "col", "span", "p", "br", "b", "strong", "i", "em" })
+            sanitizer.AllowedTags.Add(tag);
+        sanitizer.AllowedAttributes.Clear();
+        foreach (var attribute in new[] { "class", "colspan", "rowspan", "border", "cellspacing", "cellpadding" })
+            sanitizer.AllowedAttributes.Add(attribute);
+        return sanitizer;
+    }
+
     /// <summary>رنگ پیش‌فرض تأکیدی</summary>
     private const string DefaultAccent = "#16355E";
+
+    /// <summary>
+    /// متغیرها فقط در متن قالب مجازند؛ در صفت HTML، توضیح HTML، اسکریپت،
+    /// استایل و محتوای template نباید جایگذاری شوند (زمینهٔ متفاوت کدگذاری).
+    /// </summary>
+    public static bool HasUnsafeVariablePlacement(string html)
+    {
+        var document = new HtmlParser().ParseDocument(html);
+        return HasUnsafeNode(document);
+    }
+
+    private static bool HasUnsafeNode(INode node)
+    {
+        if (node is IComment comment && VarPattern.IsMatch(comment.Data)) return true;
+        if (node is IElement element)
+        {
+            if (element.Attributes.Any(a => VarPattern.IsMatch(a.Name) || VarPattern.IsMatch(a.Value))) return true;
+            if ((element.LocalName is "script" or "style" or "template") && VarPattern.IsMatch(element.InnerHtml)) return true;
+        }
+        return node.ChildNodes.Any(HasUnsafeNode);
+    }
 
     /// <summary>جایگزینی متغیرها در بدنه HTML</summary>
     /// <param name="html">بدنه قالب</param>
     /// <param name="variables">مقادیر متغیرها</param>
     public static string Render(string html, IDictionary<string, object?> variables)
     {
+        if (HasUnsafeVariablePlacement(html))
+            throw new ArgumentException("متغیرهای قالب فقط در متن مجازند، نه در صفت HTML، استایل یا اسکریپت.", nameof(html));
         return VarPattern.Replace(html, m =>
         {
             var key = m.Groups[1].Value;
-            return variables.TryGetValue(key, out var v) && v is not null
-                ? v.ToString()!
-                : $"«{key}»"; // متغیر بی‌مقدار — در پیش‌نمایش مشخص بماند
+            if (!variables.TryGetValue(key, out var value) || value is null)
+                return $"«{key}»"; // متغیر بی‌مقدار — در پیش‌نمایش مشخص بماند
+            var text = value.ToString() ?? string.Empty;
+            return TableVariables.Contains(key)
+                ? TableSanitizer.Sanitize(text)
+                : WebUtility.HtmlEncode(text);
         });
     }
 
@@ -40,6 +89,7 @@ public static class PrintTemplateRenderer
     /// <param name="fontFamily">خانواده فونت</param>
     /// <param name="showLogo">نمایش لوگو</param>
     /// <param name="paper">اندازه کاغذ</param>
+    /// <param name="orientation">جهت صفحه؛ مرورگر و درایور ممکن است آن را نادیده بگیرند.</param>
     public static string WrapDocument(
         string bodyHtml,
         string clinicName,
@@ -50,21 +100,34 @@ public static class PrintTemplateRenderer
         int fontSize,
         string? fontFamily,
         bool showLogo,
-        string paper = "A5")
+        string paper = "A5",
+        string orientation = "Portrait")
     {
-        var accentColor = string.IsNullOrWhiteSpace(accent) ? DefaultAccent : accent!;
-        var font = string.IsNullOrWhiteSpace(fontFamily) ? "Vazirmatn, Tahoma, sans-serif" : $"{fontFamily}, Tahoma, sans-serif";
+        // این مقادیر داخل CSS قرار می‌گیرند و HTML encoding برای آن کافی نیست.
+        // مقدار نامعتبر یا قدیمی به تنظیم امن پیش‌فرض برمی‌گردد.
+        var accentColor = accent is not null && Regex.IsMatch(accent, @"^(#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-zA-Z]{1,32})$")
+            ? accent : DefaultAccent;
+        var safeFont = fontFamily is not null && Regex.IsMatch(fontFamily, @"^[\p{L}\p{N} _,\-]{1,100}$")
+            ? fontFamily : "Vazirmatn";
+        var font = $"{safeFont}, Tahoma, sans-serif";
+        var safeLogo = Uri.TryCreate(logoUrl, UriKind.Absolute, out var logoUri) &&
+            (logoUri.Scheme == Uri.UriSchemeHttp || logoUri.Scheme == Uri.UriSchemeHttps)
+            ? WebUtility.HtmlEncode(logoUri.AbsoluteUri) : null;
         // ═══ چرخه سی‌ویکم — پشتیبانی کامل اندازه‌های کاغذ در پیش‌نمایش/چاپ:
         // استانداردها (۹۶dpi) + فیش حرارتی ۸۰/۵۸ میلی‌متری + قالب سفارشی
         // «Custom:عرضxارتفاع» (میلی‌متر). مقیاس: ۹۶px ≈ ۲۵.۴mm → ۳.۷۸px بر mm
         // (سازگار با رفتار پیشین: مقادیر مجهول همچنان به A5 می‌روند) ═══
-        var width = ResolvePaperWidthPx(paper);
+        var landscape = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? LandscapePaper(paper) : null;
+        var width = landscape is { } spec ? $"{spec.WidthPx}px" : ResolvePaperWidthPx(paper);
+        var pageSize = landscape is { } page ? page.CssSize : string.Equals(orientation, "Portrait", StringComparison.OrdinalIgnoreCase) ? PortraitPageSize(paper) : null;
+        var pageRule = pageSize is not null ? $"@page {{ size: {pageSize}; }}" : "";
 
         var sb = new StringBuilder(@"<!DOCTYPE html>
 <html lang=""fa"" dir=""rtl"">
 <head>
 <meta charset=""utf-8"" />
 <style>
+").Append(pageRule).Append(@"
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:").Append(font).Append(@"; font-size:").Append(fontSize).Append(@"px; color:#1F2A3D;
          background:#F0F2F5; padding:16px; }
@@ -93,15 +156,15 @@ public static class PrintTemplateRenderer
   <div class=""hdr"">");
         if (showLogo)
         {
-            sb.Append(string.IsNullOrWhiteSpace(logoUrl)
+            sb.Append(safeLogo is null
                 ? @"<div class=""logo-ph"">س</div>"
-                : $@"<img class=""logo"" src=""{logoUrl}"" alt="""" />");
+                : $@"<img class=""logo"" src=""{safeLogo}"" alt="""" />");
         }
         sb.Append(@"<div>
-      <div class=""nm"">").Append(clinicName).Append(@"</div>");
+      <div class=""nm"">").Append(WebUtility.HtmlEncode(clinicName)).Append(@"</div>");
         if (!string.IsNullOrWhiteSpace(clinicAddress) || !string.IsNullOrWhiteSpace(clinicPhone))
             sb.Append(@"      <div class=""ad"">")
-                .Append(string.Join(" • ", new[] { clinicAddress, clinicPhone }.Where(s => !string.IsNullOrWhiteSpace(s))))
+                .Append(WebUtility.HtmlEncode(string.Join(" • ", new[] { clinicAddress, clinicPhone }.Where(s => !string.IsNullOrWhiteSpace(s)))))
                 .Append("</div>");
         sb.Append(@"
     </div>
@@ -120,7 +183,7 @@ public static class PrintTemplateRenderer
 
     /// <summary>
     /// تبدیل اندازهٔ کاغذ به عرض پیکسلی برگه در رزولوشن ۹۶dpi — چرخه سی‌ویکم.
-    /// استانداردها: A3=1123 / A4=794 / A5=559 / A6=397 / B5=691 / Letter=816 / Legal=1056
+    /// استانداردها: A3=1123 / A4=794 / A5=559 / A6=397 / B5=691 / Letter=816 / Legal=816
     /// فیش حرارتی: Thermal80=302 / Thermal58=219 (عرض مفید کاغذ ۸۰ و ۵۸ میلی‌متری)
     /// سفارشی: «Custom:عرضxارتفاع» بر حسب میلی‌متر با مقیاس ۹۶/۲۵.۴ ≈ ۳.۷۸ پیکسل بر میلی‌متر
     /// </summary>
@@ -138,7 +201,7 @@ public static class PrintTemplateRenderer
             case "A6": return "397px";
             case "B5": return "691px";
             case "LETTER": return "816px";
-            case "LEGAL": return "1056px";
+            case "LEGAL": return "816px";
             case "THERMAL80": return "302px"; // ۸۰mm × ۳.۷۸ ≈ ۳۰۲px — پرینترهای کاسه‌ای متداول
             case "THERMAL58": return "219px"; // ۵۸mm × ۳.۷۸ ≈ ۲۱۹px — فیش‌خوان‌های کوچک
             default:
@@ -152,6 +215,42 @@ public static class PrintTemplateRenderer
                 }
                 return "559px"; // نام آشنا → A5 (رفتار سازگار با قبل)
         }
+    }
+
+    /// <summary>درخواست اندازه صفحه عمودی برای مرورگر؛ کاغذ پیوسته را درایور تعیین می‌کند.</summary>
+    public static string? PortraitPageSize(string? paper)
+    {
+        var key = paper?.Trim().ToUpperInvariant();
+        var standard = key switch
+        {
+            "A3" => "A3 portrait", "A4" => "A4 portrait", "A5" => "A5 portrait", "A6" => "A6 portrait",
+            "B5" => "B5 portrait", "LETTER" => "letter portrait", "LEGAL" => "legal portrait", _ => null
+        };
+        if (standard is not null) return standard;
+        if (key is null) return null;
+        var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]\s*(\d{1,4})\s*(MM)?$", RegexOptions.CultureInvariant);
+        if (!match.Success || !int.TryParse(match.Groups[1].Value, out var w) || !int.TryParse(match.Groups[2].Value, out var h) ||
+            w is < 20 or > 1000 || h is < 20 or > 1000) return null;
+        return $"{w}mm {h}mm";
+    }
+
+    /// <summary>مشخصات کاغذ افقی محدود به اندازه‌های شناخته‌شده؛ فیش پیوسته جهت ثابت ندارد.</summary>
+    public static (int WidthPx, string CssSize)? LandscapePaper(string? paper)
+    {
+        var key = paper?.Trim().ToUpperInvariant();
+        var standard = key switch
+        {
+            "A3" => (1587, "A3 landscape"), "A4" => (1123, "A4 landscape"),
+            "A5" => (794, "A5 landscape"), "A6" => (559, "A6 landscape"),
+            "B5" => (971, "B5 landscape"), "LETTER" => (1056, "letter landscape"),
+            "LEGAL" => (1344, "legal landscape"), _ => (0, "")
+        };
+        if (standard.Item1 > 0) return standard;
+        if (key is null) return null;
+        var match = Regex.Match(key, @"^CUSTOM:\s*(\d{1,4})\s*[X×]\s*(\d{1,4})\s*(MM)?$", RegexOptions.CultureInvariant);
+        if (!match.Success || !int.TryParse(match.Groups[1].Value, out var w) || !int.TryParse(match.Groups[2].Value, out var h) ||
+            w is < 20 or > 1000 || h is < 20 or > 1000) return null;
+        return ((int)Math.Round(h * 96.0 / 25.4), $"{h}mm {w}mm");
     }
 
     /// <summary>داده نمونه برای پیش‌نمایش زنده هر نوع سند</summary>
@@ -207,12 +306,17 @@ public static class PrintTemplateRenderer
         },
         "ReceptionReceipt" => new Dictionary<string, object?>
         {
-            ["patient_name"] = "زهرا موسوی",
-            ["reception_date"] = "۱۴۰۵/۰۷/۱۴",
-            ["reception_code"] = "REC-3344",
-            ["service_name"] = "ویزیت متخصص داخلی",
-            ["amount"] = "۴۵۰٬۰۰۰ ریال",
-            ["payment_method"] = "نقدی"
+            ["patient_name"] = "بیمار نمونه",
+            ["patient_national_code"] = "۰۰۰۰۰۰۰۰۰۰", ["patient_mobile"] = "۰۹۰۰۰۰۰۰۰۰۰",
+            ["reception_date"] = "۱۴۰۵/۰۷/۱۴", ["reception_time"] = "۱۰:۳۰",
+            ["reception_code"] = "RCP-3344", ["queue_number"] = "RCP-3344",
+            ["service_name"] = "ویزیت نمونه", ["performer_name"] = "پزشک نمونه",
+            ["room_name"] = "اتاق نمونه", ["insurance_name"] = "بیمه نمونه",
+            ["items_html"] = "<table class='pt'><tr><th>شرح</th><th>تعداد</th><th>مبلغ</th></tr><tr><td>ویزیت نمونه</td><td>۱</td><td>۵۰۰٬۰۰۰ ریال</td></tr></table>",
+            ["items_total"] = "۵۰۰٬۰۰۰ ریال", ["discount"] = "۰ ریال", ["tax"] = "۰ ریال",
+            ["insurance_share"] = "۵۰٬۰۰۰ ریال", ["patient_share"] = "۴۵۰٬۰۰۰ ریال",
+            ["amount"] = "۴۵۰٬۰۰۰ ریال", ["payable"] = "۴۵۰٬۰۰۰ ریال", ["paid_amount"] = "۴۵۰٬۰۰۰ ریال",
+            ["invoice_number"] = "INV-123", ["payment_method"] = "نقدی"
         },
         "MedicalCertificate" => new Dictionary<string, object?>
         {
@@ -245,20 +349,21 @@ public static class PrintTemplateRenderer
             ["discount"] = "۵۰٬۰۰۰ ریال",
             ["insurance_share"] = "۴۰۰٬۰۰۰ ریال",
             ["patient_share"] = "۳۲۰٬۰۰۰ ریال",
-            ["total"] = "۷۲۰٬۰۰۰ ریال"
+            ["total"] = "۷۲۰٬۰۰۰ ریال", ["tax"] = "۰ ریال", ["paid"] = "۱۰۰٬۰۰۰ ریال",
+            ["remaining"] = "۲۲۰٬۰۰۰ ریال", ["payment_status"] = "پرداخت جزئی"
         }
     };
 
     /// <summary>فهرست متغیرهای هر نوع سند برای پالت طراح</summary>
     public static Dictionary<string, string[]> VariablesOf() => new()
     {
-        ["Invoice"] = new[] { "invoice_code", "invoice_date", "patient_name", "insurance_name", "items_html", "subtotal", "discount", "insurance_share", "patient_share", "total" },
+        ["Invoice"] = new[] { "invoice_code", "invoice_date", "patient_name", "insurance_name", "items_html", "subtotal", "discount", "insurance_share", "patient_share", "total", "tax", "paid", "remaining", "payment_status" },
         ["Prescription"] = new[] { "patient_name", "patient_age", "patient_national_code", "doctor_name", "visit_date", "prescription_code", "items_html", "notes" },
         ["LabOrder"] = new[] { "patient_name", "doctor_name", "order_number", "order_date", "tests_html", "clinical_info" },
         ["LabResult"] = new[] { "patient_name", "order_number", "result_date", "results_html", "verified_by" },
         ["ImagingOrder"] = new[] { "patient_name", "modality", "order_number", "order_date", "clinical_info" },
         ["AppointmentTicket"] = new[] { "patient_name", "doctor_name", "appointment_date", "appointment_time", "queue_number", "tracking_code" },
-        ["ReceptionReceipt"] = new[] { "patient_name", "reception_date", "reception_code", "service_name", "amount", "payment_method" },
+        ["ReceptionReceipt"] = new[] { "patient_name", "patient_national_code", "patient_mobile", "queue_number", "reception_code", "reception_date", "reception_time", "service_name", "performer_name", "room_name", "insurance_name", "items_html", "items_total", "insurance_share", "discount", "tax", "patient_share", "payable", "amount", "paid_amount", "payment_method", "invoice_number", "clinic_name", "clinic_phone", "clinic_address", "print_date" },
         ["MedicalCertificate"] = new[] { "patient_name", "doctor_name", "issue_date", "content", "duration" },
         ["PayrollSlip"] = new[] { "employee_name", "period", "base_salary", "overtime_pay", "insurance", "tax", "net_pay" }
     };
