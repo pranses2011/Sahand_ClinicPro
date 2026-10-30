@@ -776,7 +776,7 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
-        await SaveSettingsBatchAsync("Printer", new Dictionary<string, string?>
+        var saved = await SaveSettingsBatchAsync("Printer", new Dictionary<string, string?>
         {
             ["DefaultPrinter"] = DefaultPrinter,
             ["InvoicePrinter"] = InvoicePrinter,
@@ -789,6 +789,9 @@ public partial class SettingsViewModel : ViewModelBase
             ["AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
             ["PrintCopies"] = PrintCopies.ToString()
         });
+
+        // ذخیره ممکن است بخشی در سرور اعمال شده باشد؛ در شکست، آینه را تغییر نده.
+        if (!saved) return;
 
         // آینهٔ محلی — دسترسی بی‌درنگ هنگام ثبت نوبت (بدون رفت‌وبرگشت شبکه)
         try
@@ -817,7 +820,8 @@ public partial class SettingsViewModel : ViewModelBase
         }
         catch
         {
-            // ذخیرهٔ محلی هرگز نباید جریان را متوقف کند
+            _snackbar.Error("تنظیمات سرور ذخیره شد، اما تنظیمات محلی چاپگر ذخیره نشد؛ دسترسی به تنظیمات محلی را بررسی کنید.");
+            return;
         }
 
         _snackbar.Success("تنظیمات چاپگر ذخیره شد");
@@ -852,7 +856,7 @@ public partial class SettingsViewModel : ViewModelBase
         TicketPrinter = Value(map, "TicketPrinter");
         InvoicePaperSize = string.IsNullOrWhiteSpace(Value(map, "InvoicePaperSize")) ? "A5" : Value(map, "InvoicePaperSize");
         ShowPreview = Value(map, "ShowPreview") != "false";
-        ClosePreviewAfterPrint = PrintFlow.ResolveClosePreview(Value(map, "ClosePreviewAfterPrint") ?? LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey));
+        ClosePreviewAfterPrint = PrintFlow.ResolveClosePreview(LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey) ?? Value(map, "ClosePreviewAfterPrint"));
         AutoPrintInvoice = Value(map, "AutoPrintInvoice") == "true";
         AutoPrintTicket = Value(map, "AutoPrintTicket") == "true";
         var copies = Value(map, "PrintCopies");
@@ -1347,7 +1351,7 @@ public partial class SettingsViewModel : ViewModelBase
         => settings.FirstOrDefault(s => s.Key == key)?.Value;
 
     /// <summary>ذخیره دسته تنظیمات با یک کلید دسته</summary>
-    private async Task SaveSettingsBatchAsync(string category, Dictionary<string, string?> entries)
+    private async Task<bool> SaveSettingsBatchAsync(string category, Dictionary<string, string?> entries)
     {
         IsBusy = true;
         var allOk = true;
@@ -1359,6 +1363,7 @@ public partial class SettingsViewModel : ViewModelBase
         IsBusy = false;
         if (allOk) _snackbar.Success("تنظیمات ذخیره شد");
         else _snackbar.Error(_api.LastError ?? "ذخیره برخی تنظیمات ناموفق بود");
+        return allOk;
     }
 
     /* ─── پاسخ‌ها ─── */
