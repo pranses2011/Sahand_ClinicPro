@@ -24,35 +24,8 @@ public partial class HtmlPrintWindow : Window
     }
 
     private FixedCanvasPrintGuard.Result CheckFixedCanvas()
-    {
-        if (!_html.Contains("<!--clinicpro-canvas-v1:", StringComparison.Ordinal)) return FixedCanvasPrintGuard.Result.Clear;
-        try
-        {
-            dynamic? document = Browser.Document;
-            if (document is null || !string.Equals((string?)document.readyState, "complete", StringComparison.OrdinalIgnoreCase))
-                return FixedCanvasPrintGuard.Result.Unavailable;
-            // document.all از رابط قدیمی مرورگر داخلی IE نیز در دسترس است.
-            dynamic elements = document.all;
-            var count = Convert.ToInt32(elements.length);
-            var measurements = new List<FixedCanvasPrintGuard.Measurement>();
-            for (var i = 0; i < count; i++)
-            {
-                dynamic element = elements.item(i);
-                if (!string.Equals((string?)element.tagName, "DIV", StringComparison.OrdinalIgnoreCase)) continue;
-                dynamic style = element.style;
-                if (!string.Equals((string?)style.position, "absolute", StringComparison.OrdinalIgnoreCase) ||
-                    !string.Equals((string?)style.overflow, "hidden", StringComparison.OrdinalIgnoreCase)) continue;
-                measurements.Add(new(Convert.ToInt32(element.clientWidth), Convert.ToInt32(element.clientHeight),
-                    Convert.ToInt32(element.scrollWidth), Convert.ToInt32(element.scrollHeight)));
-            }
-            return FixedCanvasPrintGuard.Evaluate(measurements);
-        }
-        catch (Exception)
-        {
-            // نبود DOM، خطای COM یا اندازه‌گیری نامعتبر، مجوز چاپ ناقص نیست.
-            return FixedCanvasPrintGuard.Result.Unavailable;
-        }
-    }
+        => !_html.Contains("<!--clinicpro-canvas-v1:", StringComparison.Ordinal)
+            ? FixedCanvasPrintGuard.Result.Clear : FixedCanvasPrintGuard.InspectBrowserDocument(Browser.Document);
 
     /// <summary>چاپ HTML — دیالوگ چاپ داخلی مرورگر روی همان سند</summary>
     private void OnPrintClick(object sender, RoutedEventArgs e)
