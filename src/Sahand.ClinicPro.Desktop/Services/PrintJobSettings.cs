@@ -47,7 +47,8 @@ public static class PrintJobSettings
     /// <summary>یافتن مشخصات سند با کلید</summary>
     public static PrintJobInfo? Find(string key) => Jobs.FirstOrDefault(j => j.Key == key);
 
-    private static string StorageKey(string jobKey, string part) => $"Printer.Job.{jobKey}.{part}";
+    /// <summary>کلید محلی تنظیم سند برای ثبت گروهی.</summary>
+    public static string StorageKey(string jobKey, string part) => $"Printer.Job.{jobKey}.{part}";
 
     /// <summary>
     /// چاپگر اختصاصی سند — اول مقدار اختصاصی همین سند، بعد کلیدهای قدیمی

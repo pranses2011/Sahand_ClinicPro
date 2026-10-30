@@ -77,22 +77,20 @@ public static class LocalSettingsStore
         }
     }
 
+    private static readonly object WriteLock = new();
+
+    /// <summary>ثبت گروهی با اعلان خطا؛ تغییرات فرایند جاری با Set هم‌زمان نمی‌شوند.</summary>
+    public static void SetManyRequired(IReadOnlyDictionary<string, string> values)
+    {
+        lock (WriteLock) LocalSettingsFile.MergeAndWrite(SettingsPath, values);
+    }
+
     /// <summary>نوشتن یک مقدار رشته‌ای — فایل کامل بازنویسی می‌شود</summary>
     public static void Set(string key, string value)
     {
         try
         {
-            var doc = new Dictionary<string, string>();
-            if (File.Exists(SettingsPath))
-            {
-                var json = File.ReadAllText(SettingsPath);
-                var existing = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-                if (existing is not null)
-                    doc = existing;
-            }
-            doc[key] = value;
-            File.WriteAllText(SettingsPath,
-                JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true }));
+            SetManyRequired(new Dictionary<string, string> { [key] = value });
         }
         catch
         {

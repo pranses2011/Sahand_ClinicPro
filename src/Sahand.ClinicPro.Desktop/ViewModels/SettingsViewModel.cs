@@ -775,6 +775,8 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SavePrinterSettingsAsync()
     {
+        if (PrintJobs.Any(row => row.SupportsFlowOptions && row.Copies is < 1 or > 9))
+        { _snackbar.Error("تعداد نسخه هر سند باید بین ۱ تا ۹ باشد."); return; }
         var saved = await SaveSettingsBatchAsync("Printer", new Dictionary<string, string?>
         {
             ["DefaultPrinter"] = DefaultPrinter,
@@ -795,30 +797,25 @@ public partial class SettingsViewModel : ViewModelBase
         // آینهٔ محلی — دسترسی بی‌درنگ هنگام ثبت نوبت (بدون رفت‌وبرگشت شبکه)
         try
         {
-            LocalSettingsStore.Set("Printer.TicketPrinter", TicketPrinter ?? string.Empty);
-            LocalSettingsStore.Set("Printer.AutoPrintTicket", AutoPrintTicket ? "true" : "false");
-            LocalSettingsStore.Set("Printer.ClinicName", ClinicName ?? string.Empty);
-            // ═══ چرخهٔ ۶۷ — آینهٔ پرچم پیش‌نمایش برای دروازهٔ PrintFlow ═══
-            // همهٔ چاپ‌های عمومی (قبض/رسید/کارت/فیش/آزمایش) از PrintFlow
-            // می‌گذرند و بی‌درنگ (بدون درخواست شبکه) این مقدار را می‌خوانند.
-            LocalSettingsStore.Set("Printer.ShowPreview", ShowPreview ? "true" : "false");
-            var closeValue = ClosePreviewAfterPrint ? "true" : "false";
-            LocalSettingsStore.Set(PrintFlow.ClosePreviewSettingKey, closeValue);
-            if (LocalSettingsStore.Get(PrintFlow.ClosePreviewSettingKey) != closeValue)
-                throw new InvalidOperationException("ذخیره محلی رفتار پیش‌نمایش تأیید نشد.");
-
-            // مرکز چاپ — چاپگر/کاغذ/نسخه/پیش‌نمایش/خودکار اختصاصی هر سند
+            var local = new Dictionary<string, string>
+            {
+                ["Printer.TicketPrinter"] = TicketPrinter ?? string.Empty,
+                ["Printer.AutoPrintTicket"] = AutoPrintTicket ? "true" : "false",
+                ["Printer.ClinicName"] = ClinicName ?? string.Empty,
+                ["Printer.ShowPreview"] = ShowPreview ? "true" : "false",
+                [PrintFlow.ClosePreviewSettingKey] = ClosePreviewAfterPrint ? "true" : "false"
+            };
             foreach (var row in PrintJobs)
             {
-                if (row.SupportsPrinter) PrintJobSettings.SetPrinter(row.Key, row.Printer);
+                if (row.SupportsPrinter) local[PrintJobSettings.StorageKey(row.Key, "Printer")] = row.Printer ?? string.Empty;
                 if (row.SupportsFlowOptions)
                 {
-                    PrintJobSettings.SetCopies(row.Key, row.Copies);
-                    PrintJobSettings.SetPreview(row.Key, row.Preview);
+                    local[PrintJobSettings.StorageKey(row.Key, "Copies")] = row.Copies.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    local[PrintJobSettings.StorageKey(row.Key, "Preview")] = row.Preview is null ? "inherit" : row.Preview.Value ? "true" : "false";
                 }
-                // کاغذ و چاپ خودکار اختصاصی هنوز به همهٔ مسیرها متصل نیستند؛
-                // مقدارهای پیشین حفظ می‌شوند ولی کنترل آنها غیرفعال است.
             }
+            // مسیرهای غیرفعال کاغذ و چاپ خودکار دست‌نخورده باقی می‌مانند.
+            LocalSettingsStore.SetManyRequired(local);
         }
         catch
         {
