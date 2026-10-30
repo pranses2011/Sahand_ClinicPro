@@ -1914,10 +1914,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             return;
         }
 
-        if ((_api as ApiClient)?.BranchId != receptionBranch)
+        if (!CanRetryContext(pendingReception))
         {
             IsReceptionOutcomeUnknown = true;
-            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ شعبه تغییر کرد و مراحل بعدی ارسال نشدند. ابتدا صف و صندوق را بررسی کنید.");
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و مراحل بعدی ارسال نشدند. ابتدا صف و صندوق را بررسی کنید.");
             return;
         }
 
@@ -1947,10 +1947,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             consumeResult = consume.Data;
         }
 
-        if ((_api as ApiClient)?.BranchId != receptionBranch)
+        if (!CanRetryContext(pendingReception))
         {
             IsReceptionOutcomeUnknown = true;
-            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ شعبه تغییر کرد و فاکتور ارسال نشد. مصرف و صف را بررسی کنید.");
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و فاکتور ارسال نشد. مصرف و صف را بررسی کنید.");
             return;
         }
 
@@ -1981,11 +1981,10 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ مبلغ سرور با مبلغ تأییدشده متفاوت است و فاکتور یا پرداخت ارسال نشد. در صندوق بررسی کنید.");
             return;
         }
-        if ((_api as ApiClient)?.BranchId != receptionBranch ||
-            (_api is ApiClient activeClient && activeClient.PaymentRecoveryServer != _invoiceRecoveryServer))
+        if (!CanRetryContext(pendingReception))
         {
             IsReceptionOutcomeUnknown = true;
-            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا شعبه تغییر کرد و فاکتور ارسال نشد.");
+            _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ سرور یا سرور یا شعبه تغییر کرد و فاکتور ارسال نشد.");
             return;
         }
         var request = invoiceDto with { ExpectedQuote = preview.Data.QuoteVersion, RequestId = Guid.NewGuid() };
@@ -1997,8 +1996,7 @@ public partial class ReceptionsViewModel : ViewModelBase
             _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ رزرو ایمن فاکتور ناموفق بود و درخواست ارسال نشد. بازیابی و صندوق را بررسی کنید.");
             return;
         }
-        if ((_api as ApiClient)?.BranchId != receptionBranch ||
-            (_api is ApiClient currentClient && currentClient.PaymentRecoveryServer != _invoiceRecoveryServer))
+        if (!CanRetryContext(pendingReception))
         {
             IsReceptionOutcomeUnknown = true;
             _snackbar.Error($"پذیرش {reception.Data} ثبت شد؛ فاکتور ارسال نشد و درخواست برای بررسی در صندوق ذخیره شد.");
@@ -2024,6 +2022,12 @@ public partial class ReceptionsViewModel : ViewModelBase
         var paymentConfirmedButRecoveryRetained = false;
         if (payment is not null && invoice?.Data is not null && invoice.Data > 0)
         {
+            if (!CanRetryContext(pendingReception))
+            {
+                IsReceptionOutcomeUnknown = true;
+                _snackbar.Error($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
+                return;
+            }
             // چرخهٔ ۳۹ — مبلغ قابل پرداخت بیمار = سهم بیمار خدمت + جمع لوازم مصرفی
             // (قیمت واقعی بچ‌ها از مصرف؛ اگر مصرف رد شده و کاربر ادامه داد، فقط خدمت)
             var detail = await _api.GetAsync<ReceptionInvoiceEnvelope>($"invoices/{invoice.Data}");
@@ -2033,10 +2037,10 @@ public partial class ReceptionsViewModel : ViewModelBase
                 paymentFailed = true;
                 _snackbar.Warning($"فاکتور صادر شد، اما مبلغ نهایی تأیید نشد یا با مبلغ تأییدشده تفاوت دارد؛ پرداخت ثبت نشد. شناسه فاکتور {invoice.Data} را در صندوق بررسی کنید.");
             }
-            else if ((_api as ApiClient)?.BranchId != receptionBranch)
+            else if (!CanRetryContext(pendingReception))
             {
                 paymentFailed = true;
-                _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
+                _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. در صندوق بررسی کنید.");
             }
             else
             {
@@ -2048,7 +2052,7 @@ public partial class ReceptionsViewModel : ViewModelBase
                     if (!attempt.ContextMatches)
                     {
                         paymentFailed = true;
-                        _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید.");
+                        _snackbar.Warning($"فاکتور {invoice.Data} صادر شد؛ سرور یا شعبه تغییر کرد و پرداخت ارسال نشد. بازیابی را در صندوق بررسی کنید.");
                     }
                     else
                     {
