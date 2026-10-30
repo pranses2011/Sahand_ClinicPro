@@ -15,17 +15,20 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="چیدمان برگه" FontSize="15" FontWeight="Bold" Foreground="#173657" Margin="0,0,0,10"/>
                     <ListBox x:Name="RowsList" ItemsSource="{Binding Rows}" BorderThickness="0" Background="Transparent"
+                             AllowDrop="True" Drop="OnRowDrop" DragOver="OnRowDragOver"
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Background="#F8FBFF" BorderBrush="#DCE7F1" BorderThickness="1" CornerRadius="7" Padding="10" Margin="0,0,0,6">
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
-                                        <StackPanel>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="⋮⋮" FontSize="19" Foreground="#7994AB" Cursor="SizeAll" VerticalAlignment="Center"
+                                                   ToolTip="این دستگیره را بکشید و روی ردیف مقصد رها کنید" MouseMove="OnRowGripMouseMove" />
+                                        <StackPanel Grid.Column="1">
                                             <TextBlock Text="متن یا برچسب" FontSize="11" Foreground="#5D748B"/>
                                             <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" MaxLength="1000" Margin="0,4,0,0"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="2" Visibility="{Binding IsVariable, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel Grid.Column="3" Visibility="{Binding IsVariable, Converter={StaticResource BoolToVisibility}}">
                                             <TextBlock Text="اطلاعات سند" FontSize="11" Foreground="#5D748B"/>
                                             <ComboBox ItemsSource="{Binding DataContext.Variables, RelativeSource={RelativeSource AncestorType=Window}}"
                                                       DisplayMemberPath="Label" SelectedValuePath="Key" SelectedValue="{Binding Key, Mode=TwoWay}"
@@ -43,6 +46,7 @@
                     <TextBlock Text="ابزار طراحی" FontSize="15" FontWeight="Bold" Foreground="#173657" Margin="0,0,0,12"/>
                     <Button Content="＋ افزودن متن" Click="OnAddText" Margin="0,0,0,8" Padding="12,8"/>
                     <Button Content="＋ افزودن اطلاعات سند" Click="OnAddVariable" Margin="0,0,0,8" Padding="12,8"/>
+                    <TextBlock Text="مرتب‌سازی: دستگیره کنار هر ردیف را بکشید." TextWrapping="Wrap" Foreground="#5D748B" FontSize="11" Margin="0,0,0,6"/>
                     <Separator Margin="0,5,0,10"/>
                     <Button Content="↑ انتقال ردیف به بالا" Click="OnMoveUp" Margin="0,0,0,8" Padding="12,8"/>
                     <Button Content="↓ انتقال ردیف به پایین" Click="OnMoveDown" Margin="0,0,0,8" Padding="12,8"/>

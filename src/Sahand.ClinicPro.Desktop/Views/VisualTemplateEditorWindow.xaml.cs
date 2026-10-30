@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using Sahand.ClinicPro.Desktop.Services;
 using Sahand.ClinicPro.Desktop.ViewModels;
 
@@ -36,6 +39,31 @@ public partial class VisualTemplateEditorWindow : Window
         if (target < 0 || target >= Rows.Count) return;
         Rows.Move(index, target); RowsList.SelectedItem = row;
     }
+    private void OnRowGripMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || sender is not FrameworkElement { DataContext: VisualTemplateBlock row } grip) return;
+        DragDrop.DoDragDrop(grip, row, DragDropEffects.Move);
+    }
+
+    private void OnRowDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(typeof(VisualTemplateBlock)) ? DragDropEffects.Move : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnRowDrop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(VisualTemplateBlock)) is not VisualTemplateBlock row || !Rows.Contains(row)) return;
+        DependencyObject? current = e.OriginalSource as DependencyObject;
+        while (current is not null && current is not ListBoxItem)
+            current = current is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(current) : LogicalTreeHelper.GetParent(current);
+        var destination = current is ListBoxItem item && item.DataContext is VisualTemplateBlock target ? Rows.IndexOf(target) : Rows.Count - 1;
+        var source = Rows.IndexOf(row);
+        if (destination >= 0 && source != destination) Rows.Move(source, destination);
+        RowsList.SelectedItem = row;
+        e.Handled = true;
+    }
+
     private void OnMoveUp(object sender, RoutedEventArgs e) => Move(-1);
     private void OnMoveDown(object sender, RoutedEventArgs e) => Move(1);
     private void OnApply(object sender, RoutedEventArgs e)
