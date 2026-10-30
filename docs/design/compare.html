@@ -14,6 +14,9 @@ a{color:#125fa6}section h2{margin:0 0 8px;font-size:19px}.notes{color:#526c80;fo
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pane{min-width:0}.pane h3{font-size:14px}
 img{width:100%;height:auto;max-height:680px;object-fit:contain;object-position:top;border:1px solid #d8e5ef;border-radius:8px;background:#f4f7fa}
 .missing{padding:25px;background:#f4f7fa;border-radius:8px;color:#526c80}
+.overlay{position:relative;aspect-ratio:1568/885;max-width:1200px;background:#edf3f8;overflow:hidden;border:1px solid #d8e5ef}
+.overlay img{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:fill;border:0;border-radius:0}
+.overlay-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.overlay-control input{width:min(320px,70vw)}
 @media(max-width:900px){.pair{grid-template-columns:1fr}}
 </style>
 </head>
@@ -48,6 +51,19 @@ for(const p of pages){
     pair.appendChild(pane);
   }
   section.appendChild(pair);
+  if(p.id==='print-designer'){
+    const title=document.createElement('h3');title.textContent='هم‌پوشانی رندر چیدمان در اندازهٔ مرجع';section.appendChild(title);
+    const explanation=document.createElement('p');explanation.className='notes';explanation.textContent='هر دو تصویر ۱۵۶۸×۸۸۵ هستند. تصویر برنامه رندر خارج از صفحه است، نه اسکرین‌شات مانیتور؛ پس تفاوت رندر، دادهٔ نمونه و متن‌های ناخوانای طرح نیز در اختلاف دیده می‌شود. با لغزنده شفافیت رندر را تغییر دهید.';section.appendChild(explanation);
+    const controls=document.createElement('label');controls.className='overlay-control';
+    const caption=document.createElement('span');caption.textContent='طرح ← میزان نمایش رندر برنامه →';controls.appendChild(caption);
+    const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value='50';slider.setAttribute('aria-label','میزان نمایش رندر برنامه در مقایسه با طرح');controls.appendChild(slider);section.appendChild(controls);
+    const overlay=document.createElement('div');overlay.className='overlay';
+    const design=document.createElement('img');design.src=p.design;design.alt='طرح تأییدشده';
+    const layout=document.createElement('img');layout.src='../screenshots/real/print-designer-layout.png';layout.alt='رندر خارج از صفحه برنامه در اندازه مرجع';layout.style.opacity='0.5';
+    slider.addEventListener('input',()=>{layout.style.opacity=String(Number(slider.value)/100)});
+    overlay.append(design,layout);section.appendChild(overlay);
+    const reference=document.createElement('a');reference.href=layout.src;reference.target='_blank';reference.className='notes';reference.textContent='باز کردن رندر هم‌اندازه در اندازه اصلی';section.appendChild(reference);
+  }
   const metadata=document.createElement('a');metadata.href='../screenshots/real/'+p.id+'.png.txt';metadata.textContent='مشخصات اندازه و جهت تصویر';metadata.className='notes';section.appendChild(metadata);
   container.appendChild(section);
 }
