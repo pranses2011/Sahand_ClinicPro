@@ -15,6 +15,11 @@
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style TargetType="Button" BasedOn="{StaticResource DesignerButton}"/>
+        <Style x:Key="ResizeHandle" TargetType="Thumb">
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Thumb">
+                <Border Background="White" BorderBrush="#3188E6" BorderThickness="1.5"/>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
         <Style x:Key="ToolButton" TargetType="Button" BasedOn="{StaticResource DesignerButton}">
             <Setter Property="Background" Value="White"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="MinHeight" Value="42"/><Setter Property="Margin" Value="0,0,0,7"/>

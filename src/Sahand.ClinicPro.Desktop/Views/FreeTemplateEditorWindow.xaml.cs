@@ -100,7 +100,7 @@ public partial class FreeTemplateEditorWindow : Window
             PageCanvas.Children.Add(border);
             if (ReferenceEquals(item, _selected))
             {
-                var handle = new Thumb { Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
+                var handle = new Thumb { Style = (Style)FindResource("ResizeHandle"), Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
                     BorderThickness = new Thickness(1), Cursor = Cursors.SizeNWSE, ToolTip = "برای تغییر اندازه گوشه را بکشید" };
                 var allowed = false;
                 Point start = default;
