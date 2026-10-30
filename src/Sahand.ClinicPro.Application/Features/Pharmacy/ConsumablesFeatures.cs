@@ -170,9 +170,12 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.EMPTY",
                 "فهرست اقلام مصرفی خالی است"));
 
-        if (request.Items.Any(i => i.Quantity <= 0))
+        // موجودی و تراکنش هر دو decimal(10,2) هستند؛ گرد شدن ضمنی SQL
+        // نباید باعث برداشت یا فاکتور با مقدار متفاوت از درخواست شود.
+        if (request.Items.Any(i => i.Quantity <= 0 || i.Quantity > 99999999.99m ||
+                decimal.Round(i.Quantity, 2) != i.Quantity))
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.QTY",
-                "تعداد هر قلم مصرفی باید بیشتر از صفر باشد"));
+                "تعداد هر قلم باید مثبت و حداکثر با دو رقم اعشار و در محدوده مجاز باشد."));
 
         if (request.Items.GroupBy(i => i.MedicationId).Any(g => g.Count() > 1))
             return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.DUPLICATE", "هر قلم مصرفی فقط یک بار در درخواست مجاز است."));
@@ -193,26 +196,35 @@ public class ConsumeStockCommandHandler : IRequestHandler<ConsumeStockCommand, R
         // مبنای سند حسابداری هزینه؛ قیمت فروش (taken) فقط برای نمایش خروجی است.
         var totalCost = 0m;
 
+        // پیش از تغییر هر بچ همه اقلام و موجودی آنها بررسی شوند؛ شکست قلم
+        // بعدی نباید تغییر ردیابی‌شده قلم قبلی را در واحد کار باقی بگذارد.
+        var plans = new List<(ConsumeItemDto Item, Domain.Entities.Clinical.Medication Medication, List<PharmacyInventory> Batches)>();
         foreach (var item in request.Items)
         {
-            // نام قلم برای پیام خطا و خروجی
             var medication = await _unitOfWork.Repository<Domain.Entities.Clinical.Medication>()
                 .QueryableNoTracking
-                .FirstOrDefaultAsync(m => m.Id == item.MedicationId && !m.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(m => m.Id == item.MedicationId && !m.IsDeleted && m.IsActive &&
+                    m.ItemKind == MedicationItemKind.Consumable, cancellationToken);
             if (medication is null)
                 return Result<ConsumeStockResultDto>.Failure(
-                    Error.NotFound("قلم مصرفی", item.MedicationId));
+                    new Error("PHARMACY.CONSUME.ITEM", "قلم انتخاب‌شده مصرفیِ فعال و معتبر نیست."));
 
-            // بچ‌های سالم این قلم به ترتیب نزدیک‌ترین انقضا (FEFO)
             var batches = await _unitOfWork.Repository<PharmacyInventory>()
                 .QueryableTracking
                 .Where(inv => inv.MedicationId == item.MedicationId
-                           && inv.Quantity > 0
-                           && !inv.IsDeleted && inv.IsActive
+                           && inv.Quantity > 0 && !inv.IsDeleted && inv.IsActive
                            && (inv.ExpiryDate == null || inv.ExpiryDate >= today))
                 .OrderBy(inv => inv.ExpiryDate == null).ThenBy(inv => inv.ExpiryDate).ThenBy(inv => inv.Id)
                 .ToListAsync(cancellationToken);
+            var available = batches.Sum(b => b.Quantity);
+            if (available < item.Quantity)
+                return Result<ConsumeStockResultDto>.Failure(new Error("PHARMACY.CONSUME.STOCK",
+                    $"موجودی «{medication.GenericNameFa ?? medication.GenericName}» کافی نیست — {item.Quantity - available} عدد کمبود دارد؛ ابتدا از صفحهٔ «لوازم مصرفی» ورود کالا ثبت کنید"));
+            plans.Add((item, medication, batches));
+        }
 
+        foreach (var (item, medication, batches) in plans)
+        {
             var remaining = item.Quantity;
             var taken = 0m; // جمع هزینهٔ واقعی این قلم از بچ‌ها
 
