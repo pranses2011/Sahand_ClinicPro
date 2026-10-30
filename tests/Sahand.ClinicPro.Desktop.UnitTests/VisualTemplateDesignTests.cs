@@ -48,6 +48,9 @@ public class VisualTemplateDesignTests
     {
         var rows = new List<VisualTemplateBlock> { new() { Kind = "variable", Text = "نام", Key = "patient_name" } };
         var html = VisualTemplateDesign.Build(rows, new[] { "patient_name" });
+        VisualTemplateDesign.HasVisualMarker(html).Should().BeTrue();
+        VisualTemplateDesign.HasVisualMarker(html + "تغییر").Should().BeTrue();
+        VisualTemplateDesign.HasVisualMarker("<p>قالب قدیمی</p>").Should().BeFalse();
         VisualTemplateDesign.TryRead("<p>قالب قدیمی</p>", new[] { "patient_name" }, out _).Should().BeFalse();
         VisualTemplateDesign.TryRead(html + "<p>تغییر دستی</p>", new[] { "patient_name" }, out _).Should().BeFalse();
         VisualTemplateDesign.TryRead(html, Array.Empty<string>(), out _).Should().BeFalse();

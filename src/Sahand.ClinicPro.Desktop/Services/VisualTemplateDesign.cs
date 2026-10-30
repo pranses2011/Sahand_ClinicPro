@@ -18,6 +18,8 @@ public sealed class VisualTemplateBlock
 public static class VisualTemplateDesign
 {
     private const string Prefix = "<!--clinicpro-visual-v1:";
+    /// <summary>بدنه با نشان طراح بصری آغاز می‌شود، حتی اگر دستکاری شده باشد.</summary>
+    public static bool HasVisualMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
     private static string SafeText(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
 
     /// <summary>اندازه‌های کاغذ استاندارد یا سفارشی با ابعاد معقول بر حسب میلی‌متر.</summary>
