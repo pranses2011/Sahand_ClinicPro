@@ -219,14 +219,20 @@
                         </WrapPanel>
 
                         <!-- عنوان ویرایشگر -->
-                        <TextBlock Grid.Row="1" FontSize="12" FontWeight="Bold" Opacity="0.7" Margin="2,0,0,5"
-                                   Text="بدنه HTML؛ قبض اصلی داخلی و غیرقابل ویرایش است و تنظیمات ظاهری آن از موتور چاپ استفاده می‌کند" />
+                        <DockPanel Grid.Row="1" Margin="2,0,0,5">
+                            <Button DockPanel.Dock="Left" Content="طراحی بصری قالب" Click="OnVisualTemplateEditor"
+                                    IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" Padding="12,5" />
+                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="#49647F" TextWrapping="Wrap" VerticalAlignment="Center"
+                                       Text="قالب را بصری طراحی کنید؛ قبض اصلی با موتور داخلی چاپ می‌شود." />
+                        </DockPanel>
 
                         <!-- بدنه -->
-                        <TextBox Grid.Row="2" IsReadOnly="{Binding SelectedTemplate.IsOriginalReceipt}" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
-                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
+                        <Expander Grid.Row="2" Header="ویرایش پیشرفته (HTML)" VerticalAlignment="Top">
+                            <TextBox IsReadOnly="{Binding SelectedTemplate.IsOriginalReceipt}" Text="{Binding SelectedTemplate.Body, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" MinHeight="130"
+                                     AcceptsReturn="True" TextWrapping="Wrap" FontFamily="{DynamicResource App.CodeFont}" FontSize="12"
+                                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" materialDesign:HintAssist.Hint="متن قالب چاپ"/>
+                        </Expander>
 
                         <!-- پالت متغیرها -->
                         <TextBlock Grid.Row="3" Text="🧩 متغیرها — با کلیک به انتهای قالب اضافه می‌شود:"
