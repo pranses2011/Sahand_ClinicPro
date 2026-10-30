@@ -19,7 +19,7 @@ public static class SaveShortcut
 
     private static void OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.Modifiers != (ModifierKeys.Control | ModifierKeys.Shift) || e.Key < Key.D1 || e.Key > Key.D9 || e.IsRepeat) return;
+        if (Keyboard.Modifiers != (ModifierKeys.Control | ModifierKeys.Shift) || (int)e.Key < (int)Key.D1 || (int)e.Key > (int)Key.D9 || e.IsRepeat) return;
         var number = (int)e.Key - (int)Key.D1 + 1;
         var candidates = new List<Button>();
         Collect((DependencyObject)sender, number, candidates);
