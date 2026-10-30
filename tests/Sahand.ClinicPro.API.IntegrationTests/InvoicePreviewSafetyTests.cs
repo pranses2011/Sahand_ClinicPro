@@ -16,10 +16,6 @@ namespace Sahand.ClinicPro.API.IntegrationTests;
 
 public class InvoicePreviewSafetyTests
 {
-    private static void AddInvoiceAccounts(ClinicProDbContext db) => db.AddRange(
-        new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true },
-        new AccountingAccount { AccountCode = "4101", AccountName = "درآمد", IsDetail = true });
-
     [Fact]
     public async Task Preview_is_read_only_and_changed_input_cannot_be_issued()
     {
@@ -27,7 +23,6 @@ public class InvoicePreviewSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "QUOTE-01", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
-        AddInvoiceAccounts(db);
         db.Add(patient); await db.SaveChangesAsync();
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var item = new InvoiceItemDto(null, "خدمت", 1, 101, 10, null, 0);
@@ -75,7 +70,6 @@ public class InvoicePreviewSafetyTests
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "QUOTE-REPLAY", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000002" };
         var service = new Service { ServiceName = "خدمت", DefaultPrice = 100, IsActive = true };
-        AddInvoiceAccounts(db);
         db.AddRange(patient, service); await db.SaveChangesAsync();
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,
@@ -106,10 +100,11 @@ public class InvoicePreviewSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "ACCOUNTS-INV", FirstName = "بیمار", LastName = "آزمون", Mobile = "09120000001" };
-        db.AddRange(patient, new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
-        if (accountState != "missing")
-            db.Add(new AccountingAccount { AccountCode = "4101", AccountName = "درآمد",
-                IsActive = accountState != "inactive", IsDetail = accountState != "not-detail" });
+        db.Add(patient);
+        var income = await db.Set<AccountingAccount>().SingleAsync(a => a.AccountCode == "4101");
+        income.IsDeleted = accountState == "missing";
+        income.IsActive = accountState != "inactive";
+        income.IsDetail = accountState != "not-detail";
         await db.SaveChangesAsync();
         var handler = new CreateInvoiceCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(), NullLogger<CreateInvoiceCommandHandler>.Instance);
         var dto = new CreateInvoiceDto(patient.Id, null, null, InvoiceType.Other, null, 0,

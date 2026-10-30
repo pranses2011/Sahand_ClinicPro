@@ -80,9 +80,9 @@ public class BillingPatientSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "PAY-JOURNAL", FirstName = "بیمار", LastName = "تست", Mobile = "09120000004" };
+        // کارخانه API کدینگ پایه را هنگام راه‌اندازی بذر می‌کند؛ ساخت حساب
+        // تکراری در InMemory می‌تواند خطای ایندکس یکتای SQL را پنهان کند.
         db.Add(patient);
-        db.AddRange(new AccountingAccount { AccountCode = "1101", AccountName = "صندوق", IsDetail = true },
-            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
         await db.SaveChangesAsync();
         var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
         db.Add(invoice);
@@ -160,10 +160,7 @@ public class BillingPatientSafetyTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClinicProDbContext>();
         var patient = new Patient { MedicalRecordNo = "PAY-IDEMPOTENT", FirstName = "اول", LastName = "بیمار", Mobile = "09120000001" };
-        db.AddRange(patient,
-            new AccountingAccount { AccountCode = "1101", AccountName = "صندوق", IsDetail = true },
-            new AccountingAccount { AccountCode = "1103", AccountName = "مطالبات", IsDetail = true });
-        await db.SaveChangesAsync();
+        db.Add(patient); await db.SaveChangesAsync();
         var invoice = new Invoice { PatientId = patient.Id, TotalAmount = 100, RemainingAmount = 100, Status = InvoiceStatus.Issued };
         db.Add(invoice); await db.SaveChangesAsync();
         var handler = new RecordPaymentCommandHandler(scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
