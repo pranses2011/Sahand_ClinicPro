@@ -574,7 +574,7 @@ public partial class App : System.Windows.Application
                 {
                     var m = Services.GetRequiredService<ComplementaryViewModel>();
                     SetDesignKpis(m.Kpis, "۳", "۶", "۲", "۹", "۱۴۰۵/۰۸/۰۳");
-                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 1, Key = "Invoice", Title = "فاکتور — سربرگ A5", TypeFa = "فاکتور و قبض پرداخت", PaperSize = "A5", IsActive = true, IsDefault = true, Body = "<div class=\"header\">درمانگاه سهند</div>" });
+                    m.PrintTemplates.Add(new PrintTemplateRow { Id = 1, Key = "Invoice", Title = "فاکتور — سربرگ A5", TypeFa = "فاکتور و قبض پرداخت", PaperSize = "A5", IsActive = true, IsDefault = true, IsLoaded = true, IsDirty = true, Body = "<div class=\"header\">درمانگاه سهند</div>" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 2, Key = "Prescription", Title = "نسخه — سربرگ پزشک", TypeFa = "نسخه پزشکی", PaperSize = "A5", IsActive = false, Body = "" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 3, Key = "ReceptionReceipt", Title = "رسید پذیرش کوتاه", TypeFa = "رسید پذیرش", PaperSize = "A6", IsActive = false, Body = "" });
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 4, Key = "InsuranceForm", Title = "صورت حساب بیمه", TypeFa = "صورت حساب بیمه", PaperSize = "A4", IsActive = false, Body = "" });
@@ -582,6 +582,7 @@ public partial class App : System.Windows.Application
                     m.PrintTemplates.Add(new PrintTemplateRow { Id = 6, Key = "ImagingReport", Title = "گزارش تصویربرداری", TypeFa = "تصویربرداری", PaperSize = "A4", IsActive = true, Body = "" });
                     m.VisibleTemplates.Clear();
                     foreach (var r in m.PrintTemplates) m.VisibleTemplates.Add(r);
+                    m.SelectedTemplate = m.PrintTemplates.First();
                     m.TabIndex = 0;
                     viewModel = m;
                     view = new ComplementaryView { DataContext = m };

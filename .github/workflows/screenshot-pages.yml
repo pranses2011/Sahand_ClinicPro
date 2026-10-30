@@ -4,12 +4,8 @@ name: 📸 اسکرینشات واقعی صفحات (مقایسه با طرح ت
 # خروجیها روی همان شاخه برگردانده میشوند تا کنار «طرح تأییدی مالک» در
 # docs/design/compare.html قرار گیرند و مغایرتها فرمبهفرم بررسی شوند.
 on:
-  # ثبت workflow در گیتهاپ نیازمند یک رویداد واقعی است؛ با تغییر همین فایل
-  # (یا فایل نشانگر) یک دور کامل اسکرینشاتها خودکار ساخته میشود.
-  push:
-    paths:
-      - '.github/workflows/screenshot-pages.yml'
-      - 'docs/screenshots/real/.trigger'
+  # فقط به درخواست صریح و روی شاخه انتخاب‌شده اجرا می‌شود؛ انتشار تگ نباید
+  # موجب تلاش نامعتبر برای نوشتن اسکرین‌شات روی نام تگ شود.
   workflow_dispatch:
     inputs:
       pages:
@@ -121,6 +117,7 @@ jobs:
           retention-days: 14
 
       - name: بازگرداندن اسکرینشاتها روی همان شاخه
+        if: startsWith(github.ref, 'refs/heads/')
         shell: pwsh
         run: |
           git config user.name "github-actions"
@@ -135,5 +132,5 @@ jobs:
           git add docs/screenshots/real docs/design/approved/
           git add -f docs/design/approved/*-design.png
           if (git diff --cached --quiet) { Write-Host 'تغییر تازهای برای کامیت نیست.'; exit 0 }
-          git commit -m "اسکرینشات واقعی صفحات (رندر WPF روی ویندوز) — راستیآزمایی طرح"
+          git commit -m "اسکرین‌شات واقعی صفحات برای مقایسه طرح" -m "تصاویر رابط WPF ویندوز با داده نمونه و ابعاد ثبت‌شده تولید شدند؛ این تصاویر به معنی تأیید عملکرد یا چاپ فیزیکی نیستند."
           git push origin HEAD:${{ github.ref_name }}
