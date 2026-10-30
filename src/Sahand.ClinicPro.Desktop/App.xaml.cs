@@ -743,6 +743,11 @@ public partial class App : System.Windows.Application
                 view.Width = layoutWidth; view.Height = layoutHeight;
                 view.Measure(new Size(layoutWidth, layoutHeight));
                 view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
+                // SizeChanged و تغییرات چیدمان واکنش‌گرا باید پیش از ثبت اجرا شوند.
+                await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                view.UpdateLayout();
+                if (Math.Abs(view.RenderSize.Width - layoutWidth) > 0.1 || Math.Abs(view.RenderSize.Height - layoutHeight) > 0.1)
+                    throw new InvalidOperationException("رندر طراح به ابعاد مرجع نرسید.");
                 var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
                 layout.Render(view);
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
