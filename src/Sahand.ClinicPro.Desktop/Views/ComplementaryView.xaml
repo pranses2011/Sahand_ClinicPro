@@ -57,7 +57,7 @@
                     <Border DockPanel.Dock="Top" CornerRadius="12" Padding="17,12" Margin="0,0,0,12">
                         <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#173B61" Offset="0"/><GradientStop Color="#087B83" Offset="1"/></LinearGradientBrush></Border.Background>
                         <DockPanel>
-                            <Button DockPanel.Dock="Left" Content="باز کردن طراح بصری" Click="OnVisualTemplateEditor"
+                            <Button DockPanel.Dock="Left" Content="باز کردن طراح آزاد" Click="OnFreeTemplateEditor"
                                     IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" Padding="13,6" />
                             <StackPanel>
                                 <TextBlock Text="مرکز طراحی قالب چاپ" FontSize="17" FontWeight="Bold" Foreground="White" />
@@ -234,7 +234,7 @@
 
                         <!-- عنوان ویرایشگر -->
                         <DockPanel Grid.Row="1" Margin="2,0,0,5">
-                            <Button DockPanel.Dock="Left" Content="طراحی بصری قالب" Click="OnVisualTemplateEditor"
+                            <Button DockPanel.Dock="Left" Content="طراح ردیفی قدیمی" Click="OnVisualTemplateEditor"
                                     IsEnabled="{Binding SelectedTemplate.IsHtmlTemplate}" Padding="12,5" />
                             <TextBlock FontSize="12" FontWeight="Bold" Foreground="#49647F" TextWrapping="Wrap" VerticalAlignment="Center"
                                        Text="قالب را بصری طراحی کنید؛ قبض اصلی با موتور داخلی چاپ می‌شود." />

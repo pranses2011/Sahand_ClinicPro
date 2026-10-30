@@ -878,7 +878,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     private void InsertVariable(TemplateVariable? variable)
     {
         if (SelectedTemplate is null || variable is null || SelectedTemplate.IsOriginalReceipt || IsTemplateLoading) return;
-        if (VisualTemplateDesign.HasVisualMarker(SelectedTemplate.Body))
+        if (VisualTemplateDesign.HasVisualMarker(SelectedTemplate.Body) || FreeTemplateDesign.HasMarker(SelectedTemplate.Body))
         {
             _snackbar.Info("برای افزودن متغیر به قالب بصری، طراح بصری را باز کنید تا ساختار قالب حفظ شود.");
             return;

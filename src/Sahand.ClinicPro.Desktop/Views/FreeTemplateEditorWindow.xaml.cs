@@ -104,13 +104,13 @@ public partial class FreeTemplateEditorWindow : Window
         if (_selected is null) return;
         try
         {
-            var old = JsonSerializer.Serialize(_selected);
+            var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
                 FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim() };
             var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
-            catch { _document.Elements[index] = JsonSerializer.Deserialize<FreeTemplateElement>(old)!; throw; }
+            catch { _document.Elements[index] = previous; throw; }
             Select(updated); RefreshCanvas();
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException) { AppDialog.Error("ویژگی عنصر", ex.Message); }
