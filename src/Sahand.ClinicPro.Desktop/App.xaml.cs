@@ -740,6 +740,9 @@ public partial class App : System.Windows.Application
                 // این تصویر جایگزین اسکرین‌شات روی صفحه نیست: تبدیل RTL و
                 // جزئیات رندر می‌توانند با خروجی مانیتور متفاوت باشند.
                 const int layoutWidth = 1568, layoutHeight = 885;
+                // درخت را از پنجره محدود رانر جدا می‌کنیم تا Clip والد،
+                // نواحی بیرون نمایشگر را از رندر مرجع حذف نکند.
+                window.Content = null;
                 view.Width = layoutWidth; view.Height = layoutHeight;
                 view.Measure(new Size(layoutWidth, layoutHeight));
                 view.Arrange(new Rect(0, 0, layoutWidth, layoutHeight));
@@ -750,6 +753,10 @@ public partial class App : System.Windows.Application
                     throw new InvalidOperationException("رندر طراح به ابعاد مرجع نرسید.");
                 var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
                 layout.Render(view);
+                var pixels = new byte[layoutWidth * layoutHeight * 4];
+                layout.CopyPixels(pixels, layoutWidth * 4, 0);
+                for (var i = 3; i < pixels.Length; i += 4)
+                    if (pixels[i] != 255) throw new InvalidOperationException("رندر هم‌اندازه ناقص یا شفاف است.");
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
                 // ریشه RTL در RenderTargetBitmap نسبت به خروجی پنجره آینه‌ای
                 // است؛ برگرداندن افقی در خروجی، همان جهت پنجره را بازمی‌گرداند.
