@@ -1,1 +1,1 @@
-Page=print-designer Flow=RightToLeft Lang=fa-ir Actual=1024x720 Render=1024x720 Desired=1023٫0728282828284x720
+Page=print-designer Flow=RightToLeft Lang=fa-ir Actual=1024x720 Render=1024x720 Desired=992٫0161616161616x720
