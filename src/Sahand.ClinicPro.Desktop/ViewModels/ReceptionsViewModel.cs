@@ -2155,13 +2155,34 @@ public partial class ReceptionsViewModel : ViewModelBase
             }
         }
 
-        // ═══ پاک‌سازی فرم — چرخهٔ ۷۴: پاک‌سازی کامل پس از ثبت موفق ═══
-        // گزارش مالک: «در پذیرش، بعد از پذیرش و پرداخت، هنوز اطلاعات بیمار در
-        // فیلدهای پذیرش باقی میمونه». سه نشتی قبلی:
-        //   ۱) PatientResults/SelectedSearchResult پاک نمی‌شد → با پاک‌شدن
-        //      FoundPatient، «نتایج جستجوی بیمار قبلی» دوباره نمایان می‌شد؛
-        //   ۲) SelectedDoctor پاک نمی‌شد → پزشکِ پذیرش قبل روی کشو می‌ماند؛
-        //   ۳) بخش هزینه (VisitFee/سهم بیمه/بیمار) اعداد پذیرش قبل را نگه می‌داشت.
+        ResetReceptionForm();
+
+        await LoadAsync();
+        }
+        catch (Exception)
+        {
+            IsReceptionOutcomeUnknown = true;
+            _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
+        }
+        finally { IsBusy = false; IsSubmitting = false; workflowLease?.Dispose(); }
+    }
+
+    /// <summary>شروع پذیرش تازه بدون پاک‌کردن سوابق بازیابی یا نتیجه نامعلوم.</summary>
+    [RelayCommand]
+    private void NewReception()
+    {
+        if (!CanEditReception)
+        {
+            _snackbar.Warning("تا پایان عملیات یا بررسی نتیجه نامعلوم نمی‌توان فرم را بازنشانی کرد.");
+            return;
+        }
+        ResetReceptionForm();
+    }
+
+    private void ResetReceptionForm()
+    {
+        _patientSearchVersion++;
+        InvalidateInquiry();
         SmartSearch = string.Empty;
         FoundPatient = null;
         FoundAppointmentInfo = null;
@@ -2169,6 +2190,10 @@ public partial class ReceptionsViewModel : ViewModelBase
         SelectedSearchResult = null;
         InsuranceNumber = string.Empty;
         ReferralCode = null;
+        VisitTypeIndex = 0;
+        UnidentifiedAgeText = string.Empty;
+        UnidentifiedGenderIndex = 0;
+        ReceptionModeIndex = 0;
         ReceptionNotes = null;
         Inquiry = null;
         InsuranceIndex = 0;
@@ -2190,14 +2215,6 @@ public partial class ReceptionsViewModel : ViewModelBase
         // چرخهٔ ۷۶ — ویزارد برای پذیرش بعدی به گام نخست بازمی‌گردد
         WizardStep = 0;
 
-        await LoadAsync();
-        }
-        catch (Exception)
-        {
-            IsReceptionOutcomeUnknown = true;
-            _snackbar.Error("پاسخ زنجیرهٔ پذیرش کامل دریافت نشد؛ پیش از تکرار، پذیرش، فاکتور و پرداخت را در صف و صندوق بررسی کنید.");
-        }
-        finally { IsBusy = false; IsSubmitting = false; workflowLease?.Dispose(); }
     }
 
     /// <summary>

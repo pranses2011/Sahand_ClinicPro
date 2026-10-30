@@ -126,6 +126,11 @@
                     </Border>
                 </UniformGrid>
 
+                <Button Content="＋ پذیرش جدید" Command="{Binding NewReceptionCommand}" IsEnabled="{Binding CanEditReception}"
+                        HorizontalAlignment="Left" Margin="0,0,0,10" Padding="14,7"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        ToolTip="پاک‌کردن اطلاعات فرم و بازگشت به گام نخست؛ اطلاعات ثبت‌شده حذف نمی‌شود." />
+
                 <ProgressBar IsIndeterminate="True" Height="3" Margin="0,0,0,10"
                              Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
