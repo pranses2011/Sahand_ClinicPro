@@ -82,6 +82,27 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Eight_resize_handles_preserve_opposite_edges_and_stay_inside_canvas()
+    {
+        var doc = new FreeTemplateDocument { Width = 600, Height = 800 };
+        var item = new FreeTemplateElement { X = 100, Y = 200, Width = 200, Height = 100 };
+        FreeTemplateDesign.ResizeFromHandle(doc, item, FreeTemplateResizeHandle.Left, 50, 0).Should().Be((150, 200, 150, 100));
+        FreeTemplateDesign.ResizeFromHandle(doc, item, FreeTemplateResizeHandle.TopLeft, 50, 25).Should().Be((150, 225, 150, 75));
+        FreeTemplateDesign.ResizeFromHandle(doc, item, FreeTemplateResizeHandle.BottomRight, 1000, 1000).Should().Be((100, 200, 500, 600));
+        foreach (var handle in Enum.GetValues<FreeTemplateResizeHandle>())
+        foreach (var delta in new[] { -1000d, 1000d })
+        {
+            var result = FreeTemplateDesign.ResizeFromHandle(doc, item, handle, delta, delta);
+            result.X.Should().BeGreaterThanOrEqualTo(0); result.Y.Should().BeGreaterThanOrEqualTo(0);
+            result.Width.Should().BeGreaterThanOrEqualTo(5); result.Height.Should().BeGreaterThanOrEqualTo(5);
+            (result.X + result.Width).Should().BeLessThanOrEqualTo(doc.Width);
+            (result.Y + result.Height).Should().BeLessThanOrEqualTo(doc.Height);
+        }
+        Action invalid = () => FreeTemplateDesign.ResizeFromHandle(doc, item, (FreeTemplateResizeHandle)999, 0, 0);
+        invalid.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Resize_stays_inside_canvas_and_preserves_minimum_size()
     {
         var doc = new FreeTemplateDocument { Width = 600, Height = 800 };

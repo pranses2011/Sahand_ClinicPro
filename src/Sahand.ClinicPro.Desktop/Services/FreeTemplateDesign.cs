@@ -41,6 +41,9 @@ public sealed class FreeTemplateDocument
     public List<FreeTemplateElement> Elements { get; set; } = new();
 }
 
+/// <summary>جهت دستگیره تغییر اندازه عنصر.</summary>
+public enum FreeTemplateResizeHandle { TopLeft, Top, TopRight, Right, BottomRight, Bottom, BottomLeft, Left }
+
 /// <summary>تولید و بازخوانی ایمن بدنه بوم مستقل از HTMLهای قدیمی.</summary>
 public static class FreeTemplateDesign
 {
@@ -70,6 +73,39 @@ public static class FreeTemplateDesign
         var maxX = Math.Floor((document.Width - element.Width) * 100) / 100;
         var maxY = Math.Floor((document.Height - element.Height) * 100) / 100;
         return (Math.Clamp(Math.Round(x, 2), 0, maxX), Math.Clamp(Math.Round(y, 2), 0, maxY));
+    }
+
+    /// <summary>تغییر اندازه از هشت دستگیره با حفظ لبه مقابل و محدوده بوم.</summary>
+    public static (double X, double Y, double Width, double Height) ResizeFromHandle(
+        FreeTemplateDocument document, FreeTemplateElement element, FreeTemplateResizeHandle handle, double dx, double dy)
+    {
+        if (!Enum.IsDefined(handle) || !double.IsFinite(dx) || !double.IsFinite(dy) ||
+            !double.IsFinite(element.X) || !double.IsFinite(element.Y) || !double.IsFinite(element.Width) || !double.IsFinite(element.Height) ||
+            !double.IsFinite(document.Width) || !double.IsFinite(document.Height) || element.X < 0 || element.Y < 0 ||
+            element.Width < 5 || element.Height < 5 || element.X + element.Width > document.Width || element.Y + element.Height > document.Height)
+            throw new ArgumentException("محدوده تغییر اندازه معتبر نیست.");
+        var left = handle is FreeTemplateResizeHandle.Left or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.BottomLeft;
+        var right = handle is FreeTemplateResizeHandle.Right or FreeTemplateResizeHandle.TopRight or FreeTemplateResizeHandle.BottomRight;
+        var top = handle is FreeTemplateResizeHandle.Top or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.TopRight;
+        var bottom = handle is FreeTemplateResizeHandle.Bottom or FreeTemplateResizeHandle.BottomLeft or FreeTemplateResizeHandle.BottomRight;
+        var x = element.X; var y = element.Y; var width = element.Width; var height = element.Height;
+        if (left)
+        {
+            var fixedRight = element.X + element.Width;
+            x = Math.Clamp(Math.Round(element.X + dx, 2), 0, Math.Floor((fixedRight - 5) * 100) / 100);
+            width = Math.Clamp(Math.Round(fixedRight - x, 2), 5, Math.Floor((document.Width - x) * 100) / 100);
+        }
+        else if (right)
+            width = Math.Clamp(Math.Round(element.Width + dx, 2), 5, Math.Floor((document.Width - element.X) * 100) / 100);
+        if (top)
+        {
+            var fixedBottom = element.Y + element.Height;
+            y = Math.Clamp(Math.Round(element.Y + dy, 2), 0, Math.Floor((fixedBottom - 5) * 100) / 100);
+            height = Math.Clamp(Math.Round(fixedBottom - y, 2), 5, Math.Floor((document.Height - y) * 100) / 100);
+        }
+        else if (bottom)
+            height = Math.Clamp(Math.Round(element.Height + dy, 2), 5, Math.Floor((document.Height - element.Y) * 100) / 100);
+        return (x, y, width, height);
     }
 
     /// <summary>محاسبه اندازه عنصر در کشیدن گوشه، محدود به محدوده بوم.</summary>

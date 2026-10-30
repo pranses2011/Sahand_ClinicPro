@@ -121,6 +121,17 @@ public partial class FreeTemplateEditorWindow : Window
         panel.Children.Add(grid);
         return panel;
     }
+    private sealed record ResizeTag(FreeTemplateElement Item, FreeTemplateResizeHandle Direction);
+
+    private static void PlaceResizeHandle(Thumb handle, FreeTemplateElement item, FreeTemplateResizeHandle direction)
+    {
+        var horizontal = direction is FreeTemplateResizeHandle.Left or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.BottomLeft ? 0 :
+            direction is FreeTemplateResizeHandle.Right or FreeTemplateResizeHandle.TopRight or FreeTemplateResizeHandle.BottomRight ? 1 : 0.5;
+        var vertical = direction is FreeTemplateResizeHandle.Top or FreeTemplateResizeHandle.TopLeft or FreeTemplateResizeHandle.TopRight ? 0 :
+            direction is FreeTemplateResizeHandle.Bottom or FreeTemplateResizeHandle.BottomLeft or FreeTemplateResizeHandle.BottomRight ? 1 : 0.5;
+        Canvas.SetLeft(handle, item.X + horizontal * Math.Max(0, item.Width - handle.Width));
+        Canvas.SetTop(handle, item.Y + vertical * Math.Max(0, item.Height - handle.Height));
+    }
     private void RefreshCanvas(bool resetCanvasInputs = true)
     {
         PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
@@ -153,36 +164,50 @@ public partial class FreeTemplateEditorWindow : Window
             PageCanvas.Children.Add(border);
             if (ReferenceEquals(item, _selected))
             {
-                var handle = new Thumb { Tag = item, Style = (Style)FindResource("ResizeHandle"), Width = 12, Height = 12, Background = Brushes.White, BorderBrush = Brushes.DodgerBlue,
-                    BorderThickness = new Thickness(1), Cursor = Cursors.SizeNWSE, ToolTip = "برای تغییر اندازه گوشه را بکشید" };
-                var allowed = false;
-                Point start = default;
-                double initialWidth = 0, initialHeight = 0;
-                void PlaceHandle() { Canvas.SetLeft(handle, item.X + item.Width - handle.Width); Canvas.SetTop(handle, item.Y + item.Height - handle.Height); }
-                handle.DragStarted += (_, _) =>
+                foreach (var direction in Enum.GetValues<FreeTemplateResizeHandle>())
                 {
-                    allowed = CanDiscardPending();
-                    if (!allowed) return;
-                    Select(item);
-                    CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
-                    SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
-                    start = Mouse.GetPosition(PageCanvas); initialWidth = item.Width; initialHeight = item.Height;
-                };
-                handle.DragDelta += (_, _) =>
-                {
-                    if (!allowed) return;
-                    var point = Mouse.GetPosition(PageCanvas);
-                    var size = FreeTemplateDesign.ResizeWithinCanvas(_document, item, initialWidth + point.X - start.X, initialHeight + point.Y - start.Y);
-                    item.Width = size.Width; item.Height = size.Height; border.Width = size.Width; border.Height = size.Height;
-                    WidthBox.Text = Number(size.Width); HeightBox.Text = Number(size.Height); PlaceHandle();
-                };
-                handle.DragCompleted += (_, e) =>
-                {
-                    if (!allowed) return;
-                    if (e.Canceled) { item.Width = initialWidth; item.Height = initialHeight; Select(item); }
-                    RefreshCanvas();
-                };
-                Panel.SetZIndex(handle, 1); PlaceHandle(); PageCanvas.Children.Add(handle);
+                    var cursor = direction switch
+                    {
+                        FreeTemplateResizeHandle.Left or FreeTemplateResizeHandle.Right => Cursors.SizeWE,
+                        FreeTemplateResizeHandle.Top or FreeTemplateResizeHandle.Bottom => Cursors.SizeNS,
+                        FreeTemplateResizeHandle.TopRight or FreeTemplateResizeHandle.BottomLeft => Cursors.SizeNESW,
+                        _ => Cursors.SizeNWSE
+                    };
+                    var handle = new Thumb { Tag = new ResizeTag(item, direction), Style = (Style)FindResource("ResizeHandle"), Width = 10, Height = 10,
+                        Background = Brushes.White, BorderBrush = Brushes.DodgerBlue, BorderThickness = new Thickness(1), Cursor = cursor,
+                        ToolTip = "برای تغییر اندازه دستگیره را بکشید" };
+                    var allowed = false;
+                    Point start = default;
+                    var original = new FreeTemplateElement();
+                    handle.DragStarted += (_, _) =>
+                    {
+                        allowed = CanDiscardPending();
+                        if (!allowed) return;
+                        Select(item);
+                        CanvasWidthBox.Text = Number(_document.Width); CanvasHeightBox.Text = Number(_document.Height);
+                        SheetPaddingBox.Text = _document.SheetPadding?.ToString(CultureInfo.InvariantCulture) ?? "";
+                        start = Mouse.GetPosition(PageCanvas);
+                        original = new FreeTemplateElement { X = item.X, Y = item.Y, Width = item.Width, Height = item.Height };
+                    };
+                    handle.DragDelta += (_, _) =>
+                    {
+                        if (!allowed) return;
+                        var point = Mouse.GetPosition(PageCanvas);
+                        var size = FreeTemplateDesign.ResizeFromHandle(_document, original, direction, point.X - start.X, point.Y - start.Y);
+                        item.X = size.X; item.Y = size.Y; item.Width = size.Width; item.Height = size.Height;
+                        Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y); border.Width = size.Width; border.Height = size.Height;
+                        XBox.Text = Number(size.X); YBox.Text = Number(size.Y); WidthBox.Text = Number(size.Width); HeightBox.Text = Number(size.Height);
+                        foreach (var h in PageCanvas.Children.OfType<Thumb>())
+                            if (h.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item)) PlaceResizeHandle(h, item, tag.Direction);
+                    };
+                    handle.DragCompleted += (_, e) =>
+                    {
+                        if (!allowed) return;
+                        if (e.Canceled) { item.X = original.X; item.Y = original.Y; item.Width = original.Width; item.Height = original.Height; Select(item); }
+                        RefreshCanvas();
+                    };
+                    Panel.SetZIndex(handle, 1); PlaceResizeHandle(handle, item, direction); PageCanvas.Children.Add(handle);
+                }
             }
         }
     }
@@ -240,7 +265,7 @@ public partial class FreeTemplateEditorWindow : Window
             element.BorderBrush = selected ? Brushes.DodgerBlue : Brushes.Transparent;
         }
         foreach (var handle in PageCanvas.Children.OfType<Thumb>())
-            handle.Visibility = ReferenceEquals(handle.Tag, item) ? Visibility.Visible : Visibility.Collapsed;
+            handle.Visibility = handle.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item) ? Visibility.Visible : Visibility.Collapsed;
         _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y;
         if (!border.CaptureMouse()) RefreshCanvas();
         e.Handled = true;
@@ -252,8 +277,8 @@ public partial class FreeTemplateEditorWindow : Window
         var position = FreeTemplateDesign.MoveWithinCanvas(_document, item, _startX + p.X - _dragStart.X, _startY + p.Y - _dragStart.Y);
         item.X = position.X; item.Y = position.Y;
         Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
-        foreach (var handle in PageCanvas.Children.OfType<Thumb>().Where(x => ReferenceEquals(x.Tag, item)))
-        { Canvas.SetLeft(handle, item.X + item.Width - handle.Width); Canvas.SetTop(handle, item.Y + item.Height - handle.Height); }
+        foreach (var handle in PageCanvas.Children.OfType<Thumb>())
+            if (handle.Tag is ResizeTag tag && ReferenceEquals(tag.Item, item)) PlaceResizeHandle(handle, item, tag.Direction);
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
