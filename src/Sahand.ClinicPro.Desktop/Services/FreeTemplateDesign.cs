@@ -164,11 +164,18 @@ public static class FreeTemplateDesign
         catch (FormatException) { return null; }
     }
 
-    public static string Build(FreeTemplateDocument document, IReadOnlyCollection<string> allowed)
+    /// <summary>اعتبار بوم در حین ویرایش؛ سند خالی می‌تواند اندازه داشته باشد ولی قابل ذخیره نیست.</summary>
+    public static void ValidateCanvas(FreeTemplateDocument document)
     {
         if (document is null || !double.IsFinite(document.Width) || !double.IsFinite(document.Height) ||
-            document.Width is < 100 or > 2500 || document.Height is < 100 or > 4000 || document.SheetPadding is < 0 or > 100 || document.Elements is null || document.Elements.Count is < 1 or > 200)
+            document.Width is < 100 or > 2500 || document.Height is < 100 or > 4000 || document.SheetPadding is < 0 or > 100 || document.Elements is null || document.Elements.Count > 200)
             throw new ArgumentException("اندازه بوم یا تعداد عناصر معتبر نیست.");
+    }
+
+    public static string Build(FreeTemplateDocument document, IReadOnlyCollection<string> allowed)
+    {
+        ValidateCanvas(document);
+        if (document.Elements.Count == 0) throw new ArgumentException("برای ذخیره حداقل یک عنصر به بوم اضافه کنید.");
         if (document.Elements.Count(x => x?.Kind == "image") > 4) throw new ArgumentException("حداکثر چهار تصویر در بوم مجاز است.");
         var body = new StringBuilder();
         if (document.SheetPadding is { } padding) body.Append("<style>.sheet{padding:").Append(padding).Append("px !important;}</style>");

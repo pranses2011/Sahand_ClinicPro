@@ -393,7 +393,11 @@ public partial class FreeTemplateEditorWindow : Window
             var padding = ReadPadding();
             var oldW = _document.Width; var oldH = _document.Height; var oldPadding = _document.SheetPadding;
             _document.Width = width; _document.Height = height; _document.SheetPadding = padding;
-            try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
+            try
+            {
+                FreeTemplateDesign.ValidateCanvas(_document);
+                if (_document.Elements.Count > 0) FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray());
+            }
             catch { _document.Width = oldW; _document.Height = oldH; _document.SheetPadding = oldPadding; throw; }
             RefreshCanvas();
         }

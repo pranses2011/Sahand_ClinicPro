@@ -52,6 +52,20 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Empty_canvas_can_be_resized_but_cannot_be_saved()
+    {
+        var doc = new FreeTemplateDocument { Width = 600, Height = 800, Elements = new() };
+        Action valid = () => FreeTemplateDesign.ValidateCanvas(doc);
+        valid.Should().NotThrow();
+        Action save = () => FreeTemplateDesign.Build(doc, Array.Empty<string>());
+        save.Should().Throw<ArgumentException>();
+        doc.Width = 99;
+        valid.Should().Throw<ArgumentException>();
+        doc.Width = 600; doc.SheetPadding = 101;
+        valid.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Layer_order_is_preserved_in_output_and_stops_at_edges()
     {
         var first = new FreeTemplateElement { Kind = "text", Text = "first" };
