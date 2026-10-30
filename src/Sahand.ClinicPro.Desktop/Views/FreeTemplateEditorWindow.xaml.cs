@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -18,6 +19,8 @@ public partial class FreeTemplateEditorWindow : Window
     private const string DragFormat = "SahandClinicPro.FreeTemplate.Kind";
     private readonly FreeTemplateDocument _document;
     private readonly IReadOnlyList<ComplementaryViewModel.TemplateVariable> _variables;
+    private readonly string _originalDocument, _originalPaper, _originalOrientation;
+    private bool _applied;
     private FreeTemplateElement? _selected;
     private Point _toolStart, _dragStart;
     private double _startX, _startY;
@@ -28,6 +31,9 @@ public partial class FreeTemplateEditorWindow : Window
     public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation)
     {
         _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
+        _originalDocument = JsonSerializer.Serialize(_document);
+        _originalPaper = paper;
+        _originalOrientation = orientation;
         _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         VariableBox.ItemsSource = _variables;
@@ -100,7 +106,7 @@ public partial class FreeTemplateEditorWindow : Window
         BoldBox.IsChecked = item.Bold; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
     }
     private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
-    private bool CanDiscardPending()
+    private bool HasPending()
     {
         var dirty = false;
         try
@@ -112,7 +118,17 @@ public partial class FreeTemplateEditorWindow : Window
                     !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment;
         }
         catch (ArgumentException) { dirty = true; }
-        return !dirty || AppDialog.Confirm("تغییرات اعمال‌نشده", "تغییرات ویژگی یا ابعاد هنوز اعمال نشده‌اند و با این کار کنار گذاشته می‌شوند. ادامه می‌دهید؟", AppDialogIcon.Warning) == true;
+        return dirty;
+    }
+    private bool CanDiscardPending() => !HasPending() || AppDialog.Confirm("تغییرات اعمال‌نشده", "تغییرات ویژگی یا ابعاد هنوز اعمال نشده‌اند و با این کار کنار گذاشته می‌شوند. ادامه می‌دهید؟", AppDialogIcon.Warning) == true;
+    private void Window_Closing(object? sender, CancelEventArgs e)
+    {
+        if (_applied) return;
+        var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
+        if ((HasPending() || JsonSerializer.Serialize(_document) != _originalDocument || PaperBox.Text != _originalPaper ||
+            !string.Equals(orientation, _originalOrientation, StringComparison.OrdinalIgnoreCase)) &&
+            AppDialog.Confirm("انصراف از طراحی", "همه تغییرات این پنجره بدون اعمال به قالب کنار گذاشته شوند؟", AppDialogIcon.Warning) != true)
+            e.Cancel = true;
     }
     private void ItemDown(object sender, MouseButtonEventArgs e)
     {
@@ -224,9 +240,9 @@ public partial class FreeTemplateEditorWindow : Window
             var html = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray());
             if (_document.Elements.Any(x => x.Kind == "variable") && AppDialog.Confirm("بررسی محتوای چاپ",
                 "کادرهای بوم اندازه ثابت دارند و اطلاعات طولانی یا ردیف‌های جدول ممکن است بریده شوند. پیش از استفاده، تمام داده‌ها و صفحه‌ها را با داده واقعی و چاپ آزمایشی بررسی کنید. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
-            ResultHtml = html; ResultPaperSize = paper; ResultOrientation = orientation; DialogResult = true;
+            ResultHtml = html; ResultPaperSize = paper; ResultOrientation = orientation; _applied = true; DialogResult = true;
         }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
     }
-    private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 }
