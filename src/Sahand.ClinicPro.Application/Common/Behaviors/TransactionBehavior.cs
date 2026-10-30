@@ -1,6 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Application.Interfaces;
+using Sahand.ClinicPro.Domain.Common;
 
 namespace Sahand.ClinicPro.Application.Common.Behaviors;
 
@@ -38,12 +39,21 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         try
         {
             var response = await next();
+            // Result<T> نیز از Result مشتق است. شکست دامنه پس از یک ذخیرهٔ
+            // میانی نباید مانند موفقیت تثبیت شود.
+            if (response is Result { IsFailure: true })
+            {
+                await _transactionManager.RollbackAsync(CancellationToken.None);
+                return response;
+            }
+
             await _transactionManager.CommitAsync(cancellationToken);
             return response;
         }
         catch (Exception ex)
         {
-            await _transactionManager.RollbackAsync(cancellationToken);
+            // لغو درخواست HTTP نباید خودِ عملیات عقب‌گرد را لغو کند.
+            await _transactionManager.RollbackAsync(CancellationToken.None);
             _logger.LogWarning(ex, "تراکنش {RequestName} با خطا به عقب برگشت", typeof(TRequest).Name);
             throw;
         }

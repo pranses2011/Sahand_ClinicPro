@@ -15,6 +15,11 @@ on:
         description: 'کلیدهای صفحات (جدا شده با کاما) — dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
         required: false
         default: 'dentistry,ophthalmology,physiotherapy,survey,survey-results,print-template,print-settings,print-designer,imaging'
+      commit_results:
+        description: 'ثبت تصاویر روی همین شاخه (در حالت عادی فقط آرتیفکت ساخته می‌شود)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -142,8 +147,8 @@ jobs:
           path: shots/
           retention-days: 14
 
-      - name: بازگرداندن اسکرینشاتها روی همان شاخه
-        if: startsWith(github.ref, 'refs/heads/')
+      - name: بازگرداندن اسکرینشاتها روی همان شاخه (فقط با درخواست صریح)
+        if: github.event_name == 'workflow_dispatch' && inputs.commit_results && startsWith(github.ref, 'refs/heads/')
         shell: pwsh
         run: |
           git config user.name "github-actions"

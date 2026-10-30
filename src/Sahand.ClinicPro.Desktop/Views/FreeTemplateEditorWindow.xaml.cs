@@ -305,11 +305,22 @@ public partial class FreeTemplateEditorWindow : Window
     }
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Escape || Mouse.Captured is not Border { Tag: FreeTemplateElement } border ||
-            !PageCanvas.Children.Contains(border)) return;
-        // از دست رفتن capture بدون تأیید، مکان اولیه را بازمی‌گرداند.
-        border.ReleaseMouseCapture();
-        e.Handled = true;
+        if (e.Key != Key.Escape) return;
+        // Thumb برخلاف تصور، به‌صورت پیش‌فرض Escape را به CancelDrag تبدیل
+        // نمی‌کند. این کار DragCompleted.Canceled را فعال و ابعاد اولیه را
+        // بازمی‌گرداند؛ قطع capture هم همین مسیر را طی می‌کند.
+        if (Mouse.Captured is Thumb thumb && PageCanvas.Children.Contains(thumb) && thumb.IsDragging)
+        {
+            thumb.CancelDrag();
+            e.Handled = true;
+            return;
+        }
+        if (Mouse.Captured is Border { Tag: FreeTemplateElement } border && PageCanvas.Children.Contains(border))
+        {
+            // از دست رفتن capture بدون تأیید، مکان اولیه را بازمی‌گرداند.
+            border.ReleaseMouseCapture();
+            e.Handled = true;
+        }
     }
     private void SampleValues_Click(object sender, RoutedEventArgs e) => RefreshCanvas(resetCanvasInputs: false);
     private void ToolDown(object sender, MouseButtonEventArgs e) => _toolStart = e.GetPosition(this);

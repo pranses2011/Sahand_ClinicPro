@@ -17,7 +17,8 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests.Appointments;
 /// </summary>
 public class WaitlistTests
 {
-    private static (NotifyWaitlistForFreedSlotCommandHandler Handler, ClinicProDbContext Ctx) MakeNotifier()
+    private static (NotifyWaitlistForFreedSlotCommandHandler Handler, ClinicProDbContext Ctx) MakeNotifier(
+        Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>? sms = null)
     {
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
             .UseInMemoryDatabase($"waitlist-{Guid.NewGuid():N}")
@@ -37,10 +38,13 @@ public class WaitlistTests
         uow.Setup(u => u.SaveEntitiesAsync(It.IsAny<CancellationToken>()))
             .Returns<CancellationToken>(async _ => await ctx.SaveChangesAsync(_) > 0);
 
-        // سرویس پیامک بی‌اثر — تست منطق پیشنهاد است نه ارسال
-        var sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>();
-        sms.Setup(s => s.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Sahand.ClinicPro.Application.Interfaces.SmsSendResult.Ok("test", "1"));
+        // سرویس پیامک بی‌اثر — تست منطق پیشنهاد است نه ارسال فیزیکی.
+        if (sms is null)
+        {
+            sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>();
+            sms.Setup(s => s.EnqueueRawAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<byte>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+        }
 
         return (new NotifyWaitlistForFreedSlotCommandHandler(uow.Object, sms.Object), ctx);
     }
@@ -134,6 +138,40 @@ public class WaitlistTests
             CancellationToken.None)).Value;
 
         result.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Offer_skips_missing_mobile_and_queues_instead_of_sending_before_commit()
+    {
+        var sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>(MockBehavior.Strict);
+        sms.Setup(s => s.EnqueueRawAsync("09140000000", It.IsAny<string>(), null, 3, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var (handler, ctx) = MakeNotifier(sms);
+        var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(3));
+        var noMobile = Entry(1, 10, 5, date, date, Priority.High);
+        noMobile.ContactMobile = " ";
+        ctx.WaitlistEntries.AddRange(noMobile, Entry(2, 11, 5, date, date));
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(10, 30)), default);
+        result.Value.Should().Be(2);
+        noMobile.Status.Should().Be(WaitlistStatus.Waiting);
+        sms.Verify(s => s.EnqueueRawAsync("09140000000", It.IsAny<string>(), null, 3, It.IsAny<CancellationToken>()), Times.Once);
+        sms.Verify(s => s.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Offer_does_not_hide_failure_to_enqueue_message()
+    {
+        var sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>(MockBehavior.Strict);
+        sms.Setup(s => s.EnqueueRawAsync(It.IsAny<string>(), It.IsAny<string>(), null, 3, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("queue unavailable"));
+        var (handler, ctx) = MakeNotifier(sms);
+        var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(3));
+        ctx.WaitlistEntries.Add(Entry(1, 10, 5, date, date));
+        await ctx.SaveChangesAsync();
+        var action = () => handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(10, 30)), default);
+        await action.Should().ThrowAsync<InvalidOperationException>();
     }
 
     /// <summary>ردیف‌های هم‌اولویت — قدیمی‌ترین اول</summary>

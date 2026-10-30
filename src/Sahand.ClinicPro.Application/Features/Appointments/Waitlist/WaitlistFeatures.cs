@@ -131,7 +131,7 @@ public class AddToWaitlistCommandHandler : IRequestHandler<AddToWaitlistCommand,
         var (statusText, statusColor) = e.Status switch
         {
             WaitlistStatus.Waiting => ("⏳ در انتظار", "#1565C0"),
-            WaitlistStatus.Notified => ("📨 پیامک شد", "#F9A825"),
+            WaitlistStatus.Notified => ("📨 پیشنهاد ثبت شد", "#F9A825"),
             WaitlistStatus.Confirmed => ("✅ تأیید بیمار", "#2E7D32"),
             WaitlistStatus.Expired => ("⌛ منقضی", "#9E9E9E"),
             WaitlistStatus.Cancelled => ("✖️ لغوشده", "#C62828"),
@@ -280,10 +280,11 @@ public class NotifyWaitlistForFreedSlotCommandHandler
             .Take(10)
             .ToListAsync(cancellationToken);
 
-        if (candidates.Count == 0)
+        // ردیف بدون شماره قابل تماس نباید به‌اشتباه «اطلاع‌رسانی‌شده» شود.
+        var winner = candidates.FirstOrDefault(w => !string.IsNullOrWhiteSpace(w.ContactMobile));
+        if (winner is null)
             return Result<long>.Success(0);
 
-        var winner = candidates[0];
         winner.Status = WaitlistStatus.Notified;
         winner.NotifiedAt = DateTime.UtcNow;
         winner.OfferedAppointmentId = request.CancelledAppointmentId;
@@ -295,16 +296,10 @@ public class NotifyWaitlistForFreedSlotCommandHandler
             $"«درمانگاه سهند» سلام 🌿\n" +
             $"به دلیل لغو نوبت، جای خالی روز {dateText} ساعت {request.AppointmentTime:hh\\:mm} پیش شماست.\n" +
             $"برای تأیید و رزرو نهایی با شماره ۰۴۱-۳۳۳۳۴۴۴ تماس بگیرید.";
-        try
-        {
-            var mobile = winner.ContactMobile ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(mobile))
-                await _sms.SendAsync(mobile, message, cancellationToken);
-        }
-        catch
-        {
-            // خطای ارسال پیامک نباید تراکنش لغو نوبت را بلامحل کند — وضعیت Notified می‌ماند و اپراتور پیگیری تلفنی می‌کند
-        }
+        // صف پیامک از همان DbContext و تراکنش استفاده می‌کند؛ ارسال مستقیم
+        // قبل از commit می‌توانست پیامِ جای خالیِ لغونشده را به بیمار برساند.
+        // شکست صف‌کردن عمداً بلعیده نمی‌شود تا کل تغییرات عقب برگردند.
+        await _sms.EnqueueRawAsync(winner.ContactMobile!, message, ct: cancellationToken);
 
         return Result<long>.Success(winner.Id);
     }

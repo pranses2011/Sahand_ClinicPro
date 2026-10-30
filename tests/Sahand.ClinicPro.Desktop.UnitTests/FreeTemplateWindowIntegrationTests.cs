@@ -59,6 +59,20 @@ public class FreeTemplateWindowIntegrationTests
             // بازگرداندن وضعیت اولیه تا بستن پنجره، تأیید تعاملی نخواهد.
             field.Text = "#173657";
             apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+            // رویدادهای واقعی WPF (نه حرکت فیزیکی ماوس): هر دستگیره هنگام
+            // DragCompleted لغوشده باید هندسهٔ پیش از شروع را بازگرداند.
+            var item = current.Elements[0];
+            var original = (item.X, item.Y, item.Width, item.Height);
+            for (var index = 0; index < 8; index++)
+            {
+                var handle = canvas.Children.OfType<Thumb>().ElementAt(index);
+                handle.RaiseEvent(new DragStartedEventArgs(0, 0));
+                item.X += 5; item.Y += 5; item.Width += 10; item.Height += 10;
+                handle.RaiseEvent(new DragCompletedEventArgs(10, 10, true));
+                (item.X, item.Y, item.Width, item.Height).Should().Be(original);
+            }
+            source.Elements[0].Width.Should().Be(original.Width);
         }
         finally
         {

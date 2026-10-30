@@ -21,6 +21,9 @@ public partial class HtmlPrintWindow : Window
         Title = title;
         TitleText.Text = title;
         Browser.NavigateToString(html);
+        // سند ممکن است حاوی اطلاعات بیمار باشد؛ کنترل COM پس از بسته‌شدن
+        // پنجره آزاد شود و در هر بار پیش‌نمایش انباشته نشود.
+        Closed += (_, _) => Browser.Dispose();
     }
 
     private FixedCanvasPrintGuard.Result CheckFixedCanvas()
