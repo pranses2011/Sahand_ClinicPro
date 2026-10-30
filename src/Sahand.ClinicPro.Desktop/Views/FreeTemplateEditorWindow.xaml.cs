@@ -48,6 +48,7 @@ public partial class FreeTemplateEditorWindow : Window
         if (preset is not null) PaperBox.SelectedItem = preset; else PaperBox.Text = paper;
         OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         if (_document.Elements.Count > 0) Select(_document.Elements[0]);
+        else ClearSelection();
         RefreshCanvas();
     }
     private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -153,11 +154,20 @@ public partial class FreeTemplateEditorWindow : Window
     }
     private void Select(FreeTemplateElement item)
     {
-        _selected = item; TextBoxValue.Text = item.Text; VariableBox.SelectedValue = item.Key;
+        _selected = item; PropertiesActions.IsEnabled = true; PropertiesScroll.IsEnabled = true;
+        TextBoxValue.Text = item.Text; VariableBox.SelectedValue = item.Key;
         VariableBox.IsEnabled = item.Kind == "variable";
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
         FontBox.Text = item.FontSize.ToString(CultureInfo.InvariantCulture); ColorBox.Text = item.Color;
         BoldBox.IsChecked = item.Bold; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
+    }
+    private void ClearSelection()
+    {
+        _selected = null;
+        TextBoxValue.Clear(); VariableBox.SelectedIndex = -1;
+        XBox.Clear(); YBox.Clear(); WidthBox.Clear(); HeightBox.Clear(); FontBox.Clear(); ColorBox.Clear();
+        BoldBox.IsChecked = false; AlignmentBox.SelectedIndex = 0;
+        PropertiesActions.IsEnabled = false; PropertiesScroll.IsEnabled = false;
     }
     private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
     private bool HasPending()
@@ -281,7 +291,7 @@ public partial class FreeTemplateEditorWindow : Window
         FreeTemplateDesign.MoveLayer(_document, item, tag == "1" ? 1 : -1);
         RefreshCanvas();
     }
-    private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); _selected = null; RefreshCanvas(); } }
+    private void Remove_Click(object sender, RoutedEventArgs e) { if (_selected is not null && CanDiscardPending()) { _document.Elements.Remove(_selected); ClearSelection(); RefreshCanvas(); } }
     private (string Html, string Paper, string Orientation) BuildCurrentDesign()
     {
         if (HasPending()) throw new ArgumentException("ابتدا تغییرات ویژگی‌ها و ابعاد را با دکمه مربوط اعمال کنید.");
