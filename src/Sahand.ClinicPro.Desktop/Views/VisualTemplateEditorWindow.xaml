@@ -50,8 +50,8 @@
                         <ComboBoxItem Content="B5"/><ComboBoxItem Content="Letter"/><ComboBoxItem Content="Legal"/>
                         <ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/>
                     </ComboBox>
-                    <Button Content="＋ افزودن متن" Click="OnAddText" Margin="0,0,0,8" Padding="12,8"/>
-                    <Button Content="＋ افزودن اطلاعات سند" Click="OnAddVariable" Margin="0,0,0,8" Padding="12,8"/>
+                    <Button Content="＋ افزودن متن" Tag="text" Click="OnAddText" PreviewMouseLeftButtonDown="OnPaletteMouseDown" PreviewMouseMove="OnPaletteMouseMove" Margin="0,0,0,8" Padding="12,8" ToolTip="کلیک یا کشیدن به روی برگه"/>
+                    <Button Content="＋ افزودن اطلاعات سند" Tag="variable" Click="OnAddVariable" PreviewMouseLeftButtonDown="OnPaletteMouseDown" PreviewMouseMove="OnPaletteMouseMove" Margin="0,0,0,8" Padding="12,8" ToolTip="کلیک یا کشیدن به روی برگه"/>
                     <TextBlock Text="مرتب‌سازی: دستگیره کنار هر ردیف را بکشید." TextWrapping="Wrap" Foreground="#5D748B" FontSize="11" Margin="0,0,0,6"/>
                     <Separator Margin="0,5,0,10"/>
                     <Button Content="↑ انتقال ردیف به بالا" Click="OnMoveUp" Margin="0,0,0,8" Padding="12,8"/>
