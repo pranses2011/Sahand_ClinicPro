@@ -126,6 +126,7 @@ public partial class FreeTemplateEditorWindow : Window
                 Background = Brushes.Transparent, ClipToBounds = true, Child = content };
             Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y);
             border.MouseLeftButtonDown += ItemDown; border.MouseMove += ItemMove; border.MouseLeftButtonUp += ItemUp;
+            border.LostMouseCapture += ItemCaptureLost;
             PageCanvas.Children.Add(border);
             if (ReferenceEquals(item, _selected))
             {
@@ -217,7 +218,9 @@ public partial class FreeTemplateEditorWindow : Window
         }
         foreach (var handle in PageCanvas.Children.OfType<Thumb>())
             handle.Visibility = ReferenceEquals(handle.Tag, item) ? Visibility.Visible : Visibility.Collapsed;
-        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y; border.CaptureMouse(); e.Handled = true;
+        _dragStart = e.GetPosition(PageCanvas); _startX = item.X; _startY = item.Y;
+        if (!border.CaptureMouse()) RefreshCanvas();
+        e.Handled = true;
     }
     private void ItemMove(object sender, MouseEventArgs e)
     {
@@ -231,7 +234,15 @@ public partial class FreeTemplateEditorWindow : Window
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)
-    { if (sender is Border border) border.ReleaseMouseCapture(); RefreshCanvas(); e.Handled = true; }
+    {
+        if (sender is Border { IsMouseCaptured: true } border) border.ReleaseMouseCapture();
+        else RefreshCanvas();
+        e.Handled = true;
+    }
+    private void ItemCaptureLost(object sender, MouseEventArgs e)
+    {
+        if (ReferenceEquals(sender, e.OriginalSource)) RefreshCanvas();
+    }
     private void SampleValues_Click(object sender, RoutedEventArgs e) => RefreshCanvas(resetCanvasInputs: false);
     private void ToolDown(object sender, MouseButtonEventArgs e) => _toolStart = e.GetPosition(this);
     private void ToolMove(object sender, MouseEventArgs e)
