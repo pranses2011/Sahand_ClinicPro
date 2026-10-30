@@ -15,7 +15,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="چیدمان برگه" FontSize="15" FontWeight="Bold" Foreground="#173657" Margin="0,0,0,10"/>
                     <ListBox x:Name="RowsList" ItemsSource="{Binding Rows}" BorderThickness="0" Background="Transparent"
-                             AllowDrop="True" Drop="OnRowDrop" DragOver="OnRowDragOver"
+                             AllowDrop="True" PreviewDrop="OnRowDrop" PreviewDragOver="OnRowDragOver"
                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -44,6 +44,12 @@
             <Border Grid.Column="2" Background="White" BorderBrush="#D8E3EE" BorderThickness="1" CornerRadius="10" Padding="14">
                 <StackPanel>
                     <TextBlock Text="ابزار طراحی" FontSize="15" FontWeight="Bold" Foreground="#173657" Margin="0,0,0,12"/>
+                    <TextBlock Text="اندازه کاغذ" FontSize="11" Foreground="#5D748B"/>
+                    <ComboBox x:Name="PaperBox" IsEditable="True" Margin="0,5,0,12" ToolTip="برای اندازه سفارشی Custom:عرضxارتفاع به میلی‌متر وارد کنید">
+                        <ComboBoxItem Content="A4"/><ComboBoxItem Content="A5"/><ComboBoxItem Content="A6"/><ComboBoxItem Content="A3"/>
+                        <ComboBoxItem Content="B5"/><ComboBoxItem Content="Letter"/><ComboBoxItem Content="Legal"/>
+                        <ComboBoxItem Content="Thermal80"/><ComboBoxItem Content="Thermal58"/>
+                    </ComboBox>
                     <Button Content="＋ افزودن متن" Click="OnAddText" Margin="0,0,0,8" Padding="12,8"/>
                     <Button Content="＋ افزودن اطلاعات سند" Click="OnAddVariable" Margin="0,0,0,8" Padding="12,8"/>
                     <TextBlock Text="مرتب‌سازی: دستگیره کنار هر ردیف را بکشید." TextWrapping="Wrap" Foreground="#5D748B" FontSize="11" Margin="0,0,0,6"/>

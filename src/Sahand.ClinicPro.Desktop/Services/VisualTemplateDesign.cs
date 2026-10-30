@@ -20,6 +20,15 @@ public static class VisualTemplateDesign
     private const string Prefix = "<!--clinicpro-visual-v1:";
     private static string SafeText(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
 
+    /// <summary>اندازه‌های کاغذ استاندارد یا سفارشی با ابعاد معقول بر حسب میلی‌متر.</summary>
+    public static bool IsValidPaperSize(string? paper)
+    {
+        if (string.IsNullOrWhiteSpace(paper)) return false;
+        if (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }.Contains(paper, StringComparer.OrdinalIgnoreCase)) return true;
+        var match = Regex.Match(paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var width) && int.TryParse(match.Groups[2].Value, out var height) && width is >= 20 and <= 1000 && height is >= 20 and <= 1000;
+    }
+
     public static string Build(IReadOnlyList<VisualTemplateBlock> blocks, IReadOnlyCollection<string> allowed)
     {
         if (blocks.Count is < 1 or > 100) throw new ArgumentException("تعداد ردیف‌ها باید بین ۱ و ۱۰۰ باشد.");

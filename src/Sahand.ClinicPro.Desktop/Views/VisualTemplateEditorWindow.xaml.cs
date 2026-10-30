@@ -14,13 +14,15 @@ public partial class VisualTemplateEditorWindow : Window
     public ObservableCollection<VisualTemplateBlock> Rows { get; }
     public IReadOnlyList<ComplementaryViewModel.TemplateVariable> Variables { get; }
     public string? ResultHtml { get; private set; }
+    public string? ResultPaperSize { get; private set; }
 
-    public VisualTemplateEditorWindow(IEnumerable<VisualTemplateBlock> rows, IEnumerable<ComplementaryViewModel.TemplateVariable> variables)
+    public VisualTemplateEditorWindow(IEnumerable<VisualTemplateBlock> rows, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paperSize)
     {
         Rows = new ObservableCollection<VisualTemplateBlock>(rows.Select(r => new VisualTemplateBlock { Kind = r.Kind, Text = r.Text, Key = r.Key }));
         Variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         DataContext = this;
+        PaperBox.Text = paperSize;
     }
     private void OnAddText(object sender, RoutedEventArgs e)
     { var row = new VisualTemplateBlock { Kind = "text", Text = "متن جدید" }; Rows.Add(row); RowsList.SelectedItem = row; }
@@ -68,7 +70,14 @@ public partial class VisualTemplateEditorWindow : Window
     private void OnMoveDown(object sender, RoutedEventArgs e) => Move(1);
     private void OnApply(object sender, RoutedEventArgs e)
     {
-        try { ResultHtml = VisualTemplateDesign.Build(Rows.ToList(), Variables.Select(v => v.Key).ToArray()); DialogResult = true; }
+        try
+        {
+            var paper = PaperBox.Text.Trim();
+            if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست؛ اندازه استاندارد یا Custom:عرضxارتفاع (۲۰ تا ۱۰۰۰ میلی‌متر) وارد کنید.");
+            ResultHtml = VisualTemplateDesign.Build(Rows.ToList(), Variables.Select(v => v.Key).ToArray());
+            ResultPaperSize = paper;
+            DialogResult = true;
+        }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
     }
     private void OnCancel(object sender, RoutedEventArgs e) => DialogResult = false;

@@ -7,6 +7,17 @@ namespace Sahand.ClinicPro.Desktop.UnitTests;
 
 public class VisualTemplateDesignTests
 {
+    [Theory]
+    [InlineData("A4", true)]
+    [InlineData("Thermal80", true)]
+    [InlineData("Custom:100x180", true)]
+    [InlineData("Custom:20×1000mm", true)]
+    [InlineData("Custom:0x50", false)]
+    [InlineData("Custom:1001x100", false)]
+    [InlineData("<style>", false)]
+    public void Paper_sizes_are_validated(string paper, bool expected)
+        => VisualTemplateDesign.IsValidPaperSize(paper).Should().Be(expected);
+
     [Fact]
     public void Round_trip_preserves_blocks_and_encodes_static_text_without_interpreting_tokens()
     {

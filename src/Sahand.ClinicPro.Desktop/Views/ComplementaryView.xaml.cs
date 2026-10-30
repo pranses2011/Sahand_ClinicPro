@@ -43,6 +43,7 @@ public partial class ComplementaryView : UserControl
         if (DataContext is not ComplementaryViewModel vm || !vm.IsTemplateReady || vm.SelectedTemplate is not { IsHtmlTemplate: true } template)
         { AppDialog.Error("طراحی قالب", "ابتدا یک قالب قابل ویرایش را انتخاب و بارگذاری کنید."); return; }
         var before = template.Body;
+        var beforePaper = template.PaperSize;
         var variables = vm.ActiveVariables.ToArray();
         var keys = variables.Select(v => v.Key).ToArray();
         if (!VisualTemplateDesign.TryRead(before, keys, out var rows))
@@ -50,11 +51,12 @@ public partial class ComplementaryView : UserControl
             if (AppDialog.Confirm("شروع طراحی بصری", "این قالب قبلاً با طراح بصری ساخته نشده است. با اعمال طرح جدید، بدنه فعلی جایگزین می‌شود؛ تا زمان ذخیره، نسخه سرور تغییر نمی‌کند. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
             rows = new() { new VisualTemplateBlock { Kind = "text", Text = "عنوان سند" } };
         }
-        var window = new VisualTemplateEditorWindow(rows, variables) { Owner = Window.GetWindow(this) };
-        if (window.ShowDialog() != true || window.ResultHtml is null) return;
-        if (!ReferenceEquals(vm.SelectedTemplate, template) || template.Body != before || !vm.IsTemplateReady)
+        var window = new VisualTemplateEditorWindow(rows, variables, beforePaper) { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() != true || window.ResultHtml is null || window.ResultPaperSize is null) return;
+        if (!ReferenceEquals(vm.SelectedTemplate, template) || template.Body != before || template.PaperSize != beforePaper || !vm.IsTemplateReady)
         { AppDialog.Error("طراحی قالب", "قالب هنگام ویرایش تغییر کرد؛ طرح اعمال نشد."); return; }
         template.Body = window.ResultHtml;
+        template.PaperSize = window.ResultPaperSize;
     }
 
     private void OnOriginalReceiptPreviewRequested()
