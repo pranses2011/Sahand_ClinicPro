@@ -872,7 +872,7 @@
                             <!-- ستون چپ: ارجاع + یادداشت -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="کد ارجاع (اختیاری)" Style="{StaticResource FieldCaption}" />
-                                <TextBox Text="{Binding ReferralCode, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding ReferralCode, UpdateSourceTrigger=PropertyChanged}" MaxLength="50" />
                                 <TextBlock Text="یادداشت پذیرش" Style="{StaticResource FieldCaption}" />
                                 <TextBox Text="{Binding ReceptionNotes, UpdateSourceTrigger=PropertyChanged}"
                                          AcceptsReturn="True" Height="56" TextWrapping="Wrap" />

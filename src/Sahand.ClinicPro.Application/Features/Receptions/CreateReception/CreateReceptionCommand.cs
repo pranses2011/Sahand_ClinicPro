@@ -78,6 +78,12 @@ public class CreateReceptionCommandHandler : IRequestHandler<CreateReceptionComm
                     : Result<long>.Failure(new Error("RECEPTION.REQUEST_CONFLICT", "شناسه درخواست پیش‌تر برای پذیرش دیگری استفاده شده است."));
         }
 
+        // ستون‌های پذیرش محدودیت طول دارند؛ خطای ذخیره نباید نتیجه‌ای مبهم
+        // برای کاربر بسازد. بازپخش موفق قبلی همچنان پیش از این کنترل است.
+        if (dto.ReferralCode?.Length > 50 || dto.ServiceName?.Length > 200)
+            return Result<long>.Failure(new Error("RECEPTION.TEXT_TOO_LONG",
+                "کد ارجاع حداکثر ۵۰ نویسه و شرح خدمات حداکثر ۲۰۰ نویسه است."));
+
         // ═══ چرخه بیست‌وچهارم (گزارش هفدهم مالک) — پذیرش خدمت درمانی ═══
         // «قسمت پذیرش فقط پزشک دارد — بیمارِ آمپول/سرم/پانسمان/آزمایش/عکس چه
         // می‌شود؟» — پذیرش دوگونه است: ویزیت پزشک (DoctorId) یا خدمت درمانی

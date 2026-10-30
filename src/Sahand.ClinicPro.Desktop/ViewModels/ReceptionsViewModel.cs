@@ -1707,6 +1707,10 @@ public partial class ReceptionsViewModel : ViewModelBase
         { _snackbar.Error("اطلاعات بیمه آماده نیست؛ تنظیمات و فهرست بیمه را تازه‌سازی و انتخاب کنید."); return false; }
         if (InsuranceCompanies[InsuranceIndex] is { Id: > 0, IsContracted: false })
         { _snackbar.Error("بیمه انتخاب‌شده طرف قرارداد نیست؛ برای پذیرش آزاد، گزینه آزاد را صریحاً انتخاب کنید."); return false; }
+        if (ReferralCode?.Trim().Length > 50)
+        { _snackbar.Error("کد ارجاع نباید بیش از ۵۰ نویسه باشد."); return false; }
+        if (ReceptionModeIndex == 1 && BuildServiceSummary().Length > 200)
+        { _snackbar.Error("شرح مجموع خدمات بیش از ۲۰۰ نویسه است؛ خدمات را در پذیرش‌های جداگانه ثبت کنید."); return false; }
         if (IsInquiring) { _snackbar.Error("استعلام بیمه هنوز در حال انجام است؛ پیش از ثبت منتظر پاسخ بمانید."); return false; }
         if (_selectedAppointmentId is not null && (ReceptionModeIndex != 0 || FoundPatient.Id != _selectedAppointmentPatientId || SelectedDoctor?.Id != _selectedAppointmentDoctorId))
         { _snackbar.Error("بیمار یا پزشک پذیرش با نوبت انتخاب‌شده مطابقت ندارد؛ نوبت را بررسی یا جستجو را پاک کنید."); return false; }
