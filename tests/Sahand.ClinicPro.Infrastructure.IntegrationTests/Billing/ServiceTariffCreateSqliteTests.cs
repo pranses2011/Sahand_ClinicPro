@@ -25,15 +25,46 @@ public class ServiceTariffCreateSqliteTests : IDisposable
     public ServiceTariffCreateSqliteTests()
     {
         // اتصال بازِ درون‌حافظه‌ای — تا پایان تست زنده می‌ماند
-        _connection = new SqliteConnection("Data Source=:memory:");
+        _connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
         _connection.Open();
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
             .UseSqlite(_connection)
             .Options;
-        _ctx = new ClinicProDbContext(options);
+        _ctx = new SqliteServiceTariffDbContext(options);
         _ctx.Database.EnsureCreated();
         var mediator = new Mock<MediatR.IMediator>().Object;
         _handler = new CreateServiceTariffCommandHandler(new UnitOfWork(_ctx, mediator));
+    }
+
+    // فقط مدل آزمایشی SQLite با سازه‌های SQL Server سازگار می‌شود؛ مدل
+    // تولید و آزمون‌های SQL Server واقعی بدون تغییر می‌مانند.
+    private sealed class SqliteServiceTariffDbContext(DbContextOptions<ClinicProDbContext> options)
+        : ClinicProDbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            foreach (var sequence in modelBuilder.Model.GetSequences().ToList())
+                modelBuilder.Model.RemoveSequence(sequence.Name, sequence.Schema);
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            foreach (var property in entity.GetProperties())
+            {
+                if (!string.IsNullOrEmpty(property.GetDefaultValueSql()))
+                    property.SetDefaultValueSql(null);
+                if (property.GetColumnType()?.Contains("(max)", StringComparison.OrdinalIgnoreCase) == true)
+                    property.SetColumnType(null);
+                if (property.ClrType == typeof(decimal))
+                {
+                    property.SetColumnType("REAL");
+                    modelBuilder.Entity(entity.ClrType).Property(property.Name).HasConversion<double>();
+                }
+                else if (property.ClrType == typeof(decimal?))
+                {
+                    property.SetColumnType("REAL");
+                    modelBuilder.Entity(entity.ClrType).Property(property.Name).HasConversion<double?>();
+                }
+            }
+        }
     }
 
     public void Dispose()
@@ -78,7 +109,9 @@ public class ServiceTariffCreateSqliteTests : IDisposable
         // گارد، تست بالا روی پروایدر سهل‌گیر می‌توانست همیشه سبزِ کاذب باشد
         _ctx.Set<Tariff>().Add(new Tariff { ServiceId = 999999, Year = 1405, Price = 1000m });
         var act = async () => await _ctx.SaveChangesAsync();
-        await act.Should().ThrowAsync<DbUpdateException>(
+        var error = await act.Should().ThrowAsync<DbUpdateException>(
             because: "درج تعرفه با خدمت ناموجود باید با خطای کلید خارجی رد شود");
+        error.Which.InnerException.Should().BeOfType<SqliteException>()
+            .Which.SqliteExtendedErrorCode.Should().Be(787); // SQLITE_CONSTRAINT_FOREIGNKEY
     }
 }

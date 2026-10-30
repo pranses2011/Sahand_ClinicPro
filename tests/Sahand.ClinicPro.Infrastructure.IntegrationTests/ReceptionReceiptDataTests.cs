@@ -20,7 +20,7 @@ public class ReceptionReceiptDataTests
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
             .UseInMemoryDatabase($"ReceiptData_{Guid.NewGuid():N}").Options;
         using var db = new ClinicProDbContext(options);
-        var patient = new Patient { FirstName = "بیمار", LastName = "نمونه" };
+        var patient = new Patient { FirstName = "بیمار", LastName = "نمونه", Mobile = "09123456789" };
         var employee = new Employee { FirstName = "انجام", LastName = "دهنده" };
         db.AddRange(patient, employee);
         await db.SaveChangesAsync();
@@ -59,13 +59,16 @@ public class ReceptionReceiptDataTests
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
             .UseInMemoryDatabase($"ReceiptUnpaid_{Guid.NewGuid():N}").Options;
         using var db = new ClinicProDbContext(options);
-        var reception = new Reception { PatientId = 1, ReceptionDate = new DateTime(2026, 1, 1) };
+        var patient = new Patient { FirstName = "بیمار", LastName = "نمونه", Mobile = "09123456789" };
+        db.Add(patient); await db.SaveChangesAsync();
+        var reception = new Reception { PatientId = patient.Id, ReceptionDate = new DateTime(2026, 1, 1) };
         db.Add(reception); await db.SaveChangesAsync();
-        db.Add(new Invoice { PatientId = 1, ReceptionId = reception.Id, SubTotal = 100, TotalAmount = 100 });
+        db.Add(new Invoice { PatientId = patient.Id, ReceptionId = reception.Id, SubTotal = 100, TotalAmount = 100 });
         await db.SaveChangesAsync();
         var handler = new GetReceptionReceiptQueryHandler(new UnitOfWork(db, new Mock<IMediator>().Object));
         var result = await handler.Handle(new GetReceptionReceiptQuery(reception.Id), CancellationToken.None);
-        result.Value!.PaymentMethod.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.PaymentMethod.Should().Be(0);
         result.Value.InvoiceNumbers.Should().Be("—");
         result.Value.Paid.Should().Be(0);
     }
