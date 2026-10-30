@@ -730,6 +730,7 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        Sahand.ClinicPro.Desktop.Services.SaveShortcut.Register();
 
         // ═══ سپر ضدبسته‌شدن برنامه (گزارش مالک: «تصویربرداری را باز می‌کنم
         // برنامه بسته می‌شود») ═══ هیچ خطای یک صفحه نباید کل برنامه را ببندد:
