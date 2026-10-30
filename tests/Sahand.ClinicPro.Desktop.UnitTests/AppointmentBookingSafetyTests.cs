@@ -72,7 +72,7 @@ public class AppointmentBookingSafetyTests
         await search;
         vm.WaitlistPatientResults.Should().BeEmpty();
         await vm.AddToWaitlistCommand.ExecuteAsync(null);
-        api.Calls.Should().NotContain(c => c.Method == "POST" && c.Endpoint == "appointments/waitlist");
+        api.Calls.Should().NotContain(c => c.Method == "POST-bool" && c.Endpoint == "appointments/waitlist");
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class AppointmentBookingSafetyTests
         vm.CanEditWaitlist.Should().BeTrue();
         vm.WaitlistPatientSearch.Should().Be("بیمار دوم");
         snackbar.Messages.Should().Contain(m => m.Message.Contains("بیمار اول") && m.Message.Contains("ثبت شد"));
-        api.Calls.Count(c => c.Method == "POST" && c.Endpoint == "appointments/waitlist").Should().Be(1);
+        api.Calls.Count(c => c.Method == "POST-bool" && c.Endpoint == "appointments/waitlist").Should().Be(1);
     }
 
     [Fact]
