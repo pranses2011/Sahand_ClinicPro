@@ -14,12 +14,18 @@ public static class LocalSettingsFile
                 ?? throw new InvalidDataException("فایل تنظیمات خالی یا نامعتبر است.")
             : new Dictionary<string, string>();
         foreach (var (key, value) in values) existing[key] = value;
+        Replace(path, existing);
+    }
+
+    /// <summary>جایگزینی کامل فایل با استفاده از فایل موقت هم‌پوشه.</summary>
+    public static void Replace(string path, IReadOnlyDictionary<string, string> values)
+    {
         var directory = Path.GetDirectoryName(path) ?? throw new ArgumentException("مسیر تنظیمات معتبر نیست.");
         Directory.CreateDirectory(directory);
         var temporary = Path.Combine(directory, ".settings-" + Guid.NewGuid().ToString("N") + ".tmp");
         try
         {
-            File.WriteAllText(temporary, JsonSerializer.Serialize(existing, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(temporary, JsonSerializer.Serialize(values, new JsonSerializerOptions { WriteIndented = true }));
             File.Move(temporary, path, overwrite: true);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }

@@ -42,21 +42,20 @@ public static class LocalSettingsStore
     /// <summary>حذف یک کلید — برای حذف پریست تم (چرخه ۲۴)</summary>
     public static void Remove(string key)
     {
-        try
+        lock (WriteLock)
         {
-            if (!File.Exists(SettingsPath))
-                return;
-            var json = File.ReadAllText(SettingsPath);
-            var doc = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-            if (doc is null || !doc.Remove(key))
-                return;
-            File.WriteAllText(SettingsPath,
-                System.Text.Json.JsonSerializer.Serialize(doc,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-        }
-        catch
-        {
-            // حذف ناموفق هرگز نباید جریان را متوقف کند
+            try
+            {
+                if (!File.Exists(SettingsPath)) return;
+                var json = File.ReadAllText(SettingsPath);
+                var doc = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                if (doc is null || !doc.Remove(key)) return;
+                LocalSettingsFile.Replace(SettingsPath, doc);
+            }
+            catch
+            {
+                // حذف ناموفق هرگز نباید جریان را متوقف کند
+            }
         }
     }
 
