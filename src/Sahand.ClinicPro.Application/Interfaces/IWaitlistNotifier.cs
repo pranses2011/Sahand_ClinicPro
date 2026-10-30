@@ -31,6 +31,8 @@ public class WaitlistNotifier : IWaitlistNotifier
     {
         var result = await _sender.Send(new NotifyWaitlistForFreedSlotCommand(
             cancelledAppointmentId, doctorId, appointmentDate, appointmentTime), ct);
-        return result.IsSuccess ? result.Value : 0;
+        if (result.IsFailure)
+            throw new InvalidOperationException($"پیشنهاد لیست انتظار ثبت نشد: {result.Error.Code}");
+        return result.Value;
     }
 }

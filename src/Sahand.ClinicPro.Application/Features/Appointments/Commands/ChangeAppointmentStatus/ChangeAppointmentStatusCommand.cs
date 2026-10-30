@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Sahand.ClinicPro.Domain.Common;
@@ -83,19 +83,12 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
             // ═══ چرخه ۱۳ (درخواست ۳-۴): پیشنهاد خودکار جای خالی به لیست انتظار ═══
             if (appointment.DoctorId > 0 && appointment.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
             {
-                try
-                {
-                    await _waitlistNotifier.NotifyFreedSlotAsync(
-                        appointment.Id, appointment.DoctorId,
-                        appointment.AppointmentDate, appointment.AppointmentTime,
-                        cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex,
-                        "پیشنهاد خودکار لیست انتظار برای نوبت {Id} ناموفق بود — تراکنش لغو سالم ماند",
-                        appointment.Id);
-                }
+                // شکست صف نباید بلعیده شود: پیشنهاد و لغو در تراکنش مشترک‌اند
+                // و در خطا هر دو باید عقب برگردند، نه اینکه لاگ موفقیت بدهیم.
+                await _waitlistNotifier.NotifyFreedSlotAsync(
+                    appointment.Id, appointment.DoctorId,
+                    appointment.AppointmentDate, appointment.AppointmentTime,
+                    cancellationToken);
             }
         }
         else

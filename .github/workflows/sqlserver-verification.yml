@@ -47,8 +47,12 @@ jobs:
           # Credentials belong only to this disposable CI container; never use a production database.
           CLINICPRO_TEST_SQLSERVER: 'Server=127.0.0.1,1433;Database=master;User ID=sa;Password=LocalTest-Only_456!;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;Connect Timeout=5'
         run: |
+          set -o pipefail
           dotnet test tests/Sahand.ClinicPro.Infrastructure.IntegrationTests/Sahand.ClinicPro.Infrastructure.IntegrationTests.csproj \
-            -c Release --filter 'Category=SqlServer' --logger 'trx;LogFileName=sqlserver.trx' --results-directory ./SqlServerTestResults
+            -c Release --filter 'Category=SqlServer' --logger 'trx;LogFileName=sqlserver.trx' --results-directory ./SqlServerTestResults | tee sqlserver-test.log
+      - name: Annotate SQL Server test failures
+        if: failure()
+        run: python3 scripts/annotate_test_failures.py sqlserver-test.log
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v6

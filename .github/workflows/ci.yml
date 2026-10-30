@@ -89,24 +89,7 @@ jobs:
             exit 0
           fi
           # نام و پیام شکست در Summary؛ بدون نیاز به دریافت فایل آرتیفکت.
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-          lines = Path('test-run.log').read_text(encoding='utf-8', errors='replace').splitlines()
-          failures = []
-          for index, line in enumerate(lines):
-              if not re.match(r'^\s*(Failed |\[FAIL\])', line, re.I):
-                  continue
-              detail = []
-              for following in lines[index + 1:index + 12]:
-                  if re.match(r'^\s*(Stack Trace:|Failed |\[FAIL\]|Standard Output Messages:)', following, re.I):
-                      break
-                  if following.strip() and not re.match(r'^\s*Error Message:', following, re.I):
-                      detail.append(following.strip())
-              failures.append(' | '.join([line.strip(), *detail]))
-          for failure in failures[:30]:
-              print('::error::' + failure.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
-          PY
+          python3 scripts/annotate_test_failures.py test-run.log
 
       - name: خلاصه پوشش
         if: always()
