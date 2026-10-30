@@ -49,6 +49,18 @@ public static class FreeTemplateDesign
     private static string Safe(string text) => WebUtility.HtmlEncode(text).Replace("{", "&#123;").Replace("}", "&#125;");
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
+    /// <summary>محاسبه مکان عنصر بدون خروج از بوم، حتی با ابعاد اعشاری.</summary>
+    public static (double X, double Y) MoveWithinCanvas(FreeTemplateDocument document, FreeTemplateElement element, double x, double y)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y) || !double.IsFinite(document.Width) || !double.IsFinite(document.Height) ||
+            !double.IsFinite(element.Width) || !double.IsFinite(element.Height) || element.Width < 5 || element.Height < 5 ||
+            element.Width > document.Width || element.Height > document.Height)
+            throw new ArgumentException("محدوده جابه‌جایی معتبر نیست.");
+        var maxX = Math.Floor((document.Width - element.Width) * 100) / 100;
+        var maxY = Math.Floor((document.Height - element.Height) * 100) / 100;
+        return (Math.Clamp(Math.Round(x, 2), 0, maxX), Math.Clamp(Math.Round(y, 2), 0, maxY));
+    }
+
     /// <summary>محاسبه اندازه عنصر در کشیدن گوشه، محدود به محدوده بوم.</summary>
     public static (double Width, double Height) ResizeWithinCanvas(FreeTemplateDocument document, FreeTemplateElement element, double width, double height)
     {

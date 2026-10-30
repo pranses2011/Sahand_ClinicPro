@@ -194,8 +194,8 @@ public partial class FreeTemplateEditorWindow : Window
     {
         if (sender is not Border { IsMouseCaptured: true, Tag: FreeTemplateElement item } border || e.LeftButton != MouseButtonState.Pressed) return;
         var p = e.GetPosition(PageCanvas);
-        item.X = Math.Round(Math.Clamp(_startX + p.X - _dragStart.X, 0, Math.Max(0, _document.Width - item.Width)), 2);
-        item.Y = Math.Round(Math.Clamp(_startY + p.Y - _dragStart.Y, 0, Math.Max(0, _document.Height - item.Height)), 2);
+        var position = FreeTemplateDesign.MoveWithinCanvas(_document, item, _startX + p.X - _dragStart.X, _startY + p.Y - _dragStart.Y);
+        item.X = position.X; item.Y = position.Y;
         Canvas.SetLeft(border, item.X); Canvas.SetTop(border, item.Y); XBox.Text = Number(item.X); YBox.Text = Number(item.Y);
     }
     private void ItemUp(object sender, MouseButtonEventArgs e)

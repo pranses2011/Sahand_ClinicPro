@@ -29,6 +29,20 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Drag_stays_inside_fractional_canvas_after_rounding()
+    {
+        var doc = new FreeTemplateDocument { Width = 600.001, Height = 800.001 };
+        var item = new FreeTemplateElement { Width = 100.004, Height = 200.004 };
+        var position = FreeTemplateDesign.MoveWithinCanvas(doc, item, 900, 900);
+        position.Should().Be((499.99, 599.99));
+        (position.X + item.Width).Should().BeLessThanOrEqualTo(doc.Width);
+        (position.Y + item.Height).Should().BeLessThanOrEqualTo(doc.Height);
+        FreeTemplateDesign.MoveWithinCanvas(doc, item, -10, -5).Should().Be((0, 0));
+        Action invalid = () => FreeTemplateDesign.MoveWithinCanvas(doc, item, double.NaN, 0);
+        invalid.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Resize_stays_inside_canvas_and_preserves_minimum_size()
     {
         var doc = new FreeTemplateDocument { Width = 600, Height = 800 };
