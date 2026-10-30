@@ -49,6 +49,8 @@
                     <TextBlock Text="مکان X / Y و اندازه عرض / ارتفاع (پیکسل)" TextWrapping="Wrap" FontSize="11"/>
                     <UniformGrid Columns="2" Margin="0,4,0,8"><TextBox x:Name="XBox" ToolTip="X"/><TextBox x:Name="YBox" ToolTip="Y"/><TextBox x:Name="WidthBox" ToolTip="عرض"/><TextBox x:Name="HeightBox" ToolTip="ارتفاع"/></UniformGrid>
                     <TextBlock Text="اندازه فونت و رنگ #RRGGBB" FontSize="11"/><UniformGrid Columns="2" Margin="0,4,0,8"><TextBox x:Name="FontBox"/><TextBox x:Name="ColorBox"/></UniformGrid>
+                    <CheckBox x:Name="BoldBox" Content="متن ضخیم" Margin="0,4,0,6"/>
+                    <TextBlock Text="چیدمان متن"/><ComboBox x:Name="AlignmentBox" SelectedIndex="0" Margin="0,4,0,8"><ComboBoxItem Content="راست (پیش‌فرض)"/><ComboBoxItem Content="وسط"/><ComboBoxItem Content="چپ"/></ComboBox>
                     <Button Content="اعمال ویژگی‌ها" Click="Update_Click" Margin="0,0,0,8"/>
                     <Button Content="حذف عنصر" Click="Remove_Click"/>
                     <TextBlock Text="برای جابه‌جایی، عنصر را با ماوس بکشید. اندازه را از ویژگی‌ها تنظیم کنید." TextWrapping="Wrap" Foreground="#536C82" FontSize="11" Margin="0,12,0,0"/>

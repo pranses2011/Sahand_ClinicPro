@@ -19,6 +19,12 @@ public sealed class FreeTemplateElement
     public double Height { get; set; } = 40;
     public int FontSize { get; set; } = 14;
     public string Color { get; set; } = "#173657";
+    /// <summary>متن ضخیم؛ مقدار پیش‌فرض در قالب قدیمی اضافه نمی‌شود.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Bold { get; set; }
+    /// <summary>چیدمان متن؛ null همان راست‌چین پیش‌فرض است.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Alignment { get; set; }
     /// <summary>تصویر محلی محدود؛ قالب قدیمی بدون این فیلد حفظ می‌شود.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ImageData { get; set; }
@@ -95,6 +101,7 @@ public static class FreeTemplateDesign
                 item.X + item.Width > document.Width || item.Y + item.Height > document.Height || item.FontSize is < 8 or > 72 ||
                 item.Color is null || !Regex.IsMatch(item.Color, @"^#[0-9a-fA-F]{6}$"))
                 throw new ArgumentException("مکان، اندازه یا رنگ عنصر معتبر نیست یا از بوم بیرون است.");
+            if (item.Alignment is not (null or "center" or "left")) throw new ArgumentException("چیدمان متن معتبر نیست.");
             if (item.Kind != "text" && item.Kind != "variable" && item.Kind != "rectangle" && item.Kind != "line" && item.Kind != "image")
                 throw new ArgumentException("نوع عنصر معتبر نیست.");
             var imageType = item.Kind == "image" ? ImageMimeType(item.ImageData) : null;
@@ -106,6 +113,8 @@ public static class FreeTemplateDesign
                 .Append(Num(item.X)).Append("px;top:").Append(Num(item.Y)).Append("px;width:").Append(Num(item.Width))
                 .Append("px;height:").Append(Num(item.Height)).Append("px;font-size:").Append(item.FontSize)
                 .Append("px;color:").Append(item.Color);
+            if (item.Bold) body.Append(";font-weight:bold");
+            if (item.Alignment is not null) body.Append(";text-align:").Append(item.Alignment);
             if (item.Kind == "rectangle") body.Append(";border:1px solid ").Append(item.Color);
             if (item.Kind == "line") body.Append(";border-top:1px solid ").Append(item.Color);
             body.Append("'>");

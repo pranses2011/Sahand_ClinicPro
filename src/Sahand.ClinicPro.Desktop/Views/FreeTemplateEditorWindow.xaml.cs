@@ -79,7 +79,9 @@ public partial class FreeTemplateEditorWindow : Window
             var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
             var content = new Border { BorderBrush = ink,
                 BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
-                Child = item.Kind == "image" ? ImagePreview(item.ImageData) : new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
+                Child = item.Kind == "image" ? ImagePreview(item.ImageData) : new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, FontWeight = item.Bold ? FontWeights.Bold : FontWeights.Normal,
+                    TextAlignment = item.Alignment == "center" ? TextAlignment.Center : item.Alignment == "left" ? TextAlignment.Left : TextAlignment.Right,
+                    Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
             var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,
                 BorderThickness = new Thickness(ReferenceEquals(item, _selected) ? 1 : 0),
                 BorderBrush = ReferenceEquals(item, _selected) ? Brushes.DodgerBlue : Brushes.Transparent,
@@ -95,7 +97,9 @@ public partial class FreeTemplateEditorWindow : Window
         VariableBox.IsEnabled = item.Kind == "variable";
         XBox.Text = Number(item.X); YBox.Text = Number(item.Y); WidthBox.Text = Number(item.Width); HeightBox.Text = Number(item.Height);
         FontBox.Text = item.FontSize.ToString(CultureInfo.InvariantCulture); ColorBox.Text = item.Color;
+        BoldBox.IsChecked = item.Bold; AlignmentBox.SelectedIndex = item.Alignment == "center" ? 1 : item.Alignment == "left" ? 2 : 0;
     }
+    private string? ReadAlignment() => AlignmentBox.SelectedIndex == 1 ? "center" : AlignmentBox.SelectedIndex == 2 ? "left" : null;
     private bool CanDiscardPending()
     {
         var dirty = false;
@@ -105,7 +109,7 @@ public partial class FreeTemplateEditorWindow : Window
             if (_selected is { } item)
                 dirty |= TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                     ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
-                    !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color;
+                    !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment;
         }
         catch (ArgumentException) { dirty = true; }
         return !dirty || AppDialog.Confirm("تغییرات اعمال‌نشده", "تغییرات ویژگی یا ابعاد هنوز اعمال نشده‌اند و با این کار کنار گذاشته می‌شوند. ادامه می‌دهید؟", AppDialogIcon.Warning) == true;
@@ -177,7 +181,7 @@ public partial class FreeTemplateEditorWindow : Window
             var previous = _selected;
             var updated = new FreeTemplateElement { Kind = _selected.Kind, Text = TextBoxValue.Text, Key = VariableBox.SelectedValue as string ?? "",
                 X = ReadNumber(XBox), Y = ReadNumber(YBox), Width = ReadNumber(WidthBox), Height = ReadNumber(HeightBox),
-                FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData };
+                FontSize = int.Parse(FontBox.Text, CultureInfo.InvariantCulture), Color = ColorBox.Text.Trim(), ImageData = _selected.ImageData, Bold = BoldBox.IsChecked == true, Alignment = ReadAlignment() };
             var index = _document.Elements.IndexOf(_selected); _document.Elements[index] = updated;
             try { FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); }
             catch { _document.Elements[index] = previous; throw; }
@@ -208,7 +212,7 @@ public partial class FreeTemplateEditorWindow : Window
                 throw new ArgumentException("ابتدا دکمه اعمال ابعاد بوم را بزنید.");
             if (_selected is { } item && (TextBoxValue.Text != item.Text || (VariableBox.SelectedValue as string ?? "") != item.Key ||
                 ReadNumber(XBox) != item.X || ReadNumber(YBox) != item.Y || ReadNumber(WidthBox) != item.Width || ReadNumber(HeightBox) != item.Height ||
-                !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color))
+                !int.TryParse(FontBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var font) || font != item.FontSize || ColorBox.Text.Trim() != item.Color || (BoldBox.IsChecked == true) != item.Bold || ReadAlignment() != item.Alignment))
                 throw new ArgumentException("ابتدا دکمه اعمال ویژگی‌ها را بزنید.");
             var paper = PaperBox.Text.Trim();
             if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
