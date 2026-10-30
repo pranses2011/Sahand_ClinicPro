@@ -24,8 +24,11 @@ public partial class HtmlPrintWindow : Window
     }
 
     private FixedCanvasPrintGuard.Result CheckFixedCanvas()
-        => !_html.Contains("<!--clinicpro-canvas-v1:", StringComparison.Ordinal)
-            ? FixedCanvasPrintGuard.Result.Clear : FixedCanvasPrintGuard.InspectBrowserDocument(Browser.Document);
+    {
+        if (!_html.Contains("<!--clinicpro-canvas-v1:", StringComparison.Ordinal)) return FixedCanvasPrintGuard.Result.Clear;
+        try { return FixedCanvasPrintGuard.InspectBrowserDocument(Browser.Document); }
+        catch (Exception) { return FixedCanvasPrintGuard.Result.Unavailable; }
+    }
 
     /// <summary>چاپ HTML — دیالوگ چاپ داخلی مرورگر روی همان سند</summary>
     private void OnPrintClick(object sender, RoutedEventArgs e)
