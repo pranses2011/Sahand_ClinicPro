@@ -8,7 +8,7 @@ public enum WaitlistStatus : byte
     /// <summary>در انتظار نوبت آزاد</summary>
     Waiting = 1,
 
-    /// <summary>پیامک پیشنهاد ارسال شد — منتظر تأیید بیمار</summary>
+    /// <summary>پیشنهاد و پیامک در صف ثبت شد — تحویل پیام تأیید نشده و منتظر پاسخ بیمار است</summary>
     Notified = 2,
 
     /// <summary>بیمار تأیید کرد — آماده نوبت‌دهی</summary>

@@ -39,18 +39,21 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<ChangeAppointmentStatusCommandHandler> _logger;
-    private readonly Interfaces.IWaitlistNotifier _waitlistNotifier;
+    private readonly IWaitlistNotifier _waitlistNotifier;
+    private readonly IDateTimeService _clock;
 
     /// <summary>سازنده با تزریق وابستگی‌ها</summary>
     public ChangeAppointmentStatusCommandHandler(IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ILogger<ChangeAppointmentStatusCommandHandler> logger,
-        Interfaces.IWaitlistNotifier waitlistNotifier)
+        IWaitlistNotifier waitlistNotifier,
+        IDateTimeService clock)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _logger = logger;
         _waitlistNotifier = waitlistNotifier;
+        _clock = clock;
     }
 
     /// <summary>اجرای تغییر وضعیت</summary>
@@ -65,6 +68,16 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
 
         if (appointment.Status == AppointmentStatus.Completed)
             return Result.Failure(new Error("ALREADY_COMPLETED", "نوبت تکمیل‌شده قابل تغییر نیست"));
+
+        if (appointment.Status == AppointmentStatus.Cancelled)
+        {
+            // بازپخش لغو نباید جای خالی یکسان را دوباره پیشنهاد کند یا
+            // دلیل اصلی را رونویسی کند. بازگرداندن مستقیم نوبت لغوشده نیز
+            // می‌تواند با جای خالی پیشنهادشده تداخل کند؛ رزرو تازه لازم است.
+            return request.NewStatus == AppointmentStatus.Cancelled
+                ? Result.Success()
+                : Result.Failure(new Error("ALREADY_CANCELLED", "نوبت لغوشده قابل بازگردانی نیست؛ نوبت جدید ثبت کنید"));
+        }
 
         var patient = await _unitOfWork.Repository<Patient>()
             .GetByIdAsync(appointment.PatientId, cancellationToken);
@@ -81,7 +94,9 @@ public class ChangeAppointmentStatusCommandHandler : IRequestHandler<ChangeAppoi
                     appointment.Id, patient.Id, request.Reason ?? string.Empty));
 
             // ═══ چرخه ۱۳ (درخواست ۳-۴): پیشنهاد خودکار جای خالی به لیست انتظار ═══
-            if (appointment.DoctorId > 0 && appointment.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            // تاریخ و ساعت نوبت به وقت محلی درمانگاه‌اند؛ مقایسهٔ صرف تاریخ
+            // با UTC می‌توانست نوبت گذشتهٔ امروز را همچنان پیشنهاد دهد.
+            if (appointment.DoctorId > 0 && appointment.AppointmentDate.ToDateTime(appointment.AppointmentTime) > _clock.NowIran)
             {
                 // شکست صف نباید بلعیده شود: پیشنهاد و لغو در تراکنش مشترک‌اند
                 // و در خطا هر دو باید عقب برگردند، نه اینکه لاگ موفقیت بدهیم.

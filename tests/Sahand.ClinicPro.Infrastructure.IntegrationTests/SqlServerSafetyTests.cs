@@ -12,6 +12,7 @@ using Sahand.ClinicPro.Application.DTOs.Receptions;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.CreateInvoice;
 using Sahand.ClinicPro.Application.Features.Billing.Commands.RecordPayment;
 using Sahand.ClinicPro.Application.Features.Appointments.Waitlist;
+using Sahand.ClinicPro.Application.Features.Appointments.Commands.ChangeAppointmentStatus;
 using Sahand.ClinicPro.Application.Features.Receptions.Commands.CreateReception;
 using Sahand.ClinicPro.Application.Interfaces;
 using Sahand.ClinicPro.Domain.Common;
@@ -167,7 +168,7 @@ public sealed class SqlServerSafetyTests
     private static async Task VerifyWaitlistQueueTransactionAsync(string connectionString, long patientId)
     {
         var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(2);
-        long appointmentId, doctorId, waitlistId;
+        long appointmentId, doctorId, waitlistId, restrictedId;
         await using (var seed = CreateContext(connectionString))
         {
             var doctor = new Doctor { IsActive = true };
@@ -177,9 +178,12 @@ public sealed class SqlServerSafetyTests
                 AppointmentDate = date, AppointmentTime = new TimeOnly(10, 30), Status = AppointmentStatus.Booked };
             var entry = new WaitlistEntry { PatientId = patientId, DoctorId = doctor.Id, PreferredFrom = date,
                 PreferredTo = date, ContactMobile = "09123456789", Status = WaitlistStatus.Waiting };
-            seed.AddRange(appointment, entry);
+            var restricted = new WaitlistEntry { PatientId = patientId, DoctorId = doctor.Id, PreferredFrom = date,
+                PreferredTo = date, ContactMobile = "09123456789", Status = WaitlistStatus.Waiting,
+                PreferredTimeOfDay = "صبح", Priority = Priority.Emergency };
+            seed.AddRange(appointment, entry, restricted);
             await seed.SaveChangesAsync();
-            (appointmentId, doctorId, waitlistId) = (appointment.Id, doctor.Id, entry.Id);
+            (appointmentId, doctorId, waitlistId, restrictedId) = (appointment.Id, doctor.Id, entry.Id, restricted.Id);
         }
 
         async Task RunOfferAsync(bool commit)
@@ -188,7 +192,8 @@ public sealed class SqlServerSafetyTests
             var manager = new TransactionManager(context, NullLogger<TransactionManager>.Instance);
             var uow = new UnitOfWork(context, Mock.Of<IMediator>());
             var sms = new SmsService(new SmsProviderFactory(Array.Empty<ISmsProvider>()), context, NullLogger<SmsService>.Instance);
-            var handler = new NotifyWaitlistForFreedSlotCommandHandler(uow, sms);
+            var clock = Mock.Of<IDateTimeService>(x => x.NowIran == date.AddDays(-1).ToDateTime(new TimeOnly(12, 0)));
+            var handler = new NotifyWaitlistForFreedSlotCommandHandler(uow, sms, clock);
             var command = new NotifyWaitlistForFreedSlotCommand(appointmentId, doctorId, date, new TimeOnly(10, 30));
             var inner = new TransactionBehavior<NotifyWaitlistForFreedSlotCommand, Result<long>>(manager,
                 NullLogger<TransactionBehavior<NotifyWaitlistForFreedSlotCommand, Result<long>>>.Instance);
@@ -214,7 +219,26 @@ public sealed class SqlServerSafetyTests
         {
             Assert.Equal(AppointmentStatus.Cancelled, (await check.Appointments.SingleAsync(a => a.Id == appointmentId)).Status);
             Assert.Equal(WaitlistStatus.Notified, (await check.WaitlistEntries.SingleAsync(w => w.Id == waitlistId)).Status);
+            Assert.Equal(WaitlistStatus.Waiting, (await check.WaitlistEntries.SingleAsync(w => w.Id == restrictedId)).Status);
             Assert.Equal(1, await check.SmsQueue.CountAsync());
+        }
+
+        // بازپخش لغو ثبت‌شده در کانتکست مستقل نباید پیامک دیگری بسازد.
+        await using (var replay = CreateContext(connectionString))
+        {
+            var notifier = new Mock<IWaitlistNotifier>(MockBehavior.Strict);
+            var clock = Mock.Of<IDateTimeService>(x => x.NowIran == date.AddDays(-1).ToDateTime(new TimeOnly(12, 0)));
+            var manager = new TransactionManager(replay, NullLogger<TransactionManager>.Instance);
+            var uow = new UnitOfWork(replay, Mock.Of<IMediator>());
+            var handler = new ChangeAppointmentStatusCommandHandler(uow, Mock.Of<ICurrentUserService>(),
+                NullLogger<ChangeAppointmentStatusCommandHandler>.Instance, notifier.Object, clock);
+            var behavior = new TransactionBehavior<ChangeAppointmentStatusCommand, Result>(manager,
+                NullLogger<TransactionBehavior<ChangeAppointmentStatusCommand, Result>>.Instance);
+            var command = new ChangeAppointmentStatusCommand(appointmentId, AppointmentStatus.Cancelled, "تکرار");
+            var result = await behavior.Handle(command, _ => handler.Handle(command, CancellationToken.None), CancellationToken.None);
+            Assert.True(result.IsSuccess);
+            notifier.VerifyNoOtherCalls();
+            Assert.Equal(1, await replay.SmsQueue.CountAsync());
         }
     }
 

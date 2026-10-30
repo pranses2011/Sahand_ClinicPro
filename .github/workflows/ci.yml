@@ -46,8 +46,10 @@ jobs:
           done || true
           exit 0
 
-      - name: بررسی انتقال نتیجه شکست تست در CI
-        run: bash scripts/test_core_test_runner.sh
+      - name: بررسی انتقال و گزارش نتیجه شکست تست در CI
+        run: |
+          bash scripts/test_core_test_runner.sh
+          python3 scripts/test_annotate_test_failures.py
 
       - name: اجرای تست‌ها + پوشش کد (B4 چرخه ۱۲)
         # ═══ چرخهٔ ۶۷ — ریشهٔ قرمزیِ دائمی CI ═══
@@ -71,14 +73,9 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          # نام تست‌های ناموفق و پیام خطا از خروجی کنسول dotnet test خوانده
-          # می‌شود (فایل trx هم موجود است ولی این مسیر ساده‌تر و مقاوم‌تر است)
-          if [ ! -f test-run.log ]; then
-            echo "تست‌ها اجرا نشدند؛ خطای مرحله پیشین را بررسی کنید."
-            exit 0
-          fi
-          # نام و پیام شکست در Summary؛ بدون نیاز به دریافت فایل آرتیفکت.
-          python3 scripts/annotate_test_failures.py test-run.log
+          # نتایج TRX در چند annotation گروه‌بندی می‌شوند تا سقف annotation
+          # گیت‌هاب شکست‌های بعدی را پنهان نکند. اگر TRX نبود، لاگ خوانده می‌شود.
+          python3 scripts/annotate_test_failures.py test-run.log TestResults
 
       - name: خلاصه پوشش
         if: always()

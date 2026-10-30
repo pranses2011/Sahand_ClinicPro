@@ -18,12 +18,14 @@ namespace Sahand.ClinicPro.Infrastructure.IntegrationTests.Appointments;
 public class WaitlistTests
 {
     private static (NotifyWaitlistForFreedSlotCommandHandler Handler, ClinicProDbContext Ctx) MakeNotifier(
-        Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>? sms = null)
+        Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>? sms = null, DateTime? nowIran = null)
     {
         var options = new DbContextOptionsBuilder<ClinicProDbContext>()
             .UseInMemoryDatabase($"waitlist-{Guid.NewGuid():N}")
             .Options;
         var ctx = new ClinicProDbContext(options);
+        ctx.Doctors.Add(new Doctor { Id = 5, IsActive = true });
+        ctx.SaveChanges();
 
         static Mock<IRepository<T>> Repo<T>(ClinicProDbContext c) where T : Sahand.ClinicPro.Domain.Common.BaseEntity
         {
@@ -47,7 +49,9 @@ public class WaitlistTests
                 .Returns(Task.CompletedTask);
         }
 
-        return (new NotifyWaitlistForFreedSlotCommandHandler(uow.Object, sms.Object), ctx);
+        var clock = Mock.Of<Sahand.ClinicPro.Application.Interfaces.IDateTimeService>(
+            x => x.NowIran == (nowIran ?? new DateTime(2000, 1, 1)));
+        return (new NotifyWaitlistForFreedSlotCommandHandler(uow.Object, sms.Object, clock), ctx);
     }
 
     private static WaitlistEntry Entry(long id, long patientId, long? doctorId,
@@ -168,7 +172,9 @@ public class WaitlistTests
     {
         var (handler, ctx) = MakeNotifier();
         var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2));
-        ctx.Doctors.Add(new Doctor { Id = 5, SpecialtyId = 10, SubSpecialtyId = 20 });
+        var doctor = await ctx.Doctors.SingleAsync(d => d.Id == 5);
+        doctor.SpecialtyId = 10;
+        doctor.SubSpecialtyId = 20;
         var wrongSpecialty = Entry(1, 10, null, date, date, Priority.Emergency);
         wrongSpecialty.SpecialtyId = 99;
         var matchingSpecialty = Entry(2, 11, null, date, date, Priority.Normal);
@@ -198,6 +204,107 @@ public class WaitlistTests
         var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(10, 30)), default);
         result.Value.Should().Be(13);
         (await ctx.WaitlistEntries.CountAsync(w => w.Status == WaitlistStatus.Notified)).Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData("صبح")]
+    [InlineData("عصر")]
+    [InlineData("شب")]
+    [InlineData("نامشخص")]
+    public async Task Offer_does_not_ignore_unapproved_time_preferences(string preference)
+    {
+        var (handler, ctx) = MakeNotifier();
+        var date = new DateOnly(2026, 5, 11);
+        var restricted = Entry(1, 10, 5, date, date, Priority.Emergency);
+        restricted.PreferredTimeOfDay = preference;
+        var anyTime = Entry(2, 11, 5, date, date);
+        ctx.WaitlistEntries.AddRange(restricted, anyTime);
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(16, 0)), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(2);
+        restricted.Status.Should().Be(WaitlistStatus.Waiting);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("  ")]
+    [InlineData("هر ساعت")]
+    [InlineData(" هر ساعتی ")]
+    public async Task Offer_allows_explicitly_unrestricted_times(string? preference)
+    {
+        var (handler, ctx) = MakeNotifier();
+        var date = new DateOnly(2026, 5, 11);
+        var entry = Entry(1, 10, 5, date, date);
+        entry.PreferredTimeOfDay = preference;
+        ctx.WaitlistEntries.Add(entry);
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(900, 5, date, new TimeOnly(16, 0)), default);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(900)]
+    public async Task Offer_never_queues_a_slot_already_past_in_Iran(long cancelledAppointmentId)
+    {
+        var sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>(MockBehavior.Strict);
+        var (handler, ctx) = MakeNotifier(sms, new DateTime(2026, 5, 10, 10, 0, 0));
+        var date = new DateOnly(2026, 5, 10);
+        var entry = Entry(1, 10, 5, date, date);
+        ctx.WaitlistEntries.Add(entry);
+        await ctx.SaveChangesAsync();
+
+        var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(
+            cancelledAppointmentId, 5, date, new TimeOnly(9, 59)), default);
+        if (cancelledAppointmentId == 0)
+        {
+            result.IsFailure.Should().BeTrue();
+            result.Error.Code.Should().Be("WAITLIST.SLOT_PAST");
+        }
+        else
+        {
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be(0);
+        }
+        entry.Status.Should().Be(WaitlistStatus.Waiting);
+        sms.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(900)]
+    public async Task Offer_never_queues_for_an_inactive_or_unknown_doctor(long cancelledAppointmentId)
+    {
+        var sms = new Mock<Sahand.ClinicPro.Application.Interfaces.ISmsService>(MockBehavior.Strict);
+        var (handler, ctx) = MakeNotifier(sms, new DateTime(2026, 5, 10, 10, 0, 0));
+        var doctor = await ctx.Doctors.SingleAsync(d => d.Id == 5);
+        doctor.IsActive = false;
+        var date = new DateOnly(2026, 5, 11);
+        var entry = Entry(1, 10, null, date, date);
+        ctx.WaitlistEntries.Add(entry);
+        await ctx.SaveChangesAsync();
+
+        foreach (var doctorId in new long[] { 5, 99 })
+        {
+            var result = await handler.Handle(new NotifyWaitlistForFreedSlotCommand(
+                cancelledAppointmentId, doctorId, date, new TimeOnly(10, 0)), default);
+            if (cancelledAppointmentId == 0)
+            {
+                result.IsFailure.Should().BeTrue();
+                result.Error.Code.Should().Be("WAITLIST.DOCTOR");
+            }
+            else
+            {
+                result.IsSuccess.Should().BeTrue();
+                result.Value.Should().Be(0);
+            }
+        }
+        entry.Status.Should().Be(WaitlistStatus.Waiting);
+        sms.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -300,6 +407,33 @@ public class WaitlistRelationalRegressionTests
                             .HasConversion<double?>(); // تهی در SQL همان NULL می‌ماند
                     }
                 }
+        }
+    }
+
+    [Fact]
+    public async Task GetWaitlist_ShowsSelectedSpecialtyInsteadOfAnyDoctor()
+    {
+        var (uow, ctx, connection) = CreateSqliteUnitOfWork();
+        try
+        {
+            var specialty = new Specialty { Id = 601, Name = "چشم‌پزشکی" };
+            var patient = new Patient { Id = 602, MedicalRecordNo = "MR-0602", FirstName = "بیمار",
+                LastName = "نمونه", Mobile = "09140000001" };
+            ctx.AddRange(specialty, patient);
+            await ctx.SaveChangesAsync();
+            var today = new DateOnly(2026, 5, 10);
+            ctx.WaitlistEntries.Add(new WaitlistEntry { PatientId = patient.Id, SpecialtyId = specialty.Id,
+                PreferredFrom = today, PreferredTo = today.AddDays(2), ContactMobile = patient.Mobile });
+            await ctx.SaveChangesAsync();
+
+            var result = await new GetWaitlistQueryHandler(uow).Handle(new GetWaitlistQuery(), default);
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().ContainSingle().Which.DoctorName.Should().Be("تخصص چشم‌پزشکی");
+        }
+        finally
+        {
+            await ctx.DisposeAsync();
+            await connection.DisposeAsync();
         }
     }
 
