@@ -16,6 +16,31 @@ public class AppointmentBookingSafetyTests
     }
 
     [Fact]
+    public void New_appointment_clears_draft_and_is_blocked_during_booking()
+    {
+        var vm = new AppointmentsViewModel(new FakeApiClient(), new FakeSnackbar(), new Navigation());
+        vm.SelectedPatient = new QuickPatient(1, "بیمار", "123", "0912", null, null, null);
+        vm.SelectedDoctor = new DoctorOption(2, "پزشک", null);
+        vm.SelectedSlot = new SlotVM { Time = "10:30", IsAvailable = true };
+        vm.Notes = "یادداشت";
+        vm.SelectedTypeIndex = 2;
+        vm.SelectedPriorityIndex = 1;
+        vm.WizardStep = 2;
+        vm.IsBooking = true;
+        vm.NewAppointmentCommand.Execute(null);
+        vm.Notes.Should().Be("یادداشت");
+        vm.IsBooking = false;
+        vm.NewAppointmentCommand.Execute(null);
+        vm.SelectedPatient.Should().BeNull();
+        vm.SelectedDoctor.Should().BeNull();
+        vm.SelectedSlot.Should().BeNull();
+        vm.Notes.Should().BeEmpty();
+        vm.SelectedTypeIndex.Should().Be(0);
+        vm.SelectedPriorityIndex.Should().Be(0);
+        vm.WizardStep.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Pending_booking_locks_form_and_connection_failure_preserves_inputs()
     {
         var completion = new TaskCompletionSource<object?>();

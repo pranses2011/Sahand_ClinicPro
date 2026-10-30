@@ -73,6 +73,30 @@ public class ReceptionsViewModelTests
     private static ReceptionsViewModel MakeVm(FakeApiClient api) =>
         new(api, new FakeSnackbar());
 
+    [Fact]
+    public void New_reception_clears_draft_but_never_clears_an_unknown_outcome()
+    {
+        var vm = MakeVm(MakeApi());
+        vm.WizardStep = 3;
+        vm.SmartSearch = "بیمار";
+        vm.InsuranceNumber = "123";
+        vm.ReferralCode = "abc";
+        vm.ReceptionNotes = "یادداشت";
+        vm.VisitTypeIndex = 2;
+        vm.NewReceptionCommand.Execute(null);
+        vm.WizardStep.Should().Be(0);
+        vm.SmartSearch.Should().BeEmpty();
+        vm.InsuranceNumber.Should().BeEmpty();
+        vm.ReferralCode.Should().BeNull();
+        vm.ReceptionNotes.Should().BeNull();
+        vm.VisitTypeIndex.Should().Be(0);
+        vm.SmartSearch = "حفظ اطلاعات";
+        vm.IsReceptionOutcomeUnknown = true;
+        vm.NewReceptionCommand.Execute(null);
+        vm.SmartSearch.Should().Be("حفظ اطلاعات");
+        vm.IsReceptionOutcomeUnknown.Should().BeTrue();
+    }
+
     // ═══════════════ ۱) آمار و فهرست صف امروز ═══════════════
 
     [Fact]

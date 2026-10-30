@@ -166,6 +166,7 @@ public partial class AppointmentsViewModel : ViewModelBase
     private int _patientSearchVersion;
     private int _slotLoadVersion;
     private int _calendarLoadVersion;
+    private bool _bookingResetRequested;
 
     /// <summary>جلوگیری از تغییر فرم در زمان ثبت نوبت.</summary>
     [ObservableProperty]
@@ -364,6 +365,7 @@ public partial class AppointmentsViewModel : ViewModelBase
         _patientSearchVersion++;
         _slotLoadVersion++;
         _calendarLoadVersion++;
+        _bookingResetRequested = true;
         _debounce?.Stop();
         _calendarReloadDebounce?.Stop();
         PatientSearchText = string.Empty;
@@ -548,7 +550,7 @@ public partial class AppointmentsViewModel : ViewModelBase
                 if (doctors?.Data is not null)
                     foreach (var d in doctors.Data)
                         Doctors.Add(new DoctorOption(d.Id, d.FullName, d.SpecialtyName, d.ConsultationFee));
-                if (SelectedDoctor is null && Doctors.Count > 0)
+                if (!_bookingResetRequested && SelectedDoctor is null && Doctors.Count > 0)
                     SelectedDoctor = Doctors[0];
             }
             if (SelectedDate is null)
@@ -589,7 +591,7 @@ public partial class AppointmentsViewModel : ViewModelBase
             SelectedDate = IranClock.Today;
             SelectedDateShamsi = PersianDateHelper.ToShamsi(IranClock.Today);
         }
-        if (SelectedDoctor is null && Doctors.Count > 0)
+        if (!_bookingResetRequested && SelectedDoctor is null && Doctors.Count > 0)
             SelectedDoctor = Doctors[0];
         await LoadTodayAppointmentsAsync();
         await SearchListAsync();
