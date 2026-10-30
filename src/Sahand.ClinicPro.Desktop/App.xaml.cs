@@ -746,10 +746,13 @@ public partial class App : System.Windows.Application
                 var layout = new System.Windows.Media.Imaging.RenderTargetBitmap(layoutWidth, layoutHeight, 96, 96, PixelFormats.Pbgra32);
                 layout.Render(view);
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(layout));
+                // ریشه RTL در RenderTargetBitmap نسبت به خروجی پنجره آینه‌ای
+                // است؛ برگرداندن افقی در خروجی، همان جهت پنجره را بازمی‌گرداند.
+                var oriented = new System.Windows.Media.Imaging.TransformedBitmap(layout, new ScaleTransform(-1, 1));
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(oriented));
                 var layoutPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "print-designer-layout.png");
                 using (var stream = File.Create(layoutPath)) encoder.Save(stream);
-                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout, 1568x885 at 96 DPI; not an on-screen screenshot. RTL transforms and rendering can differ.");
+                File.WriteAllText(layoutPath + ".txt", "Offscreen WPF layout, 1568x885 at 96 DPI; horizontally corrected for RTL. Not an on-screen screenshot; rendering can differ.");
             }
             window.Close();
             Shutdown(0);
