@@ -1,1 +1,1 @@
-Page=print-template Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=1030x774
+Page=print-template Flow=RightToLeft Lang=fa-ir Actual=1024x720 Render=1024x720 Desired=1024x720

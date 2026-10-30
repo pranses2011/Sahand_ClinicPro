@@ -1,1 +1,1 @@
-Page=ophthalmology Flow=RightToLeft Lang=fa-ir Actual=1030x774 Render=1030x774 Desired=910٫8690476190477x774
+Page=ophthalmology Flow=RightToLeft Lang=fa-ir Actual=1024x720 Render=1024x720 Desired=899٫0695238095238x720
