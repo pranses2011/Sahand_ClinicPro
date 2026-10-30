@@ -44,6 +44,14 @@ public partial class FreeTemplateEditorWindow : Window
         if (_document.Elements.Count > 0) Select(_document.Elements[0]);
         RefreshCanvas();
     }
+    private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not FrameworkElement workspace || workspace.Parent is not FrameworkElement parent) return;
+        // در قاب هم‌اندازه طرح، کناره‌ها و نسبت سه ستون به مرجع نزدیک‌ترند؛
+        // روی نمایشگرهای کوچک فضای کناری به حداقل کاهش می‌یابد.
+        var target = parent.ActualWidth >= 1400 ? new Thickness(63, 12, 78, 12) : new Thickness(16, 12, 16, 12);
+        if (workspace.Margin != target) workspace.Margin = target;
+    }
     private static string Number(double n) => n.ToString("0.##", CultureInfo.InvariantCulture);
     private static double ReadNumber(TextBox box)
     {
