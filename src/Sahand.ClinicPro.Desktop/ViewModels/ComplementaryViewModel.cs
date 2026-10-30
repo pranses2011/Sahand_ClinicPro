@@ -50,6 +50,14 @@ public partial class PrintTemplateRow : ObservableObject
     [ObservableProperty]
     private string _paperSize = "A5";
 
+    /// <summary>جهت ذخیره‌شده کاغذ</summary>
+    [ObservableProperty]
+    private string _orientation = "Portrait";
+
+    /// <summary>خانواده فونت ذخیره‌شده</summary>
+    [ObservableProperty]
+    private string? _fontFamily;
+
     /// <summary>رنگ تأکیدی هگز</summary>
     [ObservableProperty]
     private string _accentColor = "#16355E";
@@ -457,6 +465,8 @@ public partial class ComplementaryViewModel : ViewModelBase
         template.Description = d.Description;
         template.Body = d.HtmlBody;
         template.PaperSize = d.PaperSize;
+        template.Orientation = d.Orientation;
+        template.FontFamily = d.FontFamily;
         template.AccentColor = d.AccentColor ?? "#16355E";
         template.FontSize = d.FontSize;
         template.ShowLogo = d.ShowClinicLogo;
@@ -729,9 +739,9 @@ public partial class ComplementaryViewModel : ViewModelBase
             description = template.Description,
             htmlBody = template.Body,
             paperSize = template.PaperSize,
-            orientation = "Portrait",
+            orientation = template.Orientation,
             fontSize = template.FontSize,
-            fontFamily = (string?)null,
+            fontFamily = template.FontFamily,
             showClinicLogo = template.ShowLogo,
             accentColor = template.AccentColor,
             isActive = template.IsActive,
@@ -758,7 +768,8 @@ public partial class ComplementaryViewModel : ViewModelBase
             template.IsLoaded = true;
             var unchanged = template.Title == payload.templateName && template.Key == payload.type
                 && template.Description == payload.description && template.Body == payload.htmlBody
-                && template.PaperSize == payload.paperSize && template.FontSize == payload.fontSize
+                && template.PaperSize == payload.paperSize && template.Orientation == payload.orientation
+                && template.FontFamily == payload.fontFamily && template.FontSize == payload.fontSize
                 && template.ShowLogo == payload.showClinicLogo && template.AccentColor == payload.accentColor
                 && template.IsActive == payload.isActive && template.IsDefault == payload.isDefault;
             if (!unchanged)
@@ -1207,6 +1218,8 @@ public partial class ComplementaryViewModel : ViewModelBase
         public string? Description { get; set; }
         public string HtmlBody { get; set; } = "";
         public string PaperSize { get; set; } = "A5";
+        public string Orientation { get; set; } = "Portrait";
+        public string? FontFamily { get; set; }
         public int FontSize { get; set; } = 13;
         public bool ShowClinicLogo { get; set; } = true;
         public string? AccentColor { get; set; }
