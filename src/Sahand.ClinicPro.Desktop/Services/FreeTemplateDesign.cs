@@ -37,9 +37,12 @@ public static class FreeTemplateDesign
     public static bool HasMarker(string? html) => html?.StartsWith(Prefix, StringComparison.Ordinal) == true;
 
     /// <summary>عرض تقریبی قابل استفاده بدنه با کسر حاشیه ثابت قالب سرور؛ تضمین چاپگر نیست.</summary>
-    public static double AvailableBodyWidth(string paper)
+    public static double AvailableBodyWidth(string paper, string orientation = "Portrait")
     {
         if (!VisualTemplateDesign.IsValidPaperSize(paper)) return 0;
+        if (string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase))
+            return Sahand.ClinicPro.Application.Features.Reporting.PrintTemplates.PrintTemplateRenderer.LandscapePaper(paper) is { } page ? Math.Max(0, page.WidthPx - 52) : 0;
+        if (!string.Equals(orientation, "Portrait", StringComparison.OrdinalIgnoreCase)) return 0;
         var key = paper.Trim().ToUpperInvariant();
         var width = key switch { "A3" => 1123, "A4" => 794, "A5" => 559, "A6" => 397, "B5" => 691,
             "LETTER" => 816, "LEGAL" => 1056, "THERMAL80" => 302, "THERMAL58" => 219, _ => 0 };

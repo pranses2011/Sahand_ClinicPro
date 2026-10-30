@@ -224,7 +224,7 @@ public static class PrintTemplateRenderer
         {
             "A3" => (1587, "A3 landscape"), "A4" => (1123, "A4 landscape"),
             "A5" => (794, "A5 landscape"), "A6" => (559, "A6 landscape"),
-            "B5" => (979, "B5 landscape"), "LETTER" => (1056, "letter landscape"),
+            "B5" => (971, "B5 landscape"), "LETTER" => (1056, "letter landscape"),
             "LEGAL" => (1344, "legal landscape"), _ => (0, "")
         };
         if (standard.Item1 > 0) return standard;

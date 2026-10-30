@@ -5,7 +5,7 @@ namespace Sahand.ClinicPro.Desktop.Services;
 /// <summary>پیش‌نمایش نمونه محلی فقط برای بوم تأییدشده، بدون ذخیره یا تماس با سرور.</summary>
 public static class FreeTemplatePreview
 {
-    public static string Create(string html, string type, string paper, string? accent, int fontSize, bool showLogo, IReadOnlyCollection<string> allowed)
+    public static string Create(string html, string type, string paper, string? accent, int fontSize, bool showLogo, IReadOnlyCollection<string> allowed, string orientation = "Portrait", string? fontFamily = null)
     {
         if (!FreeTemplateDesign.TryRead(html, allowed, out _)) throw new ArgumentException("بدنه بوم قابل تأیید نیست.");
         var sample = PrintTemplateRenderer.SampleData(type);
@@ -15,6 +15,6 @@ public static class FreeTemplatePreview
         sample.TryAdd("print_date", "نمونه");
         var body = "<div style='border:2px solid #b00020;color:#b00020;padding:8px'>پیش‌نویس — داده نمونه، فاقد اعتبار و ذخیره‌نشده</div>" + PrintTemplateRenderer.Render(html, sample);
         return PrintTemplateRenderer.WrapDocument(body, "درمانگاه نمونه", "نشانی نمونه", "شماره نمونه", null,
-            accent, fontSize, null, showLogo, paper).Replace("__PRINT_DATE__", "نمونه");
+            accent, fontSize, fontFamily, showLogo, paper, orientation).Replace("__PRINT_DATE__", "نمونه");
     }
 }

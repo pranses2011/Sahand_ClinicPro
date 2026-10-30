@@ -20,14 +20,16 @@ public partial class FreeTemplateEditorWindow : Window
     private double _startX, _startY;
     public string? ResultHtml { get; private set; }
     public string? ResultPaperSize { get; private set; }
+    public string? ResultOrientation { get; private set; }
 
-    public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper)
+    public FreeTemplateEditorWindow(FreeTemplateDocument document, IEnumerable<ComplementaryViewModel.TemplateVariable> variables, string paper, string orientation)
     {
         _document = JsonSerializer.Deserialize<FreeTemplateDocument>(JsonSerializer.Serialize(document))!;
         _variables = variables.GroupBy(v => v.Key).Select(g => g.First()).ToArray();
         InitializeComponent();
         VariableBox.ItemsSource = _variables;
         PaperBox.Text = paper;
+        OrientationBox.SelectedIndex = string.Equals(orientation, "Landscape", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         RefreshCanvas();
     }
     private static string Number(double n) => n.ToString("0.##", CultureInfo.InvariantCulture);
@@ -162,9 +164,12 @@ public partial class FreeTemplateEditorWindow : Window
                 throw new ArgumentException("ابتدا دکمه اعمال ویژگی‌ها را بزنید.");
             var paper = PaperBox.Text.Trim();
             if (!VisualTemplateDesign.IsValidPaperSize(paper)) throw new ArgumentException("اندازه کاغذ معتبر نیست.");
-            if (_document.Width > FreeTemplateDesign.AvailableBodyWidth(paper))
+            var orientation = OrientationBox.SelectedIndex == 1 ? "Landscape" : "Portrait";
+            var availableWidth = FreeTemplateDesign.AvailableBodyWidth(paper, orientation);
+            if (availableWidth == 0) throw new ArgumentException("جهت افقی برای این اندازه کاغذ پشتیبانی نمی‌شود.");
+            if (_document.Width > availableWidth)
                 throw new ArgumentException("عرض بوم از فضای بدنه کاغذ بیشتر است و بخشی از سند بریده می‌شود؛ ابعاد بوم یا کاغذ را اصلاح کنید.");
-            ResultHtml = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); ResultPaperSize = paper; DialogResult = true;
+            ResultHtml = FreeTemplateDesign.Build(_document, _variables.Select(v => v.Key).ToArray()); ResultPaperSize = paper; ResultOrientation = orientation; DialogResult = true;
         }
         catch (ArgumentException ex) { AppDialog.Error("طراحی قالب", ex.Message); }
     }

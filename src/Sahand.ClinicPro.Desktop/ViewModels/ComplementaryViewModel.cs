@@ -869,7 +869,7 @@ public partial class ComplementaryViewModel : ViewModelBase
             try
             {
                 PreviewHtml = FreeTemplatePreview.Create(template.Body, template.Key, template.PaperSize, template.AccentColor,
-                    template.FontSize, template.ShowLogo, ActiveVariables.Select(v => v.Key).ToArray());
+                    template.FontSize, template.ShowLogo, ActiveVariables.Select(v => v.Key).ToArray(), template.Orientation, template.FontFamily);
                 _snackbar.Info("پیش‌نمایش محلی با داده نمونه است؛ قالب هنوز ذخیره نشده است.");
             }
             catch (ArgumentException ex) { _snackbar.Error("پیش‌نمایش پیش‌نویس ممکن نیست: " + ex.Message); }

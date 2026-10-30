@@ -44,21 +44,23 @@ public partial class ComplementaryView : UserControl
         { AppDialog.Error("طراحی قالب", "ابتدا یک قالب قابل ویرایش را انتخاب و بارگذاری کنید."); return; }
         var before = template.Body;
         var beforePaper = template.PaperSize;
+        var beforeOrientation = template.Orientation;
         var variables = vm.ActiveVariables.ToArray();
         var keys = variables.Select(v => v.Key).ToArray();
         if (!FreeTemplateDesign.TryRead(before, keys, out var document))
         {
             if (AppDialog.Confirm("شروع طراح آزاد", "این قالب با طراح آزاد ساخته نشده یا تغییر دستی داشته است. اعمال طرح جدید بدنه فعلی را جایگزین می‌کند؛ تا زمان ذخیره نسخه سرور تغییر نمی‌کند. ادامه می‌دهید؟", AppDialogIcon.Warning) != true) return;
-            var width = Math.Min(600, FreeTemplateDesign.AvailableBodyWidth(beforePaper));
+            var width = Math.Min(600, FreeTemplateDesign.AvailableBodyWidth(beforePaper, beforeOrientation));
             if (width < 100) { AppDialog.Error("طراحی قالب", "کاغذ برای بوم آزاد بیش از حد باریک است؛ ابتدا اندازه کاغذ را تغییر دهید."); return; }
             document = new FreeTemplateDocument { Width = width, Elements = new() { new FreeTemplateElement { Kind = "text", Text = "عنوان سند", X = 0, Y = 20, Width = Math.Min(200, width) } } };
         }
-        var window = new FreeTemplateEditorWindow(document!, variables, beforePaper) { Owner = Window.GetWindow(this) };
-        if (window.ShowDialog() != true || window.ResultHtml is null || window.ResultPaperSize is null) return;
-        if (!ReferenceEquals(vm.SelectedTemplate, template) || template.Body != before || template.PaperSize != beforePaper || !vm.IsTemplateReady)
+        var window = new FreeTemplateEditorWindow(document!, variables, beforePaper, beforeOrientation) { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() != true || window.ResultHtml is null || window.ResultPaperSize is null || window.ResultOrientation is null) return;
+        if (!ReferenceEquals(vm.SelectedTemplate, template) || template.Body != before || template.PaperSize != beforePaper || template.Orientation != beforeOrientation || !vm.IsTemplateReady)
         { AppDialog.Error("طراحی قالب", "قالب هنگام ویرایش تغییر کرد؛ طرح اعمال نشد."); return; }
         template.Body = window.ResultHtml;
         template.PaperSize = window.ResultPaperSize;
+        template.Orientation = window.ResultOrientation;
     }
 
     private void OnVisualTemplateEditor(object sender, RoutedEventArgs e)
