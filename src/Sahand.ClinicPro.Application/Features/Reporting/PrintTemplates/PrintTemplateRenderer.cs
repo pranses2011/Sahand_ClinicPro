@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using Ganss.Xss;
@@ -307,14 +307,15 @@ public static class PrintTemplateRenderer
             ["discount"] = "۵۰٬۰۰۰ ریال",
             ["insurance_share"] = "۴۰۰٬۰۰۰ ریال",
             ["patient_share"] = "۳۲۰٬۰۰۰ ریال",
-            ["total"] = "۷۲۰٬۰۰۰ ریال"
+            ["total"] = "۷۲۰٬۰۰۰ ریال", ["tax"] = "۰ ریال", ["paid"] = "۱۰۰٬۰۰۰ ریال",
+            ["remaining"] = "۲۲۰٬۰۰۰ ریال", ["payment_status"] = "پرداخت جزئی"
         }
     };
 
     /// <summary>فهرست متغیرهای هر نوع سند برای پالت طراح</summary>
     public static Dictionary<string, string[]> VariablesOf() => new()
     {
-        ["Invoice"] = new[] { "invoice_code", "invoice_date", "patient_name", "insurance_name", "items_html", "subtotal", "discount", "insurance_share", "patient_share", "total" },
+        ["Invoice"] = new[] { "invoice_code", "invoice_date", "patient_name", "insurance_name", "items_html", "subtotal", "discount", "insurance_share", "patient_share", "total", "tax", "paid", "remaining", "payment_status" },
         ["Prescription"] = new[] { "patient_name", "patient_age", "patient_national_code", "doctor_name", "visit_date", "prescription_code", "items_html", "notes" },
         ["LabOrder"] = new[] { "patient_name", "doctor_name", "order_number", "order_date", "tests_html", "clinical_info" },
         ["LabResult"] = new[] { "patient_name", "order_number", "result_date", "results_html", "verified_by" },
