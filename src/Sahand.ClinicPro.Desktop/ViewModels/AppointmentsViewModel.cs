@@ -192,6 +192,11 @@ public partial class AppointmentsViewModel : ViewModelBase
     private string _waitlistPatientSearch = string.Empty;
     private int _waitlistSearchVersion;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditWaitlist))]
+    private bool _isAddingToWaitlist;
+    public bool CanEditWaitlist => !IsAddingToWaitlist;
+
     partial void OnWaitlistPatientSearchChanged(string value)
     {
         _waitlistSearchVersion++;
@@ -1423,14 +1428,18 @@ public partial class AppointmentsViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddToWaitlistAsync()
     {
-        if (WaitlistPatient is null) { _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید"); return; }
+        if (IsAddingToWaitlist) return;
+        if (WaitlistPatient is not { } patient) { _snackbar.Error("ابتدا بیمار را جستجو و انتخاب کنید"); return; }
         if (WaitlistFromDate is not { } from || WaitlistToDate is not { } to)
         { _snackbar.Error("بازه تاریخ دلخواه را کامل کنید"); return; }
         if (to < from) { _snackbar.Error("تاریخ پایان قبل از شروع است"); return; }
 
+        IsAddingToWaitlist = true;
+        try
+        {
         var ok = await _api.PostAsync("appointments/waitlist", new
         {
-            patientId = WaitlistPatient.Id,
+            patientId = patient.Id,
             doctorId = WaitlistDoctorIndex >= 0 && WaitlistDoctorIndex < Doctors.Count
                 ? Doctors[WaitlistDoctorIndex].Id
                 : (long?)null,
@@ -1448,14 +1457,23 @@ public partial class AppointmentsViewModel : ViewModelBase
 
         if (ok)
         {
-            _snackbar.Success($"«{WaitlistPatient.FullName}» در لیست انتظار ثبت شد");
-            WaitlistPatient = null;
-            WaitlistPatientSearch = string.Empty;
-            WaitlistPatientResults.Clear();
-            WaitlistNotes = null;
+            _snackbar.Success($"«{patient.FullName}» در لیست انتظار ثبت شد");
+            if (ReferenceEquals(WaitlistPatient, patient))
+            {
+                WaitlistPatient = null;
+                WaitlistPatientSearch = string.Empty;
+                WaitlistPatientResults.Clear();
+                WaitlistNotes = null;
+            }
             await LoadWaitlistAsync();
         }
-        else _snackbar.Error(_api.LastError ?? "ثبت در لیست انتظار ناموفق بود");
+        else _snackbar.Error((_api.LastError ?? "پاسخ ثبت در لیست انتظار دریافت نشد") + "؛ پیش از تلاش مجدد فهرست انتظار را بررسی کنید.");
+        }
+        catch (Exception)
+        {
+            _snackbar.Error("پاسخ ثبت در لیست انتظار دریافت نشد؛ پیش از تلاش مجدد فهرست انتظار را بررسی کنید.");
+        }
+        finally { IsAddingToWaitlist = false; }
     }
 
     /// <summary>لغو ردیف لیست انتظار</summary>

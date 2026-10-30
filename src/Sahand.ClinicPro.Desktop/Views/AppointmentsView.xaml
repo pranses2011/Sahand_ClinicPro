@@ -1294,7 +1294,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- فرم افزودن به لیست انتظار -->
-                    <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10"
+                    <Border Grid.Row="0" CornerRadius="10" Padding="12,10" Margin="0,0,0,10" IsEnabled="{Binding CanEditWaitlist}"
                             Background="{DynamicResource MaterialDesign.Brush.Background}" BorderBrush="{DynamicResource MaterialDesign.Brush.Separator.Background}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="افزودن بیمار به لیست انتظار" FontWeight="Bold" FontSize="13" Margin="0,0,0,8"  Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"/>
