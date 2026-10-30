@@ -642,7 +642,7 @@ public partial class ComplementaryViewModel : ViewModelBase
     private void AddPresetTemplate(PresetTemplate? preset)
     {
         if (preset is null) return;
-        var fa = TemplateTypes.FirstOrDefault(t => t.Key == preset.TypeKey).Fa ?? preset.TypeKey;
+        var fa = TemplateTypes.FirstOrDefault(t => t.Key == preset.TypeKey)?.Fa ?? preset.TypeKey;
         var row = new PrintTemplateRow
         {
             Id = 0,

@@ -41,7 +41,7 @@ public partial class PhysiotherapyView : UserControl
         BuildBodyMap();
     }
 
-    private void OnNumericValidationError(object sender, ValidationErrorEventArgs e)
+    private void OnNumericValidationError(object? sender, ValidationErrorEventArgs e)
     {
         if (e.Action == ValidationErrorEventAction.Added) _numericErrors.Add(e.Error);
         else _numericErrors.Remove(e.Error);

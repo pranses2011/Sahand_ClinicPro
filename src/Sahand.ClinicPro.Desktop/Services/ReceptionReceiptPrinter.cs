@@ -40,6 +40,11 @@ public sealed record ReceptionReceiptItem(string Name, decimal Quantity, decimal
 /// <param name="PaymentMethod">روش پرداخت — ۱ نقدی، ۲ کارتخوان</param>
 /// <param name="ReferenceNumber">شمارهٔ پیگیری کارتخوان</param>
 /// <param name="CardNumber">چهار رقم آخر کارت</param>
+/// <param name="ClinicName">نام درمانگاه</param>
+/// <param name="ReceptionNumberText">شماره پذیرش نمایشی</param>
+/// <param name="InvoiceNumbersText">شماره‌های فاکتور نمایشی</param>
+/// <param name="Discount">تخفیف ثبت‌شده</param>
+/// <param name="Tax">مالیات ثبت‌شده</param>
 public sealed record ReceptionReceipt(
     long QueueNumber,
     long InvoiceNumber,
