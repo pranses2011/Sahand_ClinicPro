@@ -100,6 +100,27 @@ public partial class FreeTemplateEditorWindow : Window
         catch (Exception ex) when (ex is ArgumentException or FormatException or IOException or NotSupportedException or InvalidOperationException)
         { return new TextBlock { Text = "تصویر قابل نمایش نیست", Foreground = Brushes.DarkRed, TextWrapping = TextWrapping.Wrap }; }
     }
+    private static UIElement SampleTable(string[][] rows, FreeTemplateElement item, Brush ink)
+    {
+        var panel = new StackPanel { FlowDirection = FlowDirection.RightToLeft, ToolTip = "نمایش تقریبی جدول نمونه؛ خروجی واقعی را در پیش‌نمایش بررسی کنید" };
+        if (!string.IsNullOrWhiteSpace(item.Text)) panel.Children.Add(new TextBlock { Text = item.Text, FontSize = item.FontSize, Foreground = ink, TextWrapping = TextWrapping.Wrap });
+        var grid = new Grid();
+        var columns = rows.Max(x => x.Length);
+        for (var i = 0; i < columns; i++) grid.ColumnDefinitions.Add(new ColumnDefinition());
+        for (var row = 0; row < rows.Length; row++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            for (var col = 0; col < rows[row].Length; col++)
+            {
+                var cell = new Border { Padding = new Thickness(3, 2, 3, 2), BorderBrush = Brushes.LightGray, BorderThickness = new Thickness(0, 0, 0, 0.5),
+                    Background = row == 0 ? new SolidColorBrush(Color.FromRgb(0xE8, 0xEF, 0xF9)) : Brushes.White,
+                    Child = new TextBlock { Text = rows[row][col], FontSize = Math.Min(item.FontSize, 12), Foreground = ink, TextWrapping = TextWrapping.Wrap, FontWeight = row == 0 ? FontWeights.Bold : FontWeights.Normal } };
+                Grid.SetRow(cell, row); Grid.SetColumn(cell, col); grid.Children.Add(cell);
+            }
+        }
+        panel.Children.Add(grid);
+        return panel;
+    }
     private void RefreshCanvas(bool resetCanvasInputs = true)
     {
         PageCanvas.Width = _document.Width; PageCanvas.Height = _document.Height;
@@ -117,7 +138,9 @@ public partial class FreeTemplateEditorWindow : Window
             var ink = (Brush)new BrushConverter().ConvertFromString(item.Color)!;
             var content = new Border { BorderBrush = ink,
                 BorderThickness = item.Kind == "rectangle" ? new Thickness(1) : item.Kind == "line" ? new Thickness(0, 1, 0, 0) : new Thickness(0),
-                Child = item.Kind == "image" ? ImagePreview(item.ImageData) : new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, FontWeight = item.Bold ? FontWeights.Bold : FontWeights.Normal,
+                Child = item.Kind == "image" ? ImagePreview(item.ImageData) :
+                    item.Kind == "variable" && SampleValuesBox.IsChecked == true && FreeTemplatePreview.TrySampleTable(_sampleData, item.Key, out var rows) ? SampleTable(rows, item, ink) :
+                    new TextBlock { Text = item.Kind == "line" ? "" : label, FontSize = item.FontSize, FontWeight = item.Bold ? FontWeights.Bold : FontWeights.Normal,
                     TextAlignment = item.Alignment == "center" ? TextAlignment.Center : item.Alignment == "left" ? TextAlignment.Left : TextAlignment.Right,
                     Foreground = ink, FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap } };
             var border = new Border { Width = item.Width, Height = item.Height, Tag = item, Cursor = Cursors.SizeAll,

@@ -40,6 +40,18 @@ public class FreeTemplateDesignTests
     }
 
     [Fact]
+    public void Sample_table_extracts_only_bounded_text_without_external_entities()
+    {
+        var sample = PrintTemplateRenderer.SampleData("Invoice");
+        FreeTemplatePreview.TrySampleTable(sample, "items_html", out var rows).Should().BeTrue();
+        rows.Should().HaveCount(3);
+        rows[0].Should().HaveCount(3);
+        FreeTemplatePreview.TrySampleTable(sample, "patient_name", out _).Should().BeFalse();
+        var malicious = new Dictionary<string, object?> { ["items_html"] = "<!DOCTYPE table [<!ENTITY x SYSTEM 'file:///secret'>]><table><tr><td>&x;</td></tr></table>" };
+        FreeTemplatePreview.TrySampleTable(malicious, "items_html", out _).Should().BeFalse();
+    }
+
+    [Fact]
     public void Layer_order_is_preserved_in_output_and_stops_at_edges()
     {
         var first = new FreeTemplateElement { Kind = "text", Text = "first" };

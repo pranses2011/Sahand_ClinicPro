@@ -103,7 +103,7 @@
                                 <Button Style="{StaticResource DesignerButton}" Content="↑" Tag="1" Click="Layer_Click" ToolTip="یک لایه جلوتر" AutomationProperties.Name="یک لایه جلوتر" Margin="2" MinWidth="35"/>
                                 <Button Style="{StaticResource DesignerButton}" Content="↓" Tag="-1" Click="Layer_Click" ToolTip="یک لایه عقب‌تر" AutomationProperties.Name="یک لایه عقب‌تر" Margin="2" MinWidth="35"/>
                                 <Button Style="{StaticResource DesignerButton}" Content="×" Click="Remove_Click" ToolTip="حذف عنصر انتخاب‌شده" AutomationProperties.Name="حذف عنصر انتخاب‌شده" Margin="2" MinWidth="35"/>
-                                <CheckBox x:Name="SampleValuesBox" Content="داده نمونه" IsChecked="True" Click="SampleValues_Click" Margin="8,2,2,2" VerticalAlignment="Center" ToolTip="فقط نمایش متنی؛ برای بررسی جدول و چاپ از پیش‌نمایش استفاده کنید"/>
+                                <CheckBox x:Name="SampleValuesBox" Content="داده نمونه" IsChecked="True" Click="SampleValues_Click" Margin="8,2,2,2" VerticalAlignment="Center" ToolTip="نمایش تقریبی داده و جدول نمونه؛ برای بررسی خروجی و چاپ از پیش‌نمایش استفاده کنید"/>
                             </WrapPanel>
                         </StackPanel>
                     </Border>
