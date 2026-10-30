@@ -393,13 +393,16 @@ public class PrintTemplatesController : ApiBaseController
     /// اعتبارسنجی اندازهٔ کاغذ — پذیرش اندازه‌های استاندارد، فیش حرارتی و قالب سفارشی
     /// الگوی سفارشی: Custom:100x180 یا Custom:100×180 (میلی‌متر، اعداد صحیح ۲۰ تا ۱۰۰۰)
     /// </summary>
-    private static bool IsValidPaperSize(string? paper) =>
-        paper is not null &&
-        (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }
-            .Contains(paper, StringComparer.OrdinalIgnoreCase)
-         || System.Text.RegularExpressions.Regex.IsMatch(
-                paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$", 
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+    private static bool IsValidPaperSize(string? paper)
+    {
+        if (string.IsNullOrWhiteSpace(paper)) return false;
+        if (new[] { "A3", "A4", "A5", "A6", "B5", "Letter", "Legal", "Thermal80", "Thermal58" }
+            .Contains(paper, StringComparer.OrdinalIgnoreCase)) return true;
+        var match = System.Text.RegularExpressions.Regex.Match(paper, @"^Custom:\s*(\d{1,4})\s*[x×]\s*(\d{1,4})\s*(mm)?$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var width) && int.TryParse(match.Groups[2].Value, out var height)
+            && width is >= 20 and <= 1000 && height is >= 20 and <= 1000;
+    }
 
     /// <summary>تبدیل به DTO جزئیات</summary>
     private static PrintTemplateDetailDto ToDetail(PrintTemplate t) => new(
