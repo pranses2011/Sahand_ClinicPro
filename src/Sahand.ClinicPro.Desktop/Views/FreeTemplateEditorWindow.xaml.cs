@@ -126,7 +126,7 @@ public partial class FreeTemplateEditorWindow : Window
                 handle.DragCompleted += (_, e) =>
                 {
                     if (!allowed) return;
-                    if (e.Canceled) { item.Width = initialWidth; item.Height = initialHeight; }
+                    if (e.Canceled) { item.Width = initialWidth; item.Height = initialHeight; Select(item); }
                     RefreshCanvas();
                 };
                 Panel.SetZIndex(handle, 1); PlaceHandle(); PageCanvas.Children.Add(handle);
